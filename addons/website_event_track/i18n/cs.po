@@ -1424,7 +1424,7 @@ msgstr ""
 #. module: website_event_track
 #: model:ir.model.fields.selection,name:website_event_track.selection__event_track__priority__1
 msgid "Medium"
-msgstr "Střední hodnoty"
+msgstr "Médium"
 
 #. module: website_event_track
 #: model:ir.model.fields,field_description:website_event_track.field_website_event_menu__menu_type
@@ -2059,7 +2059,7 @@ msgstr ""
 #: code:addons/website_event_track/static/src/js/event_track_reminder.js:0
 #, python-format
 msgid "Talk added to your Favorites"
-msgstr ""
+msgstr "Talk byl přidán k vašim oblíbeným"
 
 #. module: website_event_track
 #. openerp-web
