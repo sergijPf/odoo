@@ -39,3 +39,9 @@ setup/win32/static/postgresql*.exe
 /man/
 /share/
 /src/
+
+
+#my inputs
+backups
+conf
+venv*
