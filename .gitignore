@@ -42,4 +42,6 @@ setup/win32/static/postgresql*.exe
 
 #added by sergio
 venv
-*.conf
+conf
+venv*
+backups
