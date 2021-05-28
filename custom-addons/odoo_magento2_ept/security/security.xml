@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+        <record model="ir.module.category" id="module_category_magento_ept">
+            <field name="name">Magento</field>
+            <field name="description">Magento User Access Rights</field>
+            <field name="sequence">200</field>
+        </record>
+
+        <record model="res.groups" id="group_magento_user_ept">
+            <field name="name">User</field>
+            <field name="implied_ids" eval="[(4,ref('sales_team.group_sale_salesman_all_leads'))]"/>
+            <field name="category_id" ref="module_category_magento_ept"/>
+        </record>
+
+        <record model="res.groups" id="group_magento_manager_ept">
+            <field name="name">Manager</field>
+            <field name="category_id" ref="module_category_magento_ept"/>
+            <field name="implied_ids" eval="[(4,ref('odoo_magento2_ept.group_magento_user_ept'))]"/>
+            <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+        </record>
+
+        <record id="base.default_user" model="res.users">
+            <field name="groups_id" eval="[(4,ref('odoo_magento2_ept.group_magento_manager_ept'))]"/>
+        </record>
+
+        <!-- Multi - Company Rules -->
+        <record model="ir.rule" id="magento_instance_comp_rule">
+            <field name="name">Magento Instance multi-company</field>
+            <field name="model_id" ref="model_magento_instance"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record model="ir.rule" id="magento_website_comp_rule">
+            <field name="name">Magento Website multi-company</field>
+            <field name="model_id" ref="model_magento_website"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+    </data>
+</odoo>
+
+

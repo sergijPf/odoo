@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_ept" model="ir.ui.view">
+            <field name="name">res.partner.form.ept</field>
+            <field name="model">res.partner</field>
+            <field name="type">form</field>
+            <field name="inherit_id" ref="base.view_partner_form" />
+            <field name="arch" type="xml">
+<!--                <field name="user_id" position="after" attrs="{'invisible':[('magento_customer_id','=',False)]}">-->
+<!--                    <field name="magento_customer_id" />-->
+<!--                </field>-->
+                <page name="internal_notes" position="after">
+                    <page name="magento_customer_information" string="Magento Information" attrs="{'invisible' : [('magento_instance_id','=',False)]}">
+                        <group>
+                            <group>
+                                <field name="magento_instance_id" readonly="1"/>
+                                <field name="magento_website_id" readonly="1"/>
+                                <field name="magento_customer_id"  string="Magento Customer Id" readonly="1"/>
+                                <field name="address_id" string="Magento Address Id" readonly="1"/>
+                            </group>
+                        </group>
+                    </page>
+                </page>
+            </field>
+        </record>
+
+        <record id="view_magento_partner_tree" model="ir.ui.view">
+            <field name="name">res.partner.tree</field>
+            <field name="model">res.partner</field>
+            <field eval="100" name="priority" />
+            <field name="arch" type="xml">
+                <tree string="Contacts" create="false" sample="1">
+                    <field name="name" />
+                    <field name="phone" />
+                    <field name="email" />
+                    <field name="user_id" invisible="1" />
+                    <field name="company_id" invisible="1" />
+                    <field name="is_company" invisible="1" />
+                    <field name="country_id" invisible="1" />
+                    <field name="magento_customer_id" />
+                    <field name="magento_instance_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Inherited Search View Section -->
+        <record id="magento_view_res_partner_filter" model="ir.ui.view">
+            <field name="name">res.partner.search</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_res_partner_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='group_country']" position="after">
+                    <filter name="group_instance" string="Magento Instance" context="{'group_by' : 'magento_instance_id'}" />
+                    <filter name="group_website" string="Website" context="{'group_by' : 'magento_website_id'}" />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="action_magento_partner_form" model="ir.actions.act_window">
+            <field name="name">Customers</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">res.partner</field>
+            <field name="domain">[('magento_instance_id','!=',False)]</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="context">{"search_default_customer":1}</field>
+            <field name="view_id" ref="view_magento_partner_tree" />
+            <field name="search_view_id" ref="magento_view_res_partner_filter" />
+            <field name="help" type="html">
+                <p>You can't create Magento Customer from Here.</p>
+                <br />
+                <p>
+                    <b>When order is imported system will automatically create customer in ERP. </b>
+                    <br />
+                    or
+                    <br />
+                    You can run Import Customer process.
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_magento_sales_and_customer" name="Sales"
+            parent="odoo_magento2_ept.menu_magento_root" sequence="4"/>
+
+        <menuitem id="menu_item_parent_customer_ept" name="Customers"
+            parent="odoo_magento2_ept.menu_magento_sales_and_customer" sequence="10"/>
+
+        <menuitem id="menu_item_customer_ept" name="Customers"
+            parent="odoo_magento2_ept.menu_item_parent_customer_ept" sequence="2"
+            action="action_magento_partner_form" />
+</odoo>
