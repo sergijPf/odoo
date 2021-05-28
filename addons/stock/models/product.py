@@ -641,7 +641,7 @@ class ProductTemplate(models.Model):
         'product_variant_ids.stock_move_ids.product_qty',
         'product_variant_ids.stock_move_ids.state',
     )
-    @api.depends_context('company')
+    @api.depends_context('company', 'location', 'warehouse')
     def _compute_quantities(self):
         res = self._compute_quantities_dict()
         for template in self:
@@ -882,7 +882,7 @@ class UoM(models.Model):
                               for f in {'category_id'}))
             if changed:
                 error_msg = _(
-                    "You cannot change the ratio of this unit of mesure"
+                    "You cannot change the ratio of this unit of measure"
                     " as some products with this UoM have already been moved"
                     " or are currently reserved."
                 )

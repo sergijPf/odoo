@@ -833,18 +833,32 @@ var SnippetEditor = Widget.extend({
      * @param {OdooEvent} ev
      */
     _onSnippetOptionUpdate: async function (ev) {
-        const proms1 = Object.keys(this.styles).map(key => {
-            return this.styles[key].updateUI({
-                noVisibility: true,
+        if (ev.target === this) {
+            return;
+        }
+        ev.stopPropagation();
+        const updateOptionsUI = async () => {
+            const proms1 = Object.keys(this.styles).map(key => {
+                return this.styles[key].updateUI({
+                    noVisibility: true,
+                });
             });
-        });
-        await Promise.all(proms1);
+            await Promise.all(proms1);
 
-        const proms2 = Object.keys(this.styles).map(key => {
-            return this.styles[key].updateUIVisibility();
-        });
-        await Promise.all(proms2);
-
+            const proms2 = Object.keys(this.styles).map(key => {
+                return this.styles[key].updateUIVisibility();
+            });
+            await Promise.all(proms2);
+        };
+        // Wait for the current editor's option UI updates and the parent ones
+        await Promise.all([
+            updateOptionsUI(),
+            new Promise(resolve => {
+                this.trigger_up('snippet_option_update', Object.assign({}, ev.data, {
+                    onSuccess: () => resolve(),
+                }));
+            }),
+        ]);
         ev.data.onSuccess();
     },
     /**
@@ -917,6 +931,7 @@ var SnippetsMenu = Widget.extend({
         'snippet_editor_destroyed': '_onSnippetEditorDestroyed',
         'snippet_removed': '_onSnippetRemoved',
         'snippet_cloned': '_onSnippetCloned',
+        'snippet_option_update': '_onSnippetOptionUpdate',
         'snippet_option_visibility_update': '_onSnippetOptionVisibilityUpdate',
         'snippet_thumbnail_url_request': '_onSnippetThumbnailURLRequest',
         'reload_snippet_dropzones': '_disableUndroppableSnippets',
@@ -2611,6 +2626,14 @@ var SnippetsMenu = Widget.extend({
      * @private
      * @param {OdooEvent} ev
      */
+    _onSnippetOptionUpdate: function (ev) {
+        ev.stopPropagation();
+        ev.data.onSuccess();
+    },
+    /**
+     * @private
+     * @param {OdooEvent} ev
+     */
     _onSnippetOptionVisibilityUpdate: async function (ev) {
         if (!ev.data.show) {
             await this._activateSnippet(false);
@@ -2656,9 +2679,11 @@ var SnippetsMenu = Widget.extend({
         // make text tools visible only on that specific tab). Also do it with
         // a slight delay to avoid flickering doing it twice.
         clearTimeout(this._textToolsSwitchingTimeout);
-        this._textToolsSwitchingTimeout = setTimeout(() => {
-            this._updateLeftPanelContent({tab: this.tabs.OPTIONS});
-        }, 250);
+        if (!this.$('#o_scroll').hasClass('d-none')) {
+            this._textToolsSwitchingTimeout = setTimeout(() => {
+                this._updateLeftPanelContent({tab: this.tabs.OPTIONS});
+            }, 250);
+        }
     },
     /**
      * @private

@@ -10,7 +10,6 @@
 # Fabio Genovese <ing.fabiogenovese@gmail.com>, 2020
 # Stefano Consolaro <stefano.consolaro@mymage.it>, 2020
 # Luigia Cimmino Caserta <lcc@odoo.com>, 2020
-# Simone Sanfilippo <s.sanfilippo@hinge16.eu>, 2020
 # Martin Trigaux, 2020
 # Paolo Valier, 2020
 # Léonie Bouchat <lbo@odoo.com>, 2021
@@ -229,6 +228,9 @@ msgid ""
 " Are you sure you want to close the session and post the accounting "
 "entries?</span>"
 msgstr ""
+"<span>È presente una differenza tra la chiusura di cassa attesa e quella "
+"attuale. Chiudere veramente la sessione e confermare le registrazioni "
+"contabili?</span>"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.view_pos_config_kanban
@@ -238,12 +240,12 @@ msgstr "<span>Vista</span>"
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.view_pos_session_form
 msgid "= Expected"
-msgstr ""
+msgstr "= Atteso"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.view_pos_session_form
 msgid "= Expected in Cash"
-msgstr ""
+msgstr "= Atteso in cassa"
 
 #. module: point_of_sale
 #. openerp-web
@@ -840,7 +842,7 @@ msgstr "Cassa"
 #. module: point_of_sale
 #: model:ir.model,name:point_of_sale.model_cash_box_out
 msgid "Cash Box Out"
-msgstr "Flusso di cassa in uscita"
+msgstr "Cassa in uscita"
 
 #. module: point_of_sale
 #: code:addons/point_of_sale/models/pos_config.py:0
@@ -1869,7 +1871,7 @@ msgstr "Errore, impossibile creare categorie ricorsive."
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_session__cash_real_expected
 msgid "Expected"
-msgstr "Attesi"
+msgstr "Atteso"
 
 #. module: point_of_sale
 #. openerp-web
@@ -2131,7 +2133,7 @@ msgstr "Icona"
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_session__activity_exception_icon
 msgid "Icon to indicate an exception activity."
-msgstr "Icona per indicare una eccezione attività."
+msgstr "Icona per indicare un'attività eccezione."
 
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_session__message_needaction
@@ -3733,7 +3735,7 @@ msgstr "Listini prezzi"
 #: model_terms:ir.ui.view,arch_db:point_of_sale.pos_config_view_form
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Pricing"
-msgstr "Prezzi"
+msgstr "Tariffazione"
 
 #. module: point_of_sale
 #. openerp-web
@@ -5207,6 +5209,9 @@ msgid ""
 "close a session with a too high difference between real and expected closing"
 " balance"
 msgstr ""
+"Procedura usata per visualizzare un messaggio di avviso nel caso il "
+"supervisore voglia chiudere una sessione con una differenza troppo elevata "
+"tra saldo di chiusura reale e atteso"
 
 #. module: point_of_sale
 #. openerp-web
@@ -5375,7 +5380,7 @@ msgstr "Tipo di carta utilizzata"
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_session__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr "Tipo di eccezione attività sul record."
+msgstr "Tipo di attività eccezione sul record."
 
 #. module: point_of_sale
 #: code:addons/point_of_sale/models/pos_session.py:0

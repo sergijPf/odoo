@@ -84,7 +84,7 @@ class AccountPayment(models.Model):
     def _inverse_check_number(self):
         for payment in self:
             if payment.check_number:
-                sequence = payment.journal_id.check_sequence_id
+                sequence = payment.journal_id.check_sequence_id.sudo()
                 sequence.padding = len(payment.check_number)
 
     @api.depends('payment_type', 'journal_id', 'partner_id')
@@ -122,6 +122,7 @@ class AccountPayment(models.Model):
                     FROM account_payment payment
                     JOIN account_move move ON movE.id = payment.move_id
                    WHERE journal_id = %(journal_id)s
+                   AND check_number IS NOT NULL
                 ORDER BY check_number::INTEGER DESC
                    LIMIT 1
             """, {

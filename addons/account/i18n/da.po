@@ -5384,12 +5384,8 @@ msgstr "Føderale stater"
 #. openerp-web
 #: code:addons/account/static/src/js/tours/account.js:0
 #, python-format
-msgid ""
-"Fill in the details of the line.<br><i>Tip: all the details can be set "
-"automatically if you configure your <b>products</b>.</i>"
-msgstr ""
-"Angiv detaljerne for linjen.<br><i>Råd: alle detaljerne kan angives "
-"automatisk hvis du konfigurere dine <b>produkter</b>.</i>"
+msgid "Fill in the details of the line."
+msgstr "Udfyld linjens detaljer."
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_analytic_line__general_account_id
@@ -8646,6 +8642,12 @@ msgstr "Oprindelse Moms Kontant Basis Postering"
 #: model:ir.actions.report,name:account.action_account_original_vendor_bill
 msgid "Original Bills"
 msgstr "Oprindelige regninger"
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.view_move_line_tree
+#: model_terms:ir.ui.view,arch_db:account.view_move_line_tree_grouped
+msgid "Original Currency"
+msgstr "Oprindelig Valuta"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_line__payment_id
@@ -12096,6 +12098,13 @@ msgstr ""
 "tilgodehavende er til leverandør / kundekonti."
 
 #. module: account
+#: code:addons/account/models/account_move.py:0
+#, python-format
+msgid "The Bill/Refund date is required to validate this document."
+msgstr ""
+"Regnings/Reklamations datoen er påkrævet for at validere dette dokument."
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_bank_statement__country_code
 #: model:ir.model.fields,help:account.field_account_bank_statement_line__country_code
 #: model:ir.model.fields,help:account.field_account_journal__country_code
@@ -12136,6 +12145,18 @@ msgstr ""
 #, python-format
 msgid "The account %s (%s) is deprecated."
 msgstr "Kontoen %s (%s) er forældet."
+
+#. module: account
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid ""
+"This account is configured in %(journal_names)s journal(s) (ids "
+"%(journal_ids)s) as payment debit or credit account. This means that this "
+"account's type should be reconcilable."
+msgstr ""
+"Denne konto er konfigureret i %(journal_names)s journal(erne) (ID "
+"%(journal_ids)s) som betalings debet eller kredit konto. Dette betyder at "
+"denne kontos type bør kunne afstemmes."
 
 #. module: account
 #: code:addons/account/models/account_account.py:0
@@ -12447,6 +12468,14 @@ msgid ""
 msgstr ""
 "De følgende faktura vil ikke blive afsendt per email, fordi kunden ikke har "
 "en email adresse."
+
+#. module: account
+#: code:addons/account/models/account_reconcile_model.py:0
+#, python-format
+msgid ""
+"The following regular expression is invalid to create a partner mapping: %s"
+msgstr ""
+"De følgende regulære udtryk er ugyldige i forhold til en partner-mapping: %s"
 
 #. module: account
 #: code:addons/account/models/chart_template.py:0
@@ -14768,6 +14797,12 @@ msgid ""
 msgstr ""
 "Du har defineret en 'Intern Overflyttelses konto' i dit kasseapparats "
 "journal."
+
+#. module: account
+#: code:addons/account/models/account_move.py:0
+#, python-format
+msgid "The entry %s (id %s) is already posted."
+msgstr "Posteringen %s (ID %s) er allerede posteret."
 
 #. module: account
 #: code:addons/account/models/account_move.py:0

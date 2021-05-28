@@ -304,6 +304,8 @@ class StockWarehouseOrderpoint(models.Model):
         to_remove.unlink()
         orderpoints = orderpoints - to_remove
         to_refill = defaultdict(float)
+        all_product_ids = []
+        all_warehouse_ids = []
         qty_by_product_warehouse = self.env['report.stock.quantity'].read_group(
             [('date', '=', fields.date.today()), ('state', '=', 'forecast')],
             ['product_id', 'product_qty', 'warehouse_id'],
@@ -312,7 +314,39 @@ class StockWarehouseOrderpoint(models.Model):
             warehouse_id = group.get('warehouse_id') and group['warehouse_id'][0]
             if group['product_qty'] >= 0.0 or not warehouse_id:
                 continue
+            all_product_ids.append(group['product_id'][0])
+            all_warehouse_ids.append(warehouse_id)
             to_refill[(group['product_id'][0], warehouse_id)] = group['product_qty']
+        if not to_refill:
+            return action
+
+        # Recompute the forecasted quantity for missing product today but at this time
+        # with their real lead days.
+        key_to_remove = []
+
+        # group product by lead_days and warehouse in order to read virtual_available
+        # in batch
+        pwh_per_day = defaultdict(list)
+        for (product, warehouse), quantity in to_refill.items():
+            product = self.env['product.product'].browse(product).with_prefetch(all_product_ids)
+            warehouse = self.env['stock.warehouse'].browse(warehouse).with_prefetch(all_warehouse_ids)
+            rules = product._get_rules_from_location(warehouse.lot_stock_id)
+            lead_days = rules.with_context(bypass_delay_description=True)._get_lead_days(product)[0]
+            pwh_per_day[(lead_days, warehouse)].append(product.id)
+        for (days, warehouse), p_ids in pwh_per_day.items():
+            products = self.env['product.product'].browse(p_ids)
+            qties = products.with_context(
+                warehouse=warehouse.id,
+                to_date=fields.datetime.now() + relativedelta.relativedelta(days=days)
+            ).read(['virtual_available'])
+            for qty in qties:
+                if float_compare(qty['virtual_available'], 0, precision_rounding=product.uom_id.rounding) >= 0:
+                    key_to_remove.append((qty['id'], warehouse.id))
+                else:
+                    to_refill[(qty['id'], warehouse.id)] = qty['virtual_available']
+
+        for key in key_to_remove:
+            del to_refill[key]
         if not to_refill:
             return action
 

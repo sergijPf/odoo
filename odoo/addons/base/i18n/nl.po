@@ -16,7 +16,7 @@
 # Maxim Vandenbroucke <mxv@odoo.com>, 2020
 # Yenthe Van Ginneken <yenthespam@gmail.com>, 2020
 # Odoo Experts Consultants <consultants@odooexperts.nl>, 2021
-# Erwin van der Ploeg (Odoo Experts) <erwin@odooexperts.nl>, 2021
+# Erwin van der Ploeg <erwin@odooexperts.nl>, 2021
 # 
 msgid ""
 msgstr ""
@@ -24,7 +24,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-27 13:50+0000\n"
 "PO-Revision-Date: 2020-09-07 08:09+0000\n"
-"Last-Translator: Erwin van der Ploeg (Odoo Experts) <erwin@odooexperts.nl>, 2021\n"
+"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2021\n"
 "Language-Team: Dutch (https://www.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -3172,8 +3172,8 @@ msgstr ""
 "Koppel module om verloven te integreren in urenstaten\n"
 "================================================\n"
 "\n"
-"Deze module staat toe om automatisch urenstaten in te vullen wanneer werknemers op\n"
-"vakantie zijn. Projecten en taken kunnen op bedrijfsniveau geconfigureerd worden."
+"Deze module staat toe om automatisch urenstaten in te vullen wanneer werknemers met\n"
+"verlof zijn. Projecten en taken kunnen op bedrijfsniveau geconfigureerd worden."
 
 #. module: base
 #: model:ir.module.module,description:base.module_base_automation_hr_contract
@@ -5492,13 +5492,13 @@ msgstr ""
 "in de boekhouding van Odoo.\n"
 "\n"
 "Dit heeft niet de pretentie om de volledige lokalisatie te zijn voor Mexico, dit bevat de minimale\n"
-"data om vanaf 0 te starten in de mexicaanse lokalisatie.\n"
+"data om vanaf 0 te starten in de Mexicaanse lokalisatie.\n"
 "\n"
-"Deze module en zijn inhoud worden regelmatig geüpdatet door het openerp-mexico team.\n"
+"Deze module en zijn inhoud worden regelmatig bijgewerkt door het openerp-mexico team.\n"
 "\n"
 "Met deze module heeft u:\n"
 "\n"
-" - Minimale rekeningschema getest in productie omgevingen.\n"
+" - Minimale rekeningschema getest in productieomgevingen.\n"
 " - Minimale rekeningschema om te voldoen met de SAT_ eisen.\n"
 "\n"
 ".. SAT: http://www.sat.gob.mx/"
@@ -6374,8 +6374,6 @@ msgid ""
 "    "
 msgstr ""
 "\n"
-"*** NOG NIET REVIEWEN ***\n"
-"\n"
 "Inkomende e-mailberichten ophalen van POP/IMAP servers.\n"
 "=====================================================\n"
 "\n"
@@ -6395,8 +6393,8 @@ msgstr ""
 "Just install the relevant application, and you can assign any of these document\n"
 "types (Leads, Project Issues) to your incoming e-mail accounts. New e-mails will\n"
 "automatically spawn new documents of the chosen type, so it's a snap to create a\n"
-"mailbox-to-OpenERP integration. Even better: these documents directly act as mini\n"
-"conversations synchronized by e-mail. You can reply from within OpenERP, and the\n"
+"mailbox-to-Odoo integration. Even better: these documents directly act as mini\n"
+"conversations synchronized by e-mail. You can reply from within Odoo, and the\n"
 "answers will automatically be collected when they come back, and attached to the\n"
 "same *conversation* document.\n"
 "\n"
@@ -23893,6 +23891,20 @@ msgstr ""
 "Modulebewerkingen zijn momenteel niet mogelijk. Probeer het later opnieuw of neem contact op met uw systeembeheerder."
 
 #. module: base
+#: code:addons/base/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"Odoo is unable to merge the PDFs attached to the following records:\n"
+"%s\n"
+"\n"
+"Please exclude them from the selection to continue. It's possible to still retrieve those PDFs by selecting each of the affected records individually, which will avoid merging."
+msgstr ""
+"Odoo is niet in staat de PDF's samen te voegen die bij de volgende records zijn gevoegd:\n"
+"%s\n"
+"\n"
+"Sluit ze uit van de selectie om door te gaan. Het is mogelijk om die pdf's nog steeds op te halen door elk van de betrokken records afzonderlijk te selecteren, waardoor samenvoeging wordt voorkomen."
+
+#. module: base
 #: model:ir.module.module,shortdesc:base.module_odoo_referral
 msgid "Odoo referral program"
 msgstr "Odoo verwijzingsprogramma"
@@ -28832,6 +28844,12 @@ msgid "The internal user in charge of this contact."
 msgstr "De interne gebruiker verantwoordelijk voor dit contract."
 
 #. module: base
+#: code:addons/base/models/res_country.py:106
+#, python-format
+msgid "The layout contains an invalid format key"
+msgstr "De lay-out bevat een ongeldige indelingssleutel"
+
+#. module: base
 #: model:ir.model.fields,help:base.field_ir_model__inherited_model_ids
 msgid "The list of models that extends the current model."
 msgstr "De lijst met modellen welke het huidige module uitbreiden"
@@ -31564,8 +31582,8 @@ msgid ""
 "You can manage the different federal states you are working on from here. "
 "Each state is attached to one country."
 msgstr ""
-"Van hieruit kan u de verschillende federale staten waar u werkt beheren. "
-"Elke staat is gekoppeld met een land."
+"Van hieruit kan u de verschillende federale staten/provincies waar u werkt "
+"beheren. Elke staat is gekoppeld met een land."
 
 #. module: base
 #: code:addons/base/models/res_partner.py:0
@@ -31616,10 +31634,10 @@ msgstr "U kan de supergebruiker niet activeren."
 #. module: base
 #: code:addons/base/models/res_partner.py:0
 #, python-format
-msgid "You cannot archive a contact linked to an internal user."
+msgid "You cannot archive a contact linked to a portal or internal user."
 msgstr ""
-"U kunt een contactpersoon die is gekoppeld aan een interne gebruiker niet "
-"archiveren."
+"U kunt geen contactpersoon archiveren die is gekoppeld aan een portaal of "
+"interne gebruiker."
 
 #. module: base
 #: code:addons/base/models/res_partner.py:0
@@ -31845,7 +31863,7 @@ msgstr "en"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.res_partner_kanban_view
 msgid "at"
-msgstr "op"
+msgstr "bij"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_model_fields__ttype__binary
@@ -31918,7 +31936,7 @@ msgstr "Bijv. Engels"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 msgid "e.g. Mister"
-msgstr "bijvoorbeeld De heer"
+msgstr "Bijv. De heer"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form

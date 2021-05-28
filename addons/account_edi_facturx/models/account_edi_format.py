@@ -45,6 +45,12 @@ class AccountEdiFormat(models.Model):
         self.ensure_one()
         return True if self.code == 'facturx_1_0_05' else super()._is_embedding_to_invoice_pdf_needed()
 
+    def _get_embedding_to_invoice_pdf_values(self, invoice):
+        values = super()._get_embedding_to_invoice_pdf_values(invoice)
+        if values and self.code == 'facturx_1_0_05':
+            values['name'] = 'factur-x.xml'
+        return values
+
     def _export_facturx(self, invoice):
 
         def format_date(dt):
@@ -182,7 +188,8 @@ class AccountEdiFormat(models.Model):
         invoice.move_type = default_move_type
 
         # self could be a single record (editing) or be empty (new).
-        with Form(invoice.with_context(default_move_type=default_move_type)) as invoice_form:
+        with Form(invoice.with_context(default_move_type=default_move_type,
+                                       account_predictive_bills_disable_prediction=True)) as invoice_form:
             # Partner (first step to avoid warning 'Warning! You must first select a partner.').
             partner_type = invoice_form.journal_id.type == 'purchase' and 'SellerTradeParty' or 'BuyerTradeParty'
             elements = tree.xpath('//ram:' + partner_type + '/ram:SpecifiedTaxRegistration/ram:ID', namespaces=tree.nsmap)
