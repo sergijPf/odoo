@@ -41,5 +41,6 @@ setup/win32/static/postgresql*.exe
 /src/
 
 #added by mslf
-venv
+venv*
 *.conf
+backups
