@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_odoo_magento_integrator_odoo_magento_integrator,odoo_magento_integrator.odoo_magento_integrator,model_odoo_magento_integrator_odoo_magento_integrator,base.group_user,1,1,1,1
