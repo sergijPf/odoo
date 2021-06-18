@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<odoo>
+    <record id="view_magento_product_form" model="ir.ui.view">
+        <field name="name">odoo_magento2_wl.view_magento_product_form</field>
+        <field name="model">magento.product.product</field>
+        <field name="inherit_id" ref="odoo_magento2_ept.view_magento_product_form"/>
+        <field name="arch" type="xml">
+            <field name="odoo_product_id" position="after">
+                <field name="categ_id"/>
+            </field>
+        </field>
+    </record>
+</odoo>

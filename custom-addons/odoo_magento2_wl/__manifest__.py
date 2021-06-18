@@ -4,7 +4,7 @@
     'version': '14.0.0.0',
     'category': 'Sales',
     'summary': """
-        Odoo Magento 2.4 connector customization as per Smartino specific needs""",
+        Odoo Magento 2.4 connector customization as per Smartino specific case""",
     'author': "White Label Sp. z o.o.",
     'website': "https://ffflabel.com/",
 
@@ -14,8 +14,8 @@
     # Views
     'data': [
         # 'security/ir.model.access.csv',
-        'views/views.xml',
-        'views/templates.xml',
+        'views/sale_order_view.xml',
+        'views/magento_product_product_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
