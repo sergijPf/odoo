@@ -1,13 +1,25 @@
 <?xml version="1.0" ?>
 <odoo>
-    <record id="view_magento_product_form" model="ir.ui.view">
-        <field name="name">odoo_magento2_wl.view_magento_product_form</field>
+    <record id="magento_product_form_inherit_view" model="ir.ui.view">
+        <field name="name">magento_product_form_inherit_view</field>
         <field name="model">magento.product.product</field>
         <field name="inherit_id" ref="odoo_magento2_ept.view_magento_product_form"/>
         <field name="arch" type="xml">
             <field name="odoo_product_id" position="after">
-                <field name="categ_id"/>
+                <field name="categ_id" string="Odoo Product Category"/>
             </field>
+
+             <field name="product_type" position="after">
+                <field name="attribute_set"/>
+            </field>
+
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <field name="magento_product_id" invisible="1"/>
+                    <button name="export_product_to_magento" type="object" class="oe_highlight" string="Export To Magento"
+                            attrs="{'invisible' : [('magento_product_id','!=',False)]}"/>
+                </header>
+            </xpath>
         </field>
     </record>
 </odoo>
