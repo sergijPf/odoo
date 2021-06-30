@@ -9,10 +9,6 @@
                 <field name="categ_id" string="Odoo Product Category"/>
             </field>
 
-             <field name="product_type" position="after">
-                <field name="attribute_set"/>
-            </field>
-
             <xpath expr="//sheet" position="before">
                 <header>
                     <field name="magento_product_id" invisible="1"/>
@@ -20,6 +16,11 @@
                             attrs="{'invisible' : [('magento_product_id','!=',False)]}"/>
                 </header>
             </xpath>
+
+            <xpath expr="//field[@name='product_template_attribute_value_ids']" position="attributes">
+                <attribute name="readonly">1</attribute>
+            </xpath>
+
         </field>
     </record>
 </odoo>

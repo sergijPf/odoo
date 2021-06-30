@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="product_category_form_inherit_view" model="ir.ui.view">
+            <field name="name">product_category_form_inherit_view</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//group[@name='account_property']" position="after">
+                    <group string="Magento Details" modifiers="{}">
+                        <field name="magento_attr_set"/>
+                        <field name="magento_assigned_attr" widget="many2many_tags" options="{'no_create_edit': True}"/>
+                    </group>
+                </xpath>
+
+            </field>
+        </record>
+    </data>
+</odoo>
