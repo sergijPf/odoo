@@ -94,6 +94,7 @@ class MagentoProductProduct(models.Model):
                     available_attributes,
                     attribute_set_id
                 )
+
             # map simple to config product in magento
             if simple_prod.get('id'):
                 is_assigned = self.assign_attr_to_config_product(
@@ -346,17 +347,17 @@ class MagentoProductProduct(models.Model):
 
         #check if config.product assign attributes are the same in magento and odoo
         attr_options = config_prod_magento.get("extension_attributes").get("configurable_product_options")
-        prod_attr_magento = { attr["label"].strip().upper() for attr in attr_options if attr }
-        prod_attr_odoo = { attr.strip().upper() for attr in config_prod_assigned_attr if attr }
+        prod_attr_magento = {}
         if attr_options:
+            prod_attr_magento = { self.get_attr_name_by_id(available_attributes, attr.get("attribute_id")) for attr in attr_options if attr }
+            prod_attr_odoo = { attr.strip().upper() for attr in config_prod_assigned_attr if attr }
             if prod_attr_odoo != prod_attr_magento:
                 print("unlink needed")
                 for opt in attr_options:
                     if opt.get("label").upper().strip() not in [o.upper().strip() for o in config_prod_assigned_attr]:
                         try:
                             api_url = '/V1/configurable-products/%s/options/%s' % (config_product_sku, opt.get("id"))
-                            res = req(magento_instance, api_url, 'DELETE')
-                            print("delete_assign_attr", res)
+                            req(magento_instance, api_url, 'DELETE')
                         except Exception as error:
                             raise UserError(_("Error while unlinking Assign Attribute of Configurable Product in Magento: " +
                                               str(error)))
@@ -365,10 +366,10 @@ class MagentoProductProduct(models.Model):
         for attr_val in product_attributes:
             if attr_val.attribute_id.name in config_prod_assigned_attr:
                 if attr_val.attribute_id.name.strip().upper() in prod_attr_magento:
-                    print("already assigned")
                     res = True
                     continue
                 else:
+                    #valid for new "assign" attributes to be created in Magento
                     for attr in available_attributes:
                         if attr_val.attribute_id.name.strip().upper() == str(attr['default_label']).strip().upper():
                             for o in attr['options']:
@@ -468,3 +469,8 @@ class MagentoProductProduct(models.Model):
         for attr in config_prod_assigned_attr:
             if attr not in simple_prod_attributes:
                 raise UserError("Product \"%s\" has to have \"%s\" attribute defined."%(prod_name,attr))
+
+    def get_attr_name_by_id(self, available_attributes, attr_id):
+        for attr in available_attributes:
+            if str(attr.get('attribute_id')) == str(attr_id):
+                return str(attr.get('default_label')).strip().upper()
