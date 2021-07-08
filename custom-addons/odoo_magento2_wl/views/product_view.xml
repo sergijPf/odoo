@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record model="ir.ui.view" id="product_common_vendor_stock_ept_form_inherit_view">
+        <field name="name">Common Vendor Stock Ept Inherited</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="common_connector_library.product_form_view_common_vendor_stock_ept"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[last()]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

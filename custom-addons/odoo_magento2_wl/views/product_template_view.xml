@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record model="ir.ui.view" id="product_common_product_template_image_ept_form_inherit_view">
+        <field name="name">product.common.template.image.ept_inherit_form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="common_connector_library.product_form_view_common_product_template_image_ept"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[last()]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

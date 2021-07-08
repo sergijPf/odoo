@@ -16,7 +16,11 @@
         # 'security/ir.model.access.csv',
         'views/sale_order_view.xml',
         'views/magento_product_product_view.xml',
+        'views/magento_product_template_view.xml',
+        'views/product_template_view.xml',
+        'views/product_view.xml',
         'views/product_category_view.xml',
+        'wizard_views/magento_import_export_operation_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

@@ -16,6 +16,24 @@ class MagentoProductProduct(models.Model):
     """
     _inherit = 'magento.product.product'
 
+    # is_exported_to_magento = fields.Boolean(string="Exported to Magento")
+
+    def prepare_products_export_to_magento(self):
+        active_product_ids = self._context.get("active_ids", [])
+        magento_products = self.env["magento.product.product"].browse(active_product_ids)
+
+        for prod in magento_products:
+            prod.export_product_to_magento()
+
+        return {
+            'effect': {
+                'fadeout': 'slow',
+                'message': " 'Export to Magento' Process Completed Successfully! {}".format(""),
+                'img_url': '/web/static/src/img/smile.svg',
+                'type': 'rainbow_man',
+            }
+        }
+
     def export_product_to_magento(self):
         attribute_set_id = self.get_attribute_set_id_by_name(
             self.magento_instance_id,
@@ -46,9 +64,6 @@ class MagentoProductProduct(models.Model):
         )
         if not is_attrib_exist:
             raise UserError("Please check product attributes")
-
-        config_prod = {}
-        simple_prod = {}
 
         # check Odoo Product Category is config.Product in Magento and create if not
         config_prod = self.check_odoo_product_category_is_config_product_in_magento(
@@ -114,15 +129,6 @@ class MagentoProductProduct(models.Model):
                     )
         else:
             raise UserError("Odoo product category wasn't created nor updated as config.product in Magento.")
-
-        return {
-            'effect': {
-                'fadeout': 'slow',
-                'message': " 'Export to Magento' Process Completed Successfully! {}".format(""),
-                'img_url': '/web/static/src/img/smile.svg',
-                'type': 'rainbow_man',
-            }
-        }
 
 
     def check_odoo_product_category_is_config_product_in_magento(self, magento_instance, magento_sku):
@@ -287,8 +293,8 @@ class MagentoProductProduct(models.Model):
             raise UserError(_("Error while new Simple Product creation in Magento: " + str(error)))
 
         # export product images to Magento
-        if response and len(self.odoo_product_id.ept_image_ids):
-            self.export_media_to_magento(magento_instance, response.get("sku"), self.odoo_product_id.ept_image_ids)
+        if response and len(self.odoo_product_id.product_template_image_ids):
+            self.export_media_to_magento(magento_instance, response.get("sku"), self.odoo_product_id.product_template_image_ids)
 
         return response
 
@@ -317,8 +323,8 @@ class MagentoProductProduct(models.Model):
             raise UserError(_("Error while Simple product update in Magento: " + str(error)))
 
         # export product images to Magento
-        if response and len(self.odoo_product_id.ept_image_ids):
-            self.export_media_to_magento(magento_instance, response.get("sku"), self.odoo_product_id.ept_image_ids)
+        if response and len(self.odoo_product_id.product_template_image_ids):
+            self.export_media_to_magento(magento_instance, response.get("sku"), self.odoo_product_id.product_template_image_ids)
 
         return response
 
@@ -503,15 +509,15 @@ class MagentoProductProduct(models.Model):
 
     def export_media_to_magento(self, magento_instance, product_sku, odoo_images):
         for img in odoo_images:
-            attachment = self.env['ir.attachment'].sudo().search([('res_field', '=', 'image'),
-                                                                   ('res_model', '=', 'common.product.image.ept'),
+            attachment = self.env['ir.attachment'].sudo().search([('res_field', '=', 'image_256'),
+                                                                   ('res_model', '=', 'product.image'),
                                                                    ('res_id', '=', img.id)
                                                                    ])
             image = {
                 "entry": {
                     "media_type": "image",
                     "content": {
-                        "base64EncodedData": img.image.decode('utf-8'),
+                        "base64EncodedData": img.image_256.decode('utf-8'),
                         "type": attachment.mimetype,
                         "name": attachment.mimetype.replace("/",".")
                     }
