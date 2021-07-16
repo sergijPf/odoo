@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import json
+
 from odoo import fields, models, _
 from datetime import datetime
 from odoo.exceptions import UserError
@@ -23,34 +25,12 @@ class MagentoProductProduct(models.Model):
         export_products = self.env["magento.product.product"].browse(active_product_ids)
 
         # refactoring
-        ml_export_products = {}
+        ml_export_conf_products = {}
+        ml_export_simple_products = {}
         attr_sets = {}
         magento_products = {}
 
         for mi in {i.magento_instance_id: {} for i in export_products}:
-            # create combined dict of selected products for export to Magento:
-            # dict_name = {
-            #   instance_name: {
-            #       config_prod_name: {
-            #           related_prod_list: [],
-            #           attr_set: name,
-            #           config.attr: []
-            #       }
-            #   }
-            # }
-            ml_export_products.update({
-                mi.name: {
-                    c.odoo_product_id.categ_id.name: {
-                        # 'related_products': {
-                        #     s.magento_sku for s in export_products if
-                        #     s.odoo_product_id.categ_id.name == c.odoo_product_id.categ_id.name
-                        # },
-                        'attribute_set': c.odoo_product_id.categ_id.magento_attr_set,
-                        'config_attr': [a.name for a in c.odoo_product_id.categ_id.magento_assigned_attr if a],
-                        'children': []
-                    } for c in export_products if mi.id == c.magento_instance_id.id
-                }
-            })
 
             # create unique attr_sets and get their id/attribute details(options)
             attr_sets.update({
@@ -67,21 +47,55 @@ class MagentoProductProduct(models.Model):
                     'attributes': self.get_available_attributes_from_magento(mi, attr_sets[mi.name][a_set].get('id'))
                 })
 
+            # create combined dict of selected products to export in Magento:
+            # magento_layer_dict = {
+            #   instance_name: {
+            #       config_prod_name: {
+            #           related_simple_prod_list: [],
+            #           attr_set: name,
+            #           config_attr: [],
+            #           config_prod_children: [],
+            #           is_in_magento: True/False
+            #       }
+            #   }
+            # }
+            ml_export_conf_products.update({
+                mi.name: {
+                    c.odoo_product_id.categ_id.name: {
+                        'attribute_set_id': attr_sets[mi.name][c.odoo_product_id.categ_id.magento_attr_set]['id'],
+                        'config_attr': [a.name for a in c.odoo_product_id.categ_id.magento_assigned_attr if a],
+                        'children': [],
+                        'is_in_magento': False
+                    } for c in export_products if mi.id == c.magento_instance_id.id
+                }
+            })
+
+            ml_export_simple_products.update({
+                mi.name: {
+                    s.magento_sku: {
+                        'attribute_set_id': attr_sets[mi.name][s.odoo_product_id.categ_id.magento_attr_set]['id'],
+                        'is_in_magento': False,
+                        'is_ok_to_export': True
+                    } for s in export_products if mi.id == s.magento_instance_id.id
+                }
+            })
+
             # get selected products and their config's(categ.) product from magento
             ml_config_products = list(
                 {c.odoo_product_id.categ_id for c in export_products if mi.id == c.magento_instance_id.id})
             ml_simple_products = [s for s in export_products if mi.id == s.magento_instance_id.id]
             magento_products.update({
-                mi.name: self.get_products_from_magento(mi, [s.magento_sku for s in
-                                                             ml_simple_products] + [c.name for c in ml_config_products])
+                mi.name: self.get_products_from_magento(mi, [s.magento_sku for s in ml_simple_products] +
+                                                        [c.name for c in ml_config_products])
             })
             mag_prod_list = magento_products[mi.name]['items']
             mag_prod_sku_list = [p.get('sku') for p in mag_prod_list]
 
             # check if config products exist in Magento and create/update them.
             for prod in ml_config_products:
-                attr_set_id = attr_sets[mi.name][prod.magento_attr_set]['id']
                 if prod.name in mag_prod_sku_list:
+                    attr_set_id = attr_sets[mi.name][prod.magento_attr_set]['id']
+                    ml_export_conf_products[mi.name][prod.name]['is_in_magento'] = True
                     conf_prod = next(
                         (x for x in mag_prod_list if x.get('sku') == prod.name and x.get('type_id') == 'configurable'),
                         {})
@@ -95,25 +109,36 @@ class MagentoProductProduct(models.Model):
                     else:
                         raise UserError(
                             _("Product with the following sku - \"%s\" already exists in Magento. " % prod.name))
-                else:
-                    mag_prod_list.append(self.create_new_configurable_product_in_magento(mi, prod.name, attr_set_id))
 
-            # update children field for config products with data from Magento
-            for ml_conf_prod in ml_export_products[mi.name]:
-                simple_prod_list = [i.get('sku') for i in self.get_config_children(mi, ml_conf_prod)]
-                ml_export_products[mi.name][ml_conf_prod].update({'children': simple_prod_list})
+            # update children fields for config products with data from Magento
+            for ml_conf_prod in ml_export_conf_products[mi.name]:
+                # update config's children if is_in_magento
+                if ml_export_conf_products[mi.name][ml_conf_prod].get('is_in_magento'):
+                    simple_prod_list = [i.get('sku') for i in self.get_config_children(mi, ml_conf_prod)]
+                    ml_export_conf_products[mi.name][ml_conf_prod].update({'children': simple_prod_list})
+
+            new_conf_prod_list = [{c: ml_export_conf_products[mi.name][c]} for c in ml_export_conf_products[mi.name] if
+                                  not ml_export_conf_products[mi.name][c].get('is_in_magento')]
+            bulk_info = self.create_new_bulk_of_conf_products_in_magento(mi, new_conf_prod_list)
+            # mag_prod_list.extend(self.create_new_bulk_of_conf_products_in_magento(mi, new_conf_prod_list))
+            # if not bulk_info['errors']:
+            #     status = self.get_bulk_detailed_status(mi, bulk_info['bulk_uuid'])
+            # mag_prod_list.append(self.create_new_configurable_product_in_magento(mi, prod.name, attr_set_id))
 
             # get storeViews from Magento
             magento_storeviews = self.get_storeviews_from_magento(mi) or []
 
             # check simple product exist in Magento and create/update them
             for prod in ml_simple_products:
-                # Check if Simple product has attribute(s) to be used as assigned attributes while linking with Config.product
-                self.check_product_attr_is_in_assigned_attributes(
-                    [a.attribute_id.name for a in prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id],
-                    ml_export_products[mi.name][prod.categ_id.name]['config_attr'],
+                # Check if Simple product has attribute(s) to be used as assigned attributes
+                # while linking with Config.product
+                check_attr = self.check_product_attr_is_in_assigned_attributes(
+                    [a.attribute_id.name for a in
+                     prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id],
+                    ml_export_conf_products[mi.name][prod.categ_id.name]['config_attr'],
                     prod.magento_sku
                 )
+                ml_export_simple_products[mi.name][prod.magento_sku]['is_ok_to_export'] = check_attr
 
                 attr_set_id = attr_sets[mi.name][prod.odoo_product_id.categ_id.magento_attr_set]['id']
                 available_attributes = attr_sets[mi.name][prod.odoo_product_id.categ_id.magento_attr_set]['attributes']
@@ -125,11 +150,18 @@ class MagentoProductProduct(models.Model):
                     available_attributes,
                     magento_storeviews
                 )
+                ml_export_simple_products[mi.name][prod.magento_sku]['is_ok_to_export'] = is_attrib_exist and \
+                                                                                          ml_export_simple_products[
+                                                                                              mi.name][
+                                                                                              prod.magento_sku][
+                                                                                              'is_ok_to_export']
                 # attribute doesn't exist on Magento and have to be created manually
                 if not is_attrib_exist:
                     raise UserError("Please check product attributes")
 
                 if prod.magento_sku in mag_prod_sku_list:
+                    ml_export_simple_products[mi.name][prod.magento_sku]['is_in_magento'] = True
+
                     simp_prod = next(
                         (x for x in mag_prod_list if x.get('sku') == prod.magento_sku and x.get('type_id') == 'simple'),
                         {})
@@ -138,26 +170,22 @@ class MagentoProductProduct(models.Model):
                         odoo_update_date2 = datetime.strftime(prod.odoo_product_id.write_date, MAGENTO_DATETIME_FORMAT)
                         if odoo_update_date1 > simp_prod.get("updated_at") or \
                                 odoo_update_date2 > simp_prod.get("updated_at"):
-                            simp_prod = self.update_simple_product_in_magento(
-                                mi,
-                                prod,
-                                prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id,
-                                available_attributes,
-                                attr_set_id)
+                            self.update_simple_product_in_magento(mi, prod,
+                                                                  prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id,
+                                                                  available_attributes, attr_set_id)
                     else:
                         raise UserError("The Product with such sku is already created in Magento. "
                                         "Please check it. (Note it's type isn't Simple Product.) ")
-                else:
-                    simp_prod = self.create_new_simple_product_in_magento(
-                        mi,
-                        prod,
-                        prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id,
-                        available_attributes,
-                        attr_set_id
-                    )
+                    # else:
+                    # simp_prod = self.create_new_simple_product_in_magento(
+                    #     mi,
+                    #     prod,
+                    #     prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id,
+                    #     available_attributes,
+                    #     attr_set_id
+                    # )
 
-                # map simple to config product in magento
-                if simp_prod.get('id'):
+                    # map simple to config product in magento
                     config_prod = next(
                         (x for x in mag_prod_list if
                          x.get('sku') == prod.categ_id.name and x.get('type_id') == 'configurable'), {})
@@ -166,16 +194,29 @@ class MagentoProductProduct(models.Model):
                         prod.categ_id.name,
                         prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id,
                         config_prod,
-                        ml_export_products[mi.name][prod.categ_id.name]['config_attr'],
+                        ml_export_conf_products[mi.name][prod.categ_id.name]['config_attr'],
                         available_attributes
                     )
                     if is_assigned:
                         self.link_simple_to_config_product_in_magento(
                             mi,
                             prod.categ_id.name,
-                            ml_export_products[mi.name][prod.categ_id.name]['children'],
-                            simp_prod.get('sku')
+                            ml_export_conf_products[mi.name][prod.categ_id.name]['children'],
+                            prod.magento_sku
                         )
+            new_simple_prod_dict = {}
+            for s in ml_export_simple_products[mi.name]:
+                if not ml_export_simple_products[mi.name][s]['is_in_magento'] and ml_export_simple_products[mi.name][s]['is_ok_to_export']:
+                    new_simple_prod_dict.update({s: ml_export_simple_products[mi.name][s]})
+            print(new_simple_prod_dict)
+            # return
+            # new_simple_prod_dict = {{s: ml_export_simple_products[mi.name][s]} for s in
+            #                         ml_export_simple_products[mi.name] if
+            #                         not ml_export_simple_products[mi.name][s]['is_in_magento'] and
+            #                         ml_export_simple_products[mi.name][s]['is_ok_to_export']}
+            bulk_info = self.create_new_bulk_of_simple_products_in_magento(mi, ml_simple_products, new_simple_prod_dict,
+                                                                           attr_sets[mi.name])
+            print(bulk_info)
 
         return {
             'effect': {
@@ -523,7 +564,7 @@ class MagentoProductProduct(models.Model):
                             req(magento_instance, api_url, 'DELETE')
                         except Exception as error:
                             raise UserError(_("Error while unlinking Assign Attribute of %s "
-                                              "Config.Product in Magento: "%config_product_sku + str(error)))
+                                              "Config.Product in Magento: " % config_product_sku + str(error)))
 
         # assign new options to config.product with relevant info from Magento
         for attr_val in product_attributes:
@@ -636,7 +677,9 @@ class MagentoProductProduct(models.Model):
                                                      prod_sku):
         for attr in config_prod_assigned_attr:
             if attr not in simple_prod_attributes:
-                raise UserError("Product \"%s\" has to have \"%s\" attribute defined." % (prod_sku, attr))
+                return False
+                # raise UserError("Product \"%s\" has to have \"%s\" attribute defined." % (prod_sku, attr))
+        return True
 
     def get_attr_name_by_id(self, available_attributes, attr_id):
         for attr in available_attributes:
@@ -696,4 +739,81 @@ class MagentoProductProduct(models.Model):
             response = req(magento_instance, api_url)
         except Exception as error:
             response = []
+        return response
+
+    def create_new_bulk_of_conf_products_in_magento(self, magento_instance, config_products_list):
+        data = []
+
+        for prod in config_products_list:
+            prod_sku = str(list(prod.keys())[0])
+            data.append({
+                "product": {
+                    "sku": prod_sku,
+                    "name": prod_sku.upper(),
+                    "attribute_set_id": prod[prod_sku]['attribute_set_id'],
+                    "status": 1,  # Enabled
+                    "visibility": 4,  # Catalog, Search
+                    "type_id": "configurable",
+                    "custom_attributes": []
+                }
+            })
+
+        try:
+            api_url = '/async/bulk/V1/products'
+            response = req(magento_instance, api_url, 'POST', data)
+        except Exception as error:
+            raise UserError(_("Error while new Configurable Product creation in Magento: " + str(error)))
+
+        return response
+
+    def get_bulk_detailed_status(self, magento_instance, bulk_uuid):
+        try:
+            api_url = '/V1/bulk/%s/detailed-status' % bulk_uuid
+            response = req(magento_instance, api_url)
+        except Exception as error:
+            raise UserError(_("Error while getting bulk detailed-status: " + str(error)))
+
+        return response
+
+    def create_new_bulk_of_simple_products_in_magento(self, magento_instance, odoo_products, ml_export_simple_products,
+                                                      available_attributes_dict):
+        data = []
+
+        for prod in odoo_products:
+            if prod.magento_sku in ml_export_simple_products.keys():
+                custom_attributes = self.map_product_attributes_from_magento(
+                    prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id,
+                    available_attributes_dict[prod.odoo_product_id.categ_id.magento_attr_set]['attributes']
+                )
+                data.append({
+                    "product": {
+                        "sku": prod.magento_sku,
+                        "name": prod.magento_product_name,  # update to x_magento_name
+                        "attribute_set_id": ml_export_simple_products[prod.magento_sku]['attribute_set_id'],
+                        "price": prod.lst_price,
+                        "status": 1,  # Enabled
+                        "visibility": 4,  # Catalog, Search
+                        "type_id": "simple",
+                        "weight": prod.weight,
+                        "extension_attributes": {
+                            "stock_item": {
+                                "qty": prod.qty_available,
+                                "is_in_stock": "true"
+                            }
+                        },
+                        "custom_attributes": custom_attributes
+                    }
+                })
+
+        try:
+            api_url = '/async/bulk/V1/products'
+            response = req(magento_instance, api_url, 'POST', data)
+        except Exception as error:
+            raise UserError(_("Error while new Simple Products creation in Magento: " + str(error)))
+
+        # export product images to Magento
+        # if response and len(odoo_products.odoo_product_id.product_template_image_ids):
+        #     self.export_media_to_magento(magento_instance, response.get("sku"),
+        #                                  odoo_products.odoo_product_id.product_template_image_ids)
+
         return response
