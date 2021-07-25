@@ -8,8 +8,9 @@
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='account_property']" position="after">
                     <group name="magento_details" string="Magento Details" modifiers="{}">
-                        <field name="magento_attr_set"/>
+                        <field name="magento_attr_set" required="1"/>
                         <field name="magento_assigned_attr" widget="many2many_tags" options="{'no_create_edit': True}"/>
+                        <field name="magento_export_date" readonly="1"/>
                     </group>
                 </xpath>
 
