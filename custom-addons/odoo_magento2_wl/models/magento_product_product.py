@@ -59,6 +59,7 @@ class MagentoProductProduct(models.Model):
                         'export_date_to_magento': s.magento_export_date,
                         'latest_update_date': s.write_date
                         if s.write_date > s.odoo_product_id.write_date else s.odoo_product_id.write_date,
+                        'magento_prod_id': '',
                         'magento_update_date': '',
                         'to_export': True
                     } for s in export_products if mi.id == s.magento_instance_id.id
@@ -89,21 +90,31 @@ class MagentoProductProduct(models.Model):
                 mi.name: self.get_products_from_magento(mi, ml_simp_products_dict)
             })
 
-            # add update date from Magento to conf/simp dict
+            # add update conf/simp dictionaries with Magento data
             for prod in magento_conf_products[mi.name]:
-                ml_conf_products_dict[mi.name][prod.get("sku")].update({
+                prod_sku = prod.get("sku")
+                ml_conf_products_dict[mi.name][prod_sku].update({
+                    'magento_type_id': prod.get('type_id'),
+                    'magento_attr_set_id': prod.get("attribute_set_id"),
+                    'magento_conf_prod_options': prod.get("extension_attributes").get("configurable_product_options"),
+                    'children': prod.get("extension_attributes").get("configurable_product_links"),
                     'magento_update_date': prod.get("updated_at")
                 })
             for prod in magento_simp_products[mi.name]:
                 ml_simp_products_dict[mi.name][prod.get("sku")].update({
+                    'magento_type_id': prod.get('type_id'),
+                    'magento_prod_id': prod.get("id"),
                     'magento_update_date': prod.get("updated_at")
                 })
 
+            del magento_conf_products
+            del magento_simp_products
+
             # update 'to_export' field for products don't need to be exported
-            self.check_config_products_to_export(mi.name, ml_conf_products_dict, magento_conf_products, attr_sets)
+            self.check_config_products_to_export(mi.name, ml_conf_products_dict, attr_sets)
             self.check_simple_products_to_export(mi.name, ml_simp_products_dict, ml_conf_products_dict)
 
-            # get selected products and their configurable products from Magento if already exist
+            # filter selected products and their configurable products to be exported to Magento
             ml_list_of_conf_prod = list({
                 c.odoo_product_id.categ_id for c in export_products
                 if mi.id == c.magento_instance_id.id and
@@ -135,12 +146,11 @@ class MagentoProductProduct(models.Model):
 
                         # check & update (PUT) every single conf.product if it exists in Magento and there are no errors
                         if ml_conf_products_dict[mi.name][prod.name]['magento_update_date']:
-                            conf_prod = next((x for x in magento_conf_products[mi.name] if x.get('sku') == prod.name and
-                                              x.get('type_id') == 'configurable'), {})
-                            if conf_prod:
+                            if ml_conf_products_dict[mi.name][prod.name]['magento_type_id'] == 'configurable':
                                 # check if assign attributes are the same in Magento and Odoo
+                                mag_attr_options = ml_conf_products_dict[mi.name][prod.name]['magento_conf_prod_options']
                                 check_assign_attr = self.check_config_product_assign_attributes(
-                                    conf_prod,
+                                    mag_attr_options,
                                     attr_sets[mi.name][prod.magento_attr_set]['attributes'],
                                     prod_conf_attr
                                 )
@@ -151,11 +161,17 @@ class MagentoProductProduct(models.Model):
                                     ml_conf_products_dict,
                                     check_assign_attr
                                 )
-                                # update conf_prod in mag_conf_prod_list, later will be used while linking with simple prod
+                                # update magento data in ml_conf_products_dict,
+                                # later will be used while linking with simple prod
                                 if conf_prod:
-                                    for p in range(len(magento_conf_products[mi.name])):
-                                        if magento_conf_products[mi.name][p]['sku'] == conf_prod['sku']:
-                                            magento_conf_products[mi.name].insert(p, conf_prod)
+                                    attr_opt = conf_prod.get("extension_attributes").get("configurable_product_options")
+                                    children = conf_prod.get("extension_attributes").get("configurable_product_links")
+                                    ml_conf_products_dict[mi.name][prod.name].update({
+                                        'magento_attr_set_id': conf_prod.get("attribute_set_id"),
+                                        'magento_conf_prod_options': attr_opt,
+                                        'children': children,
+                                        'magento_update_date': conf_prod.get("updated_at")
+                                    })
                             else:
                                 ml_conf_products_dict[mi.name][prod.name]['log_message'] += \
                                     "Product with the following sku - \"%s\" already exists in Magento. " \
@@ -182,16 +198,6 @@ class MagentoProductProduct(models.Model):
             # if no configurable and simple products to export - skip
             if not ml_list_of_conf_prod and not ml_list_of_simp_prod:
                 continue
-
-            # update ml_conf_products_dict's children field with data from Magento
-            for conf_prod in ml_conf_products_dict[mi.name]:
-                # update config's children if is in magento
-                if ml_conf_products_dict[mi.name][conf_prod]['magento_update_date'] and \
-                        not ml_conf_products_dict[mi.name][conf_prod]['log_message']:
-                    mag_prod = next(
-                        (x for x in magento_conf_products[mi.name] if conf_prod == x.get("sku")), {})
-                    simple_prod_list = mag_prod.get("extension_attributes").get("configurable_product_links")
-                    ml_conf_products_dict[mi.name][conf_prod].update({'children': simple_prod_list})
 
             # check if product attributes of all selected simple products exist in Magento
             # logs error when product has no attributes and when needed - creates new attribute options(swatch)
@@ -232,9 +238,7 @@ class MagentoProductProduct(models.Model):
                     prod_attr_set = prod.odoo_product_id.categ_id.magento_attr_set
                     available_attributes = attr_sets[mi.name][prod_attr_set]['attributes']
                     attr_set_id = attr_sets[mi.name][prod_attr_set]['id']
-                    simp_prod = next((x for x in magento_simp_products[mi.name] if
-                                      x.get('sku') == prod.magento_sku and x.get('type_id') == 'simple'), {})
-                    if simp_prod:
+                    if ml_simp_products_dict[mi.name][prod.magento_sku]['magento_type_id'] == 'simple':
                         self.update_single_simple_product_in_magento(
                             mi,
                             prod,
@@ -252,12 +256,9 @@ class MagentoProductProduct(models.Model):
 
                     # choose related configurable product from Magento product list in order to assign conf. attributes
                     # to it and to link with simple product
-                    config_prod = next((x for x in magento_conf_products[mi.name] if
-                                        x.get('sku') == prod.categ_id.name and x.get('type_id') == 'configurable'), {})
                     self.assign_attr_to_config_product(
                         mi,
                         prod,
-                        config_prod,
                         available_attributes,
                         ml_conf_products_dict
                     )
@@ -266,15 +267,15 @@ class MagentoProductProduct(models.Model):
                             mi,
                             prod,
                             ml_conf_products_dict[mi.name][prod.categ_id.name]['children'],
-                            simp_prod.get("id"),
                             ml_simp_products_dict
                         )
 
                     # check if simple product assigned to any other selected config.product than current one and unlink it
                     for conf_prod in ml_conf_products_dict[mi.name]:
-                        if conf_prod != prod.categ_id.name and simp_prod.get("id") in \
+                        prod_id = ml_simp_products_dict[mi.name][prod.magento_sku]['magento_prod_id']
+                        if conf_prod != prod.categ_id.name and prod_id in \
                                 ml_conf_products_dict[mi.name][conf_prod]['children']:
-                            self.unlink_simple_and_config_prod(mi, simp_prod.get("sku"), conf_prod)
+                            self.unlink_simple_and_config_prod(mi, prod.magento_sku, conf_prod)
 
             # process mass upload of simple products to Magento, assign attributes to config.products and link them
             new_simple_prod = {}
@@ -320,7 +321,7 @@ class MagentoProductProduct(models.Model):
             }
         }
 
-    def check_config_products_to_export(self, mi_name, ml_conf_products_dict, magento_conf_products, attr_sets):
+    def check_config_products_to_export(self, mi_name, ml_conf_products_dict, attr_sets):
         for prod in ml_conf_products_dict[mi_name]:
             if ml_conf_products_dict[mi_name][prod]['log_message']:
                 ml_conf_products_dict[mi_name][prod]['to_export'] = False
@@ -340,14 +341,14 @@ class MagentoProductProduct(models.Model):
                 if exp_date_c > upd_date_c:
                     if mag_date_c > exp_date_c:
                         # check if assign attributes and attribute-set are the same in Magento and Odoo
-                        conf_prod = next((x for x in magento_conf_products[mi_name] if x.get('sku') == prod and
-                                          x.get('type_id') == 'configurable'), {})
-                        if conf_prod:
+                        if ml_conf_products_dict[mi_name][prod]['magento_type_id'] == 'configurable':
                             attr_set_name = ml_conf_products_dict[mi_name][prod]['attribute_set']
-                            if conf_prod.get("attribute_set_id") == attr_sets[mi_name][attr_set_name]['id']:
+                            mag_attr_set_id = ml_conf_products_dict[mi_name][prod]['magento_attr_set_id']
+                            if mag_attr_set_id == attr_sets[mi_name][attr_set_name]['id']:
                                 if prod['attribute_set']:
+                                    mag_attr_options = ml_conf_products_dict[mi_name][prod]['magento_conf_prod_options']
                                     check_assign_attr = self.check_config_product_assign_attributes(
-                                        conf_prod,
+                                        mag_attr_options,
                                         attr_sets[mi_name][attr_set_name]['attributes'],
                                         ml_conf_products_dict[mi_name][prod]['config_attr']
                                     )
@@ -377,7 +378,9 @@ class MagentoProductProduct(models.Model):
             if exp_date_s:
                 if exp_date_s > upd_date_s and exp_date_s > upd_date_c:
                     if mag_date_s > exp_date_s:
-                        ml_simp_products_dict[mi_name][prod]['to_export'] = False
+                        if ml_simp_products_dict[mi_name][prod]['magento_prod_id'] in \
+                                ml_conf_products_dict[mi_name][categ_name]['children']:
+                            ml_simp_products_dict[mi_name][prod]['to_export'] = False
 
     def update_single_conf_product_in_magento(self, magento_instance, magento_sku, attribute_set_id, ml_conf_products,
                                               check_assign_attr):
@@ -527,8 +530,7 @@ class MagentoProductProduct(models.Model):
 
         return custom_attributes
 
-    def assign_attr_to_config_product(self, magento_instance, product, conf_prod_magento, available_attributes,
-                                      ml_conf_products):
+    def assign_attr_to_config_product(self, magento_instance, product, available_attributes, ml_conf_products):
         """
         Assigns attributes to configurable product in Magento, in order to link it further
         """
@@ -546,7 +548,7 @@ class MagentoProductProduct(models.Model):
         }
 
         # check if config.product "assign" attributes are the same in magento and odoo
-        attr_options = conf_prod_magento.get("extension_attributes").get("configurable_product_options")
+        attr_options = ml_conf_products[magento_instance.name][config_product_sku]['magento_conf_prod_options']
         prod_attr_magento = {}
         if attr_options:
             prod_attr_magento = {self.get_attr_name_by_id(available_attributes, attr.get("attribute_id")) for attr in
@@ -592,9 +594,8 @@ class MagentoProductProduct(models.Model):
                                             'log_message'] += txt
                                     break
 
-    def check_config_product_assign_attributes(self, conf_prod_magento, available_attributes, conf_prod_assigned_attr):
+    def check_config_product_assign_attributes(self, mag_attr_options, available_attributes, conf_prod_assigned_attr):
         """Check if config.product "assign" attributes are the same in Magento and Odoo"""
-        mag_attr_options = conf_prod_magento.get("extension_attributes").get("configurable_product_options")
         prod_attr_magento = {self.get_attr_name_by_id(available_attributes, attr.get("attribute_id")) for attr in
                              mag_attr_options if attr}
         prod_attr_odoo = {attr.strip().upper() for attr in conf_prod_assigned_attr if attr}
@@ -603,13 +604,13 @@ class MagentoProductProduct(models.Model):
         return False
 
     def link_simple_to_config_product_in_magento(self, magento_instance, product, config_product_children,
-                                                 simple_prod_id, ml_simp_products):
+                                                 ml_simp_products):
         """Links simple product to configurable product in Magento"""
         config_product_sku = product.categ_id.name
         simple_product_sku = product.magento_sku
 
         # if already linked, skip
-        if simple_prod_id in config_product_children:
+        if ml_simp_products[magento_instance.name][simple_product_sku]['magento_prod_id'] in config_product_children:
             return
 
         # if not linked
