@@ -13,7 +13,7 @@ class AccountTaxCode(models.Model):
         @return : Tax_ids
         @author: Haresh Mori on dated 10-Dec-2018
         """
-        tax_ids = self.search(
+        tax_ids = self.with_context(active_test=False).search(
             [('price_include', '=', is_tax_included),
              ('type_tax_use', 'in', ['sale']),
              ('amount', '>=', rate - 0.001),
@@ -21,7 +21,7 @@ class AccountTaxCode(models.Model):
         if tax_ids:
             return tax_ids[0]
         # try to find a tax with less precision
-        tax_ids = self.search(
+        tax_ids = self.with_context(active_test=False).search(
             [('price_include', '=', is_tax_included),
              ('type_tax_use', 'in', ['sale']),
              ('amount', '>=', rate - 0.01),

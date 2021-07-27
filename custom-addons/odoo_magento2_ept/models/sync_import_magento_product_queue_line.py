@@ -7,6 +7,7 @@ import json
 import time
 from datetime import timedelta, datetime
 from odoo import models, fields
+SYNC_IMPORT_MAGENTO_PRODUCT_QUEUE = "sync.import.magento.product.queue"
 
 
 class SyncImportMagentoProductQueueLine(models.Model):
@@ -17,7 +18,7 @@ class SyncImportMagentoProductQueueLine(models.Model):
     _description = "Sync/ Import Product Queue Line"
     _rec_name = "product_sku"
     sync_import_magento_product_queue_id = fields.Many2one(
-        "sync.import.magento.product.queue",
+        SYNC_IMPORT_MAGENTO_PRODUCT_QUEUE,
         ondelete="cascade"
     )
     magento_instance_id = fields.Many2one(
@@ -99,10 +100,7 @@ class SyncImportMagentoProductQueueLine(models.Model):
             'magento_instance_id': instance and instance.id or False,
             'state': 'draft'
         }
-        product_queue_data_id = self.env["sync.import.magento.product.queue"].create(
-            product_queue_vals
-        )
-
+        product_queue_data_id = self.env[SYNC_IMPORT_MAGENTO_PRODUCT_QUEUE].create(product_queue_vals)
         return product_queue_data_id
 
     def auto_import_magento_product_queue_data(self):
@@ -111,7 +109,7 @@ class SyncImportMagentoProductQueueLine(models.Model):
         This method is called from cron job.
         """
         product_queue_ids = []
-        magento_import_product_queue_obj = self.env["sync.import.magento.product.queue"]
+        magento_import_product_queue_obj = self.env[SYNC_IMPORT_MAGENTO_PRODUCT_QUEUE]
         query = """select queue.id from sync_import_magento_product_queue_line as queue_line
         inner join sync_import_magento_product_queue as queue on queue_line.sync_import_magento_product_queue_id = queue.id
         where queue_line.state='draft' and queue.is_action_require = 'False'
@@ -120,10 +118,9 @@ class SyncImportMagentoProductQueueLine(models.Model):
         product_data_queue_list = self._cr.fetchall()
         for result in product_data_queue_list:
             product_queue_ids.append(result[0])
-        if not product_queue_ids:
-            return True
-        product_queues = magento_import_product_queue_obj.browse(list(set(product_queue_ids)))
-        self.process_product_queue_and_post_message(product_queues)
+        if product_queue_ids:
+            product_queues = magento_import_product_queue_obj.browse(list(set(product_queue_ids)))
+            self.process_product_queue_and_post_message(product_queues)
         return True
 
     def process_product_queue_and_post_message(self, product_queues):

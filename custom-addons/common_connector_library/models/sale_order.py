@@ -146,9 +146,13 @@ class SaleOrder(models.Model):
         to current date in action confirm process.
         @author: Dipesh Tanna
         Migration done by twinkalc August 2020
+        Added invalidate_cache line to resolve the issue of PO line description while product route has dropship and
+        multi language active in Odoo.T-07778 Added line by Haresh Mori @Emipro Technologies Pvt. Ltd on date 19 July
+        2021
         """
         self.ensure_one()
         date_order = self.date_order
+        self.env['product.product'].invalidate_cache(fnames=['display_name'])
         self.action_confirm()
         self.write({'date_order': date_order})
         return True

@@ -6,9 +6,9 @@ from odoo import models, fields, api
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    product_brand_id = fields.Many2one('common.product.brand.ept', string="Brand",
+    product_brand_id = fields.Many2one('common.product.brand.ept', string="Product Brand",
                                        help='Select a brand for this product.')
-    ept_image_ids = fields.One2many('common.product.image.ept', 'template_id', string='Images')
+    ept_image_ids = fields.One2many('common.product.image.ept', 'template_id', string='Product Images')
 
     def prepare_common_image_vals(self, vals):
         """

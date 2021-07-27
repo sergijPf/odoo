@@ -40,6 +40,9 @@ class ResConfigMagentoInstance(models.TransientModel):
         default=False,
         help="If checked, Multi Inventory Sources used in Magento"
     )
+    magento_verify_ssl = fields.Boolean(
+        string="Verify SSL", default=False,
+        help="Check this if your Magento site is using SSL certificate")
 
     def create_magento_instance(self):
         """
@@ -47,18 +50,23 @@ class ResConfigMagentoInstance(models.TransientModel):
         """
         magento_instance_obj = self.env['magento.instance']
         magento_url = self.magento_url.rstrip('/')
-        magento_instance_exist = magento_instance_obj.search([
+        magento_instance_exist = magento_instance_obj.with_context(active_test=False).search([
             ('magento_url', '=', magento_url), ('access_token', '=', self.access_token)
         ])
         if magento_instance_exist:
-            raise UserError(_('Magento Instance already exist with given Credential.'))
+            raise UserError(_('The instance already exists for the given Hostname. '
+                              'The Hostname must be unique, for instance. '
+                              'Please check the existing instance; '
+                              'if you cannot find the instance, '
+                              'please check whether the instance is archived.'))
         vals = {
             'name': self.name,
             'access_token': self.access_token,
             'magento_version': self.magento_version,
             'magento_url': magento_url,
             'company_id': self.company_id.id,
-            'is_multi_warehouse_in_magento': self.is_multi_warehouse_in_magento
+            'is_multi_warehouse_in_magento': self.is_multi_warehouse_in_magento,
+            'magento_verify_ssl': self.magento_verify_ssl
             }
         magento_instance = magento_instance_obj
         try:
@@ -107,6 +115,7 @@ class ResConfigMagentoInstance(models.TransientModel):
                 'default_company_id': instance.company_id.id,
                 'default_magento_url': instance.magento_url,
                 'default_is_multi_warehouse_in_magento': instance.is_multi_warehouse_in_magento,
+                'default_magento_verify_ssl': instance.magento_verify_ssl,
                 'is_already_instance_created': True,
                 'is_calling_from_magento_onboarding_panel': False
             })

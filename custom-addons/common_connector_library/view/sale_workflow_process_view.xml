@@ -31,8 +31,7 @@
                                    attrs="{'invisible':[('validate_order','=',False)]}"/>
                             <field name="register_payment"
                                    attrs="{'invisible':[('create_invoice','=',False)]}"/>
-                            <field name="invoice_date_is_order_date"
-                                   attrs="{'invisible':[('create_invoice','=',False)]}"/>
+                            <field name="invoice_date_is_order_date"/>
                         </group>
                         <group string="Order Configuration">
                             <field name="picking_policy" required="1"/>

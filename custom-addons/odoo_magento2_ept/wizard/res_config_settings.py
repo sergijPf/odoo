@@ -5,6 +5,8 @@ Describes configuration for Magento Instance.
 """
 from odoo import models, fields, api
 from odoo.http import request
+MAGENTO_FINANCIAL_STATUS_EPT = 'magento.financial.status.ept'
+STOCK_WAREHOUSE = 'stock.warehouse'
 
 
 class ResConfigSettings(models.TransientModel):
@@ -15,7 +17,7 @@ class ResConfigSettings(models.TransientModel):
 
     def _get_magento_default_financial_statuses(self):
         if self._context.get('default_magento_instance_id', False):
-            financial_status_ids = self.env['magento.financial.status.ept'].search(
+            financial_status_ids = self.env[MAGENTO_FINANCIAL_STATUS_EPT].search(
                 [('magento_instance_id', '=', self._context.get('default_magento_instance_id', False))]).ids
             return [(6, 0, financial_status_ids)]
         return [(6, 0, [])]
@@ -50,12 +52,12 @@ class ResConfigSettings(models.TransientModel):
              "order 100000692 in Magento, will be named 'mag-100000692' in ERP."
     )
     magento_website_warehouse_id = fields.Many2one(
-        'stock.warehouse',
+        STOCK_WAREHOUSE,
         string='Warehouse',
         help='Warehouse to be used to deliver an order from this website.'
     )
     warehouse_ids = fields.Many2many(
-        'stock.warehouse',
+        STOCK_WAREHOUSE,
         string="Warehouses",
         help='Warehouses used to compute stock to update on Magento.'
     )
@@ -81,7 +83,7 @@ class ResConfigSettings(models.TransientModel):
         help="Import Product Stock from Magento to Odoo"
     )
     import_stock_warehouse = fields.Many2one(
-        'stock.warehouse',
+        STOCK_WAREHOUSE,
         string="Import Product Stock Warehouse",
         help="Warehouse for import stock from Magento to Odoo"
     )
@@ -134,15 +136,8 @@ class ResConfigSettings(models.TransientModel):
         help="While importing a product, "
              "the selected category will set in that product."
     )
-    # is_export_dropship_picking = fields.Boolean(
-    #     string="Export 'Drop-ship' shipment details?",
-    #     default=True,
-    #     help="Check if you want to export Drop-ship order shipping "
-    #          "details from Odoo to Magento; otherwise, not."
-    # )
-
     magento_financial_status_ids = fields.Many2many(
-        'magento.financial.status.ept',
+        MAGENTO_FINANCIAL_STATUS_EPT,
         'magento_sale_auto_workflow_conf_rel',
         'financial_onboarding_status_id', 'workflow_id',
         string='Magento Financial Status', default=_get_magento_default_financial_statuses)
@@ -153,6 +148,17 @@ class ResConfigSettings(models.TransientModel):
                                            default='instance_level')
     import_order_after_date = fields.Datetime(
         help="Connector only imports those orders which have created after a given date.")
+    tax_calculation_method = fields.Selection([
+        ('excluding_tax', 'Excluding Tax'), ('including_tax', 'Including Tax')],
+        string="Tax Calculation Method into Magento Website", default="excluding_tax",
+        help="This indicates whether product prices received from Magento is including tax or excluding tax,"
+             " when import sale order from Magento"
+    )
+    magento_set_sales_description_in_product = fields.Boolean(
+        string="Use Sales Description of Magento Product",
+        config_parameter="odoo_magento2_ept.set_magento_sales_description",
+        help="In both odoo products and Magento layer products, it is used to set the description and short description"
+    )
 
     @api.onchange('magento_instance_id')
     def onchange_magento_instance_id(self):
@@ -199,6 +205,7 @@ class ResConfigSettings(models.TransientModel):
                 self.magento_website_pricelist_ids = magento_website_id.pricelist_ids.ids
             if magento_website_id.warehouse_id:
                 self.magento_website_warehouse_id = magento_website_id.warehouse_id.id
+            self.tax_calculation_method = magento_website_id.tax_calculation_method
 
     @api.onchange('magento_storeview_id')
     def onchange_magento_storeview_id(self):
@@ -223,7 +230,10 @@ class ResConfigSettings(models.TransientModel):
         if magento_instance_id:
             self.write_instance_vals(magento_instance_id)
         if self.magento_website_id:
-            self.magento_website_id.write({'warehouse_id': self.magento_website_warehouse_id.id})
+            self.magento_website_id.write({
+                'warehouse_id': self.magento_website_warehouse_id.id,
+                'tax_calculation_method': self.tax_calculation_method,
+            })
         if self.magento_storeview_id:
             self.magento_storeview_id.write({
                 'team_id': self.magento_team_id,
@@ -266,7 +276,7 @@ class ResConfigSettings(models.TransientModel):
         """
         try:
             view_id = self.env.ref('odoo_magento2_ept.magento_basic_configurations_onboarding_wizard_view')
-        except:
+        except Exception:
             return True
         return self.magento_res_config_view_action(view_id)
 
@@ -279,7 +289,7 @@ class ResConfigSettings(models.TransientModel):
         """
         try:
             view_id = self.env.ref('odoo_magento2_ept.magento_financial_status_onboarding_wizard_view')
-        except:
+        except Exception:
             return True
         return self.magento_res_config_view_action(view_id)
 
@@ -329,7 +339,10 @@ class ResConfigSettings(models.TransientModel):
             company = magento_instance_id.company_id
             company.set_onboarding_step_done('magento_basic_configuration_onboarding_state')
         if self.magento_website_id:
-            self.magento_website_id.write({'warehouse_id': self.magento_website_warehouse_id.id})
+            self.magento_website_id.write({
+                'warehouse_id': self.magento_website_warehouse_id.id,
+                'tax_calculation_method': self.tax_calculation_method
+            })
         if self.magento_storeview_id:
             self.magento_storeview_id.write({
                 'team_id': self.magento_team_id,
@@ -343,7 +356,7 @@ class ResConfigSettings(models.TransientModel):
         Save the changes in the Instance.
         :return: True
         """
-        magento_financial_status_obj = self.env['magento.financial.status.ept']
+        magento_financial_status_obj = self.env[MAGENTO_FINANCIAL_STATUS_EPT]
         instance = self.magento_instance_id
         if instance:
             company = instance.company_id

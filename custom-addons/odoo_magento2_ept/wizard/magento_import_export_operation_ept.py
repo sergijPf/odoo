@@ -13,6 +13,13 @@ from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+MAGENTO_ORDER_DATA_QUEUE_EPT = 'magento.order.data.queue.ept'
+IR_ACTION_ACT_WINDOW = 'ir.actions.act_window'
+IR_MODEL_DATA = 'ir.model.data'
+VIEW_MODE = 'tree,form'
+COMPLETED_STATE = "[('state', '!=', 'completed' )]"
+IMPORT_MAGENTO_PRODUCT_QUEUE = 'sync.import.magento.product.queue'
+MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
 
 
 class MagentoImportExportEpt(models.TransientModel):
@@ -90,10 +97,7 @@ class MagentoImportExportEpt(models.TransientModel):
         if self.operations == 'import_customer':
             self.import_customer_operation(instances)
         elif self.operations == 'map_products':
-            if not self.datas:
-                raise UserError(_("Please Upload File to Continue Mapping Products..."))
-            for instance in instances:
-                self.import_magento_csv(instance.id)
+            self.map_product_operation(instances)
         elif self.operations == 'import_sale_order':
             result = self.import_sale_order_operation(instances)
         elif self.operations == 'import_specific_order':
@@ -106,15 +110,11 @@ class MagentoImportExportEpt(models.TransientModel):
             result = self.import_product_stock_operation(instances)
         elif self.operations == 'export_shipment_information':
             picking.export_shipment_to_magento(instances)
-            # for instance in instances:
-            #     instance.last_order_status_update_date = datetime.now()
         elif self.operations == 'export_invoice_information':
             account_move.export_invoice_to_magento(instances)
         elif self.operations == 'export_product_stock':
             self.export_product_stock_operation(instances)
-        if result:
-            return result
-        else:
+        if not result:
             title = [vals for key, vals in self._fields['operations'].selection if key == self.operations]
             return {
                 'effect': {
@@ -124,6 +124,17 @@ class MagentoImportExportEpt(models.TransientModel):
                     'type': 'rainbow_man',
                 }
             }
+        return result
+
+    def map_product_operation(self, instances):
+        """
+        Perform map product operation.
+        :param instances: Magento instances
+        """
+        if not self.datas:
+            raise UserError(_("Please Upload File to Continue Mapping Products..."))
+        for instance in instances:
+            self.import_magento_csv(instance.id)
 
     def import_customer_operation(self, instances):
         """
@@ -142,35 +153,14 @@ class MagentoImportExportEpt(models.TransientModel):
         :param instances: Magento Instances
         :return:
         """
-        magento_order_data_queue_obj = self.env['magento.order.data.queue.ept']
+        magento_order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT]
         from_date = datetime.strftime(self.start_date, MAGENTO_DATETIME_FORMAT) if self.start_date else {}
         to_date = datetime.strftime(self.end_date, MAGENTO_DATETIME_FORMAT)
         for instance in instances:
             order_queue_data = magento_order_data_queue_obj.magento_create_order_data_queues(
                 instance, from_date, to_date
             )
-        result = {
-            'name': _('Magento Order Data Queue'),
-            'res_model': 'magento.order.data.queue.ept',
-            'type': 'ir.actions.act_window',
-        }
-        if order_queue_data.get('total_order_queues') == 1:
-            view_ref = self.env['ir.model.data'].get_object_reference(
-                'odoo_magento2_ept', 'view_magento_order_data_queue_ept_form'
-            )
-            view_id = view_ref[1] if view_ref else False
-            result.update({
-                'views': [(view_id, 'form')],
-                'view_mode': 'form',
-                'view_id': view_id,
-                'res_id': order_queue_data.get('order_queue').id,
-                'target': 'current'
-            })
-        else:
-            result.update({
-                'view_mode': 'tree,form',
-                'domain': "[('state', '!=', 'completed' )]"
-            })
+        result = self.return_order_queue_form_or_tree_view(order_queue_data)
         return result
 
     def import_specific_sale_order_operation(self, instances):
@@ -182,33 +172,42 @@ class MagentoImportExportEpt(models.TransientModel):
         if not self.import_specific_sale_order:
             raise Warning(_("Please enter Magento sale "
                             "order Reference for performing this operation."))
-        magento_order_data_queue_obj = self.env['magento.order.data.queue.ept']
+        magento_order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT]
         sale_order_list = self.import_specific_sale_order.split(',')
         for instance in instances:
             order_queue_data = magento_order_data_queue_obj.import_specific_order(
                 instance, sale_order_list
             )
+        result = self.return_order_queue_form_or_tree_view(order_queue_data)
+        return result
+
+    def return_order_queue_form_or_tree_view(self, order_queue_data):
+        """
+        it's return the tree view or form view based on the total_order_queues.
+        :param order_queue_data: {'order_queue': magento.order.data.queue.ept(X,), 'count': X, 'total_order_queues': X}
+        :return: view with domain
+        """
         result = {
             'name': _('Magento Order Data Queue'),
-            'res_model': 'magento.order.data.queue.ept',
-            'type': 'ir.actions.act_window',
+            'res_model': MAGENTO_ORDER_DATA_QUEUE_EPT,
+            'type': IR_ACTION_ACT_WINDOW,
         }
         if order_queue_data.get('total_order_queues') == 1:
-            view_ref = self.env['ir.model.data'].get_object_reference(
+            view_ref = self.env[IR_MODEL_DATA].get_object_reference(
                 'odoo_magento2_ept', 'view_magento_order_data_queue_ept_form'
             )
             view_id = view_ref[1] if view_ref else False
             result.update({
-                'view_mode': 'form',
                 'views': [(view_id, 'form')],
+                'view_mode': 'form',
                 'view_id': view_id,
                 'res_id': order_queue_data.get('order_queue').id,
                 'target': 'current'
             })
         else:
             result.update({
-                'view_mode': 'tree,form',
-                'domain': "[('state', '!=', 'completed' )]"
+                'view_mode': VIEW_MODE,
+                'domain': COMPLETED_STATE
             })
         return result
 
@@ -218,7 +217,7 @@ class MagentoImportExportEpt(models.TransientModel):
         :param instances: Magento Instances
         :return:
         """
-        magento_import_product_queue_obj = self.env['sync.import.magento.product.queue']
+        magento_import_product_queue_obj = self.env[IMPORT_MAGENTO_PRODUCT_QUEUE]
         from_date = datetime.strftime(self.start_date, MAGENTO_DATETIME_FORMAT) if self.start_date else {}
         to_date = datetime.strftime(self.end_date, MAGENTO_DATETIME_FORMAT)
         do_not_update_product = self.do_not_update_existing_product
@@ -236,11 +235,11 @@ class MagentoImportExportEpt(models.TransientModel):
         """
         result = {
             'name': _('Magento Product Data Queue'),
-            'res_model': 'sync.import.magento.product.queue',
-            'type': 'ir.actions.act_window',
+            'res_model': IMPORT_MAGENTO_PRODUCT_QUEUE,
+            'type': IR_ACTION_ACT_WINDOW,
         }
         if product_queue_data.get('total_product_queues') == 1:
-            view_ref = self.env['ir.model.data'].get_object_reference(
+            view_ref = self.env[IR_MODEL_DATA].get_object_reference(
                 'odoo_magento2_ept', 'view_sync_import_magento_product_queue_ept_form'
             )
             view_id = view_ref[1] if view_ref else False
@@ -253,8 +252,8 @@ class MagentoImportExportEpt(models.TransientModel):
             })
         else:
             result.update({
-                'view_mode': 'tree,form',
-                'domain': "[('state', '!=', 'completed' )]"
+                'view_mode': VIEW_MODE,
+                'domain': COMPLETED_STATE
             })
         return result
 
@@ -267,7 +266,7 @@ class MagentoImportExportEpt(models.TransientModel):
         if not self.import_specific_product:
             raise Warning(_("Please enter Magento product"
                             " SKU for performing this operation."))
-        magento_import_product_queue_obj = self.env['sync.import.magento.product.queue']
+        magento_import_product_queue_obj = self.env[IMPORT_MAGENTO_PRODUCT_QUEUE]
         product_sku_lists = self.import_specific_product.split(',')
         do_not_update_product = self.do_not_update_existing_product
         for instance in instances:
@@ -276,28 +275,7 @@ class MagentoImportExportEpt(models.TransientModel):
                 product_sku_lists,
                 do_not_update_product
             )
-        result = {
-            'name': _('Magento Product Data Queue'),
-            'res_model': 'sync.import.magento.product.queue',
-            'type': 'ir.actions.act_window',
-        }
-        if product_queue_data.get('total_product_queues') == 1:
-            view_ref = self.env['ir.model.data'].get_object_reference(
-                'odoo_magento2_ept', 'view_sync_import_magento_product_queue_ept_form'
-            )
-            view_id = view_ref[1] if view_ref else False
-            result.update({
-                'views': [(view_id, 'form')],
-                'view_mode': 'form',
-                'view_id': view_id,
-                'res_id': product_queue_data.get('product_queue').id,
-                'target': 'current'
-            })
-        else:
-            result.update({
-                'view_mode': 'tree,form',
-                'domain': "[('state', '!=', 'completed' )]"
-            })
+        result = self.return_form_or_tree_view(product_queue_data)
         return result
 
     def import_product_stock_operation(self, instances):
@@ -307,7 +285,7 @@ class MagentoImportExportEpt(models.TransientModel):
         :return:
         """
         magento_inventory_locations_obj = self.env['magento.inventory.locations']
-        magento_product_product = self.env['magento.product.product']
+        magento_product_product = self.env[MAGENTO_PRODUCT_PRODUCT]
         is_log_exist = False
         for instance in instances:
             if not instance.is_import_product_stock:
@@ -318,17 +296,15 @@ class MagentoImportExportEpt(models.TransientModel):
                 is_log_exist = magento_product_product.create_product_inventory(instance)
             else:
                 inventory_locations = magento_inventory_locations_obj.search([
-                    ('magento_instance_id', '=', instance.id), ('active', '=', True)
-                ])
-                # is_log_exist = magento_product_product.create_product_multi_inventory(instance, inventory_locations)
+                    ('magento_instance_id', '=', instance.id)])
                 magento_product_product.create_product_multi_inventory(instance, inventory_locations)
         if is_log_exist:
             result = {
                 'name': _('Magento Product Import Stock'),
                 'res_model': 'common.log.book.ept',
-                'type': 'ir.actions.act_window'
+                'type': IR_ACTION_ACT_WINDOW
             }
-            view_ref = self.env['ir.model.data'].get_object_reference(
+            view_ref = self.env[IR_MODEL_DATA].get_object_reference(
                 'common_connector_library', 'action_common_log_book_ept_form'
             )
             view_id = view_ref[1] if view_ref else False
@@ -344,8 +320,8 @@ class MagentoImportExportEpt(models.TransientModel):
             return {
                 'name': _('Magento Product Inventory Adjustments'),
                 'res_model': 'stock.inventory',
-                'type': 'ir.actions.act_window',
-                'view_mode': 'tree,form',
+                'type': IR_ACTION_ACT_WINDOW,
+                'view_mode': VIEW_MODE,
             }
 
     def export_product_stock_operation(self, instances):
@@ -355,14 +331,13 @@ class MagentoImportExportEpt(models.TransientModel):
         :return:
         """
         magento_inventory_locations_obj = self.env['magento.inventory.locations']
-        magento_product_product = self.env['magento.product.product']
+        magento_product_product = self.env[MAGENTO_PRODUCT_PRODUCT]
         for instance in instances:
             if instance.magento_version in ['2.1', '2.2'] or not instance.is_multi_warehouse_in_magento:
                 magento_product_product.export_multiple_product_stock_to_magento(instance)
             else:
                 inventory_locations = magento_inventory_locations_obj.search([
-                    ('magento_instance_id', '=', instance.id), ('active', '=', True)
-                ])
+                    ('magento_instance_id', '=', instance.id)])
                 magento_product_product.export_product_stock_to_multiple_locations(instance, inventory_locations)
             instance.last_update_stock_time = datetime.now()
 
@@ -397,7 +372,7 @@ class MagentoImportExportEpt(models.TransientModel):
         :param odoo_templates: Odoo product template object
         """
         field_name = ['product_template_id', 'product_id', 'template_name', 'product_name',
-                      'product_default_code', 'magento_sku', 'description', 'instance_id']
+                      'product_default_code', 'magento_sku', 'description', 'sale_description', 'instance_id']
         buffer = StringIO()
         csv_writer = DictWriter(buffer, field_name, delimiter=',')
         csv_writer.writer.writerow(field_name)
@@ -434,6 +409,7 @@ class MagentoImportExportEpt(models.TransientModel):
         :param instance: magento.instance()
         :return: dictionary
         """
+        position = 0
         return {
             'product_template_id': odoo_template.id,
             'product_id': variant.id,
@@ -442,6 +418,7 @@ class MagentoImportExportEpt(models.TransientModel):
             'product_default_code': variant.default_code,
             'magento_sku': variant.default_code,
             'description': variant.description or "",
+            'sale_description': odoo_template.description_sale if position == 0 else '',
             'instance_id': instance.id
         }
 
@@ -484,7 +461,11 @@ class MagentoImportExportEpt(models.TransientModel):
         if not product_dict.get('product_id'):
             odoo_template = self.env['product.template'].browse(int(product_dict.get('product_template_id')))
             for variant in odoo_template.product_variant_ids:
-                product_dict.update({'magento_sku': variant.default_code})
+                product_dict.update({
+                    'magento_sku': variant.default_code,
+                    'description': variant.description,
+                    'sale_description': variant.description_sale
+                })
                 magento_sku_missing = self.create_or_update_magento_product_variant(product_dict, variant,
                                                                                     magento_sku_missing)
         else:
@@ -508,6 +489,7 @@ class MagentoImportExportEpt(models.TransientModel):
             odoo_template = self.env['product.template'].browse(int(product_dict.get('product_template_id')))
             template_vals = self.prepare_magento_product_template_vals_ept(product_dict, odoo_template)
             magento_template = magento_template_object.create(template_vals)
+            self.create_magento_template_images(magento_template, odoo_template)
         return magento_template
 
     @staticmethod
@@ -520,16 +502,21 @@ class MagentoImportExportEpt(models.TransientModel):
                     #('odoo_product_template_id', '=', int(product_dict.get('product_template_id'))),
                     ('magento_sku', '=', product_dict.get('magento_sku'))]
 
-    @staticmethod
-    def prepare_magento_product_template_vals_ept(product_dict, odoo_template):
-        return {
+    def prepare_magento_product_template_vals_ept(self, product_dict, odoo_template):
+        ir_config_parameter_obj = self.env["ir.config_parameter"]
+        magneto_product_template_dict = {
             'magento_instance_id': product_dict.get('instance_id'),
             'odoo_product_template_id': product_dict.get('product_template_id'),
             'product_type': 'configurable' if odoo_template.product_variant_count > 1 else 'simple',
             'magento_product_name': odoo_template.name,
-            'description': odoo_template.description,
             'magento_sku': False if odoo_template.product_variant_count > 1 else product_dict.get('magento_sku')
         }
+        if ir_config_parameter_obj.sudo().get_param("odoo_magento2_ept.set_magento_sales_description"):
+            magneto_product_template_dict.update({
+                'description': product_dict.get('description'),
+                'short_description': product_dict.get('sale_description'),
+            })
+        return magneto_product_template_dict
 
     def create_or_update_magento_product_variant(self, product_dict, product, magento_sku_missing):
         """
@@ -539,7 +526,7 @@ class MagentoImportExportEpt(models.TransientModel):
         :param magento_sku_missing: Missing SKU dictionary
         :return: Missing SKU dictionary
         """
-        magento_product_object = self.env['magento.product.product']
+        magento_product_object = self.env[MAGENTO_PRODUCT_PRODUCT]
         magento_prod_sku = product_dict.get('magento_sku')
         if not product_dict.get('magento_sku', False) and product.default_code:
             magento_prod_sku = product.default_code
@@ -552,7 +539,8 @@ class MagentoImportExportEpt(models.TransientModel):
                 magento_template = self.create_or_update_magento_product_template(product_dict,product)
                 prod_vals = self.prepare_magento_product_vals_ept(product_dict, product, magento_template,
                                                                   magento_prod_sku)
-                magento_product_object.create(prod_vals)
+                magento_product = magento_product_object.create(prod_vals)
+                self.create_magento_product_images(magento_template, product, magento_product)
             # else:
             #   magento_variant.write({'magento_sku': magento_prod_sku})
         return magento_sku_missing
@@ -569,16 +557,21 @@ class MagentoImportExportEpt(models.TransientModel):
                 # ('odoo_product_id', '=', product.id),
                 ('magento_sku', '=', product_dict.get('magento_sku'))]
 
-    @staticmethod
-    def prepare_magento_product_vals_ept(product_dict, product, magento_template, magento_prod_sku):
-        return {
+    def prepare_magento_product_vals_ept(self, product_dict, product, magento_template, magento_prod_sku):
+        ir_config_parameter_obj = self.env["ir.config_parameter"]
+        magento_product_vals = {
             'magento_instance_id': product_dict.get('instance_id'),
             'odoo_product_id': product.id,
             'magento_tmpl_id': magento_template.id,
             'magento_sku': magento_prod_sku,
-            'description': product.description,
             'magento_product_name': product.name
         }
+        if ir_config_parameter_obj.sudo().get_param("odoo_magento2_ept.set_magento_sales_description"):
+            magento_product_vals.update({
+                'description': product_dict.get('description'),
+                'short_description': product_dict.get('sale_description'),
+            })
+        return magento_product_vals
 
     def download_sample_attachment(self):
         """
@@ -592,3 +585,52 @@ class MagentoImportExportEpt(models.TransientModel):
             'target': 'new',
             'nodestroy': False,
         }
+
+    def create_magento_template_images(self, magento_template, odoo_template):
+        """
+        This method is use to create images in Magento layer.
+        :param magento_template: magento product template object
+        :param odoo_template: product template object
+        """
+        magento_product_image_obj = self.env["magento.product.image"]
+        magento_product_image_list = []
+        for odoo_image in odoo_template.ept_image_ids.filtered(lambda x: not x.product_id):
+            magento_product_image = magento_product_image_obj.search(
+                [("magento_tmpl_id", "=", magento_template.id),
+                 ("odoo_image_id", "=", odoo_image.id)])
+            if not magento_product_image:
+                magento_product_image_list.append({
+                    "odoo_image_id": odoo_image.id,
+                    "magento_tmpl_id": magento_template.id,
+                    'url': odoo_image.url,
+                    'image': odoo_image.image,
+                    'magento_instance_id': magento_template.magento_instance_id.id
+                })
+        if magento_product_image_list:
+            magento_product_image_obj.create(magento_product_image_list)
+
+    def create_magento_product_images(self, magento_template, odoo_product, magento_product):
+        """
+        This method is use to create images in Magento layer.
+        :param magento_template: magneto product template object
+        :param odoo_product: product  object
+        :param magento_product: magento product object
+        """
+        magento_product_image_obj = self.env["magento.product.image"]
+        magento_product_image_list = []
+        for odoo_image in odoo_product.ept_image_ids:
+            magento_product_image = magento_product_image_obj.search(
+                [("magento_tmpl_id", "=", magento_template.id),
+                 ("magento_product_id", "=", magento_product.id),
+                 ("odoo_image_id", "=", odoo_image.id)])
+            if not magento_product_image:
+                magento_product_image_list.append({
+                    "odoo_image_id": odoo_image.id,
+                    "magento_tmpl_id": magento_template.id,
+                    "magento_product_id": magento_product.id if magento_product else False,
+                    'url': odoo_image.url,
+                    'image': odoo_image.image,
+                    'magento_instance_id': magento_template.magento_instance_id.id
+                })
+        if magento_product_image_list:
+            magento_product_image_obj.create(magento_product_image_list)

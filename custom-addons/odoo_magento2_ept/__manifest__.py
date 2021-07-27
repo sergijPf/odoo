@@ -1,7 +1,7 @@
 {
     # App information
     'name': "Odoo Magento 2 Connector",
-    'version': '14.0.5.6',
+    'version': '14.0.7.0',
     'category': 'Sales',
     'license': 'OPL-1',
     'summary': 'Odoo Magento 2 Connector helps you integrate your Magento 2.x website with Odoo '
@@ -55,6 +55,7 @@
         'wizard_views/magento_onboarding_confirmation_ept.xml',
         'data/ecommerce_data.xml',
         'security/ir.model.access.csv',
+        'data/update_magento_partner.xml'
     ],
     'qweb': [
         'static/src/xml/*.xml',

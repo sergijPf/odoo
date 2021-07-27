@@ -6,13 +6,14 @@ Describes methods for Export shipment information.
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from .api_request import req
+STOCK_PICKING = 'stock.picking'
 
 
 class StockPicking(models.Model):
     """
     Describes methods for Export shipment information.
     """
-    _inherit = 'stock.picking'
+    _inherit = STOCK_PICKING
     _description = 'Stock Picking'
 
     is_magento_picking = fields.Boolean(
@@ -20,7 +21,7 @@ class StockPicking(models.Model):
         help="If checked, It is Magento Picking"
     )
     related_backorder_ids = fields.One2many(
-        comodel_name='stock.picking',
+        comodel_name=STOCK_PICKING,
         inverse_name='backorder_id',
         string="Related backorders",
         help="This field relocates related backorders"
@@ -101,7 +102,7 @@ class StockPicking(models.Model):
         """
         common_log_book_obj = self.env['common.log.book.ept']
         common_log_lines_obj = self.env['common.log.lines.ept']
-        model_id = common_log_lines_obj.get_model_id('stock.picking')
+        model_id = common_log_lines_obj.get_model_id(STOCK_PICKING)
         job = common_log_book_obj.create({
             'type': 'import',
             'module': 'magento_ept',
@@ -136,7 +137,7 @@ class StockPicking(models.Model):
         try:
             api_url = '/V1/order/{}/ship/'.format(picking.sale_id.magento_order_id)
             response = req(picking.magento_instance_id, api_url, 'POST', values)
-        except Exception as error:
+        except Exception:
             order_name = picking.sale_id.name
             picking.write({
                 "max_no_of_attempts": picking.max_no_of_attempts + 1,
@@ -207,16 +208,18 @@ class StockPicking(models.Model):
 
         tracking_numbers = []
         package_ids = picking.package_ids
+        magento_carrier_code = picking.carrier_id.magento_carrier_code or ''
+        magento_carrier_title = picking.carrier_id.magento_carrier.magento_carrier_title or ''
         if package_ids:
             for package in package_ids:
-                trackno = {'carrierCode': picking.carrier_id.magento_carrier_code or '',
-                           'title': picking.carrier_id.magento_carrier.magento_carrier_title or '',
+                trackno = {'carrierCode': magento_carrier_code,
+                           'title': magento_carrier_title,
                            'trackNumber': package.tracking_no if package.tracking_no else picking.carrier_tracking_ref or ''}
                 tracking_numbers.append(trackno)
         else:
             if picking.carrier_tracking_ref:
-                trackno = {'carrierCode': picking.carrier_id.magento_carrier_code or '',
-                           'title': picking.carrier_id.magento_carrier.magento_carrier_title or '',
+                trackno = {'carrierCode': magento_carrier_code,
+                           'title': magento_carrier_title,
                            'trackNumber': picking.carrier_tracking_ref or ''}
                 tracking_numbers.append(trackno)
         return tracking_numbers

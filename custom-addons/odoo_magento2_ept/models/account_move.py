@@ -6,12 +6,13 @@ Describes methods for account move
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from .api_request import req
+ACCOUNT_MOVE = 'account.move'
 
 class AccountInvoice(models.Model):
     """
     Describes fields and methods to import and export invoices of Magento.
     """
-    _inherit = 'account.move'
+    _inherit = ACCOUNT_MOVE
 
     magento_payment_method_id = fields.Many2one(
         'magento.payment.method',
@@ -50,7 +51,7 @@ class AccountInvoice(models.Model):
             ('state', 'in', ['posted']),
             ('max_no_of_attempts', '<=', 3)
         ])
-        model_id = common_log_lines_obj.get_model_id('account.move')
+        model_id = common_log_lines_obj.get_model_id(ACCOUNT_MOVE)
         log_book_id = common_log_book_obj.create({
             'type': 'export',
             'module': 'magento_ept',
@@ -73,7 +74,7 @@ class AccountInvoice(models.Model):
         common_log_book_obj = self.env['common.log.book.ept']
         common_log_lines_obj = self.env['common.log.lines.ept']
         instance = self.magento_instance_id
-        model_id = common_log_lines_obj.get_model_id('account.move')
+        model_id = common_log_lines_obj.get_model_id(ACCOUNT_MOVE)
         log_book_id = common_log_book_obj.create({
             'type': 'export',
             'module': 'magento_ept',
@@ -125,7 +126,7 @@ class AccountInvoice(models.Model):
         try:
             api_url = '/V1/order/%s/invoice' % sale_order.magento_order_id
             response = req(invoice.magento_instance_id, api_url, 'POST', data)
-        except Exception as error:
+        except Exception:
             invoice.write({
                 "max_no_of_attempts" : invoice.max_no_of_attempts + 1,
                 "magento_message" : _("The request could not be satisfied while export this invoice."

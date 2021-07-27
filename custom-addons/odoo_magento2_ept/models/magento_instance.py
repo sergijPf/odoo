@@ -17,13 +17,19 @@ _secondsConverter = {
     'weeks': lambda interval: interval * 7 * 24 * 60 * 60,
     'minutes': lambda interval: interval * 60,
 }
+ACTION_ACT_WINDOW = 'ir.actions.act_window'
+MAGENTO_STOREVIEW = 'magento.storeview'
+MAGENTO_INSTANCE = 'magento.instance'
+MAGENTO_WEBSITE = 'magento.website'
+PRODUCT_PRICELIST = 'product.pricelist'
+IR_CRON = 'ir.cron'
 
 
 class MagentoInstance(models.Model):
     """
     Describes methods for Magento Instance
     """
-    _name = 'magento.instance'
+    _name = MAGENTO_INSTANCE
     _description = 'Magento Instance'
 
     @api.model
@@ -74,7 +80,7 @@ class MagentoInstance(models.Model):
              'If Warehouses is not selected then it is taken from Website'
     )
     magento_website_ids = fields.One2many(
-        'magento.website',
+        MAGENTO_WEBSITE,
         'magento_instance_id',
         string='Website',
         readonly=True,
@@ -96,7 +102,7 @@ class MagentoInstance(models.Model):
         ('website', 'Website')
     ], string="Catalog Price Scopes", help="Scope of Price in Magento", default='global')
     pricelist_id = fields.Many2one(
-        'product.pricelist',
+        PRODUCT_PRICELIST,
         string="Pricelist",
         help="Product Price is set in selected Pricelist"
     )
@@ -120,14 +126,6 @@ class MagentoInstance(models.Model):
         string="Last Orders import date",
         help="Last Orders import date",
     )
-    # last_order_status_update_date = fields.Datetime(
-    #     string="Last Shipment Export date",
-    #     help="Last Shipment Export date",
-    # )
-    # last_partner_import_date = fields.Datetime(
-    #     string="Last Partner import date",
-    #     help="Last Partner import date",
-    # )
     last_update_stock_time = fields.Datetime(
         string="Last Update Product Stock Time",
         help="Last Update Stock Time",
@@ -199,9 +197,9 @@ class MagentoInstance(models.Model):
         "Import Order Status",
         default=_default_order_status,
         help="Select order status in which you want to import the orders from Magento to Odoo.")
-    active = fields.Boolean("Active", default=True)
+    active = fields.Boolean("Status", default=True)
     magento_import_customer_current_page = fields.Integer(
-        string="Magento Import Customer Current Page",
+        string="Magento Import Customer Current Pages",
         default=1,
         help="It will fetch customers from Magento of given page.")
     magento_import_order_page_count = fields.Integer(
@@ -214,36 +212,36 @@ class MagentoInstance(models.Model):
         help="It will fetch products of Magento from given page numbers.")
     import_product_category = fields.Many2one(
         'product.category',
-        string="Import Product Category",
+        string="Import Product Categories",
         default=_default_set_import_product_category,
         help="While importing a product, "
              "the selected category will set in that product."
     )
-    # is_export_dropship_picking = fields.Boolean(
-    #     string="Export 'Drop-ship' shipment details?",
-    #     default=True,
-    #     help="Check if you want to export Drop-ship order shipping "
-    #          "details from Odoo to Magento; otherwise, not."
-    # )
     is_instance_create_from_onboarding_panel = fields.Boolean(default=False)
     is_onboarding_configurations_done = fields.Boolean(default=False)
     import_order_after_date = fields.Datetime(help="Connector only imports those orders which"
                                                    " have created after a "
                                                    "given date.",
                                               default=set_magento_import_after_date)
+    magento_verify_ssl = fields.Boolean(
+        string="Verify SSL", default=False,
+        help="Check this if your Magento site is using SSL certificate")
 
     def check_dashboard_view(self):
-
+        """
+        It will display dashboard based on configuration either by instance wise or website wise.
+        :return:
+        """
         view_type = self.env["ir.config_parameter"].sudo().get_param("odoo_magento2_ept.dashboard_view_type")
         if view_type == 'instance_level':
             view = self.env.ref('odoo_magento2_ept.action_magento_dashboard_instance').sudo().read()[0]
         else:
             view = self.env.ref('odoo_magento2_ept.action_magento_dashboard_website').sudo().read()[0]
-        action = self.prepare_action(view,[])
+        action = self.prepare_action(view, [])
         return action
-        
+
     def _compute_get_scheduler_list(self):
-        seller_cron = self.env['ir.cron'].search([('magento_instance_id', '=', self.id)])
+        seller_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
         for record in self:
             record.cron_count = len(seller_cron.ids)
 
@@ -263,7 +261,7 @@ class MagentoInstance(models.Model):
         tree_view = self.env.ref('odoo_magento2_ept.magento_delivery_carrier_tree_view').id
         action = {
             'name': 'Magento Carriers Views',
-            'type': 'ir.actions.act_window',
+            'type': ACTION_ACT_WINDOW,
             'view_type': 'form',
             'view_mode': 'tree',
             'res_model': 'magento.delivery.carrier',
@@ -279,14 +277,14 @@ class MagentoInstance(models.Model):
         Opens view for cron scheduler of instance
         :return:
         """
-        instance_cron = self.env['ir.cron'].\
+        instance_cron = self.env[IR_CRON].\
             search([('magento_instance_id', '=', self.id)])
         action = {
             'domain': "[('id', 'in', " + str(instance_cron.ids) + " )]",
             'name': 'Cron Scheduler',
             'view_mode': 'tree,form',
-            'res_model': 'ir.cron',
-            'type': 'ir.actions.act_window',
+            'res_model': IR_CRON,
+            'type': ACTION_ACT_WINDOW,
         }
         return action
 
@@ -341,7 +339,7 @@ class MagentoInstance(models.Model):
         view = self.env.ref('odoo_magento2_ept.view_inactive_magento_instance')
         return {
             'name': _('Instance Active/Inactive Details'),
-            'type': 'ir.actions.act_window',
+            'type': ACTION_ACT_WINDOW,
             'view_type': 'form',
             'view_mode': 'form',
             'res_model': 'magento.queue.process.ept',
@@ -352,13 +350,18 @@ class MagentoInstance(models.Model):
         }
 
     def magento_action_archive_unarchive(self):
+        """
+        This method archive/active related website, storeviews, products, queues,
+        financial status, inventory locations when instance archive/ active.
+        :return:
+        """
         domain = [("magento_instance_id", "=", self.id)]
         magento_template_obj = self.env["magento.product.template"]
         magento_financial_status_obj = self.env["magento.financial.status.ept"]
         magento_payment_method_obj = self.env["magento.payment.method"]
         magento_inventory_location_obj = self.env["magento.inventory.locations"]
-        magento_website_obj = self.env['magento.website']
-        magento_storeview_obj = self.env['magento.storeview']
+        magento_website_obj = self.env[MAGENTO_WEBSITE]
+        magento_storeview_obj = self.env[MAGENTO_STOREVIEW]
         data_queue_mixin_obj = self.env['data.queue.mixin.ept']
         ir_cron_obj = self.env["ir.cron"]
         if self.active:
@@ -396,6 +399,10 @@ class MagentoInstance(models.Model):
         return True
 
     def unlink(self):
+        """
+        Unlink onboarding panel flags when instance is unlink.
+        :return:
+        """
         company = self.company_id
         company.write({
             'magento_instance_onboarding_state': 'not_done',
@@ -479,10 +486,10 @@ class MagentoInstance(models.Model):
         try:
             attributes_price = req(self, api_url, method='GET')
         except Exception as error:
-            raise error
+            raise UserError(error)
 
         self.catalog_price_scope = attributes_price.get('scope')
-        
+
     def sync_website(self):
         """
         Sync all the websites from magento
@@ -490,20 +497,22 @@ class MagentoInstance(models.Model):
         try:
             website_response = req(self, "/V1/store/websites", method='GET')
         except Exception as error:
-            raise error
+            raise UserError(error)
         for data in website_response:
             magento_website_id = data.get('id')
             if magento_website_id != 0:
-                odo_website_id = self.magento_website_ids.filtered(
-                    lambda x: x.magento_website_id == str(magento_website_id) and x.magento_instance_id.id == self.id
-                )
-                if not odo_website_id:
-                    self.env['magento.website'].create({
+                mage_website_id = self.search_magento_website_id(str(magento_website_id))
+                if not mage_website_id:
+                    self.env[MAGENTO_WEBSITE].create({
                         'name': data.get('name'),
                         'magento_website_id': magento_website_id,
                         'magento_instance_id': self.id,
                         'warehouse_id': self.warehouse_ids.id
                     })
+
+    def search_magento_website_id(self, magento_website_id):
+        return self.magento_website_ids.filtered(
+            lambda x: x.magento_website_id == str(magento_website_id) and x.magento_instance_id.id == self.id)
 
     def open_all_websites(self):
         """
@@ -514,10 +523,10 @@ class MagentoInstance(models.Model):
         tree_view = self.env.ref('odoo_magento2_ept.view_magento_website_tree').id
         action = {
             'name': 'Magento Website',
-            'type': 'ir.actions.act_window',
+            'type': ACTION_ACT_WINDOW,
             'view_type': 'form',
             'view_mode': 'tree',
-            'res_model': 'magento.website',
+            'res_model': MAGENTO_WEBSITE,
             'views': [(tree_view, 'tree'), (form_view_id, 'form')],
             'view_id': tree_view,
             'target': 'current',
@@ -529,8 +538,7 @@ class MagentoInstance(models.Model):
         """
         This method used for import all storeview from magento.
         """
-        storeview_obj = self.env['magento.storeview']
-        res_lang_obj = self.env['res.lang']
+        storeview_obj = self.env[MAGENTO_STOREVIEW]
         response = req(self, "/V1/store/storeConfigs", method='GET')
         stores = req(self, "/V1/store/storeViews", method='GET')
         for storeview_data in response:
@@ -542,18 +550,7 @@ class MagentoInstance(models.Model):
                 ])
                 odoo_website_id = self.update_pricelist_in_website(storeview_data)
                 if not storeview:
-                    name = ''
-                    for store in stores:
-                        if store['id'] == magento_storeview_id:
-                            name = store['name']
-                            break
-                    lang = storeview_data.get('locale')
-                    if lang:
-                        language = res_lang_obj.search([
-                            ('code', '=', lang), '|', ('active', '=', False), ('active', '=', True)
-                        ])
-                        if language and not language.active:
-                            language.write({'active': True})
+                    name, language = self.get_store_view_language_and_name(stores, magento_storeview_id, storeview_data)
                     storeview_obj.create({
                         'name': name,
                         'magento_website_id': odoo_website_id.id,
@@ -565,23 +562,43 @@ class MagentoInstance(models.Model):
                 else:
                     storeview.write({'base_media_url': storeview_data.get('base_media_url')})
 
+    def get_store_view_language_and_name(self, stores, magento_storeview_id, storeview_data):
+        """
+        Get Store view language and name.
+        :param stores: Magento stores received from API
+        :param magento_storeview_id: Magento store view id
+        :param storeview_data: data received from Magento
+        :return: name and res language object
+        """
+        res_lang_obj = self.env['res.lang']
+        name = ''
+        for store in stores:
+            if store['id'] == magento_storeview_id:
+                name = store['name']
+                break
+        lang = storeview_data.get('locale')
+        if lang:
+            language = res_lang_obj.with_context(active_test=False).search([('code', '=', lang)])
+            if language and not language.active:
+                language.write({'active': True})
+        return name, language
+
     def update_pricelist_in_website(self, storeview_data):
         """
         If Website is found, then update price list based on store currency.
         :param storeview_data: Store view response received from Magento.
         :return: Magento website object
         """
-        website_obj = self.env['magento.website']
-        pricelist_obj = self.env['product.pricelist']
+        website_obj = self.env[MAGENTO_WEBSITE]
+        pricelist_obj = self.env[PRODUCT_PRICELIST]
         currency_obj = self.env['res.currency']
         odoo_website_id = website_obj.search([
             ('magento_website_id', '=', storeview_data.get('website_id')),
             ('magento_instance_id', '=', self.id)
         ], limit=1)
         if odoo_website_id:
-            currency_id = currency_obj.search([
-                ('name', '=', storeview_data.get('base_currency_code')),
-                '|', ('active', '=', True), ('active', '=', False)], limit=1)
+            currency_id = currency_obj.with_context(active_test=False).search([
+                ('name', '=', storeview_data.get('base_currency_code'))], limit=1)
             if currency_id and not currency_id.active:
                 currency_id.write({'active': True})
             elif not currency_id:
@@ -679,13 +696,10 @@ class MagentoInstance(models.Model):
         magento_currency = req(self, url)
         currency_obj = self.env['res.currency']
         magento_base_currency = magento_currency.get('base_currency_code')
-        pricelist_obj = self.env['product.pricelist']
+        pricelist_obj = self.env[PRODUCT_PRICELIST]
         for active_currency in magento_currency.get('exchange_rates'):
-            currency_id = currency_obj.search([
-                ('name', '=', active_currency.get('currency_to')),
-                '|', ('active', '=', False),
-                ('active', '=', True)
-            ], limit=1)
+            currency_id = currency_obj.with_context(active_test=False). \
+                search([('name', '=', active_currency.get('currency_to'))], limit=1)
             if not currency_id.active:
                 currency_id.write({'active': True})
             price_list = pricelist_obj.search([('currency_id', '=', currency_id.id)])
@@ -712,7 +726,7 @@ class MagentoInstance(models.Model):
         if args is None:
             args = {}
         magento_order_data_queue_obj = self.env['magento.order.data.queue.ept']
-        magento_instance = self.env['magento.instance']
+        magento_instance = self.env[MAGENTO_INSTANCE]
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
             instance = magento_instance.browse(magento_instance_id)
@@ -738,7 +752,7 @@ class MagentoInstance(models.Model):
         if args is None:
             args = {}
         magento_import_product_queue_obj = self.env['sync.import.magento.product.queue']
-        magento_instance = self.env['magento.instance']
+        magento_instance = self.env[MAGENTO_INSTANCE]
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
             instance = magento_instance.browse(magento_instance_id)
@@ -765,7 +779,7 @@ class MagentoInstance(models.Model):
             args = {}
         magento_product_product = self.env['magento.product.product']
         magento_inventory_locations_obj = self.env['magento.inventory.locations']
-        magento_instance = self.env['magento.instance']
+        magento_instance = self.env[MAGENTO_INSTANCE]
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
             instance = magento_instance.browse(magento_instance_id)
@@ -773,8 +787,7 @@ class MagentoInstance(models.Model):
                 magento_product_product.export_multiple_product_stock_to_magento(instance)
             else:
                 inventory_locations = magento_inventory_locations_obj.search([
-                    ('magento_instance_id', '=', instance.id), ('active', '=', True)
-                ])
+                    ('magento_instance_id', '=', instance.id)])
                 magento_product_product.export_product_stock_to_multiple_locations(instance, inventory_locations)
             instance.last_update_stock_time = datetime.now()
 
@@ -788,7 +801,7 @@ class MagentoInstance(models.Model):
         if args is None:
             args = {}
         stock_picking = self.env['stock.picking']
-        magento_instance = self.env['magento.instance']
+        magento_instance = self.env[MAGENTO_INSTANCE]
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
             instance = magento_instance.browse(magento_instance_id)
@@ -804,7 +817,7 @@ class MagentoInstance(models.Model):
         if args is None:
             args = {}
         account_move = self.env['account.move']
-        magento_instance = self.env['magento.instance']
+        magento_instance = self.env[MAGENTO_INSTANCE]
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
             instance = magento_instance.browse(magento_instance_id)
@@ -917,7 +930,7 @@ class MagentoInstance(models.Model):
         :return: total number of Magento products ids and action for products
         """
         product_data = {}
-        main_sql = """select count(id) as total_count from magento_product_template where 
+        main_sql = """select count(id) as total_count from magento_product_template where
         magento_product_template.magento_instance_id = %s""" % (record.id)
         domain = []
         if exported != 'All' and exported:
@@ -927,7 +940,6 @@ class MagentoInstance(models.Model):
             main_sql = main_sql + " and magento_product_template.sync_product_with_magento = False"
             domain.append(('sync_product_with_magento', '=', False))
         elif exported == 'All':
-            # main_sql = main_sql + " and magento_product_template.sync_product_with_magento in (False,True)"
             domain.append(('sync_product_with_magento', 'in', (False, True)))
 
         if product_type:
@@ -1231,7 +1243,6 @@ class MagentoInstance(models.Model):
         view = self.env.ref('odoo_magento2_ept.'
                             'action_wizard_magento_instance_import_export_operations').sudo().read()[0]
         action = self.prepare_action(view, [])
-        website = self.browse(record_id)
         action.update({'context': {'default_magento_instance_id': record_id}})
         return action
 
@@ -1354,83 +1365,12 @@ class MagentoInstance(models.Model):
         data_type = False
         total_percentage = 0.0
 
-        def get_compared_week_data(record):
-            current_total = 0.0
-            previous_total = 0.0
-            day_of_week = date.weekday(date.today())
-            self._cr.execute("""select sum(amount_untaxed) as current_week from sale_order
-                                    where date(date_order) >= (select date_trunc('week', date(current_date))) and
-                                    magento_instance_id=%s and state in ('sale','done')""" %
-                             (record.id))
-            current_week_data = self._cr.dictfetchone()
-            if current_week_data:
-                current_total = current_week_data.get('current_week') if current_week_data.get('current_week') else 0
-            # Previous week data
-            self._cr.execute("""select sum(amount_untaxed) as previous_week from sale_order
-                                where date(date_order) between (select date_trunc('week', current_date) - interval '7 day') 
-                                and (select date_trunc('week', (select date_trunc('week', current_date) - interval '7
-                                day')) + interval '%s day')
-                                and magento_instance_id=%s and state in ('sale','done')
-                                """ % (day_of_week, record.id))
-            previous_week_data = self._cr.dictfetchone()
-            if previous_week_data:
-                previous_total = previous_week_data.get('previous_week') if previous_week_data.get(
-                    'previous_week') else 0
-            return current_total, previous_total
-
-        def get_compared_month_data(record):
-            current_total = 0.0
-            previous_total = 0.0
-            day_of_month = date.today().day - 1
-            self._cr.execute("""select sum(amount_untaxed) as current_month from sale_order
-                                    where date(date_order) >= (select date_trunc('month', date(current_date)))
-                                    and magento_instance_id=%s and state in ('sale','done')""" %
-                             (record.id))
-            current_data = self._cr.dictfetchone()
-            if current_data:
-                current_total = current_data.get('current_month') if current_data.get('current_month') else 0
-            # Previous week data
-            self._cr.execute("""select sum(amount_untaxed) as previous_month from sale_order where date(date_order)
-                                between (select date_trunc('month', current_date) - interval '1 month') and
-                                (select date_trunc('month', (select date_trunc('month', current_date) - interval
-                                '1 month')) + interval '%s days')
-                                and magento_instance_id=%s and state in ('sale','done')
-                                """ % (day_of_month, record.id))
-            previous_data = self._cr.dictfetchone()
-            if previous_data:
-                previous_total = previous_data.get('previous_month') if previous_data.get('previous_month') else 0
-            return current_total, previous_total
-
-        def get_compared_year_data(record):
-            current_total = 0.0
-            previous_total = 0.0
-            year_begin = date.today().replace(month=1, day=1)
-            year_end = date.today()
-            delta = (year_end - year_begin).days - 1
-            self._cr.execute("""select sum(amount_untaxed) as current_year from sale_order
-                                    where date(date_order) >= (select date_trunc('year', date(current_date)))
-                                    and magento_instance_id=%s and state in ('sale','done')""" %
-                             (record.id))
-            current_data = self._cr.dictfetchone()
-            if current_data:
-                current_total = current_data.get('current_year') if current_data.get('current_year') else 0
-            # Previous week data
-            self._cr.execute("""select sum(amount_untaxed) as previous_year from sale_order where date(date_order)
-                                between (select date_trunc('year', date(current_date) - interval '1 year')) and 
-                                (select date_trunc('year', date(current_date) - interval '1 year') + interval '%s days') 
-                                and magento_instance_id=%s and state in ('sale','done')
-                                """ % (delta, record.id))
-            previous_data = self._cr.dictfetchone()
-            if previous_data:
-                previous_total = previous_data.get('previous_year') if previous_data.get('previous_year') else 0
-            return current_total, previous_total
-
         if self._context.get('sort') == 'week':
-            current_total, previous_total = get_compared_week_data(record)
+            current_total, previous_total = self.get_compared_week_data(record)
         elif self._context.get('sort') == "month":
-            current_total, previous_total = get_compared_month_data(record)
+            current_total, previous_total = self.get_compared_month_data(record)
         elif self._context.get('sort') == "year":
-            current_total, previous_total = get_compared_year_data(record)
+            current_total, previous_total = self.get_compared_year_data(record)
         else:
             current_total, previous_total = 0.0, 0.0
         if current_total > 0.0:
@@ -1442,21 +1382,73 @@ class MagentoInstance(models.Model):
                 total_percentage = (previous_total - current_total) * 100 / current_total
         return data_type, round(total_percentage, 2)
 
-    def open_store_views(self):
-        """
-        This method used to view all store views for website.
-        """
-        form_view_id = self.env.ref('odoo_magento2_ept.view_magento_storeview_form').id
-        tree_view = self.env.ref('odoo_magento2_ept.view_magento_storeview_tree').id
-        action = {
-            'name': 'Magento Store Views',
-            'type': 'ir.actions.act_window',
-            'view_type': 'form',
-            'view_mode': 'tree',
-            'res_model': 'magento.storeview',
-            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
-            'view_id': tree_view,
-            'target': 'current',
-            'domain': [('id', 'in', self.store_view_ids.ids)]
-        }
-        return action
+    def get_compared_week_data(self, record):
+        current_total = 0.0
+        previous_total = 0.0
+        day_of_week = date.weekday(date.today())
+        self._cr.execute("""select sum(amount_untaxed) as current_week from sale_order
+                                where date(date_order) >= (select date_trunc('week', date(current_date))) and
+                                magento_instance_id=%s and state in ('sale','done')""" %
+                         (record.id))
+        current_week_data = self._cr.dictfetchone()
+        if current_week_data and current_week_data.get('current_week'):
+            current_total = current_week_data.get('current_week')
+        # Previous week data
+        self._cr.execute("""select sum(amount_untaxed) as previous_week from sale_order
+                            where date(date_order) between (select date_trunc('week', current_date) - interval '7 day') 
+                            and (select date_trunc('week', (select date_trunc('week', current_date) - interval '7
+                            day')) + interval '%s day')
+                            and magento_instance_id=%s and state in ('sale','done')
+                            """ % (day_of_week, record.id))
+        previous_week_data = self._cr.dictfetchone()
+        if previous_week_data and previous_week_data.get(
+                'previous_week'):
+            previous_total = previous_week_data.get('previous_week')
+        return current_total, previous_total
+
+    def get_compared_month_data(self, record):
+        current_total = 0.0
+        previous_total = 0.0
+        day_of_month = date.today().day - 1
+        self._cr.execute("""select sum(amount_untaxed) as current_month from sale_order
+                                where date(date_order) >= (select date_trunc('month', date(current_date)))
+                                and magento_instance_id=%s and state in ('sale','done')""" %
+                         (record.id))
+        current_data = self._cr.dictfetchone()
+        if current_data and current_data.get('current_month'):
+            current_total = current_data.get('current_month')
+        # Previous week data
+        self._cr.execute("""select sum(amount_untaxed) as previous_month from sale_order where date(date_order)
+                            between (select date_trunc('month', current_date) - interval '1 month') and
+                            (select date_trunc('month', (select date_trunc('month', current_date) - interval
+                            '1 month')) + interval '%s days')
+                            and magento_instance_id=%s and state in ('sale','done')
+                            """ % (day_of_month, record.id))
+        previous_data = self._cr.dictfetchone()
+        if previous_data and previous_data.get('previous_month'):
+            previous_total = previous_data.get('previous_month')
+        return current_total, previous_total
+
+    def get_compared_year_data(self, record):
+        current_total = 0.0
+        previous_total = 0.0
+        year_begin = date.today().replace(month=1, day=1)
+        year_end = date.today()
+        delta = (year_end - year_begin).days - 1
+        self._cr.execute("""select sum(amount_untaxed) as current_year from sale_order
+                                where date(date_order) >= (select date_trunc('year', date(current_date)))
+                                and magento_instance_id=%s and state in ('sale','done')""" %
+                         (record.id))
+        current_data = self._cr.dictfetchone()
+        if current_data and current_data.get('current_year'):
+            current_total = current_data.get('current_year')
+        # Previous week data
+        self._cr.execute("""select sum(amount_untaxed) as previous_year from sale_order where date(date_order)
+                            between (select date_trunc('year', date(current_date) - interval '1 year')) and 
+                            (select date_trunc('year', date(current_date) - interval '1 year') + interval '%s days') 
+                            and magento_instance_id=%s and state in ('sale','done')
+                            """ % (delta, record.id))
+        previous_data = self._cr.dictfetchone()
+        if previous_data and previous_data.get('previous_year'):
+            previous_total = previous_data.get('previous_year')
+        return current_total, previous_total

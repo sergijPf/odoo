@@ -27,16 +27,23 @@
             <field name="arch" type="xml">
                 <form string="Product" name="product_form" create="false">
                     <sheet>
-                        <field name="type" on_change="1" modifiers="{'required': true}" invisible="1"/>
-                        <field name="product_variant_count" invisible="1" modifiers="{'invisible': true, 'readonly': true}"/>
                         <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
+                        <field name="active" invisible="True" />
+                        <field name="active_product" class="oe_inline" invisible='1'/>
                         <div class="oe_button_box" name="button_box">
-                            <button name="toggle_active" type="object" class="oe_stat_button" attrs="{'invisible': [('product_type', '=', 'configurable')]}" icon="fa-archive">
-                                <field name="active" widget="boolean_button" options="{'terminology': 'archive'}"  modifiers="{}"/>
+                            <button class="oe_stat_button"
+                                    name="toggle_active" icon="fa-lock"
+                                    type="object" attrs="{'invisible': [('active','=',False)]}">
+                                <span class="o_stat_text" style="color:#2dab2d">Active</span>
+                            </button>
+                            <button class="oe_stat_button"
+                                    name="toggle_active" icon="fa-unlock"
+                                    type="object" attrs="{'invisible': [('active','=',True)]}">
+                                <span class="o_stat_text" style="color:#da3434">Archived</span>
                             </button>
                             <button string="Odoo Product" type="object" name="view_odoo_product"  class="oe_stat_button" icon="fa-chain" />
                         </div>
-                        <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>
+                        <field name="image_1920" widget="image" class="oe_avatar"/>
                         <div class="oe_title">
                             <label class="oe_edit_only" for="magento_product_name" string="Product Name"/>
                             <h1>
@@ -54,7 +61,8 @@
                                             <field name="magento_tmpl_id" readonly="1"/>
                                         </group>
                                         <group name="group_standard_price">
-                                            <field name="lst_price" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'readonly': [('product_variant_count', '&gt;', 1)]}" modifiers="{'readonly': [['product_variant_count', '&gt;', 1]]}"/>
+                                            <field name="total_magento_variants" invisible="1"/>
+                                            <field name="lst_price" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'readonly': [('total_magento_variants', '&gt;', 1)]}" modifiers="{'readonly': [['total_magento_variants', '&gt;', 1]]}"/>
                                             <field name="valuation" invisible="1" readonly="1" modifiers="{'invisible': true, 'readonly': true}"/>
                                             <field name="cost_method" invisible="1" readonly="1" modifiers="{'invisible': true, 'readonly': true}"/>
                                             <label for="standard_price"/>
@@ -75,7 +83,7 @@
                                         <separator string="Description" colspan="4"/>
                                         <field name="description" colspan="4" nolabel="1" placeholder="This note will be displayed on the quotations." modifiers="{}"/>
                                         <separator string="Short Description" colspan="4"/>
-                                        <field name="description_sale" colspan="4" nolabel="1" placeholder="This note will be displayed on the quotations." modifiers="{}"/>
+                                        <field name="short_description" colspan="4" nolabel="1" placeholder="This note will be displayed on the quotations." modifiers="{}"/>
                                     </group>
                                 </page>
                                 <page string="Magento Details" name="magento_conf">

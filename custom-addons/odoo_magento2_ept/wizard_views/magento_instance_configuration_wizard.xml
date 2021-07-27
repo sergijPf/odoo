@@ -22,6 +22,13 @@
                         <field name='magento_url' required="1" readonly="context.get('is_already_instance_created', False)" string="Host" placeholder="http://test.emiprotechnologies.com"/>
                     </group>
                 </group>
+                <group class="o_onboard_padding">
+                    <group class="magento_verify_ssl">
+                        <field name='magento_verify_ssl' widget="boolean_toggle"
+                               class="o_onboard_boolean_toggle"
+                               readonly="context.get('is_already_instance_created', False)"/>
+                    </group>
+                </group>
                 <group class="o_onboard_padding"
                        attrs="{'invisible': ['|', ('magento_version', '==', '2.1'),('magento_version', '==', '2.2')]}">
                     <group class="woo_is_export_update_images_alignment">

@@ -243,19 +243,21 @@
             </field>
         </record>
 
-<!--        <record id="decide_main_action" model="ir.actions.act_window">-->
-<!--            <field name="name">Dashboard Main Action</field>-->
-<!--            <field name="model_id" ref="model_magento_instance"/>-->
-<!--            <field name="state">code</field>-->
-<!--            <field name="code">action = model.check_dashboard_view()</field>-->
-<!--        </record>-->
         <record id="decide_main_action" model="ir.actions.server">
         <field name="name">Dashboard Main Action</field>
         <field name="model_id" ref="model_magento_instance"/>
         <field name="state">code</field>
         <field name="code">action = env.get('magento.instance').check_dashboard_view()</field>
     </record>
-        <menuitem id="menu_main_magento_dashboard_ept" name="Dashboard"
-            parent="odoo_magento2_ept.menu_magento_root" sequence="1"
-            action="decide_main_action" />
+    <menuitem id="menu_main_magento_dashboard_ept" name="Dashboard"
+        parent="odoo_magento2_ept.menu_magento_root" sequence="1"
+        action="decide_main_action" />
+
+    <template id="assets_backend_magento_inherit" inherit_id="web.assets_backend"
+              name="Backend Assets (used in backend interface)">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/scss"
+                  href="/odoo_magento2_ept/static/src/css/graph_widget_ept.scss"/>
+        </xpath>
+    </template>
 </odoo>

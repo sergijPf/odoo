@@ -4,8 +4,18 @@
 Describes fields and methods for Magento Cron Configuration
 """
 from dateutil.relativedelta import relativedelta
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+RES_USERS = 'res.users'
+IMPORT_SALE_ORDER_CRON = 'odoo_magento2_ept.ir_cron_import_sale_orders_instance_id_%d'
+EXPORT_PRODUCT_STOCK_CRON = 'odoo_magento2_ept.ir_cron_export_product_stock_qty_instance_id_%d'
+EXPORT_SHIPMENT_ORDER_STATUS_CRON = 'odoo_magento2_ept.ir_cron_export_shipment_order_status_instance_id_%d'
+EXPORT_INVOICE_CRON = 'odoo_magento2_ept.ir_cron_export_invoice_instance_id_%d'
+IMPORT_MAGENTO_PRODUCT_CRON = 'odoo_magento2_ept.ir_cron_import_magento_product_instance_id_%d'
+CRON_ERROR_MSG = 'Core settings of Magento are deleted, please upgrade Magento module to back this settings.'
+MAGENTO_STR = 'Magento - '
+IR_MODEL_DATA = 'ir.model.data'
+IR_CRON = 'ir.cron'
 
 _intervalTypes = {
     'work_days': lambda interval: relativedelta(days=interval),
@@ -41,7 +51,7 @@ class MagentoCronConfiguration(models.TransientModel):
     )
     auto_import_product_interval_number = fields.Integer(
         string='Auto Import Product Interval Numbers',
-        help="Repeat every x.",
+        help="Import product every x interval.",
         default=1
     )
     auto_import_product_interval_type = fields.Selection([
@@ -53,12 +63,12 @@ class MagentoCronConfiguration(models.TransientModel):
     ], string='Auto Import Product Interval Unit', help='Auto Import Product Interval Unit')
     auto_import_product_next_execution = fields.Datetime(
         string='Auto Next Product Execution',
-        help='Next execution time'
+        help='Next execution time for import product'
     )
     auto_import_product_user_id = fields.Many2one(
-        'res.users',
+        RES_USERS,
         string='Auto Import Product User',
-        help="Responsible User"
+        help="Responsible User for import product"
     )
 
     # Auto import sale orders
@@ -68,7 +78,7 @@ class MagentoCronConfiguration(models.TransientModel):
     )
     auto_import_sale_orders_interval_number = fields.Integer(
         string='Auto Import sale orders Interval Number',
-        help="Repeat every x.",
+        help="Import sale order every x interval.",
         default=1
     )
     auto_import_sale_orders_interval_type = fields.Selection([
@@ -80,12 +90,12 @@ class MagentoCronConfiguration(models.TransientModel):
     ], string='Auto Import Sale Order Interval Unit', help='Auto Import Sale Order Interval Unit')
     auto_import_sale_orders_next_execution = fields.Datetime(
         string='Auto Next Sale Execution',
-        help='Next execution time'
+        help='Next execution time for import sale order'
     )
     auto_import_sale_order_user_id = fields.Many2one(
-        'res.users',
+        RES_USERS,
         string='Auto Import Sale Order User',
-        help="Responsible User"
+        help="Responsible User for import sale order"
     )
 
     # Auto Export Product Stock
@@ -95,7 +105,7 @@ class MagentoCronConfiguration(models.TransientModel):
     )
     auto_export_product_stock_interval_number = fields.Integer(
         string='Auto Export Product Stock Interval Numbers',
-        help="Repeat every x.",
+        help="Export product stock every x interval.",
         default=1
     )
     auto_export_product_stock_interval_type = fields.Selection(
@@ -111,12 +121,12 @@ class MagentoCronConfiguration(models.TransientModel):
     )
     auto_export_product_stock_next_execution = fields.Datetime(
         string='Auto Next Export Product Execution',
-        help='Next execution time'
+        help='Next execution time for export product stock'
     )
     auto_export_product_stock_user_id = fields.Many2one(
-        'res.users',
+        RES_USERS,
         string='Auto Export Product User',
-        help="Responsible User"
+        help="Responsible User for export product stock"
     )
 
     # Auto Export Invoice
@@ -126,7 +136,7 @@ class MagentoCronConfiguration(models.TransientModel):
     )
     auto_export_invoice_interval_number = fields.Integer(
         string='Auto Export Invoice Interval Numbers',
-        help="Repeat every x.",
+        help="Export Invoice every x interval.",
         default=1
     )
     auto_export_invoice_interval_type = fields.Selection([
@@ -138,12 +148,12 @@ class MagentoCronConfiguration(models.TransientModel):
     ], string='Auto Export Invoice  Interval Unit', help='Auto Export Invoice  Interval Unit')
     auto_export_invoice_next_execution = fields.Datetime(
         string='Auto Next Export Invoice  Execution',
-        help='Next execution time'
+        help='Next execution time for export invoice'
     )
     auto_export_invoice_user_id = fields.Many2one(
-        'res.users',
+        RES_USERS,
         string='Auto Export Invoice User',
-        help="Responsible User"
+        help="Responsible User for export invoice"
     )
 
     # Auto Export Shipment Information
@@ -153,7 +163,7 @@ class MagentoCronConfiguration(models.TransientModel):
     )
     auto_export_shipment_order_status_interval_number = fields.Integer(
         string='Auto Update Order Status Interval Number',
-        help="Repeat every x.",
+        help="Export shipment every x interval.",
         default=1
     )
     auto_export_shipment_order_status_interval_type = fields.Selection([
@@ -165,12 +175,12 @@ class MagentoCronConfiguration(models.TransientModel):
     ], string='Auto Export Shipment Interval Unit', help='Auto Export Shipment Interval Unit')
     auto_export_shipment_order_status_next_execution = fields.Datetime(
         string='Auto Next Order Status Execution',
-        help='Next execution time'
+        help='Next execution time for export shipment'
     )
     auto_export_shipment_order_status_user_id = fields.Many2one(
-        'res.users',
+        RES_USERS,
         string='Auto Update Order User',
-        help="Responsible User"
+        help="Responsible User for export shipment"
     )
 
     @api.onchange("magento_instance_id")
@@ -194,9 +204,9 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         try:
             magento_import_order_cron_exist = instance and self.env.ref(
-                'odoo_magento2_ept.ir_cron_import_sale_orders_instance_id_%d' % instance.id
+                IMPORT_SALE_ORDER_CRON % instance.id
             )
-        except:
+        except Exception:
             magento_import_order_cron_exist = False
         if magento_import_order_cron_exist:
             interval_number = magento_import_order_cron_exist.interval_number or False
@@ -217,9 +227,9 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         try:
             magento_export_product_stock_cron_exist = instance and self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_product_stock_qty_instance_id_%d' % instance.id
+                EXPORT_PRODUCT_STOCK_CRON % instance.id
             )
-        except:
+        except Exception:
             magento_export_product_stock_cron_exist = False
         if magento_export_product_stock_cron_exist:
             interval_number = magento_export_product_stock_cron_exist.interval_number or False
@@ -240,9 +250,9 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         try:
             export_shipment_order_cron_exist = instance and self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_shipment_order_status_instance_id_%d' % instance.id
+                EXPORT_SHIPMENT_ORDER_STATUS_CRON % instance.id
             )
-        except:
+        except Exception:
             export_shipment_order_cron_exist = False
         if export_shipment_order_cron_exist:
             export_shipment_order_cron_active = export_shipment_order_cron_exist.active
@@ -264,9 +274,9 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         try:
             export_invoice_cron_exist = magento_instance and self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_invoice_instance_id_%d' % (magento_instance.id)
+                EXPORT_INVOICE_CRON % (magento_instance.id)
             )
-        except:
+        except Exception:
             export_invoice_cron_exist = False
         if export_invoice_cron_exist:
             interval_number = export_invoice_cron_exist.interval_number or False
@@ -285,9 +295,9 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         try:
             import_product_cron_exist = instance and self.env.ref(
-                'odoo_magento2_ept.ir_cron_import_magento_product_instance_id_%d' % instance.id
+                IMPORT_MAGENTO_PRODUCT_CRON % instance.id
             )
-        except:
+        except Exception:
             import_product_cron_exist = False
         if import_product_cron_exist:
             interval_number = import_product_cron_exist.interval_number or False
@@ -333,7 +343,7 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         if self.auto_import_sale_orders:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_import_sale_orders_instance_id_%d' % magento_instance.id,
+                IMPORT_SALE_ORDER_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
             auto_import_sale_order_user_id = self.auto_import_sale_order_user_id
@@ -355,23 +365,20 @@ class MagentoCronConfiguration(models.TransientModel):
                     raise_if_not_found=False
                 )
                 if not import_sale_orders_cron:
-                    raise UserError(
-                        'Core settings of Magento are deleted,'
-                        ' please upgrade Magento module to back this settings.'
-                    )
-                name = 'Magento - ' + magento_instance.name + ' : Import Sale Orders'
+                    raise UserError(_(CRON_ERROR_MSG))
+                name = MAGENTO_STR + magento_instance.name + ' : Import Sale Orders'
                 vals.update({'name': name})
                 new_cron = import_sale_orders_cron.copy(default=vals)
-                self.env['ir.model.data'].create({
+                self.env[IR_MODEL_DATA].create({
                     'module': 'odoo_magento2_ept',
                     'name': 'ir_cron_import_sale_orders_instance_id_%d' % magento_instance.id,
-                    'model': 'ir.cron',
+                    'model': IR_CRON,
                     'res_id': new_cron.id,
                     'noupdate': True
                 })
         else:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_import_sale_orders_instance_id_%d' % magento_instance.id,
+                IMPORT_SALE_ORDER_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
             if cron_exist:
@@ -386,7 +393,7 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         if self.auto_export_product_stock:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_product_stock_qty_instance_id_%d' % magento_instance.id,
+                EXPORT_PRODUCT_STOCK_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
             auto_export_product_stock_user = self.auto_export_product_stock_user_id
@@ -409,24 +416,21 @@ class MagentoCronConfiguration(models.TransientModel):
                     raise_if_not_found=False
                 )
                 if not export_product_stock_cron:
-                    raise UserError(
-                        'Core settings of Magento are deleted,'
-                        ' please upgrade Magento module to back this settings.'
-                    )
+                    raise UserError(_(CRON_ERROR_MSG))
 
-                name = 'Magento - ' + magento_instance.name + ' : Update Stock Quantities'
+                name = MAGENTO_STR + magento_instance.name + ' : Update Stock Quantities'
                 vals.update({'name': name})
                 new_cron = export_product_stock_cron.copy(default=vals)
-                self.env['ir.model.data'].create({
+                self.env[IR_MODEL_DATA].create({
                     'module': 'odoo_magento2_ept',
                     'name': 'ir_cron_export_product_stock_qty_instance_id_%d' % magento_instance.id,
-                    'model': 'ir.cron',
+                    'model': IR_CRON,
                     'res_id': new_cron.id,
                     'noupdate': True
                 })
         else:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_product_stock_qty_instance_id_%d' % magento_instance.id,
+                EXPORT_PRODUCT_STOCK_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
             if cron_exist:
@@ -441,7 +445,7 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         if self.auto_export_shipment_order_status:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_shipment_order_status_instance_id_%d' % magento_instance.id,
+                EXPORT_SHIPMENT_ORDER_STATUS_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
             export_ship_order_status_user = self.auto_export_shipment_order_status_user_id
@@ -464,24 +468,21 @@ class MagentoCronConfiguration(models.TransientModel):
                     raise_if_not_found=False
                 )
                 if not update_order_status_cron:
-                    raise UserError(
-                        'Core settings of Magento are deleted,'
-                        ' please upgrade Magento module to back this settings.'
-                    )
+                    raise UserError(_(CRON_ERROR_MSG))
 
-                name = 'Magento - ' + magento_instance.name + ' : Export Shipment Information'
+                name = MAGENTO_STR + magento_instance.name + ' : Export Shipment Information'
                 vals.update({'name': name})
                 new_cron = update_order_status_cron.copy(default=vals)
-                self.env['ir.model.data'].create({
+                self.env[IR_MODEL_DATA].create({
                     'module': 'odoo_magento2_ept',
                     'name': 'ir_cron_export_shipment_order_status_instance_id_%d' % magento_instance.id,
-                    'model': 'ir.cron',
+                    'model': IR_CRON,
                     'res_id': new_cron.id,
                     'noupdate': True
                 })
         else:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_shipment_order_status_instance_id_%d' % magento_instance.id,
+                EXPORT_SHIPMENT_ORDER_STATUS_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
             if cron_exist:
@@ -496,7 +497,7 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         if self.auto_export_invoice:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_invoice_instance_id_%d' % magento_instance.id,
+                EXPORT_INVOICE_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
 
@@ -518,24 +519,21 @@ class MagentoCronConfiguration(models.TransientModel):
                     raise_if_not_found=False
                 )
                 if not export_inovice_cron:
-                    raise UserError(
-                        'Core settings of Magento are deleted,'
-                        ' please upgrade Magento module to back this settings.'
-                    )
+                    raise UserError(_(CRON_ERROR_MSG))
 
-                name = 'Magento - ' + magento_instance.name + ' : Export Invoice'
+                name = MAGENTO_STR + magento_instance.name + ' : Export Invoice'
                 vals.update({'name': name})
                 new_cron = export_inovice_cron.copy(default=vals)
-                self.env['ir.model.data'].create({
+                self.env[IR_MODEL_DATA].create({
                     'module': 'odoo_magento2_ept',
                     'name': 'ir_cron_export_invoice_instance_id_%d' % magento_instance.id,
-                    'model': 'ir.cron',
+                    'model': IR_CRON,
                     'res_id': new_cron.id,
                     'noupdate': True
                 })
         else:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_export_invoice_instance_id_%d' % magento_instance.id,
+                EXPORT_INVOICE_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
             if cron_exist:
@@ -550,7 +548,7 @@ class MagentoCronConfiguration(models.TransientModel):
         """
         if self.auto_import_product:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_import_magento_product_instance_id_%d' % magento_instance.id,
+                IMPORT_MAGENTO_PRODUCT_CRON % magento_instance.id,
                 raise_if_not_found=False)
 
             vals = {
@@ -570,24 +568,21 @@ class MagentoCronConfiguration(models.TransientModel):
                     raise_if_not_found=False
                 )
                 if not export_inovice_cron:
-                    raise UserError(
-                        'Core settings of Magento are deleted,'
-                        ' please upgrade Magento module to back this settings.'
-                    )
+                    raise UserError(_(CRON_ERROR_MSG))
 
-                name = 'Magento - ' + magento_instance.name + ' : Import Product'
+                name = MAGENTO_STR + magento_instance.name + ' : Import Product'
                 vals.update({'name': name})
                 new_cron = export_inovice_cron.copy(default=vals)
-                self.env['ir.model.data'].create({
+                self.env[IR_MODEL_DATA].create({
                     'module': 'odoo_magento2_ept',
                     'name': 'ir_cron_import_magento_product_instance_id_%d' % magento_instance.id,
-                    'model': 'ir.cron',
+                    'model': IR_CRON,
                     'res_id': new_cron.id,
                     'noupdate': True
                 })
         else:
             cron_exist = self.env.ref(
-                'odoo_magento2_ept.ir_cron_import_magento_product_instance_id_%d' % magento_instance.id,
+                IMPORT_MAGENTO_PRODUCT_CRON % magento_instance.id,
                 raise_if_not_found=False
             )
             if cron_exist:

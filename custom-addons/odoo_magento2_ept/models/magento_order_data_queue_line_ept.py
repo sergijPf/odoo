@@ -7,6 +7,8 @@ import json
 import time
 from datetime import timedelta, datetime
 from odoo import models, fields
+MAGENTO_ORDER_DATA_QUEUE_EPT = "magento.order.data.queue.ept"
+SALE_ORDER = 'sale.order'
 
 
 class MagentoOrderDataQueueLineEpt(models.Model):
@@ -17,7 +19,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
     _description = "Magento Order Data Queue Line EPT"
     _rec_name = "magento_order_id"
 
-    magento_order_data_queue_id = fields.Many2one("magento.order.data.queue.ept")
+    magento_order_data_queue_id = fields.Many2one(MAGENTO_ORDER_DATA_QUEUE_EPT, ondelete="cascade")
     magento_instance_id = fields.Many2one(
         'magento.instance',
         string='Magento Instance',
@@ -54,7 +56,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         return {
             'name': 'Sale Order',
             'type': 'ir.actions.act_window',
-            'res_model': 'sale.order',
+            'res_model': SALE_ORDER,
             'view_type': 'form',
             'view_mode': 'tree,form',
             'domain': [('id', '=', self.sale_order_id.id)]
@@ -101,7 +103,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         """
         # Here search order queue having below 50 order queue line, then add queue line in that queue
         # Or else create new order queue
-        order_data_queue_obj = self.env["magento.order.data.queue.ept"].\
+        order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT].\
             search([('state', '=', 'draft'), ('magento_instance_id', '=', magento_instance.id)]).\
             filtered(lambda x: x.order_queue_line_total_record and x.order_queue_line_total_record < 50)
         order_queue_data_id = order_data_queue_obj[0] if order_data_queue_obj else False
@@ -121,7 +123,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         This method is called from cron job.
         """
         order_queue_ids = []
-        magento_import_order_queue_obj = self.env["magento.order.data.queue.ept"]
+        magento_import_order_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT]
         query = """select queue.id from magento_order_data_queue_line_ept as queue_line
                 inner join magento_order_data_queue_ept as queue on queue_line.magento_order_data_queue_id = queue.id
                 where queue_line.state='draft' and queue.is_action_require = 'False'
@@ -130,10 +132,9 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         order_data_queue_list = self._cr.fetchall()
         for result in order_data_queue_list:
             order_queue_ids.append(result[0])
-        if not order_queue_ids:
-            return True
-        order_queues = magento_import_order_queue_obj.browse(list(set(order_queue_ids)))
-        self.process_order_queue_and_post_message(order_queues)
+        if order_queue_ids:
+            order_queues = magento_import_order_queue_obj.browse(list(set(order_queue_ids)))
+            self.process_order_queue_and_post_message(order_queues)
         return True
 
     def process_order_queue_and_post_message(self, order_queues):
@@ -165,7 +166,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         """
         This method processes order queue lines.
         """
-        sale_order_obj = self.env['sale.order']
+        sale_order_obj = self.env[SALE_ORDER]
         magento_prod = {}
         inv_cust = {}
         del_cust = {}
@@ -203,7 +204,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         if queue_id.order_common_log_book_id:
             log_book_id = queue_id.order_common_log_book_id
         else:
-            model_id = self.env['common.log.lines.ept'].get_model_id('sale.order')
+            model_id = self.env['common.log.lines.ept'].get_model_id(SALE_ORDER)
             log_book_id = self.env["common.log.book.ept"].create({
                 'type': 'import',
                 'module': 'magento_ept',

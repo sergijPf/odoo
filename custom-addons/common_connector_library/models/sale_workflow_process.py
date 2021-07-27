@@ -61,7 +61,6 @@ class SaleWorkflowProcess(models.Model):
         for record in self:
             if not record.create_invoice:
                 record.register_payment = False
-                record.invoice_date_is_order_date = False
 
     @api.model
     def auto_workflow_process_ept(self, auto_workflow_process_id=False, order_ids=[]):

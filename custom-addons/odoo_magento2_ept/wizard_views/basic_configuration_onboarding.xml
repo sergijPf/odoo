@@ -167,7 +167,7 @@
                             <label for="import_stock_warehouse" class="o_onboard_label" string="Import Stock Warehouse"/>
                             <field name="import_stock_warehouse"
                                    options="{'no_open':True,'no_create':True,'no_create_edit':True}"
-                                   attrs="{'required':[('is_import_product_stock','=',True)]}"
+                                   attrs="{'required':[('is_import_product_stock','=',True),('is_multi_warehouse_in_magento', '=', False)]}"
                                    class="o_light_label w-50 o_onboard_select" widget="selection"
                             />
                             <a href="javascript:void(0)"
@@ -254,6 +254,16 @@
                                    class="o_light_label o_onboard_input"/>
                             <a href="javascript:void(0)"
                                title="Product price will be taken/set from this pricelist if Catalog Price Scope is website."
+                               class="mr-2 o_doc_link o_onboard_doc_link"/>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box o_onboard_setting_box" attrs="{'invisible': [('magento_website_id', '=', False)]}">
+                        <div class="ml-2 pl-1">
+                            <label for="tax_calculation_method" class="o_onboard_label" string="Tax Calculation Method"/>
+                            <field name="tax_calculation_method"
+                                   class="o_light_label w-50 o_onboard_select" widget="selection"/>
+                            <a href="javascript:void(0)"
+                               title="This indicates whether product prices received from Magento is including tax or excluding tax, when import sale order from Magento"
                                class="mr-2 o_doc_link o_onboard_doc_link"/>
                         </div>
                     </div>

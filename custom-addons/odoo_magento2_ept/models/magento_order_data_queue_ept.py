@@ -3,15 +3,13 @@
 """
 Describes methods for Magento import order data queue.
 """
-from datetime import datetime
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-#from odoo.addons.odoo_magento2_ept.models.api_request import req, create_search_criteria, create_filter
-#from odoo.addons.odoo_magento2_ept.python_library.php import Php
-from .api_request import req, create_search_criteria, create_filter
+from .api_request import req, create_search_criteria
 from ..python_library.php import Php
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+MAGENTO_ORDER_DATA_QUEUE_LINE_EPT = "magento.order.data.queue.line.ept"
 
 
 class MagentoOrderDataQueueEpt(models.Model):
@@ -42,7 +40,7 @@ class MagentoOrderDataQueueEpt(models.Model):
         help="Log lines of Common log book for particular order queue"
     )
     order_data_queue_line_ids = fields.One2many(
-        "magento.order.data.queue.line.ept",
+        MAGENTO_ORDER_DATA_QUEUE_LINE_EPT,
         "magento_order_data_queue_id",
         help="Order data queue line ids"
     )
@@ -132,7 +130,7 @@ class MagentoOrderDataQueueEpt(models.Model):
         :param start_date: Import Order Start Date
         :param end_date: Import Order End Date
         """
-        order_data_queue_line = self.env["magento.order.data.queue.line.ept"]
+        order_data_queue_line = self.env[MAGENTO_ORDER_DATA_QUEUE_LINE_EPT]
         order_queue_data = {'order_queue': False, 'count': 0, 'total_order_queues': 0}
         response = self.get_orders_api_response_from_magento(magento_instance, end_date, start_date)
         if response.get('messages', False) and response.get('messages', False).get('error'):
@@ -158,7 +156,6 @@ class MagentoOrderDataQueueEpt(models.Model):
                     total_imported_orders = magento_instance.magento_import_order_page_count * 50
                     magento_instance.magento_import_order_page_count += 1
                     self._cr.commit()
-            #magento_instance.last_order_import_date = datetime.now()
             magento_instance.magento_import_order_page_count = 1
         return order_queue_data
 
@@ -184,7 +181,7 @@ class MagentoOrderDataQueueEpt(models.Model):
         :param order_reference_lists:  Dictionary of Order References
         :return:
         """
-        order_data_queue_line = self.env["magento.order.data.queue.line.ept"]
+        order_data_queue_line = self.env[MAGENTO_ORDER_DATA_QUEUE_LINE_EPT]
         order_queue_data = {'order_queue': False, 'count': 0, 'total_order_queues': 0}
         order_statuses = instance.import_magento_order_status_ids.mapped('status')
         for order_reference in order_reference_lists:
@@ -200,7 +197,6 @@ class MagentoOrderDataQueueEpt(models.Model):
                 order_queue_data = order_data_queue_line.create_import_order_queue_line(
                     response.get('items'), instance, order_queue_data
                 )
-        #instance.last_order_import_date = datetime.now()
         return order_queue_data
 
     def create_search_criteria_for_import_order(self, import_order_filter, magento_order_status):

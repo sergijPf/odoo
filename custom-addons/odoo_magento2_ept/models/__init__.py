@@ -35,3 +35,4 @@ from . import data_queue_mixin_ept
 from . import account
 from . import magento_financial_status_ept
 from . import res_company
+from . import magento_res_partner_ept

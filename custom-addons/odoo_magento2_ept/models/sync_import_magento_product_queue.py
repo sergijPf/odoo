@@ -163,7 +163,6 @@ class SyncImportMagentoProductQueue(models.Model):
                     total_imported_products, product_queue_data = self.import_product_in_queue_line(response, instance, product_skus,
                                                                            product_queue_data, do_not_update_product)
                     self._cr.commit()
-        #instance.last_product_import_date = datetime.now()
         instance.magento_import_product_page_count = 1
         return product_queue_data
 
@@ -237,7 +236,6 @@ class SyncImportMagentoProductQueue(models.Model):
                     product_queue_data,
                     do_not_update_product
                 )
-        #instance.last_product_import_date = datetime.now()
         if log_line_id:
             self.create_log_of_missing_sku(instance, product_queue_data, log_line_id)
         return product_queue_data

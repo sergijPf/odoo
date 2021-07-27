@@ -87,7 +87,7 @@ class StockInventory(models.Model):
             'name': inventory_name,
             'location_ids': [(6, 0, [location_id.id])] if location_id else False,
             'date': time.strftime("%Y-%m-%d %H:%M:%S"),
-            'product_ids': [(6, 0, inventory_products)],
+            #'product_ids': [(6, 0, inventory_products)],
             'prefill_counted_quantity': 'zero',
             "company_id": location_id.company_id.id if location_id else self.env.company.id
         }

@@ -6,7 +6,7 @@ from odoo import models, fields, api
 class ProductProduct(models.Model):
     _inherit = "product.product"
 
-    ept_image_ids = fields.One2many('common.product.image.ept', 'product_id', string='Images')
+    ept_image_ids = fields.One2many('common.product.image.ept', 'product_id', string='Product Images')
     vendor_ids = fields.One2many('vendor.stock.ept', 'vendor_product_id', string="Vendor")
     is_drop_ship_product = fields.Boolean(store=False, compute="_compute_is_drop_ship_product")
 

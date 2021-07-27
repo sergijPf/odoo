@@ -28,6 +28,9 @@
                             </group>
                         </group>
                         <group>
+                            <field name='magento_verify_ssl' widget="boolean_toggle"/>
+                        </group>
+                        <group>
                             <field name='is_multi_warehouse_in_magento' widget="boolean_toggle" attrs="{'invisible': ['|', ('magento_version', '==', '2.1'),('magento_version', '==', '2.2')]}"/>
                         </group>
                         <group>

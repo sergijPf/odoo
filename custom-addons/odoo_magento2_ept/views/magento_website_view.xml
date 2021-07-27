@@ -29,6 +29,7 @@
                             <group>
                                 <field name="magento_instance_id" readonly="1" />
                                 <field name="magento_website_id" readonly="1" />
+                                <field name="tax_calculation_method" string="Tax Calculation Method" readonly="1" />
                             </group>
                             <group>
                                 <field name="warehouse_id" readonly="1"/>

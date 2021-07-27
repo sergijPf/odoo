@@ -28,6 +28,36 @@
                             </div>
                         </div>
                     </div>
+                        <div name="description_config">
+                            <h2 style="font-size:25px;background-color:#e9ecef;">
+                                Odoo Product Configuration
+                            </h2>
+                            <div class="row mt16 o_settings_container o_settings_container_magento_config">
+                                <div class="col-12 o_setting_box o_setting_box o_setting_box_magento_config">
+                                    <div class="o_setting_left_pane">
+                                        <field name="magento_set_sales_description_in_product" widget="boolean_toggle"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <label for="magento_set_sales_description_in_product"/>
+                                        <div class="text-muted">
+                                            If checked, it will be attached with Magento Layer's Product's description and short description.
+                                            <br/>
+                                            - This configuration applies to all Magento instances, not to particular
+                                            one.
+                                            <br/>
+                                            - The Description value is being received from Magento is in HTML format,
+                                            while it gets stored in Odoo product's field as Text format. Enable this, only
+                                            if works for you.
+                                            <br/>
+                                            - The Odoo product's Sales Description will be used in Sale order line.
+                                            <br/>
+                                            - When a new product from Magento will be created in Odoo, it will set the
+                                            Description into Odoo product's Internal Notes field and Short description into Sales Description field.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <h2 style="font-size:25px;background-color:#e9ecef;">Magento Instances
                         </h2>
                         <div class="row mt16 o_settings_container">
@@ -160,17 +190,6 @@
                                     </div>
                                 </div>
                             </div>
-<!--                            <div class="col-12 col-lg-6 o_setting_box">-->
-<!--                                <div class="o_setting_left_pane">-->
-<!--                                    <field name="is_export_dropship_picking" widget="boolean_toggle"/>-->
-<!--                                </div>-->
-<!--                                <div class="o_setting_right_pane">-->
-<!--                                    <label for="is_export_dropship_picking" string="Export 'Drop-ship' shipment details?" />-->
-<!--                                    <div class="text-muted" id="sale_coupon">-->
-<!--                                        Check if you want to export Drop-ship order shipping details from Odoo to Magento; otherwise, not.-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
                         </div>
                         <h2 style="font-size:25px;background-color:#e9ecef;" attrs="{'invisible': [('magento_instance_id', '=', False)]}">Inventory</h2>
                         <div class="row mt16 o_settings_container" attrs="{'invisible': [('magento_instance_id', '=', False)]}">
@@ -204,10 +223,10 @@
                                     <div class="text-muted" id="sale_coupon">
                                         If checked, import Product Stock from Magento to Odoo
                                     </div>
-                                    <div class="content-group" attrs="{'invisible' : ['|',('is_import_product_stock','=',False),('is_multi_warehouse_in_magento', '=', True)],'required' : [('is_import_product_stock','=',True)]}">
+                                    <div class="content-group" attrs="{'invisible' : ['|',('is_import_product_stock','=',False),('is_multi_warehouse_in_magento', '=', True)]}">
                                         <div>
                                             <label for="import_stock_warehouse" string="Import Stock Warehouse"/>
-                                            <field name="import_stock_warehouse"/>
+                                            <field name="import_stock_warehouse" attrs="{'required' : [('is_import_product_stock','=',True),('is_multi_warehouse_in_magento', '=', False)]}"/>
                                         </div>
                                         <div class="text-muted">
                                             Warehouse used to store stock quantities, when only single warehouse is in Magento
@@ -263,7 +282,7 @@
                                 <div class="col-12 col-lg-6 o_setting_box">
                                     <div class="o_setting_right_pane">
                                         <label for="magento_website_id" string="Select Website"/>
-                                        <field name="magento_website_id"  class="oe_inline" />
+                                        <field name="magento_website_id" widget="selection" class="oe_inline" />
                                     </div>
                                 </div>
                             </div>
@@ -279,14 +298,21 @@
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6 o_setting_box">
-                                <div class="o_setting_right_pane">
-                                    <label for="magento_website_pricelist_ids" string="Pricelist"/>
-                                    <field name="magento_website_pricelist_ids" widget="many2many_tags" class="oe_inline" attrs="{'required':[('magento_website_id','!=', False)]}"/>
-                                    <div class="text-muted" id="sale_coupon">
-                                        Product price will be taken/set from this pricelist if Catalog Price Scope is website.
+                                    <div class="o_setting_right_pane">
+                                        <label for="magento_website_pricelist_ids" string="Pricelist"/>
+                                        <field name="magento_website_pricelist_ids" widget="many2many_tags" class="oe_inline" attrs="{'required':[('magento_website_id','!=', False)]}"/>
+                                        <div class="text-muted" id="sale_coupon">
+                                            Product price will be taken/set from this pricelist if Catalog Price Scope is website.
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                                <div class="col-12 col-lg-6 o_setting_box">
+                                    <div class="o_setting_right_pane">
+                                        <label for="tax_calculation_method" string="Tax Calculation Method"/>
+                                        <field name="tax_calculation_method" class="oe_inline" widget="selection"/>
+                                        <div class="text-muted">This indicates whether product prices received from Magento is including tax or excluding tax, when import sale order from Magento</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -318,7 +344,7 @@
                                 <div class="col-12 col-lg-6 o_setting_box">
                                     <div class="o_setting_right_pane">
                                         <label for="magento_website_id" string="Select Website"/>
-                                        <field name="magento_website_id"  class="oe_inline" />
+                                        <field name="magento_website_id" widget="selection"  class="oe_inline" />
                                     </div>
                                 </div>
                             </div>
@@ -330,7 +356,7 @@
                                 <div class="col-12 col-lg-6 o_setting_box">
                                     <div class="o_setting_right_pane">
                                         <label for="magento_storeview_id" string="Select Storeview"/>
-                                        <field name="magento_storeview_id"  class="oe_inline" />
+                                        <field name="magento_storeview_id"  widget="selection" class="oe_inline" />
                                     </div>
                                 </div>
                             </div>
@@ -381,5 +407,11 @@
         <menuitem id="menu_magento_config_settings" name="Settings"
             parent="menu_configuration_root" sequence="1"
             action="action_magento_config_settings"/>
+
+        <template id="inherit_assets_backend_magento" inherit_id="web.assets_backend">
+            <xpath expr="." position="inside">
+                <script src="/odoo_magento2_ept/static/src/js/magento_icon_view.js"/>
+            </xpath>
+        </template>
     </data>
 </odoo>

@@ -29,16 +29,21 @@ class SaleOrderLine(models.Model):
         magento_product = self.env['magento.product.product']
         sale_lines_response = order_response.get('items')
         sale_order_lines = []
-        Skip_order = False
+        skip_order = False
+        store_id = order_response.get('store_id')
+        store_view = magento_instance.magento_website_ids.store_view_ids.filtered(
+            lambda x: x.magento_storeview_id == str(store_id)
+        )
+        tax_calculation_method = store_view and store_view.magento_website_id.tax_calculation_method
         for item in sale_lines_response:
             if item.get('product_type') in ['bundle', 'configurable']:
                 continue
             product_id = item.get('product_id')
             product_sku = item.get('sku')
-            price = item.get('parent_item').get('price') if "parent_item" in item else item.get('price')
             # Start the code to get the custom option title and custom option value title from the Extension attribute.
             description = self.get_custom_option_title(product_id, order_response)
             # Over the code to get the custom option title and custom option value title from the Extension attribute.
+            item_price = self.calculate_order_item_price(tax_calculation_method, item)
             magento_product = magento_product.search([
                 '|', ('magento_product_id', '=', product_id),
                 ('magento_sku', '=', product_sku),
@@ -48,28 +53,50 @@ class SaleOrderLine(models.Model):
                 product_obj = self.env['product.product'].search([('default_code', '=', product_sku)])
                 if not product_obj:
                     continue
-                else:
-                    if len(product_obj) > 1:
-                        Skip_order = True
-                        message = ("Order product exists in odoo product more than one. Product SKU : %s") % product_sku
-                        log_book_id.add_log_line(message, order_response['increment_id'],
-                                                 order_dict.id, "magento_order_data_queue_line_id")
-                        return Skip_order, []
-                    odoo_product = product_obj
+                elif len(product_obj) > 1:
+                    skip_order = True
+                    message = "Order product exists in odoo product more than one. Product SKU : %s" % product_sku
+                    log_book_id.add_log_line(message, order_response['increment_id'],
+                                             order_dict.id, "magento_order_data_queue_line_id")
+                    return skip_order, []
+                odoo_product = product_obj
             else:
                 odoo_product = magento_product.odoo_product_id
-            sale_order_line = self.create_sale_order_line_vals(
-                item, price, odoo_product, magento_order
-            )
+            custom_options = ''
+            if description:
+                product_name = "Custom Option for Product" \
+                               " : %s \n" % odoo_product.name
+                custom_options = product_name + description
+            sale_order_line = self.with_context(custom_options=custom_options).create_sale_order_line_vals(
+                item, item_price, odoo_product, magento_order)
             order_line = self.create(sale_order_line)
             sale_order_lines.append(order_line)
             if description:
                 product_name = "Custom Option for Product" \
-                               " : %s \n" % (odoo_product and odoo_product.id and odoo_product.name or False)
+                               " : %s \n" % odoo_product.name
                 description = product_name + description
                 order_line_obj = self.create_order_line_note(description, magento_order.id)
                 sale_order_lines.append(order_line_obj)
-        return Skip_order, sale_order_lines
+        return skip_order, sale_order_lines
+
+    @staticmethod
+    def calculate_order_item_price(tax_calculation_method, item):
+        """
+        Calculate order item price based on tax calculation method configurations.
+        :param tax_calculation_method: Tax calculation method (Including/ Excluding)
+        :param item: order item received from Magento
+        :return: order item price
+        """
+        if tax_calculation_method == 'including_tax':
+            price = item.get('parent_item').get('price_incl_tax') if "parent_item" in item else item.get(
+                'price_incl_tax')
+        else:
+            price = item.get('parent_item').get('price') if "parent_item" in item else item.get(
+                'price')
+        original_price = item.get('parent_item').get('original_price') if "parent_item" in item else item.get(
+            'original_price')
+        item_price = price if price != original_price else original_price
+        return item_price
 
     def create_order_line_note(self, description, magento_order_id):
         """

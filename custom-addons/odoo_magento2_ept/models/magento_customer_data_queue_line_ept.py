@@ -7,6 +7,7 @@ import time
 import json
 from datetime import timedelta, datetime
 from odoo import models, fields
+MAGENTO_CUSTOMER_DATA_QUEUE_EPT = "magento.customer.data.queue.ept"
 
 
 class MagentoCustomerDataQueueLineEpt(models.Model):
@@ -16,7 +17,7 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
     _name = "magento.customer.data.queue.line.ept"
     _description = "Magento Customer Data Queue Line EPT"
     _rec_name = "magento_customer_id"
-    magento_customer_data_queue_id = fields.Many2one("magento.customer.data.queue.ept")
+    magento_customer_data_queue_id = fields.Many2one(MAGENTO_CUSTOMER_DATA_QUEUE_EPT, ondelete="cascade")
     magento_instance_id = fields.Many2one(
         'magento.instance',
         string='Magento Instance',
@@ -75,7 +76,7 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
             'magento_instance_id': magento_instance and magento_instance.id or False,
             'state': 'draft',
         }
-        customer_queue_data = self.env["magento.customer.data.queue.ept"].create(
+        customer_queue_data = self.env[MAGENTO_CUSTOMER_DATA_QUEUE_EPT].create(
             customer_queue_vals
         )
         return customer_queue_data
@@ -89,7 +90,7 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
         country_dict = {}
         state_dict = {}
         customer_dict = {}
-        magento_order_data_queue_obj = self.env["magento.customer.data.queue.ept"]
+        magento_order_data_queue_obj = self.env[MAGENTO_CUSTOMER_DATA_QUEUE_EPT]
         start = time.time()
         query = """select queue.id from magento_customer_data_queue_line_ept as queue_line
                 inner join magento_customer_data_queue_ept as queue on queue_line.magento_customer_data_queue_id = queue.id
@@ -98,18 +99,17 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
         customer_data_queue_list = self._cr.fetchall()
         for result in customer_data_queue_list:
             customer_queue_ids.append(result[0])
-        if not customer_queue_ids:
-            return True
-        customer_queues = magento_order_data_queue_obj.browse(list(set(customer_queue_ids)))
-        customer_queue_process_cron_time = customer_queues.magento_instance_id.get_magento_cron_execution_time(
-            "odoo_magento2_ept.magento_ir_cron_to_process_customer_queue_data")
-        for customer_queue in customer_queues:
-            customer_queue_lines = customer_queue.customer_queue_line_ids.filtered(lambda x: x.state == "draft")
-            if customer_queue_lines:
-                customer_dict, country_dict, state_dict = customer_queue_lines.process_import_customer_queue_data(
-                    country_dict, state_dict, customer_dict)
-            if time.time() - start > customer_queue_process_cron_time - 60:
-                return True
+        if customer_queue_ids:
+            customer_queues = magento_order_data_queue_obj.browse(list(set(customer_queue_ids)))
+            customer_queue_process_cron_time = customer_queues.magento_instance_id.get_magento_cron_execution_time(
+                "odoo_magento2_ept.magento_ir_cron_to_process_customer_queue_data")
+            for customer_queue in customer_queues:
+                customer_queue_lines = customer_queue.customer_queue_line_ids.filtered(lambda x: x.state == "draft")
+                if customer_queue_lines:
+                    customer_dict, country_dict, state_dict = customer_queue_lines.process_import_customer_queue_data(
+                        country_dict, state_dict, customer_dict)
+                if time.time() - start > customer_queue_process_cron_time - 60:
+                    return True
         return True
 
     def process_import_customer_queue_data(self, country_dict, state_dict, customer_dict):

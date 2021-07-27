@@ -54,21 +54,29 @@
                 <form string="Product" create="false">
                     <header/>
                     <sheet>
-                        <field name='product_variant_count' invisible='1' />
                         <field name="id" invisible="True" />
+                        <field name="active" invisible="True" />
+                        <field name="active_template" class="oe_inline" invisible='1'/>
                         <div class="oe_button_box" name="button_box">
-                            <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
-                                <field name="active" widget="boolean_button" options='{"terminology": "archive"}' />
+                            <button class="oe_stat_button"
+                                    name="toggle_active" icon="fa-lock"
+                                    type="object" attrs="{'invisible': [('active','=',False)]}">
+                                <span class="o_stat_text" style="color:#2dab2d">Active</span>
+                            </button>
+                            <button class="oe_stat_button"
+                                    name="toggle_active" icon="fa-unlock"
+                                    type="object" attrs="{'invisible': [('active','=',True)]}">
+                                <span class="o_stat_text" style="color:#da3434">Archived</span>
                             </button>
                             <button name="open_variant_list" type="object" icon="fa-sitemap"
                                 class="oe_stat_button" attrs="{'invisible': [('product_type', '!=', 'configurable')]}">
-                                <field string="Variants" name="product_variant_count"
+                                <field string="Variants" name="total_magento_variants"
                                     widget="statinfo" modifiers="{'readonly': true}" />
                             </button>
                             <button string="Odoo Product" type="object" name="view_odoo_product_template"
                                 class="oe_stat_button" icon="fa-chain"/>
                         </div>
-                        <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>
+                        <field name="image_1920" widget="image" class="oe_avatar"/>
                         <div class="oe_title">
                             <label class="oe_edit_only" for="magento_product_name" string="Product Name" />
                             <h1>
@@ -84,12 +92,13 @@
                                         <field name="magento_product_template_id" readonly="1"/>
                                     </group>
                                     <group name="group_standard_price">
+                                        <field name="currency_id" invisible="1"/>
                                         <field name="list_price" widget='monetary'
                                             options="{'currency_field': 'currency_id', 'field_digits': True}" />
                                         <label for="standard_price" groups="base.group_user"
-                                            attrs="{'invisible': [('product_variant_count', '&gt;', 1)]}" />
+                                            attrs="{'invisible': [('total_magento_variants', '&gt;', 1)]}" />
                                         <div name="standard_price_uom" groups="base.group_user"
-                                            attrs="{'invisible': [('product_variant_count', '&gt;', 1)]}">
+                                            attrs="{'invisible': [('total_magento_variants', '&gt;', 1)]}">
                                             <field name="standard_price" widget='monetary'
                                                 options="{'currency_field': 'currency_id', 'field_digits': True}" />
                                         </div>

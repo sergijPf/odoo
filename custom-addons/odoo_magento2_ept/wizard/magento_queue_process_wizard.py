@@ -3,7 +3,6 @@
 """
 Describes Wizard for processing order queue
 """
-from odoo.exceptions import UserError
 from odoo import models, api, _
 
 
@@ -32,9 +31,6 @@ class MagentoQueueProcessEpt(models.TransientModel):
         order_queue_ids = self._context.get('active_ids')
         order_queue_ids = self.env['magento.order.data.queue.ept'].browse(order_queue_ids).filtered(
             lambda x: x.state != 'done')
-        self.env.cr.execute(
-            """update magento_order_data_queue_ept set is_process_queue = False where is_process_queue = True""")
-        self._cr.commit()
         for order_queue_id in order_queue_ids:
             queue_lines = order_queue_id.order_data_queue_line_ids.filtered(
                 lambda line: line.state in ['draft', 'failed'])
@@ -49,9 +45,6 @@ class MagentoQueueProcessEpt(models.TransientModel):
         product_queue_ids = self._context.get('active_ids')
         product_queue_ids = self.env['sync.import.magento.product.queue'].\
             browse(product_queue_ids).filtered(lambda x: x.state != 'done')
-        self.env.cr.execute(
-            """update sync_import_magento_product_queue set is_process_queue = False where is_process_queue = True""")
-        self._cr.commit()
         for product_queue_id in product_queue_ids:
             queue_lines = product_queue_id.import_product_queue_line_ids.filtered(
                 lambda line: line.state in ['draft', 'failed'])
