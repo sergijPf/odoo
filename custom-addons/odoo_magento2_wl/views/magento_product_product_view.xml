@@ -6,16 +6,8 @@
         <field name="inherit_id" ref="odoo_magento2_ept.view_magento_product_form"/>
         <field name="arch" type="xml">
             <field name="odoo_product_id" position="after">
-                <field name="categ_id" string="Odoo Product Category"/>
+                <field name="prod_categ_name" string="Odoo Product Category"/>
             </field>
-
-<!--            <xpath expr="//sheet" position="before">-->
-<!--                <header>-->
-<!--                    <field name="magento_product_id" invisible="1"/>-->
-<!--                    <button name="prepare_products_export_to_magento" type="object" class="oe_highlight" string="Export To Magento"-->
-<!--                            attrs="{'invisible' : [('magento_product_id','!=',False)]}"/>-->
-<!--                </header>-->
-<!--            </xpath>-->
 
             <xpath expr="//field[@name='product_template_attribute_value_ids']" position="attributes">
                 <attribute name="readonly">1</attribute>
@@ -34,6 +26,6 @@
         <field name="binding_model_id" ref="model_magento_product_product"/>
         <field name="binding_view_types">list,form</field>
         <field name="state">code</field>
-        <field name="code">records.prepare_products_export_to_magento()</field>
+        <field name="code">records.process_products_export_to_magento()</field>
     </record>
 </odoo>
