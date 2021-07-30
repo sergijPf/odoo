@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="magento_cron_configuration_ept_inherit_form_view" model="ir.ui.view">
+            <field name="name">magento.cron.configuration.inherited</field>
+            <field name="model">magento.cron.configuration</field>
+            <field name="inherit_id" ref="odoo_magento2_ept.magento_cron_configuration_ept_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//div[contains(text(),'Import Product')]" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//div[contains(text(),'Import Product')]/following::group" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+         </record>
+
+    </data>
+</odoo>

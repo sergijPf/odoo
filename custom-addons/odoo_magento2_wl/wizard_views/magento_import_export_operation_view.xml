@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record id="magento_import_export_operation_inherit_view" model="ir.ui.view">
-            <field name="name">magento_import_export_operation_inherit_view</field>
-            <field name="model">magento.import.export.ept</field>
-            <field name="inherit_id" ref="odoo_magento2_ept.view_magento_import_export_operation"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='operations']" position="replace">
-<!--                    <attribute name="invisible" value="[('operations','in',['import_products','import_specific_product','map_products'])]"></attribute>-->
-                    <field name="operations" required="1" attrs="{'invisible' : [('operations','in',['import_products','import_specific_product','map_products'])]}"/>
-                </xpath>
-            </field>
-        </record>
+<!--        <record id="magento_import_export_operation_inherit_view" model="ir.ui.view">-->
+<!--            <field name="name">magento_import_export_operation_inherit_view</field>-->
+<!--            <field name="model">magento.import.export.ept</field>-->
+<!--            <field name="inherit_id" ref="odoo_magento2_ept.view_magento_import_export_operation"/>-->
+<!--            <field name="arch" type="xml">-->
+<!--                <xpath expr="//field[@name='operations']" position="replace">-->
+<!--                    <field name="operations" required="1" attrs="{'invisible' : [('operations','in',['import_products','import_specific_product','map_products'])]}"/>-->
+<!--                </xpath>-->
+<!--            </field>-->
+<!--        </record>-->
 
     </data>
 </odoo>

@@ -44,7 +44,7 @@ class MagentoProductProduct(models.Model):
         attr_sets = {}
 
         for mi in {i.magento_instance_id: {} for i in export_products}:
-            # create dict with unique selected configurable/simple products and add some meta-info
+            # create dict which collects meta-data for unique selected configurable/simple products
             ml_conf_products_dict.update({
                 c.odoo_product_id.categ_id.name: {
                     'attribute_set': c.odoo_product_id.categ_id.magento_attr_set,
@@ -194,12 +194,7 @@ class MagentoProductProduct(models.Model):
                              ml_conf_products_dict[k]['log_message']
                              }
             if new_conf_prod:
-                self.create_bulk_of_new_conf_products_in_magento(mi, new_conf_prod, ml_conf_products_dict,
-                                                                 attr_sets)
-
-            # if no configurable and simple products to export - skip below code
-            # if not ml_list_of_conf_prod and not ml_list_of_simp_prod:
-            #     continue
+                self.create_bulk_of_new_conf_products_in_magento(mi, new_conf_prod, ml_conf_products_dict, attr_sets)
 
             # check if product attributes of all selected simple products exist in Magento
             # logs error when product has no attributes and when needed - creates new attribute options(swatch)
@@ -272,8 +267,6 @@ class MagentoProductProduct(models.Model):
                         ml_simp_products_dict[prod.magento_sku]['log_message'] += text
                         continue
 
-                    # choose related configurable product from Magento product list in order to assign conf. attributes
-                    # to it and to link with simple product
                     self.assign_attr_to_config_product(
                         mi,
                         prod,
