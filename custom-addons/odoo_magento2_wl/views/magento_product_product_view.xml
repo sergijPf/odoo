@@ -17,6 +17,10 @@
                 <attribute name="readonly">1</attribute>
             </xpath>
 
+            <xpath expr="//field[@name='magento_sku']" position="after">
+                <field name="x_magento_name"/>
+            </xpath>
+
             <xpath expr="//field[@name='standard_price']" position="attributes">
                 <attribute name="readonly">1</attribute>
             </xpath>
@@ -78,13 +82,32 @@
         <field name="inherit_id" ref="odoo_magento2_ept.view_magento_product_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree" position="attributes">
-                <attribute name="default_order">magento_instance_id, magento_sku</attribute>
+                <attribute name="default_order">magento_instance_id, prod_categ_name, magento_sku</attribute>
+            </xpath>
+
+            <xpath expr="//tree" position="inside">
+                <header>
+                    <button name="process_products_export_to_magento"
+                            context="{'status_check': True}"
+                            string="Update Export Status"
+                            type="object"
+                            class="btn btn-info ml-4"/>
+                </header>
+            </xpath>
+
+            <xpath expr="//field[@name='sync_product_with_magento']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='magento_sku']" position="before">
+                <field name="prod_categ_name"/>
             </xpath>
 
             <xpath expr="//field[@name='magento_product_name']" position="after">
                 <field name="product_template_attribute_value_ids"
                        widget="many2many_tags"
                        readonly="1"
+                       optional="show"
                        can_create="false"
                        can_write="false"
                        modifiers="{'readonly':true}"/>
@@ -105,12 +128,26 @@
         </field>
     </record>
 
+    <record id="group_make_invisible" model="res.groups">
+        <field name="name">Group Make Invisible</field>
+    </record>
+    <record model="ir.ui.menu" id="odoo_magento2_ept.menu_item_magento_products_ept">
+        <field name="groups_id" eval="[(6,0,[ref('group_make_invisible')])]"/>
+    </record>
+
+
+<!--    <record id="odoo_magento2_ept.magento_product_normal_action_sell_ept" model="ir.actions.act_window">-->
+<!--        <field name="context">{}</field>-->
+<!--    </record>-->
+
 <!--    Log book with errors section-->
      <record id="view_exported_product_log_book_filter" model="ir.ui.view">
         <field name="name">magento.product.product.search</field>
         <field name="model">magento.product.product</field>
         <field name="arch" type="xml">
             <search string="Export Products Log Book">
+                <field name="magento_sku"/>
+                <field name="magento_product_name"/>
                 <field name="magento_log_message"/>
                 <field name="magento_log_message_conf"/>
                 <filter string="Product error" name="prod_log" domain="[('magento_log_message', '!=', '')]"/>
@@ -118,9 +155,13 @@
                         domain="[('magento_log_message_conf', '!=', '')]"/>
                 <filter string="Not in Magento" name="not_in_magento"
                         domain="[('magento_status', '!=', 'in_magento')]"/>
-                <group expand="0" string="Group By">
-                        <filter string="Instances" name="group_by_instance"
-                                context="{'group_by': 'magento_instance_id'}"/>
+                <group expand="1" string="Group By">
+                    <filter string="Instances" name="group_by_instance"
+                            context="{'group_by': 'magento_instance_id'}"/>
+                    <filter string="Product Category" name="group_by_product_category"
+                            context="{'group_by': 'prod_categ_name'}"/>
+                    <filter string="Magento Status" name="group_by_status"
+                            context="{'group_by': 'magento_status'}"/>
                 </group>
             </search>
         </field>
@@ -132,7 +173,7 @@
         <field name="arch" type="xml">
             <tree create="0" delete="0" default_order="magento_status">
                 <field name="magento_instance_id"/>
-                <field name="magento_sku"/>
+                <field name="magento_sku" string="Product SKU"/>
                 <field name="magento_log_message"/>
                 <field name="prod_categ_name"/>
                 <field name="magento_log_message_conf"/>
@@ -196,7 +237,7 @@
         <field name="view_id" ref="view_magento_exported_products_log_book_tree"/>
         <field name="search_view_id" ref="view_exported_product_log_book_filter"/>
         <field name="context">
-            {'group_by': ['magento_instance_id'],
+            {'group_by': ['magento_instance_id', 'prod_categ_name'],
             'search_default_not_in_magento':1,
             'form_view_ref' : 'odoo_magento2_wl.view_magento_exported_products_log_book_form'}
         </field>

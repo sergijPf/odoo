@@ -8,23 +8,11 @@
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='account_property']" position="after">
                     <group name="magento_details" string="Magento Details" modifiers="{}">
+                        <field name="magento_sku" placeholder="Name for Magento"/>
                         <field name="magento_attr_set" required="1"/>
                         <field name="magento_assigned_attr" widget="many2many_tags" options="{'no_create_edit': True}"/>
                     </group>
                 </xpath>
-
-<!--                <xpath expr="//group[@name='magento_details']" position="after">-->
-<!--                     <group name="config_product_images" string="Images Info">-->
-<!--                        <field name="common_image" class="o_website_sale_image_list" context="{'default_name': name}"-->
-<!--                               mode="kanban" options="{'create_text':'Add a Media'}" nolabel="1">-->
-<!--                        </field>-->
-<!--                    </group>-->
-
-<!--                    <group name="product_template_images" string="Extra Product Media">-->
-<!--                        <field name="product_template_image_ids" class="o_website_sale_image_list" context="{'default_name': name}" mode="kanban" options="{'create_text':'Add a Media'}" nolabel="1"/>-->
-<!--                    </group>-->
-
-<!--                </xpath>-->
 
             </field>
         </record>
