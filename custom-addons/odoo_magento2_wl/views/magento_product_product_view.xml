@@ -6,7 +6,9 @@
         <field name="inherit_id" ref="odoo_magento2_ept.view_magento_product_form"/>
         <field name="arch" type="xml">
             <field name="odoo_product_id" position="after">
-                <field name="prod_categ_name" string="Odoo Product Category"/>
+                <field name="odoo_prod_categ"/>
+                <field name="magento_prod_categ"/>
+                <field name="prod_categ_name" string="Configurable Product Name"/>
             </field>
 
             <xpath expr="//field[@name='product_template_attribute_value_ids']" position="attributes">
@@ -92,6 +94,11 @@
                             string="Update Export Status"
                             type="object"
                             class="btn btn-info ml-4"/>
+<!--                    <button name="%(odoo_magento2_wl.magento_product_category_update_wizard)d"-->
+<!--                            string="Update Product Category"-->
+<!--                            type="action"-->
+<!--                            class="oe_highlight ml-4"-->
+<!--                            />-->
                 </header>
             </xpath>
 
@@ -99,9 +106,9 @@
                 <attribute name="invisible">1</attribute>
             </xpath>
 
-            <xpath expr="//field[@name='magento_sku']" position="before">
-                <field name="prod_categ_name"/>
-            </xpath>
+<!--            <xpath expr="//field[@name='magento_sku']" position="before">-->
+<!--                <field name="prod_categ_name"/>-->
+<!--            </xpath>-->
 
             <xpath expr="//field[@name='magento_product_name']" position="after">
                 <field name="product_template_attribute_value_ids"
@@ -128,17 +135,17 @@
         </field>
     </record>
 
-    <record id="group_make_invisible" model="res.groups">
-        <field name="name">Group Make Invisible</field>
-    </record>
-    <record model="ir.ui.menu" id="odoo_magento2_ept.menu_item_magento_products_ept">
-        <field name="groups_id" eval="[(6,0,[ref('group_make_invisible')])]"/>
-    </record>
-
+<!--    <record id="group_make_invisible" model="res.groups">-->
+<!--        <field name="name">Group Make Invisible</field>-->
+<!--    </record>-->
+<!--    <record model="ir.ui.menu" id="odoo_magento2_ept.menu_item_magento_products_ept">-->
+<!--        <field name="groups_id" eval="[(6,0,[ref('group_make_invisible')])]"/>-->
+<!--    </record>-->
 
 <!--    <record id="odoo_magento2_ept.magento_product_normal_action_sell_ept" model="ir.actions.act_window">-->
 <!--        <field name="context">{}</field>-->
 <!--    </record>-->
+
 
 <!--    Log book with errors section-->
      <record id="view_exported_product_log_book_filter" model="ir.ui.view">
@@ -153,8 +160,8 @@
                 <filter string="Product error" name="prod_log" domain="[('magento_log_message', '!=', '')]"/>
                 <filter string="Product Category error" name="conf_prod_log"
                         domain="[('magento_log_message_conf', '!=', '')]"/>
-                <filter string="Not in Magento" name="not_in_magento"
-                        domain="[('magento_status', '!=', 'in_magento')]"/>
+                <filter string="Error to Export" name="error_to_export"
+                        domain="[('magento_status', '=', 'log_error')]"/>
                 <group expand="1" string="Group By">
                     <filter string="Instances" name="group_by_instance"
                             context="{'group_by': 'magento_instance_id'}"/>
@@ -238,7 +245,7 @@
         <field name="search_view_id" ref="view_exported_product_log_book_filter"/>
         <field name="context">
             {'group_by': ['magento_instance_id', 'prod_categ_name'],
-            'search_default_not_in_magento':1,
+            'search_default_error_to_export':1,
             'form_view_ref' : 'odoo_magento2_wl.view_magento_exported_products_log_book_form'}
         </field>
         <field name="help" type="html">

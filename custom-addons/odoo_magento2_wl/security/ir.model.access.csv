@@ -1,2 +1,2 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_odoo_magento2_wl_odoo_magento2_wl,odoo_magento2_wl.odoo_magento2_wl,model_odoo_magento2_wl_odoo_magento2_wl,base.group_user,1,1,1,1
+access_magento_product_category_update,model_product_category_update,model_product_category_update,odoo_magento2_ept.group_magento_user_ept,1,1,1,0
