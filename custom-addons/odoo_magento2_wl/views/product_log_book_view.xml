@@ -1,0 +1,118 @@
+<?xml version="1.0" ?>
+<odoo>
+     <record id="view_exported_product_log_book_filter" model="ir.ui.view">
+        <field name="name">Magento Product Log Book Search</field>
+        <field name="model">product.log.book</field>
+        <field name="arch" type="xml">
+            <search string="Export Products Log Book">
+                <field name="magento_sku"/>
+                <field name="magento_product_name"/>
+                <field name="prod_categ_name"/>
+                <field name="magento_log_message"/>
+                <field name="magento_log_message_conf"/>
+                <filter string="Product error" name="prod_log" domain="[('magento_log_message', '!=', '')]"/>
+                <filter string="Product Category error" name="conf_prod_log"
+                        domain="[('magento_log_message_conf', '!=', '')]"/>
+                <filter string="Error to Export" name="error_to_export"
+                        domain="[('magento_status', '=', 'log_error')]"/>
+                <group expand="1" string="Group By">
+                    <filter string="Instances" name="group_by_instance"
+                            context="{'group_by': 'magento_instance_id'}"/>
+                    <filter string="Product Category" name="group_by_product_category"
+                            context="{'group_by': 'prod_categ_name'}"/>
+                    <filter string="Magento Status" name="group_by_status"
+                            context="{'group_by': 'magento_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_magento_exported_products_log_book_tree" model="ir.ui.view">
+        <field name="name">Magento Product Log Book Tree</field>
+        <field name="model">product.log.book</field>
+        <field name="arch" type="xml">
+            <tree create="0" delete="0" default_order="magento_status">
+                <field name="magento_instance_id"/>
+                <field name="magento_sku" string="Product SKU"/>
+                <field name="magento_log_message"/>
+                <field name="prod_categ_name"/>
+                <field name="magento_log_message_conf"/>
+                <field name="magento_status"
+                       decoration-success="magento_status == 'in_magento'"
+                       decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
+                       decoration-info="magento_status == 'in_process'"
+                       decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
+                       decoration-danger="magento_status == 'log_error'"
+                       widget="badge"
+                       optional="show"
+                       on_change="1"
+                       modifiers="{'readonly':true}"
+                />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_magento_exported_products_log_book_form" model="ir.ui.view">
+        <field name="name">Magento Product Log Book Form</field>
+        <field name="model">product.log.book</field>
+        <field name="arch" type="xml">
+            <form create="0" delete="0" edit="0">
+                <sheet>
+                    <widget name="web_ribbon" text="Exported"
+                            attrs="{'invisible': [('magento_status', '!=', 'in_magento')]}"/>
+                    <group>
+                        <group>
+                            <field name="magento_instance_id"/>
+                            <field name="magento_sku"/>
+                            <field name="magento_product_id"/>
+                            <field name="magento_status"/>
+                            <field name="magento_export_date" string="Current Product Last Export Date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="prod_categ_name"/>
+                            <field name="magento_export_date_conf" string="Product Category Last Export Date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="log" string="Log Message(s)">
+                            <tree create="false" editable="bottom">
+                                <field name="magento_log_message"/>
+                                <field name="magento_log_message_conf"/>
+                            </tree>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_show_log_messages_of_exported_products" model="ir.actions.act_window">
+        <field name="name">Exported Product Logs</field>
+        <field name="res_model">product.log.book</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_magento_exported_products_log_book_tree"/>
+        <field name="search_view_id" ref="view_exported_product_log_book_filter"/>
+        <field name="context">
+            {'group_by': ['magento_instance_id', 'prod_categ_name'],
+            'search_default_error_to_export':1,
+            'form_view_ref' : 'odoo_magento2_wl.view_magento_exported_products_log_book_form'}
+        </field>
+        <field name="help" type="html">
+            <div class="oe_empty_magento_instance">
+                <br/>
+                <br/>
+                <br/>
+                <p>
+                    <b>There is No Data yet...</b>
+                </p>
+            </div>
+        </field>
+    </record>
+
+    <menuitem id="odoo_magento2_ept.sync_import_magento_product_queue_ept_menu"
+              sequence="2"
+              name="Products"
+              parent="odoo_magento2_ept.magento_data_queue_ept_menu"
+              action="action_show_log_messages_of_exported_products"/>
+
+</odoo>

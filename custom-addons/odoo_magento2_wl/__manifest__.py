@@ -19,10 +19,10 @@
         'views/magento_product_template_view.xml',
         'views/product_template_view.xml',
         'views/product_view.xml',
+        'views/product_log_book_view.xml',
         'views/product_category_view.xml',
         'views/res_config_settings.xml',
         'wizard/magento_product_category_update_view.xml',
-        'wizard/magento_import_export_operation_view.xml',
         'wizard/magento_cron_configuration_view.xml',
     ],
     # only loaded in demonstration mode

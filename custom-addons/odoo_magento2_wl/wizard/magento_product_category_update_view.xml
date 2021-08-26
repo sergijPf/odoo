@@ -4,7 +4,7 @@
             <field name="name">Update Magento Product Category for Magento Layer</field>
             <field name="model">product.category.update</field>
             <field name="arch" type="xml">
-                <form string="Update Product Category">
+                <form string="Update Magento Product Category">
                     <group>
                         <field name="product_categ" required="1"/>
                     </group>
@@ -15,7 +15,7 @@
                                     <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
                                 </u>
                                 <b>
-                                    The Product Categories for the selected Products in Magento Layer will be updated!
+                                    This action will update Product Category for the selected Products in Magento Layer!
                                 </b>
                             </p>
                         </div>
@@ -30,7 +30,7 @@
         </record>
 
     <record id="magento_product_category_update_wizard" model="ir.actions.act_window">
-        <field name="name">Update Product Category</field>
+        <field name="name">Update Magento Category</field>
         <field name="res_model">product.category.update</field>
         <field name="binding_model_id" ref="odoo_magento2_wl.model_magento_product_product"/>
         <field name="binding_view_types">list,form</field>
@@ -38,14 +38,5 @@
         <field name="view_id" ref="view_magento_product_category_update"/>
         <field name="target">new</field>
     </record>
-
-<!--    <record id="action_magento_product_category_update" model="ir.actions.server">-->
-<!--        <field name="name">Update Product Category</field>-->
-<!--        <field name="model_id" ref="model_magento_product_product"/>-->
-<!--        <field name="binding_model_id" ref="model_magento_product_product"/>-->
-<!--        <field name="binding_view_types">list</field>-->
-<!--        <field name="state">code</field>-->
-<!--        <field name="code">records.process_products_export_to_magento()</field>-->
-<!--    </record>-->
 
 </odoo>

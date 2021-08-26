@@ -4,7 +4,7 @@ import json
 
 from odoo import fields, models
 from datetime import datetime
-# from odoo.exceptions import UserError
+from odoo.exceptions import UserError
 from ...odoo_magento2_ept.models.api_request import req, create_search_criteria
 from ...odoo_magento2_ept.python_library.php import Php
 
@@ -20,20 +20,19 @@ class MagentoProductProduct(models.Model):
     prod_categ_name = fields.Char(string='Magento Product Category', related='odoo_product_id.categ_id.magento_name',
                                   store=True)
     odoo_prod_categ = fields.Many2one(string='Odoo Product Category', related='odoo_product_id.categ_id')
-    magento_prod_categ = fields.Many2one(string='Magento Layer Product Category', related='odoo_product_id.categ_id',
-                                         store=True)
+    magento_prod_categ = fields.Many2one(string='Magento Product Category (Configurable Product)',
+                                         related='odoo_product_id.categ_id', store=True)
     x_magento_name = fields.Char(string='Name for Magento', related='odoo_product_id.x_magento_name')
     magento_export_date = fields.Datetime(string="Last Export Date", copy=False)
-    magento_export_date_conf = fields.Datetime(string="Configurable Product last Export Date", copy=False)
-    magento_log_message = fields.Char(string="Product Error Messages")
-    magento_log_message_conf = fields.Char(string="Product Category Error Messages")
+    magento_export_date_conf = fields.Datetime(string="Configurable Product last Export Date")
     magento_status = fields.Selection([
         ('not_exported', 'not Exported'),
         ('in_process', 'In Process'),
         ('in_magento', 'In Magento'),
         ('need_to_link', 'Need to be Linked'),
         ('log_error', 'Error to Export'),
-        ('update_needed', 'Need to Update')
+        ('update_needed', 'Need to Update'),
+        ('deleted', 'Deleted in Magento')
     ], string='Export Status', help='The status of Product Export to Magento ', default='not_exported')
 
     def process_products_export_to_magento(self, single=''):
@@ -49,6 +48,17 @@ class MagentoProductProduct(models.Model):
             active_product_ids = self._context.get("active_ids", [])
             export_products = self.env["magento.product.product"].browse(active_product_ids)
 
+        products_dict = {d.magento_instance_id: {} for d in export_products}
+        for mi in products_dict:
+            products_dict[mi].update({
+                c.prod_categ_name: [] for c in export_products if c.magento_instance_id.id == mi.id and
+                                                                                  c.prod_categ_name
+            })
+        for mi in products_dict:
+            for cat in products_dict[mi]:
+                products_dict[mi][cat] = [i.id for i in export_products if
+                                          i.magento_instance_id.id == mi.id and i.prod_categ_name == cat]
+
         # Abbreviation used below:
         # ml - magento_layer with products in Odoo
         # mi - magento_instance
@@ -57,61 +67,73 @@ class MagentoProductProduct(models.Model):
         # conf - configurable(in Magento) aka category_name(Odoo)
         # simp - simple
         # mag - magento
-        for mi in {i.magento_instance_id: {} for i in export_products}:
-            # create dict which collects meta-data for unique selected configurable/simple products
-            ml_conf_products_dict = self.create_conf_products_dict(mi.id, export_products)
-            ml_simp_products_dict = self.create_simple_products_dict(mi.id, export_products)
+        for mi in products_dict:
+            # implement pagination for large datasets
+            threshold = 100
+            selection = []
+            category_list = list(products_dict[mi].keys())
+            for categ in category_list:
+                selection += products_dict[mi][categ]
+                if categ != category_list[-1] and len(selection) < threshold:
+                    continue
+                else:
+                    export_products = self.env["magento.product.product"].browse(selection)
 
-            # get selected products from Magento if any
-            magento_conf_products = self.get_products_from_magento(mi, ml_conf_products_dict)
-            magento_simp_products = self.get_products_from_magento(mi, ml_simp_products_dict)
+                    # create dict which collects meta-data for selected configurable/simple products
+                    ml_conf_products_dict = self.create_conf_products_dict(mi.id, export_products)
+                    ml_simp_products_dict = self.create_simple_products_dict(mi.id, export_products, single)
 
-            # update conf/simp dictionaries with Magento data
-            for prod in magento_conf_products:
-                self.update_conf_product_dict_with_magento_data(prod, ml_conf_products_dict)
-            del magento_conf_products
-            for prod in magento_simp_products:
-                self.update_simp_product_dict_with_magento_data(prod, ml_simp_products_dict)
-            del magento_simp_products
+                    # get selected products from Magento if any
+                    magento_conf_products = self.get_products_from_magento(mi, ml_conf_products_dict)
+                    magento_simp_products = self.get_products_from_magento(mi, ml_simp_products_dict)
 
-            # create unique attribute-sets dict and get their id/attribute(options) data from Magento
-            attr_sets = self.create_attribute_sets_dict(mi, ml_conf_products_dict)
+                    # update conf/simp dictionaries with Magento data
+                    for prod in magento_conf_products:
+                        self.update_conf_product_dict_with_magento_data(prod, ml_conf_products_dict)
+                    del magento_conf_products
+                    for prod in magento_simp_products:
+                        self.update_simp_product_dict_with_magento_data(prod, ml_simp_products_dict)
+                    del magento_simp_products
 
-            # check and update 'to_export' field of ml_dict for products which don't need to be exported
-            self.check_config_products_to_export(ml_conf_products_dict, attr_sets)
+                    # create attribute-sets dict and get their id/attribute(options) data from Magento
+                    attr_sets = self.create_attribute_sets_dict(mi, ml_conf_products_dict)
 
-            self.check_simple_products_to_export(mi.id, ml_simp_products_dict, ml_conf_products_dict)
+                    # check and update 'to_export' field of ml_dict for products which don't need to be exported
+                    self.check_config_products_to_export(ml_conf_products_dict, attr_sets)
+                    self.check_simple_products_to_export(mi.id, ml_simp_products_dict, ml_conf_products_dict)
 
-            if not status_check:
-                # filter selected Odoo Products and their Configurable Products to be exported to Magento
-                conf_prod_to_export = {
-                    k: v for k, v in ml_conf_products_dict.items() if v['to_export'] and not v['log_message']
-                }
-                simp_prod_to_export = export_products.filtered(
-                    lambda prd: prd.magento_instance_id.id == mi.id and prd.magento_sku in ml_simp_products_dict and
-                                ml_simp_products_dict[prd.magento_sku]['to_export'] is True and
-                                ml_simp_products_dict[prd.magento_sku]['log_message'] == ""
-                )
+                    if not status_check:
+                        # filter selected Odoo Products and their Configurable Products to be exported to Magento
+                        conf_prod_to_export = {
+                            k: v for k, v in ml_conf_products_dict.items() if v['to_export'] and not v['log_message']
+                        }
+                        simp_prod_to_export = export_products.filtered(
+                            lambda prd: prd.magento_instance_id.id == mi.id and prd.magento_sku in ml_simp_products_dict and
+                                        ml_simp_products_dict[prd.magento_sku]['to_export'] is True and
+                                        ml_simp_products_dict[prd.magento_sku]['log_message'] == ""
+                        )
 
-                self.process_config_products_create_or_update(mi, conf_prod_to_export, ml_conf_products_dict, attr_sets,
-                                                              single)
-                # check if product attributes of all selected simple products exist in Magento
-                # logs error when product has no attributes and when needed - creates new attribute options(swatch)
-                self.check_product_attributes_exist_in_magento(mi, simp_prod_to_export, attr_sets,
-                                                               ml_simp_products_dict)
+                        self.process_config_products_create_or_update(mi, conf_prod_to_export, ml_conf_products_dict,
+                                                                      attr_sets, single)
+                        # check if product attributes of all selected simple products exist in Magento
+                        # logs error when product has no attributes and when needed - creates new attribute options(swatch)
+                        self.check_product_attributes_exist_in_magento(mi, simp_prod_to_export, attr_sets,
+                                                                       ml_simp_products_dict)
 
-                self.process_simple_products_create_or_update(mi, simp_prod_to_export, ml_simp_products_dict, attr_sets,
-                                                              ml_conf_products_dict, single)
+                        self.process_simple_products_create_or_update(mi, simp_prod_to_export, ml_simp_products_dict,
+                                                                      attr_sets, ml_conf_products_dict, single)
 
-                # save data with export dates, magento statuses and log_messages to Db
-                self.save_magento_data_to_database(mi.id, ml_simp_products_dict, ml_conf_products_dict)
+                        # save data with export dates, magento statuses and log_messages to Db
+                        self.save_magento_data_to_database(mi.id, ml_simp_products_dict, ml_conf_products_dict)
 
-            else:
-                for s in ml_simp_products_dict:
-                    magento_product = self.env['magento.product.product'].search([
-                        ('magento_sku', '=', s), ('magento_instance_id', '=', mi.id), ('active', '=', True)
-                    ])
-                    self.save_magento_status_to_database(s, ml_simp_products_dict, magento_product)
+                    else:
+                        for s in ml_simp_products_dict:
+                            magento_product = self.env['magento.product.product'].search([
+                                ('magento_sku', '=', s), ('magento_instance_id', '=', mi.id), ('active', '=', True)
+                            ])
+                            self.save_magento_status_to_database(s, ml_simp_products_dict, magento_product)
+
+                selection = []
 
     def create_conf_products_dict(self, instance_id, export_products):
         """
@@ -122,7 +144,7 @@ class MagentoProductProduct(models.Model):
         """
         products_dict = {}
         products_dict.update({
-            c.magento_prod_categ.magento_name: {
+            c.prod_categ_name: {
                 'attribute_set': c.magento_prod_categ.magento_attr_set,
                 'config_attr': {a.name for a in c.magento_prod_categ.magento_assigned_attr},
                 'children': [],
@@ -130,29 +152,33 @@ class MagentoProductProduct(models.Model):
                 'export_date_to_magento': c.magento_export_date_conf,
                 'latest_update_date': c.magento_prod_categ.write_date,
                 'to_export': True
-            } for c in export_products if instance_id == c.magento_instance_id.id and c.magento_prod_categ.magento_name
+            } for c in export_products if instance_id == c.magento_instance_id.id and c.prod_categ_name
         })
         return products_dict
 
-    def create_simple_products_dict(self, instance_id, export_products):
+    def create_simple_products_dict(self, instance_id, export_products, single_product):
         """
         Create dictionary which contains metadata for selected Simple Products (Odoo products)
         :param instance_id: Magento Instance ID
         :param export_products: Magento Layer Odoo Product to be exported
+        :param single_product: Odoo product in case of Manual Export process
         :return: Dictionary
         """
         products_dict = {}
         text = "Product Category is missing 'Magento Product Name' field . \n"
+        if single_product:
+            single_product.write({'magento_status': 'not_exported'})
+
         products_dict.update({
             s.magento_sku: {
-                'category_name': s.magento_prod_categ.magento_name,
-                'log_message': '' if s.magento_prod_categ.magento_name else text,
+                'category_name': s.prod_categ_name,
+                'log_message': '' if s.prod_categ_name else text,
                 'export_date_to_magento': s.magento_export_date,
-                'latest_update_date': s.odoo_product_id.write_date,
+                'latest_update_date': max(s.odoo_product_id.write_date, s.odoo_product_id.product_tmpl_id.write_date),
                 'conf_attributes': self.get_product_conf_attributes_dict(s),
                 'magento_status': s.magento_status,
                 'to_export': True
-            } for s in export_products if instance_id == s.magento_instance_id.id
+            } for s in export_products if instance_id == s.magento_instance_id.id and s.magento_status != 'deleted'
         })
         return products_dict
 
@@ -259,21 +285,28 @@ class MagentoProductProduct(models.Model):
                                 ml_simp_products_dict[prod]['to_export'] = False
                                 # re-write to db if not "in_magento" status
                                 if ml_simp_products_dict[prod]['magento_status'] != 'in_magento':
+                                    ml_simp_products_dict[prod]['magento_status'] = 'in_magento'
                                     magento_product = self.env['magento.product.product'].search([
                                         ('magento_sku', '=', prod), ('magento_instance_id', '=', instance_id),
                                         ('active', '=', True)
                                     ])
-                                    magento_product.write({
-                                        'magento_status': "in_magento",
-                                        'magento_log_message': "",
-                                        'magento_log_message_conf': ""
-                                    })
+                                    self.save_magento_status_to_database(prod, ml_simp_products_dict, magento_product)
+
+                                    log_book = self.env['product.log.book'].search(
+                                        [('magento_product_id', '=', magento_product.id), ('active', '=', True)])
+                                    if log_book:
+                                        log_book.write({
+                                            'magento_log_message': '',
+                                            'magento_log_message_conf': ''
+                                        })
                                 remove_items.append(prod)
                             else:
                                 ml_simp_products_dict[prod]['magento_status'] = 'need_to_link'
+                        elif ml_simp_products_dict[prod]['magento_status'] == 'in_magento':
+                            ml_simp_products_dict[prod]['magento_status'] = 'update_needed'
                     else:
-                        if ml_simp_products_dict[prod]['magento_status'] != 'log_error' and mag_date_s:
-                           ml_simp_products_dict[prod]['magento_status'] = 'update_needed'
+                        if ml_simp_products_dict[prod]['magento_status'] not in ['log_error', 'in_process']:
+                            ml_simp_products_dict[prod]['magento_status'] = 'update_needed'
                 else:
                     if ml_simp_products_dict[prod]['magento_status'] != 'log_error':
                         ml_simp_products_dict[prod]['magento_status'] = 'update_needed'
@@ -312,14 +345,13 @@ class MagentoProductProduct(models.Model):
                             attr_sets[mag_attr_set]['attributes'],
                             prod_conf_attr
                         )
-                        if not check_assign_attr:
-                            conf_prod = self.update_single_conf_product_in_magento(instance, prod, prod_attr_set_id,
-                                                                                   ml_conf_products_dict,
-                                                                                   check_assign_attr)
-                            # update magento data in ml_conf_products_dict,
-                            # later will be used while linking with simple prod
-                            if conf_prod:
-                                self.update_conf_product_dict_with_magento_data(conf_prod, ml_conf_products_dict)
+                        conf_prod = self.update_single_conf_product_in_magento(instance, prod, prod_attr_set_id,
+                                                                               ml_conf_products_dict,
+                                                                               check_assign_attr)
+                        # update magento data in ml_conf_products_dict,
+                        # later will be used while linking with simple prod
+                        if conf_prod:
+                            self.update_conf_product_dict_with_magento_data(conf_prod, ml_conf_products_dict)
                     else:
                         ml_conf_products_dict[prod]['log_message'] += \
                             "Product with the following sku - \"%s\" already exists in Magento. " \
@@ -349,8 +381,82 @@ class MagentoProductProduct(models.Model):
 
     def process_simple_products_create_or_update(self, instance, simp_prod_to_export, ml_simp_products_dict, attr_sets,
                                                  ml_conf_products_dict, single):
+        self.check_simple_products_for_errors_before_export(simp_prod_to_export, ml_simp_products_dict,
+                                                            ml_conf_products_dict, attr_sets)
+                # check if simple product assigned to any other of selected config.product than
+                # current one and unlink it
+                # for conf_prod in ml_conf_products_dict:
+                #     prod_id = ml_simp_products_dict[prod.magento_sku]['magento_prod_id']
+                #     if conf_prod != categ_name and prod_id in ml_conf_products_dict[conf_prod]['children']:
+                #         self.unlink_simple_and_config_prod(instance, prod.magento_sku, conf_prod)
+        #process simple products update (async) in Magento, assign attributes to config.products and link them
+        update_simple_prod = {}
+        for s in ml_simp_products_dict:
+            if ml_simp_products_dict[s].get('magento_update_date', '') and not ml_simp_products_dict[s]['log_message']:
+                update_simple_prod.update({s: ml_simp_products_dict[s]})
+
+        if update_simple_prod:
+            if single:
+                categ_name = single.prod_categ_name
+                prod_attr_set = single.magento_prod_categ.magento_attr_set
+                available_attributes = attr_sets[prod_attr_set]['attributes']
+                # to skip this step if only linking with parent needs to be done
+                if ml_simp_products_dict[single.magento_sku]['magento_status'] != 'need_to_link':
+                    res = self.update_single_simple_product_in_magento(instance, single, available_attributes,
+                                                                       attr_sets[prod_attr_set]['id'],
+                                                                       ml_simp_products_dict)
+                    if res:
+                        self.update_simp_product_dict_with_magento_data(res, ml_simp_products_dict)
+
+                        self.assign_attr_to_config_product(instance, single, available_attributes, ml_conf_products_dict,
+                                                           ml_simp_products_dict)
+                        if not ml_simp_products_dict[single.magento_sku]['log_message']:
+                            self.link_simple_to_config_product_in_magento(instance, single,
+                                                                          ml_conf_products_dict[categ_name]['children'],
+                                                                          ml_simp_products_dict)
+            else:
+                self.create_bulk_of_simple_products_in_magento(instance, simp_prod_to_export, update_simple_prod,
+                                                               ml_simp_products_dict, attr_sets, 'PUT')
+                self.assign_attr_to_config_products_in_bulk(instance, simp_prod_to_export, update_simple_prod,
+                                                            ml_conf_products_dict, ml_simp_products_dict, attr_sets)
+                self.link_simple_to_config_products_in_bulk(instance, simp_prod_to_export, update_simple_prod,
+                                                            ml_simp_products_dict)
+
+        # process new simple products creation in Magento, assign attributes to config.products and link them
+        new_simple_prod = {}
+        for s in ml_simp_products_dict:
+            if not ml_simp_products_dict[s].get('magento_update_date', '') and \
+                    not ml_simp_products_dict[s]['log_message']:
+                new_simple_prod.update({s: ml_simp_products_dict[s]})
+
+        if new_simple_prod:
+            if single:
+                res = self.create_single_simple_product_in_magento(instance, single, ml_simp_products_dict, attr_sets)
+                if res:
+                    self.update_simp_product_dict_with_magento_data(res, ml_simp_products_dict)
+                    prod_attr_set = single.magento_prod_categ.magento_attr_set
+                    available_attributes = attr_sets[prod_attr_set]['attributes']
+                    self.assign_attr_to_config_product(instance, single, available_attributes,
+                                                       ml_conf_products_dict, ml_simp_products_dict)
+                    if not ml_simp_products_dict[single.magento_sku]['log_message']:
+                        self.link_simple_to_config_product_in_magento(
+                            instance,
+                            single,
+                            ml_conf_products_dict[single.prod_categ_name]['children'],
+                            ml_simp_products_dict
+                        )
+            else:
+                self.create_bulk_of_simple_products_in_magento(instance, simp_prod_to_export, new_simple_prod,
+                                                                   ml_simp_products_dict, attr_sets, 'POST')
+                self.assign_attr_to_config_products_in_bulk(instance, simp_prod_to_export, new_simple_prod,
+                                                            ml_conf_products_dict, ml_simp_products_dict, attr_sets)
+                self.link_simple_to_config_products_in_bulk(instance, simp_prod_to_export, new_simple_prod,
+                                                            ml_simp_products_dict)
+
+    def check_simple_products_for_errors_before_export(self, simp_prod_to_export, ml_simp_products_dict,
+                                                       ml_conf_products_dict, attr_sets):
         for prod in simp_prod_to_export:
-            categ_name = prod.magento_prod_categ.magento_name
+            categ_name = prod.prod_categ_name
             # check if any log_messages for current product or it's configurable
             if ml_simp_products_dict[prod.magento_sku]['log_message']:
                 continue
@@ -386,95 +492,12 @@ class MagentoProductProduct(models.Model):
                 continue
 
             # the code below relates only to Simple Products to be updated in Magento
-            if ml_simp_products_dict[prod.magento_sku].get('magento_update_date', ''):
-                if not ml_conf_products_dict[categ_name].get('magento_update_date', ''):
-                    # log warning that newly created config.products via async-bulk request possibly are not created
-                    # in Magento yet (at the moment of further code execution)
-                    text = "The Configurable Product - %s related to current product is not in Magento yet. " \
-                           "And they cannot be linked so far.\n" % categ_name
-                    ml_simp_products_dict[prod.magento_sku]['log_message'] += text
-                    continue
+            if ml_simp_products_dict[prod.magento_sku].get('magento_update_date', '') and \
+                    ml_simp_products_dict[prod.magento_sku]['magento_type_id'] != 'simple':
+                text = "The Product with such sku is already created in Magento. " \
+                       "(And it's type isn't Simple Product.)\n"
+                ml_simp_products_dict[prod.magento_sku]['log_message'] += text
 
-                if ml_simp_products_dict[prod.magento_sku]['magento_type_id'] == 'simple':
-                    # to skip this step if only linking with parent needs to be done
-                    if ml_simp_products_dict[prod.magento_sku]['magento_status'] != 'need_to_link':
-                        res = self.update_single_simple_product_in_magento(instance, prod, available_attributes,
-                                                                           attr_sets[prod_attr_set]['id'],
-                                                                           ml_simp_products_dict)
-                        if ml_simp_products_dict[prod.magento_sku]['log_message']:
-                            continue
-                        else:
-                            self.update_simp_product_dict_with_magento_data(res, ml_simp_products_dict)
-                else:
-                    text = "The Product with such sku is already created in Magento. " \
-                           "(And it's type isn't Simple Product.)\n"
-                    ml_simp_products_dict[prod.magento_sku]['log_message'] += text
-                    continue
-
-                self.assign_attr_to_config_product(instance, prod, available_attributes, ml_conf_products_dict,
-                                                   ml_simp_products_dict)
-                if not ml_conf_products_dict[categ_name]['log_message']:
-                    self.link_simple_to_config_product_in_magento(instance, prod,
-                                                                  ml_conf_products_dict[categ_name]['children'],
-                                                                  ml_simp_products_dict)
-
-                # check if simple product assigned to any other of selected config.product than
-                # current one and unlink it
-                for conf_prod in ml_conf_products_dict:
-                    prod_id = ml_simp_products_dict[prod.magento_sku]['magento_prod_id']
-                    if conf_prod != categ_name and prod_id in ml_conf_products_dict[conf_prod]['children']:
-                        self.unlink_simple_and_config_prod(instance, prod.magento_sku, conf_prod)
-
-        # process new simple products creation in Magento, assign attributes to config.products and link them
-        new_simple_prod = {}
-        for s in ml_simp_products_dict:
-            if not ml_simp_products_dict[s].get('magento_update_date', '') and \
-                    not ml_simp_products_dict[s]['log_message']:
-                new_simple_prod.update({s: ml_simp_products_dict[s]})
-
-        if new_simple_prod:
-            if single:
-                res = self.create_new_simple_product_in_magento(instance, simp_prod_to_export, ml_simp_products_dict,
-                                                                attr_sets)
-                if res:
-                    self.update_simp_product_dict_with_magento_data(res, ml_simp_products_dict)
-                    prod_attr_set = simp_prod_to_export.magento_prod_categ.magento_attr_set
-                    available_attributes = attr_sets[prod_attr_set]['attributes']
-                    self.assign_attr_to_config_product(instance, simp_prod_to_export, available_attributes,
-                                                       ml_conf_products_dict, ml_simp_products_dict)
-                    if not ml_conf_products_dict[simp_prod_to_export.magento_prod_categ.magento_name][
-                        'log_message']:
-                        self.link_simple_to_config_product_in_magento(
-                            instance,
-                            simp_prod_to_export,
-                            ml_conf_products_dict[simp_prod_to_export.magento_prod_categ.magento_name][
-                                'children'],
-                            ml_simp_products_dict
-                        )
-            else:
-                self.create_new_bulk_of_simple_products_in_magento(instance, simp_prod_to_export, new_simple_prod,
-                                                                   ml_simp_products_dict, attr_sets)
-                self.assign_attr_to_config_products_in_bulk(instance, simp_prod_to_export, new_simple_prod,
-                                                            ml_conf_products_dict, ml_simp_products_dict, attr_sets)
-                self.link_simple_to_config_products_in_bulk(instance, simp_prod_to_export, new_simple_prod,
-                                                            ml_simp_products_dict)
-
-    def process_manually(self):
-        """
-        Process Product's Export (create/update) with regular Magento API process (without RabbitMQ)
-        :return: None
-        """
-        self.ensure_one()
-        self.process_products_export_to_magento(self)
-
-        # return {
-        #     'effect': {
-        #         'fadeout': 'slow',
-        #         'message': "Process Completed Successfully!".format({}),
-        #         'img_url': '/web/static/src/img/smile.svg',
-        #         'type': 'rainbow_man',
-        #     }
-        # }
 
     def update_single_conf_product_in_magento(self, magento_instance, magento_sku, attribute_set_id, ml_conf_products,
                                               check_assign_attr):
@@ -506,6 +529,7 @@ class MagentoProductProduct(models.Model):
             text = "Error while config.product update in Magento.\n"
             ml_conf_products[magento_sku]['log_message'] += text
             return {}
+
         if response.get("sku"):
             ml_conf_products[magento_sku]['export_date_to_magento'] = response.get("updated_at")
             return response
@@ -531,25 +555,31 @@ class MagentoProductProduct(models.Model):
 
             prod_attr_set = prod.magento_prod_categ.magento_attr_set
             avail_attr_list = available_attributes[prod_attr_set]['attributes']
+            prod_attr_list = [(a.attribute_id.name, a.name) for a in prod_attr]
+
+            # add Product Life Phase attribute (aka x_status)
+            if prod.odoo_product_id.x_status:
+                prod_attr_list.append(("PRODUCTLIFEPHASE", self.to_upper(prod.odoo_product_id.x_status)))
+
             # logs if any of attributes are missed in Magento and creates new attr.option in Magento if needed
-            for attr in prod_attr:
-                attr_name = self.to_upper(attr.attribute_id.name)
-                at = next((a for a in avail_attr_list if a and attr_name == self.to_upper(a.get('default_label'))), {})
+            for attr in prod_attr_list:
+                at = next((a for a in avail_attr_list if
+                           a and self.to_upper(attr[0]) == self.to_upper(a.get('default_label'))), {})
                 if not at:
-                    text = "Attribute - %s has to be created on Magento side an attached " \
-                           "to related Attribute Set.\n" % attr.attribute_id.name
+                    text = "Attribute - %s has to be created on Magento side and attached " \
+                           "to related Attribute Set.\n" % attr[0]
                     ml_product_dict[prod.magento_sku]['log_message'] += text
                 else:
-                    if self.to_upper(attr.name) not in [self.to_upper(i.get('label')) for i in at['options']]:
+                    if self.to_upper(attr[1]) not in [self.to_upper(i.get('label')) for i in at['options']]:
                         id, err = self.create_new_attribute_option_in_magento(magento_instance, at['attribute_code'],
-                                                                              attr.name)
+                                                                              attr[1])
                         if err:
                             ml_product_dict[prod.magento_sku]['log_message'] += err
                         else:
-                            for d in available_attributes[prod_attr_set]['attributes']:
-                                if d['attribute_id'] == at['attribute_id']:
-                                    d['options'].append({
-                                        'label': attr.name.upper(),
+                            for a in available_attributes[prod_attr_set]['attributes']:
+                                if a['attribute_id'] == at['attribute_id']:
+                                    a['options'].append({
+                                        'label': attr[1].upper(),
                                         'value': id
                                     })
                                     break
@@ -587,7 +617,7 @@ class MagentoProductProduct(models.Model):
             res = req(magento_instance, api_url, 'POST', data)
             try:
                 id = int(res[3:])
-            except:
+            except Exception:
                 raise
         except Exception:
             return 0, "Error while new Product Attribute Option(Swatch) creation for %s Attribute.\n" % attribute_code
@@ -604,11 +634,16 @@ class MagentoProductProduct(models.Model):
         :param ml_simp_products: Dictionary contains metadata for selected Simple Products (Odoo products)
         :return: {} or Updated product
         """
-        product_attributes = product.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id
-        custom_attributes = self.map_product_attributes_from_magento(product_attributes, available_attributes)
+        prod_attr_list = [(self.to_upper(a.attribute_id.name), self.to_upper(a.name)) for a in
+                          product.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id]
+        # add Product Life Phase attribute (aka x_status)
+        if product.odoo_product_id.x_status:
+            prod_attr_list.append(("PRODUCTLIFEPHASE", self.to_upper(product.odoo_product_id.x_status)))
+        custom_attributes = self.map_product_attributes_from_magento(prod_attr_list, available_attributes)
         data = {
             "product": {
-                "name": product.x_magento_name if product.x_magento_name else product.magento_product_name,
+                "name": product.magento_product_name,
+                # product.x_magento_name if product.x_magento_name else product.magento_product_name,
                 "attribute_set_id": attribute_set_id,
                 "price": product.lst_price,
                 "status": 1,
@@ -621,6 +656,7 @@ class MagentoProductProduct(models.Model):
         }
 
         try:
+            print(ml_simp_products[product.magento_sku])
             api_url = '/all/V1/products/%s' % product.magento_sku
             response = req(magento_instance, api_url, 'PUT', data)
         except Exception:
@@ -647,13 +683,13 @@ class MagentoProductProduct(models.Model):
         """
         custom_attributes = []
         # update custom_attributes field with relevant data from Magento
-        for attr_val in product_attributes:
-            for attr in available_attributes:
-                if self.to_upper(attr_val.attribute_id.name) == self.to_upper(attr['default_label']):
-                    for o in attr['options']:
-                        if self.to_upper(attr_val.name) == self.to_upper(o['label']):
+        for attr in product_attributes:
+            for avl_attr in available_attributes:
+                if attr[0] == self.to_upper(avl_attr['default_label']):
+                    for o in avl_attr['options']:
+                        if attr[1] == self.to_upper(o['label']):
                             custom_attributes.append({
-                                "attribute_code": attr['attribute_code'],
+                                "attribute_code": avl_attr['attribute_code'],
                                 "value": o['value']
                             })
                             break
@@ -686,7 +722,7 @@ class MagentoProductProduct(models.Model):
         :param ml_simp_products: Dictionary contains metadata for selected Simple Products (Odoo products)
         :return: None
         """
-        config_product_sku = product.magento_prod_categ.magento_name
+        config_product_sku = product.prod_categ_name
         product_attributes = product.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id
         conf_prod_assigned_attr = ml_conf_products[config_product_sku]['config_attr']
         data = {
@@ -771,7 +807,7 @@ class MagentoProductProduct(models.Model):
         :param ml_simp_products: Dictionary contains metadata for selected Simple Products (Odoo products)
         :return: None
         """
-        config_product_sku = product.magento_prod_categ.magento_name
+        config_product_sku = product.prod_categ_name
         simple_product_sku = product.magento_sku
 
         # if already linked, skip
@@ -895,24 +931,30 @@ class MagentoProductProduct(models.Model):
         :param ml_products_dict: Dictionary contains metadata for selected Simple/Configurable Products
         :return: List of Products from Magento
         """
+        res = []
+        step = 50
+        cur_page = 0
         magento_sku_list = list(ml_products_dict)
-        sku_list = ','.join(magento_sku_list)
-        search_criteria = 'searchCriteria[filterGroups][0][filters][0][field]=sku&searchCriteria[filterGroups]' \
-                          '[0][filters][0][condition_type]=in&searchCriteria[filterGroups][0][filters][0][value]=%s' % \
-                          sku_list
-        try:
+        times = (len(magento_sku_list) // step) + (1 if len(magento_sku_list) % step else 0)
+        for cnt in range(times):
+            sku_list = ','.join(magento_sku_list[cur_page:step*(1+cnt)])
+            search_criteria = 'searchCriteria[filterGroups][0][filters][0][field]=sku&searchCriteria[filterGroups]' \
+                              '[0][filters][0][condition_type]=in&searchCriteria[filterGroups][0][filters][0][value]=%s' % \
+                              sku_list
             api_url = '/V1/products?%s' % search_criteria
-            response = req(magento_instance, api_url)
-        except Exception:
-            for prod in magento_sku_list:
-                text = "Error while requesting product from Magento.\n"
-                ml_products_dict[prod]['log_message'] += text
-            return []
+            try:
+                response = req(magento_instance, api_url)
+            except Exception:
+                for prod in magento_sku_list[cur_page:step*(1+cnt)]:
+                    text = "Error while requesting product from Magento.\n"
+                    ml_products_dict[prod]['log_message'] += text
+                cur_page += step
+                continue
 
-        if response.get('items'):
-            return response.get('items')
-        else:
-            return []
+            res += (response.get('items', []))
+            cur_page += step
+
+        return res
 
     def create_bulk_of_new_conf_products_in_magento(self, magento_instance, new_conf_products, ml_conf_products,
                                                     attr_sets):
@@ -990,8 +1032,8 @@ class MagentoProductProduct(models.Model):
 
         return {}
 
-    def create_new_bulk_of_simple_products_in_magento(self, magento_instance, odoo_products, new_simple_prod,
-                                                      ml_simp_products, attr_sets):
+    def create_bulk_of_simple_products_in_magento(self, magento_instance, odoo_products, new_simple_prod,
+                                                      ml_simp_products, attr_sets, method='POST'):
         """
         Export(POST) to Magento new Simple Products in bulk (asynchronously)
         :param magento_instance: Instance of Magento
@@ -1008,15 +1050,22 @@ class MagentoProductProduct(models.Model):
         for prod in odoo_products:
             # map Odoo product attributes as in Magento
             if prod.magento_sku in new_products_sku:
+                prod_attr_list = [(self.to_upper(a.attribute_id.name), self.to_upper(a.name)) for a in
+                                  prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id]
+                # add Product Life Phase attribute (aka x_status)
+                if prod.odoo_product_id.x_status:
+                    prod_attr_list.append(("PRODUCTLIFEPHASE", self.to_upper(prod.odoo_product_id.x_status)))
+
                 custom_attributes = self.map_product_attributes_from_magento(
-                    prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id,
+                    prod_attr_list,
                     attr_sets[prod.magento_prod_categ.magento_attr_set]['attributes']
                 )
                 attr_set_id = attr_sets[prod.magento_prod_categ.magento_attr_set]['id']
                 data.append({
                     "product": {
                         "sku": prod.magento_sku,
-                        "name": prod.x_magento_name if prod.x_magento_name else prod.magento_product_name,
+                        "name": prod.magento_product_name,
+                        # prod.x_magento_name if prod.x_magento_name else prod.magento_product_name,
                         "attribute_set_id": attr_set_id,
                         "price": prod.lst_price,
                         "status": 1,  # Enabled
@@ -1040,9 +1089,12 @@ class MagentoProductProduct(models.Model):
         if data:
             try:
                 api_url = '/async/bulk/V1/products'
-                response = req(magento_instance, api_url, 'POST', data)
+                response = req(magento_instance, api_url, method, data)
             except Exception:
-                text = "Error while async new Simple Products creation in Magento.\n"
+                if method == 'POST':
+                    text = "Error while asynchronously new Simple Products creation in Magento.\n"
+                else:
+                    text = "Error while asynchronously Simple Products update in Magento.\n"
                 for prod in odoo_products:
                     if prod.magento_sku in new_products_sku:
                         ml_simp_products[prod.magento_sku]['log_message'] += text
@@ -1057,7 +1109,7 @@ class MagentoProductProduct(models.Model):
                 if prod_media:
                     self.export_bulk_media_to_magento(magento_instance, prod_media, ml_simp_products)
 
-    def create_new_simple_product_in_magento(self, magento_instance, odoo_product, ml_simp_products, attr_sets):
+    def create_single_simple_product_in_magento(self, magento_instance, odoo_product, ml_simp_products, attr_sets):
         """
         Export(POST) to Magento new Simple Product
         :param magento_instance: Instance of Magento
@@ -1070,15 +1122,21 @@ class MagentoProductProduct(models.Model):
         prod_media = {}
 
         # map Odoo product attributes as in Magento
+        prod_attr_list = [(self.to_upper(a.attribute_id.name), self.to_upper(a.name)) for a in
+                          odoo_product.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id]
+        # add Product Life Phase attribute (aka x_status)
+        if odoo_product.odoo_product_id.x_status:
+            prod_attr_list.append(("PRODUCTLIFEPHASE", self.to_upper(odoo_product.odoo_product_id.x_status)))
         custom_attributes = self.map_product_attributes_from_magento(
-            odoo_product.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id,
+            prod_attr_list,
             attr_sets[odoo_product.magento_prod_categ.magento_attr_set]['attributes']
         )
         attr_set_id = attr_sets[odoo_product.magento_prod_categ.magento_attr_set]['id']
         data.update({
             "product": {
                 "sku": odoo_product.magento_sku,
-                "name": odoo_product.x_magento_name if odoo_product.x_magento_name else odoo_product.magento_product_name,
+                "name": odoo_product.magento_product_name,
+                # odoo_product.x_magento_name if odoo_product.x_magento_name else odoo_product.magento_product_name,
                 "attribute_set_id": attr_set_id,
                 "price": odoo_product.lst_price,
                 "status": 1,  # Enabled
@@ -1210,7 +1268,7 @@ class MagentoProductProduct(models.Model):
                     simple_prod.odoo_product_id.product_template_attribute_value_ids.product_attribute_value_id
                 for attr_val in simp_prod_attrs:
                     attr_name = attr_val.attribute_id.name
-                    categ_name = simple_prod.magento_prod_categ.magento_name
+                    categ_name = simple_prod.prod_categ_name
                     mag_attr_set = simple_prod.magento_prod_categ.magento_attr_set
                     if attr_name in config_prod_assigned_attr.get(categ_name)['config_attr']:
                         mag_avail_attrs = available_attributes.get(mag_attr_set).get('attributes')
@@ -1232,7 +1290,7 @@ class MagentoProductProduct(models.Model):
                 api_url = '/async/bulk/V1/configurable-products/bySku/options'
                 req(magento_instance, api_url, 'POST', data)
             except Exception:
-                text = "Error while async assign product attributes to Config.Product in Magento.\n"
+                text = "Error while asynchronously assign product attributes to Config.Product in Magento.\n"
                 for prod in odoo_products:
                     if prod.magento_sku in new_products_sku:
                         ml_simp_products[prod.magento_sku]['log_message'] += text
@@ -1255,7 +1313,7 @@ class MagentoProductProduct(models.Model):
             if simple_prod.magento_sku in new_simple_products:
                 data.append({
                     "childSku": simple_prod.magento_sku,
-                    "sku": simple_prod.magento_prod_categ.magento_name
+                    "sku": simple_prod.prod_categ_name
                 })
 
         if data:
@@ -1263,7 +1321,7 @@ class MagentoProductProduct(models.Model):
                 api_url = '/async/bulk/V1/configurable-products/bySku/child'
                 req(magento_instance, api_url, 'POST', data)
             except Exception:
-                text = "Error while async linking Simple to Configurable Product in Magento. Possible reason: \n"
+                text = "Error while asynchronously linking Simple to Configurable Product in Magento. Possible reason: \n"
                 for prod in odoo_products:
                     if prod.magento_sku in new_simple_products:
                         ml_simp_products[prod.magento_sku]['log_message'] += text
@@ -1375,14 +1433,43 @@ class MagentoProductProduct(models.Model):
             ])
             self.save_magento_status_to_database(s, ml_simp_products, magento_product)
 
-            if ml_simp_products[s]['to_export'] or ml_simp_products[s]['log_message']:
-                categ_name = ml_simp_products[s].get('category_name')
-                magento_product.write({
-                    'magento_export_date': ml_simp_products[s]['export_date_to_magento'],
-                    'magento_export_date_conf': ml_conf_products.get(categ_name, {}).get('export_date_to_magento'),
+            categ_name = ml_simp_products[s].get('category_name')
+
+            if ml_simp_products[s]['to_export']:
+                vals = {}
+                vals.update({
+                    'magento_export_date': ml_simp_products[s]['export_date_to_magento']
+                })
+                magento_product.write(vals)
+
+                if ml_conf_products.get(categ_name, {}).get('to_export'):
+                    vals = {}
+                    products = self.env['magento.product.product'].search([
+                        ('magento_instance_id', '=', instance_id),
+                        ('active', '=', True),
+                        ('prod_categ_name', '=', categ_name),
+                    ])
+                    vals.update({
+                        'magento_export_date_conf': ml_conf_products.get(categ_name, {}).get('export_date_to_magento')
+                    })
+                    products.write(vals)
+                    ml_conf_products[categ_name]['to_export'] = False
+
+            if ml_simp_products[s]['log_message']:
+                vals = {}
+                vals.update({
                     'magento_log_message': ml_simp_products[s]['log_message'],
                     'magento_log_message_conf': ml_conf_products.get(categ_name, {}).get('log_message')
                 })
+                log_book = self.env['product.log.book'].search([('magento_product_id', '=', magento_product.id),
+                                                                ('active', '=', True)])
+                if not log_book:
+                    vals.update({
+                        'magento_product_id': magento_product.id
+                    })
+                    log_book.create(vals)
+                else:
+                    log_book.write(vals)
 
     def save_magento_status_to_database(self, product, ml_simp_products, magento_product):
         if ml_simp_products[product]['log_message']:
@@ -1412,8 +1499,25 @@ class MagentoProductProduct(models.Model):
                 'attributes': self.get_available_attributes_from_magento(magento_instance, a_set, ml_conf_products_dict,
                                                                          attr_sets)
             })
-
         return attr_sets
+
+    def process_manually(self):
+        """
+        Process Product's Export (create/update) with regular Magento API process (without RabbitMQ)
+        :return: None
+        """
+        self.ensure_one()
+        self.process_products_export_to_magento(self)
+
+    def delete_in_magento(self):
+        self.ensure_one()
+        try:
+            api_url = '/V1/products/%s' % self.magento_sku
+            response = req(self.magento_instance_id, api_url, 'DELETE')
+        except Exception as err:
+            raise UserError("Error while deleting product in Magento. " + str(err))
+        if response is True:
+            self.write({'magento_status': 'deleted'})
 
     @staticmethod
     def to_upper(val):
@@ -1428,4 +1532,3 @@ class MagentoProductProduct(models.Model):
             return datetime.strftime(odoo_date, MAGENTO_DATETIME_FORMAT)
         else:
             return ""
-
