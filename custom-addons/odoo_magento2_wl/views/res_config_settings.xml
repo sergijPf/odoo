@@ -5,16 +5,18 @@
             <field name="model">res.config.settings</field>
             <field name="inherit_id" ref="odoo_magento2_ept.view_magento_res_config_settings_ept" />
             <field name="arch" type="xml">
+
+<!--ask if needed product import to Odoo-->
                 <xpath expr="//field[@name='auto_create_product']" position="attributes">
-                    <attribute name="invisible">1</attribute>
+                    <attribute name="invisible">0</attribute>
                 </xpath>
                 <xpath expr="//label[@for='auto_create_product']" position="attributes">
-                    <attribute name="invisible">1</attribute>
+                    <attribute name="invisible">0</attribute>
                 </xpath>
                 <xpath expr="//label[@for='auto_create_product']/following-sibling::div" position="attributes">
-                    <attribute name="invisible">1</attribute>
+                    <attribute name="invisible">0</attribute>
                 </xpath>
-
+<!--end of section-->
                 <xpath expr="//field[@name='allow_import_image_of_products']" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </xpath>

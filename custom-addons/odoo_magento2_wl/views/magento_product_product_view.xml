@@ -80,6 +80,10 @@
                 <attribute name="invisible">1</attribute>
             </xpath>
 
+            <xpath expr="//page[@name='notes']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
             <xpath expr="//field[@name='created_at']" position="replace">
                 <field name="magento_export_date" string="Current Product Last Export Date" readonly="1"/>
             </xpath>
@@ -109,6 +113,8 @@
                 <field name="prod_categ_name"/>
                 <filter string="Not in Magento" name="not_in_magento"
                         domain="[('magento_status', '!=', 'in_magento')]"/>
+                <separator/>
+                    <filter name="archived" string="Archived" domain="[('active','=',0)]"/>
             </xpath>
              <xpath expr="//search/group" position="replace">
                 <group expand="1" string="Group By">
@@ -156,9 +162,9 @@
                        modifiers="{'readonly':true}"/>
             </xpath>
 
-            <xpath expr="//field[@name='magento_product_name']" position="replace">
-                <field name="x_magento_name" string="Magento Product Name" readonly="1"/>
-            </xpath>
+<!--            <xpath expr="//field[@name='magento_product_name']" position="replace">-->
+<!--                <field name="x_magento_name" string="Magento Product Name" readonly="1"/>-->
+<!--            </xpath>-->
 
             <xpath expr="//field[@name='product_type']" position="replace">
                 <field name="magento_status"
