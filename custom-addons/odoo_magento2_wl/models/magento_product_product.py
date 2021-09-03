@@ -2,7 +2,7 @@
 
 import json
 
-from odoo import fields, models
+from odoo import fields, models, api
 from datetime import datetime
 from odoo.exceptions import UserError
 from ...odoo_magento2_ept.models.api_request import req, create_search_criteria
@@ -33,7 +33,8 @@ class MagentoProductProduct(models.Model):
         ('log_error', 'Error to Export'),
         ('update_needed', 'Need to Update'),
         ('deleted', 'Deleted in Magento')
-    ], string='Export Status', help='The status of Product Export to Magento ', default='not_exported')
+    ], string='Export Status', help='The status of Product Export to Magento ',
+        default='not_exported')
 
     def process_products_export_to_magento(self, single=False):
         """
@@ -191,8 +192,7 @@ class MagentoProductProduct(models.Model):
             'magento_update_date': magento_prod.get("updated_at")
         })
 
-    @staticmethod
-    def update_simp_product_dict_with_magento_data(magento_prod, ml_simp_products_dict):
+    def update_simp_product_dict_with_magento_data(self, magento_prod, ml_simp_products_dict):
         """
         Update Simple Products 'Meta-dictionary' with data from Magento
         :param magento_prod: Product dict received from Magento
@@ -630,15 +630,14 @@ class MagentoProductProduct(models.Model):
         }
 
         if method == 'POST':
-            data.update({
+            data["product"].update({
                 "sku": product.magento_sku,
                 "extension_attributes": {
                     "stock_item": {
-                        "qty": product.qty_available,
+                        "qty": product.qty_available or 0,
                         "is_in_stock": "true"
                     }
-                },
-
+                }
             })
 
         try:
@@ -653,10 +652,33 @@ class MagentoProductProduct(models.Model):
         if response.get("sku"):
             ml_simp_products[product.magento_sku]['export_date_to_magento'] = response.get("updated_at")
             ml_simp_products[product.magento_sku]['magento_status'] = 'need_to_link'
+
+            if (method == "POST"):
+                # assign magento_websites to product if it doesn't have any
+                if not len(product.magento_website_ids):
+                    product.magento_website_ids = self.env['magento.website'].search(
+                            [('magento_instance_id', '=', product.magento_instance_id.id)])
+                # add websites to product in Magento
+                data = {
+                    "productWebsiteLink": {
+                        "sku": product.magento_sku,
+                        "website_id": 0
+                    }
+                }
+                for site in product.magento_website_ids:
+                    data["productWebsiteLink"].update({"website_id": site.magento_website_id})
+                    try:
+                        api_url = '/V1/products/%s/websites' % product.magento_sku
+                        req(magento_instance, api_url, method, data)
+                    except Exception:
+                        text = "Error while adding website to product in Magento"
+                        ml_simp_products[product.magento_sku]['log_message'] += text
+
             # export product images to Magento
             if len(product.odoo_product_id.product_template_image_ids):
                 prod_media = {product.magento_sku: product.odoo_product_id.product_template_image_ids}
                 self.export_media_to_magento(magento_instance, prod_media, ml_simp_products)
+
             return response
         return {}
 
@@ -1046,6 +1068,7 @@ class MagentoProductProduct(models.Model):
         """
         data = []
         prod_media = {}
+        product_websites = []
         new_products_sku = new_simple_prod.keys()
 
         for prod in odoo_products:
@@ -1075,7 +1098,7 @@ class MagentoProductProduct(models.Model):
                         "weight": prod.odoo_product_id.weight,
                         "extension_attributes": {
                             "stock_item": {
-                                "qty": prod.qty_available,
+                                "qty": prod.qty_available or 0,
                                 "is_in_stock": "true"
                             }
                         },
@@ -1083,19 +1106,13 @@ class MagentoProductProduct(models.Model):
                     }
                 })
 
-                # update product_media dict if product has images
-                if len(prod.odoo_product_id.product_template_image_ids):
-                    prod_media.update({prod.magento_sku: prod.odoo_product_id.product_template_image_ids})
-
         if data:
             try:
                 api_url = '/async/bulk/V1/products'
                 response = req(magento_instance, api_url, method, data)
             except Exception:
-                if method == 'POST':
-                    text = "Error while asynchronously new Simple Products creation in Magento.\n"
-                else:
-                    text = "Error while asynchronously Simple Products update in Magento.\n"
+                text = "Error while asynchronously new Simple Products creation in Magento.\n" if method == 'POST' else \
+                    "Error while asynchronously Simple Products update in Magento.\n"
                 for prod in odoo_products:
                     if prod.magento_sku in new_products_sku:
                         ml_simp_products[prod.magento_sku]['log_message'] += text
@@ -1106,8 +1123,38 @@ class MagentoProductProduct(models.Model):
                     if prod.magento_sku in new_products_sku:
                         ml_simp_products[prod.magento_sku]['export_date_to_magento'] = datetime.now()
                         ml_simp_products[prod.magento_sku]['magento_status'] = 'in_process'
+
+                    # update product_media dict if product has images
+                    if len(prod.odoo_product_id.product_template_image_ids):
+                        prod_media.update({prod.magento_sku: prod.odoo_product_id.product_template_image_ids})
+
+                    # update product_websites dict
+                    if (method == "POST"):
+                        # assign magento_websites to product if it has no
+                        if not len(prod.magento_website_ids):
+                            prod.magento_website_ids = self.env['magento.website'].search(
+                                [('magento_instance_id', '=', prod.magento_instance_id.id)])
+                        # add websites to product in Magento
+                        for site in prod.magento_website_ids:
+                            product_websites.append({
+                                "productWebsiteLink": {
+                                    "sku": prod.magento_sku,
+                                    "website_id": site.magento_website_id
+                                },
+                                "sku": prod.magento_sku
+                            })
+
                 if prod_media:
                     self.export_media_to_magento_in_bulk(magento_instance, prod_media, ml_simp_products)
+
+                if product_websites:
+                    try:
+                        api_url = '/async/bulk/V1/products/bySku/websites'
+                        req(magento_instance, api_url, method, product_websites)
+                    except Exception:
+                        text = "Error while adding websites to product in Magento"
+                        for prod in odoo_products:
+                            ml_simp_products[prod.magento_sku]['log_message'] += text
             else:
                  return False
 

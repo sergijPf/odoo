@@ -52,7 +52,7 @@
                 <attribute name="invisible">1</attribute>
             </xpath>
 
-            <xpath expr="//field[@name='magento_website_ids']" position="replace">
+            <xpath expr="//field[@name='magento_website_ids']" position="after">
                 <field name="magento_status" readonly="1"/>
             </xpath>
 
@@ -151,6 +151,9 @@
             <xpath expr="//field[@name='sync_product_with_magento']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
+            <xpath expr="//field[@name='magento_instance_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
 
             <xpath expr="//field[@name='qty_available']" position="before">
                 <field name="product_template_attribute_value_ids"
@@ -162,9 +165,10 @@
                        modifiers="{'readonly':true}"/>
             </xpath>
 
-<!--            <xpath expr="//field[@name='magento_product_name']" position="replace">-->
-<!--                <field name="x_magento_name" string="Magento Product Name" readonly="1"/>-->
-<!--            </xpath>-->
+            <xpath expr="//field[@name='magento_sku']" position="before">
+                <field name="magento_instance_id"/>
+                <field name="magento_website_ids" widget="many2many_tags"/>
+            </xpath>
 
             <xpath expr="//field[@name='product_type']" position="replace">
                 <field name="magento_status"
