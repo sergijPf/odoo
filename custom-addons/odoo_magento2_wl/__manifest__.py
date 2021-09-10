@@ -13,7 +13,7 @@
 
     # Views
     'data': [
-        'security/ir.model.access.csv',
+        'security/security_rules.xml',
         'views/sale_order_view.xml',
         'views/magento_product_product_view.xml',
         'views/magento_product_template_view.xml',
@@ -22,8 +22,10 @@
         'views/product_log_book_view.xml',
         'views/product_category_view.xml',
         'views/res_config_settings.xml',
+        'views/magento_instance_view.xml',
         'wizard/magento_product_category_update_view.xml',
         'wizard/magento_cron_configuration_view.xml',
+        'security/ir.model.access.csv',
     ],
     # only loaded in demonstration mode
     'demo': [
@@ -35,3 +37,4 @@
     'auto_install': False,
 
 }
+
