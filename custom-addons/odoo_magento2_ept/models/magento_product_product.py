@@ -74,19 +74,6 @@ class MagentoProductProduct(models.Model):
         help="Date when product updated into Magento"
     )
 
-    no_stock_sync = fields.Boolean(
-        string='No Stock Synchronization',
-        help="Check this to exclude the product "
-             "from stock synchronizations.",
-    )
-    export_stock_type = fields.Selection([
-        ('fixed', 'Export Fixed Qty'),
-        ('actual', 'Export Actual Stock')
-    ], string="Export Product Stock Type", default='actual')
-    export_fix_value = fields.Float(
-        string="Fixed Stock Quantity",
-        help="Fixed Stock Quantity"
-    )
     magento_sku = fields.Char(string="Magento Product SKU", help="Magento Product SKU")
     description = fields.Text(string="Product Description", help="Description", translate=True)
     short_description = fields.Text(
@@ -139,6 +126,19 @@ class MagentoProductProduct(models.Model):
             unlink_magento_templates.unlink()
         self.clear_caches()
         return res
+
+    def toggle_active(self):
+        """ Archiving related magento.product.template if there is not any more active magento.product.product
+        (and vice versa, unarchiving the related magento product template if there is now an active magento.product.product) """
+        result = super().toggle_active()
+        # We deactivate product templates which are active with no active variants.
+        tmpl_to_deactivate = self.filtered(lambda product: (product.magento_tmpl_id.active
+                                                            and not product.magento_tmpl_id.magento_product_ids)).mapped('magento_tmpl_id')
+        # We activate product templates which are inactive with active variants.
+        tmpl_to_activate = self.filtered(lambda product: (not product.magento_tmpl_id.active
+                                                          and product.magento_tmpl_id.magento_product_ids)).mapped('magento_tmpl_id')
+        (tmpl_to_deactivate + tmpl_to_activate).toggle_active()
+        return result
 
     def view_odoo_product(self):
         """
@@ -220,7 +220,7 @@ class MagentoProductProduct(models.Model):
         :param item: item received from Magento
         :return: product_count, item
         """
-        if product_count > 10 or (0 < product_count <= 10 and product_total_queue == 0):
+        if product_count > 1 or (0 < product_count <= 1 and product_total_queue == 0):
             self._cr.commit()
             product_count = 1
             item.sync_import_magento_product_queue_id.is_process_queue = True
@@ -520,8 +520,30 @@ class MagentoProductProduct(models.Model):
                 'odoo_product_template_id': odoo_product.product_tmpl_id.id,
                 'sync_product_with_magento': True
             })
+            magento_attribute_set = self.env['magento.attribute.set'].search(
+                [('instance_id', '=', instance_id.id), ('attribute_set_id', '=', item.get('attribute_set_id'))])
+            if magento_attribute_set:
+                value.update({'attribute_set_id': magento_attribute_set.id})
+            magento_tax_class = ''
+            for attribute_code in item.get('custom_attributes'):
+                if attribute_code.get('attribute_code') == 'tax_class_id':
+                    magento_tax = self.env['magento.tax.class'].search([
+                        ('magento_instance_id', '=', instance_id.id),
+                        ('magento_tax_class_id', '=', attribute_code.get('value'))])
+                    magento_tax_class = magento_tax.id
+            if magento_tax_class:
+                value.update({'magento_tax_class': magento_tax_class})
+            magento_categories_dict = []
+            if 'category_links' in item.get('extension_attributes'):
+                for attribute_code in item.get('extension_attributes').get('category_links'):
+                    magento_categories_dict.append(attribute_code.get('category_id'))
+                if magento_categories_dict:
+                    magento_categories = self.env['magento.product.category'].search([
+                        ('instance_id', '=', instance_id.id),
+                        ('category_id', 'in', magento_categories_dict)])
+                    value.update({'category_ids': [(6, 0, magento_categories.ids)]})
             magento_prod_tmpl = magento_prod_tmpl_obj.create(value)
-            if instance_id.allow_import_image_of_products:
+            if instance_id.allow_import_image_of_products and item.get('type_id') == "configurable":
                 magento_media_url = False
                 magento_stores = magento_websites.store_view_ids
                 if magento_stores:

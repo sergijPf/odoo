@@ -151,7 +151,7 @@
             <field name="name">magento.order.data.queue.ept.tree</field>
             <field name="model">magento.order.data.queue.ept</field>
             <field name="arch" type="xml">
-                <tree create="0" delete="1">
+                <tree create="0" delete="1" default_order="id desc" >
                     <field name="name"/>
                     <field name="magento_instance_id"/>
                     <field name="create_date"/>

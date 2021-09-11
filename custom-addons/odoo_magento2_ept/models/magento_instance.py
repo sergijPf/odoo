@@ -226,6 +226,11 @@ class MagentoInstance(models.Model):
     magento_verify_ssl = fields.Boolean(
         string="Verify SSL", default=False,
         help="Check this if your Magento site is using SSL certificate")
+    active_user_ids = fields.One2many(
+        "magento.api.request.page",
+        "magento_instance_id",
+        string='Active Users',
+        help='Active Users')
 
     def check_dashboard_view(self):
         """
@@ -356,10 +361,17 @@ class MagentoInstance(models.Model):
         :return:
         """
         domain = [("magento_instance_id", "=", self.id)]
+        attribute_instance_domain = [("instance_id", "=", self.id)]
         magento_template_obj = self.env["magento.product.template"]
         magento_financial_status_obj = self.env["magento.financial.status.ept"]
         magento_payment_method_obj = self.env["magento.payment.method"]
         magento_inventory_location_obj = self.env["magento.inventory.locations"]
+        magento_product_category_obj = self.env['magento.product.category']
+        magento_attribute_set_obj = self.env['magento.attribute.set']
+        magento_attribute_group_obj = self.env['magento.attribute.group']
+        magento_product_attribute_obj = self.env['magento.product.attribute']
+        magento_product_attribute_option_obj = self.env['magento.attribute.option']
+        magento_tax_class_obj = self.env['magento.tax.class']
         magento_website_obj = self.env[MAGENTO_WEBSITE]
         magento_storeview_obj = self.env[MAGENTO_STOREVIEW]
         data_queue_mixin_obj = self.env['data.queue.mixin.ept']
@@ -375,6 +387,12 @@ class MagentoInstance(models.Model):
             magento_inventory_location_obj.search(domain).write(activate)
             magento_financial_status_obj.search(domain).write(activate)
             magento_payment_method_obj.search(domain).write(activate)
+            magento_tax_class_obj.search(domain).write(activate)
+            magento_product_category_obj.search(attribute_instance_domain).write(activate)
+            magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
+            magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
+            magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
+            magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
             company = self.company_id
             company.write({
                 'magento_instance_onboarding_state': 'not_done',
@@ -383,6 +401,9 @@ class MagentoInstance(models.Model):
                 'magento_cron_configuration_onboarding_state': 'not_done',
                 'is_create_magento_more_instance': False
             })
+            magento_order_counts = self.active_user_ids
+            for magento_order_count in magento_order_counts:
+                magento_order_count.write({'magento_import_order_page_count': 1})
             self.write({'is_onboarding_configurations_done': True})
         else:
             activate = {"active": True}
@@ -392,6 +413,12 @@ class MagentoInstance(models.Model):
             magento_inventory_location_obj.search(domain).write(activate)
             magento_financial_status_obj.search(domain).write(activate)
             magento_payment_method_obj.search(domain).write(activate)
+            magento_tax_class_obj.search(domain).write(activate)
+            magento_product_category_obj.search(attribute_instance_domain).write(activate)
+            magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
+            magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
+            magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
+            magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
             self.synchronize_metadata()
         self.write(activate)
         magento_template_obj.search(domain).write(activate)
@@ -476,6 +503,14 @@ class MagentoInstance(models.Model):
             record.import_delivery_method()
             record.import_magento_inventory_locations()
             self.env['magento.financial.status.ept'].create_financial_status(record, 'not_paid')
+            self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(record)
+            record.get_category()
+            record.import_tax_class()
+            self.env['magento.attribute.set'].import_magento_product_attribute_set(record)
+
+    def get_category(self):
+        magento_category_obj = self.env['magento.product.category']
+        magento_category_obj.get_all_category(self)
 
     def sync_price_scop(self):
         """
@@ -557,10 +592,14 @@ class MagentoInstance(models.Model):
                         'magento_storeview_id': magento_storeview_id,
                         'magento_instance_id': self.id,
                         'base_media_url': storeview_data.get('base_media_url'),
-                        'lang_id': language.id
+                        'lang_id': language.id,
+                        'magento_storeview_code': storeview_data.get('code')
                     })
                 else:
-                    storeview.write({'base_media_url': storeview_data.get('base_media_url')})
+                    storeview.write({
+                        'base_media_url': storeview_data.get('base_media_url'),
+                        'magento_storeview_code': storeview_data.get('code')
+                    })
 
     def get_store_view_language_and_name(self, stores, magento_storeview_id, storeview_data):
         """
@@ -686,6 +725,28 @@ class MagentoInstance(models.Model):
                     else:
                         magento_location.write({'active': inventory_location.get('enabled')})
 
+    def import_tax_class(self):
+        """
+        This method used for import Tax Classes.
+        """
+        tax_class_obj = self.env['magento.tax.class']
+        url = '/V1/taxClasses/search?searchCriteria[page_size]=50&searchCriteria[currentPage]=1'
+        tax_class_req = req(self, url)
+        all_tax_class = tax_class_req.get('items')
+        for tax_class in all_tax_class:
+            tax_class_id = tax_class.get('class_id')
+            new_tax_class = tax_class_obj.search([
+                ('magento_tax_class_id', '=', tax_class_id),
+                ('magento_instance_id', '=', self.id)
+            ])
+            if not new_tax_class:
+                tax_class_obj.create({
+                    'magento_tax_class_id': tax_class.get('class_id'),
+                    'magento_tax_class_name': tax_class.get('class_name'),
+                    'magento_tax_class_type': tax_class.get('class_type'),
+                    'magento_instance_id': self.id
+                })
+
     @api.model
     def import_currency(self):
         """
@@ -732,7 +793,7 @@ class MagentoInstance(models.Model):
             instance = magento_instance.browse(magento_instance_id)
             last_order_import_date = instance.last_order_import_date
             if not last_order_import_date:
-                last_order_import_date = None
+                last_order_import_date = ''
             from_date = last_order_import_date
             to_date = datetime.now()
             magento_order_data_queue_obj.magento_create_order_data_queues(
@@ -758,7 +819,7 @@ class MagentoInstance(models.Model):
             instance = magento_instance.browse(magento_instance_id)
             last_product_import_date = instance.last_product_import_date
             if not last_product_import_date:
-                last_product_import_date = None
+                last_product_import_date = ''
             from_date = last_product_import_date
             to_date = datetime.now()
             magento_import_product_queue_obj.create_sync_import_product_queues(
@@ -961,18 +1022,18 @@ class MagentoInstance(models.Model):
         :return: total number of customer ids and action for customers
         """
         customer_data = {}
-        main_sql = """select count(id) as total_count from res_partner
-                    where magento_instance_id = %s""" % (record.id)
+        main_sql = """select DISTINCT(rp.id) as partner_id from res_partner as rp
+                    inner join magento_res_partner_ept mp on mp.partner_id = rp.id
+                    where mp.magento_instance_id = %s""" % (record.id)
         view = self.env.ref('base.action_partner_form').sudo().read()[0]
-        action = record.prepare_action(view, [('active', 'in', [True, False]),
-                                              ('magento_instance_id', '=', record.id)
-                                              ])
         self._cr.execute(main_sql)
         result = self._cr.dictfetchall()
-        total_count = 0
+        magento_customer_ids = []
         if result:
-            total_count = result[0].get('total_count')
-        customer_data.update({'customer_count': total_count, 'customer_action': action})
+            for data in result:
+                magento_customer_ids.append(data.get('partner_id'))
+        action = record.prepare_action(view, [('id', 'in', magento_customer_ids)])
+        customer_data.update({'customer_count': len(magento_customer_ids), 'customer_action': action})
         return customer_data
 
     def get_total_orders(self, record, state=False):
@@ -1036,12 +1097,19 @@ class MagentoInstance(models.Model):
         Use: To get the list of Magento shipped orders month wise or year wise
         :return: total number of Magento shipped orders ids and action for shipped orders of current instance
         """
-        shipped_query = """select distinct(so.id) from stock_picking sp
-                                 inner join sale_order so on so.procurement_group_id=sp.group_id inner 
-                                 join stock_location on stock_location.id=sp.location_dest_id and stock_location.usage='customer' 
-                                 where sp.is_magento_picking = True and sp.state = 'done' and 
-                                 so.magento_instance_id=%s""" % \
-                        (record.id)
+        shipped_query = """
+           SELECT distinct(so.id) 
+           FROM stock_picking AS sp
+           JOIN sale_order AS so
+               ON sp.sale_id = so.id
+           JOIN stock_location AS sl 
+               ON sl.id = sp.location_dest_id 
+           WHERE 
+               sp.is_magento_picking = True AND 
+               sp.state = 'done' AND
+               so.magento_instance_id = {} AND
+               sl.usage='customer'
+       """.format(record.id)
 
         def shipped_order_of_current_week(shipped_query):
             qry = shipped_query + " and date(so.date_order) >= (select date_trunc('week', date(current_date)))"

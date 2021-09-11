@@ -229,11 +229,9 @@ class ResPartner(models.Model):
         }
         magento_partner_values = {
             'address_id': customer_address.get('id') if item else customer_address.get('entity_id'),
-            'magento_instance_id': magento_instance.id, 'magento_website_id': website_id
+            'magento_instance_id': magento_instance.id, 'magento_website_id': website_id,
+            'magento_customer_id': item.get('id') if not customer_id and item else customer_id
         }
-        if not ship:
-            magento_partner_values.update({
-                'magento_customer_id': item.get('id') if not customer_id and item else customer_id})
         if customer_address.get('company'):
             partner_vals.update({'company_name': customer_address.get('company')})
         return partner_vals, magento_partner_values
@@ -344,11 +342,13 @@ class ResPartner(models.Model):
         :return: partner dictionary and Log line
         """
         magento_partner_obj = self.env[MAGENTO_RES_PARTNER_EPT]
+        customer = False
         customer_id = response.get('customer_id', False)
         magento_store = magento_instance.magento_website_ids.store_view_ids.filtered(
             lambda l: l.magento_storeview_id == str(response.get('store_id')))
-        customer = magento_partner_obj.search([('magento_customer_id', '=', customer_id),
-                                               ('magento_instance_id', '=', magento_instance.id)], limit=1)
+        if customer_id:
+            customer = magento_partner_obj.search([('magento_customer_id', '=', customer_id),
+                                                   ('magento_instance_id', '=', magento_instance.id)], limit=1)
         partner_args = {'magento_invoice_customer': magento_invoice_customer,
                         'magento_delivery_customer': magento_delivery_customer,
                         'customer': customer,
@@ -514,9 +514,10 @@ class ResPartner(models.Model):
         """
         exist_partner = self.find_magento_partner_by_key(partner_vals)
         if exist_partner:
-            if not magento_customer and not exist_partner.is_magento_customer:
+            if not exist_partner.is_magento_customer:
+                exist_partner.write({'is_magento_customer': True})
+            if not magento_customer:
                 exist_partner.create_magento_res_partner_ept(magento_partner_vals)
-                exist_partner.write({'is_woo_customer': True})
             invoice_partner = exist_partner
         else:
             if company_name:
@@ -524,7 +525,7 @@ class ResPartner(models.Model):
             if magento_customer:
                 partner_vals.update({'parent_id': magento_customer.partner_id.id})
             invoice_partner = self.with_context(tracking_disable=True).create(partner_vals)
-            if not magento_customer:
+            if not magento_customer or (magento_customer and magento_customer.address_id != magento_partner_vals.get('address_id')):
                 invoice_partner.create_magento_res_partner_ept(magento_partner_vals)
             self.magento_update_company_name_in_partner(invoice_partner, company_name)
         return invoice_partner
@@ -562,30 +563,33 @@ class ResPartner(models.Model):
         if not delivery:
             delivery = self.find_magento_partner_by_key(partner_vals)
             if delivery:
-                if not magento_customer and not delivery.is_magento_customer:
+                if not delivery.is_magento_customer:
+                    delivery.write({'is_magento_customer': True})
+                if not magento_customer:
                     delivery.create_magento_res_partner_ept(magento_partner_vals)
-                    delivery.write({'is_woo_customer': True})
             else:
-                delivery = self.create_delivery_partner(partner_vals, magento_partner_vals, magento_customer)
+                delivery = self.create_delivery_partner(
+                    partner_vals, magento_partner_vals, magento_customer, invoice_partner)
         magento_delivery_customer.update({partner_vals.get('magento_customer_id'): delivery})
         return delivery
 
-    def create_delivery_partner(self, partner_vals, magento_partner_vals, magento_customer):
+    def create_delivery_partner(self, partner_vals, magento_partner_vals, magento_customer, invoice_partner):
         """
         Create delivery type partner
         :param partner_vals: Dictionary of partner values
         :param magento_partner_vals: Dictionary of Magento Partner values
         :param magento_customer: magento res partner object
+        :param invoice_partner: res partner object
         :return:
         """
         company_name = partner_vals.get('company_name')
         delivery = self.with_context(tracking_disable=True).create({
             'type': 'delivery',
-            'parent_id': magento_customer and magento_customer.partner_id.id or False,
+            'parent_id': invoice_partner.id or False,
             **partner_vals,
         })
         if company_name:
             delivery.write({'company_name': company_name})
-        if not magento_customer:
+        if not magento_customer or (magento_customer and magento_customer.address_id != magento_partner_vals.get('address_id')):
             delivery.create_magento_res_partner_ept(magento_partner_vals)
         return delivery

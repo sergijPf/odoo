@@ -326,6 +326,7 @@ class MagentoCronConfiguration(models.TransientModel):
         vals['auto_export_shipment_order_status'] = self.auto_export_shipment_order_status or False
         vals['auto_export_invoice'] = self.auto_export_invoice or False
         vals['auto_import_product'] = self.auto_import_product or False
+        self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(magento_instance)
         magento_instance.write(vals)
         # Below code is used for only onboarding panel purpose.
         if self._context.get('is_calling_from_magento_onboarding_panel', False):

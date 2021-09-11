@@ -33,6 +33,7 @@ class MagentoStoreview(models.Model):
     lang_id = fields.Many2one('res.lang', string='Language', help="Language Name")
     team_id = fields.Many2one('crm.team', string='Sales Team', help="Sales Team")
     magento_storeview_id = fields.Char(string="Magento Store View", help="Magento Store View")
+    magento_storeview_code = fields.Char(string="Magento Store Code", help="Magento Store Code")
     magento_instance_id = fields.Many2one(
         'magento.instance',
         related='magento_website_id.magento_instance_id',

@@ -31,7 +31,7 @@
                 </group>
                 <group class="o_onboard_padding"
                        attrs="{'invisible': ['|', ('magento_version', '==', '2.1'),('magento_version', '==', '2.2')]}">
-                    <group class="woo_is_export_update_images_alignment">
+                    <group class="magento_is_export_update_images_alignment">
                         <field name='is_multi_warehouse_in_magento' widget="boolean_toggle"
                                class="o_onboard_boolean_toggle"
                                readonly="context.get('is_already_instance_created', False)"/>

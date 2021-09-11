@@ -40,8 +40,9 @@ class SaleOrderLine(models.Model):
                 continue
             product_id = item.get('product_id')
             product_sku = item.get('sku')
+            order_item_id = item.get('item_id')
             # Start the code to get the custom option title and custom option value title from the Extension attribute.
-            description = self.get_custom_option_title(product_id, order_response)
+            description = self.get_custom_option_title(order_item_id, order_response)
             # Over the code to get the custom option title and custom option value title from the Extension attribute.
             item_price = self.calculate_order_item_price(tax_calculation_method, item)
             magento_product = magento_product.search([
@@ -117,7 +118,7 @@ class SaleOrderLine(models.Model):
         })
         return order_line_obj
 
-    def get_custom_option_title(self, product_id, order_response):
+    def get_custom_option_title(self, order_item_id, order_response):
         """
         :param product_id: Product ID
         :param order_response: Order REST API response
@@ -131,7 +132,7 @@ class SaleOrderLine(models.Model):
         if ept_option_title:
             for custom_opt_itm in ept_option_title:
                 custom_opt = json.loads(custom_opt_itm)
-                if product_id == int(custom_opt.get('product_id')):
+                if order_item_id == int(custom_opt.get('order_item_id')):
                     for option_data in custom_opt.get('option_data'):
                         description += option_data.get('label') + " : " + option_data.get('value') + "\n"
         return description

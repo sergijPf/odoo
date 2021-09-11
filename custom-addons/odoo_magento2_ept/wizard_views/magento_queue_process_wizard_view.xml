@@ -76,6 +76,7 @@
             <field name="res_model">magento.queue.process.ept</field>
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_queue_process_action" />
+            <field name="binding_model_id" ref="model_magento_order_data_queue_ept" />
             <field name="target">new</field>
             <field name="context">{'queue_process':'process_order_queue_manually'}</field>
         </record>
@@ -85,6 +86,7 @@
             <field name="res_model">magento.queue.process.ept</field>
             <field name="view_id" ref="view_queue_process_action" />
             <field name="target">new</field>
+            <field name="binding_model_id" ref="model_sync_import_magento_product_queue" />
             <field name="context">{'queue_process':'process_product_queue_manually'}</field>
         </record>
 
@@ -147,6 +149,8 @@
                                 3) Deletes all queues which is related to the instance.
                                 <br/>
                                 4) Deactivate related Payment Gateway, Financial Statuses, Inventory Locations, Websites and Store Views.
+                                <br/>
+                                5) Deactivate related Magento Categories, Tax Classes, Attribute Sets, Attribute Groups, and Attributes.
                             </ol>
                             <ol>
                                 During the Un archive instance, it will do below:
@@ -156,6 +160,8 @@
                                 2) Active Magento layer products and it's variant.
                                 <br/>
                                 3) Activate related Payment Gateway, Financial Statuses, Inventory Locations, Websites and Store Views.
+                                <br/>
+                                4) Activate related Magento Categories, Tax Classes, Attribute Sets, Attribute Groups, and Attributes.
                             </ol>
                         </b>
                     </p>

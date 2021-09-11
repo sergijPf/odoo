@@ -84,6 +84,18 @@ class MagentoProductImage(models.Model):
         help="The sequence number will use this to order the product images"
     )
     image_binary = fields.Binary('Image', help='Binary Image', attachment=True)
+    exported_in_magento = fields.Boolean(
+        string="Image Exported In Magento?", default=False, help="Image Exported In Magento?")
+
+    @api.model
+    def default_get(self, fields):
+        """
+        we have inherited default_get method for setting
+        default value of template_id and product_id
+        in context for select variant wise images.
+        """
+        fields += ["magento_tmpl_id", "magento_product_id"]
+        return super(MagentoProductImage, self).default_get(fields)
 
     @api.model
     def create(self, vals):

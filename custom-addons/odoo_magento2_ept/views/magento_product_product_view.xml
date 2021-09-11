@@ -55,8 +55,8 @@
                                 <page string="General Information" name="general_information">
                                     <group>
                                         <group name="group_general">
-                                            <field name="odoo_product_id"/>
-                                            <field name="magento_sku" required="1"/>
+                                            <field name="odoo_product_id" readonly="1"/>
+                                            <field name="magento_sku" required="1" readonly="1"/>
                                             <field name="magento_product_id" readonly="1"/>
                                             <field name="magento_tmpl_id" readonly="1"/>
                                         </group>
@@ -88,17 +88,12 @@
                                 </page>
                                 <page string="Magento Details" name="magento_conf">
                                     <group>
-                                        <field name="magento_instance_id" readonly="0"/>
+                                        <field name="magento_instance_id" readonly="1"/>
                                         <field name="magento_product_id" readonly="1" invisible="1"/>
                                         <field name="created_at" readonly="1"/>
                                         <field name="updated_at" readonly="1"/>
-                                        <field name="product_type"/>
-                                        <field name="magento_website_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
-                                    </group>
-                                    <group string="Inventory Options">
-                                        <field name="no_stock_sync"/>
-                                        <field name="export_stock_type" required="1"/>
-                                        <field name="export_fix_value" attrs="{'invisible':[('export_stock_type','in',['actual'])]}"/>
+                                        <field name="product_type" readonly="1"/>
+                                        <!--<field name="magento_website_ids" widget="many2many_tags" options="{'no_create_edit': True}" readonly="1"/>-->
                                     </group>
                                 </page>
 
@@ -166,6 +161,7 @@
                         <filter name ="Instance"  string="Magento Instance" context="{'group_by' : 'magento_instance_id'}"/>
                         <filter name ="Product Type" string="Product Type" context="{'group_by' : 'product_type'}"/>
                     </group>
+                    <filter name="archive" string="Archived" domain="[('active','=',False)]"/>
                 </search>
             </field>
         </record>

@@ -88,7 +88,7 @@ class ResConfigSettings(models.TransientModel):
         help="Warehouse for import stock from Magento to Odoo"
     )
     magento_stock_field = fields.Selection([
-        ('free_qty', 'On Hand Quantity'),
+        ('free_qty', 'Free Quantity'),
         ('virtual_available', 'Forecast Quantity')
     ], string="Magento Stock Type", default='free_qty', help="Magento Stock Type")
     auto_create_product = fields.Boolean(

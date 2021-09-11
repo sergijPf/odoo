@@ -98,6 +98,14 @@
                                     </group>
                                 </group>
                             </page>
+                            <page name="active_users" string="Users">
+                                <field name="active_user_ids">
+                                    <tree create="false" editable="bottom">
+                                        <field name="user_id" readonly="1"/>
+                                        <field name="magento_import_order_page_count"/>
+                                    </tree>
+                                </field>
+                            </page>
                         </notebook>
                     </sheet>
                 </form>

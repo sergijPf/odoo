@@ -3,7 +3,7 @@
 from odoo import models, fields
 
 
-class WooResPartnerEpt(models.Model):
+class MagentoResPartnerEpt(models.Model):
     _name = "magento.res.partner.ept"
     _description = "Magento Res Partner"
 

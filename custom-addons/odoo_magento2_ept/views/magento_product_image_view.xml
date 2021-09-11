@@ -29,7 +29,7 @@
                     <div class="col-md-6 col-xl-5" invisible="context.get('default_magento_product_id',False)">
                         <field name="magento_tmpl_id" invisible="1" />
                         <label for="magento_product_id" string="Product variant" />
-                        <field name="magento_product_id" domain="[('odoo_product_id','=',magento_tmpl_id)]" />
+                        <field name="magento_product_id" domain="[('magento_tmpl_id','=',magento_tmpl_id)]" />
                     </div>
                 </div>
             </form>

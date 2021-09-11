@@ -158,7 +158,7 @@ class MagentoImportExportEpt(models.TransientModel):
         to_date = datetime.strftime(self.end_date, MAGENTO_DATETIME_FORMAT)
         for instance in instances:
             order_queue_data = magento_order_data_queue_obj.magento_create_order_data_queues(
-                instance, from_date, to_date
+                instance, from_date, to_date, True
             )
         result = self.return_order_queue_form_or_tree_view(order_queue_data)
         return result
@@ -418,7 +418,7 @@ class MagentoImportExportEpt(models.TransientModel):
             'product_default_code': variant.default_code,
             'magento_sku': variant.default_code,
             'description': variant.description or "",
-            'sale_description': odoo_template.description_sale if position == 0 else '',
+            'sale_description': odoo_template.description_sale if position == 0 and odoo_template.description_sale else '',
             'instance_id': instance.id
         }
 
@@ -509,7 +509,8 @@ class MagentoImportExportEpt(models.TransientModel):
             'odoo_product_template_id': product_dict.get('product_template_id'),
             'product_type': 'configurable' if odoo_template.product_variant_count > 1 else 'simple',
             'magento_product_name': odoo_template.name,
-            'magento_sku': False if odoo_template.product_variant_count > 1 else product_dict.get('magento_sku')
+            'magento_sku': False if odoo_template.product_variant_count > 1 else product_dict.get('magento_sku'),
+            'export_product_to_all_website': True
         }
         if ir_config_parameter_obj.sudo().get_param("odoo_magento2_ept.set_magento_sales_description"):
             magneto_product_template_dict.update({
@@ -594,7 +595,10 @@ class MagentoImportExportEpt(models.TransientModel):
         """
         magento_product_image_obj = self.env["magento.product.image"]
         magento_product_image_list = []
+        sequence = 1
         for odoo_image in odoo_template.ept_image_ids.filtered(lambda x: not x.product_id):
+            if odoo_template.image_1920 and odoo_image.image == odoo_template.image_1920:
+                sequence = 0
             magento_product_image = magento_product_image_obj.search(
                 [("magento_tmpl_id", "=", magento_template.id),
                  ("odoo_image_id", "=", odoo_image.id)])
@@ -604,8 +608,10 @@ class MagentoImportExportEpt(models.TransientModel):
                     "magento_tmpl_id": magento_template.id,
                     'url': odoo_image.url,
                     'image': odoo_image.image,
-                    'magento_instance_id': magento_template.magento_instance_id.id
+                    'magento_instance_id': magento_template.magento_instance_id.id,
+                    'sequence': sequence
                 })
+            sequence += 1
         if magento_product_image_list:
             magento_product_image_obj.create(magento_product_image_list)
 
@@ -618,7 +624,10 @@ class MagentoImportExportEpt(models.TransientModel):
         """
         magento_product_image_obj = self.env["magento.product.image"]
         magento_product_image_list = []
+        sequence = 1
         for odoo_image in odoo_product.ept_image_ids:
+            if odoo_product.image_1920 and odoo_image.image == odoo_product.image_1920:
+                sequence = 0
             magento_product_image = magento_product_image_obj.search(
                 [("magento_tmpl_id", "=", magento_template.id),
                  ("magento_product_id", "=", magento_product.id),
@@ -630,7 +639,9 @@ class MagentoImportExportEpt(models.TransientModel):
                     "magento_product_id": magento_product.id if magento_product else False,
                     'url': odoo_image.url,
                     'image': odoo_image.image,
-                    'magento_instance_id': magento_template.magento_instance_id.id
+                    'magento_instance_id': magento_template.magento_instance_id.id,
+                    'sequence': sequence
                 })
+            sequence += 1
         if magento_product_image_list:
             magento_product_image_obj.create(magento_product_image_list)

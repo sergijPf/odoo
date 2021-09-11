@@ -153,7 +153,7 @@
             <field name="name">sync.import.product.queue.tree</field>
             <field name="model">sync.import.magento.product.queue</field>
             <field name="arch" type="xml">
-                <tree create="0" delete="0" default_order="name desc"
+                <tree create="0" delete="0" default_order="id desc"
                       decoration-primary="is_process_queue==True">
                     <field name="name"/>
                     <field name="magento_instance_id"/>

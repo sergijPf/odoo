@@ -31,8 +31,10 @@ class MagentoInventoryLocations(models.Model):
     export_stock_warehouse_ids = fields.Many2many(
         'stock.warehouse',
         string="Warehouses",
-        help='Warehouses used to compute the stock quantities.'
-             'If Warehouses is not selected then it is taken from Website'
+        help='If you have product stock in various Warehouses that you need to export in the Magento, \n'
+             ' then configure current odoo Warehouses here for the current stock location. \n'
+             'It will compute the stock quantities from those Warehouses \n'
+             'and export them to the current source location in the Magento.'
     )
     import_stock_warehouse = fields.Many2one(
         'stock.warehouse',

@@ -185,7 +185,7 @@ class ProductProduct(models.Model):
         @return: Prepared query in string.
         @author: Maulik Barad on Date 21-Oct-2020.
         """
-        query = ("""select * from (select pp.id as product_id,
+        query = ("""select product_id,sum(stock) as stock from (select pp.id as product_id,
                 COALESCE(sum(sq.quantity)-sum(sq.reserved_quantity),0) as stock
                 from product_product pp
                 left join stock_quant sq on pp.id = sq.product_id and sq.location_id in (%s)
@@ -193,7 +193,7 @@ class ProductProduct(models.Model):
                 union all
                 select product_id as product_id, sum(product_qty) as stock from stock_move
                 where state in ('assigned') and product_id in (%s) and location_dest_id in (%s)
-                group by product_id) as test"""%(location_ids, simple_product_list_ids,
+                group by product_id) as test group by test.product_id"""%(location_ids, simple_product_list_ids,
                  simple_product_list_ids, location_ids))
         return query
 

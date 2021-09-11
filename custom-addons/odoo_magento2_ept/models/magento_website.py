@@ -192,20 +192,19 @@ class MagentoWebsite(models.Model):
         :return: total number of customer ids and action for customers
         """
         customer_data = {}
-        main_sql = """select count(id) as total_count from res_partner
-                where magento_website_id = %s and
-                magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
+        main_sql = """select DISTINCT(rp.id) as partner_id from res_partner as rp
+                        inner join magento_res_partner_ept mp on mp.partner_id = rp.id
+                        where mp.magento_website_id = %s and
+                        mp.magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
         view = self.env.ref('base.action_partner_form').sudo().read()[0]
-        action = record.prepare_action(view, [('active', 'in', [True, False]),
-                                              ('magento_instance_id', '=', record.magento_instance_id.id),
-                                              ('magento_website_id', '=', record.id)
-                                              ])
         self._cr.execute(main_sql)
         result = self._cr.dictfetchall()
-        total_count = 0
+        magento_customer_ids = []
         if result:
-            total_count = result[0].get('total_count')
-        customer_data.update({'customer_count': total_count, 'customer_action': action})
+            for data in result:
+                magento_customer_ids.append(data.get('partner_id'))
+        action = record.prepare_action(view, [('id', 'in', magento_customer_ids)])
+        customer_data.update({'customer_count': len(magento_customer_ids), 'customer_action': action})
         return customer_data
 
     def get_total_orders(self, record, state=False):
@@ -272,12 +271,20 @@ class MagentoWebsite(models.Model):
         Use: To get the list of Magento shipped orders month wise or year wise
         :return: total number of Magento shipped orders ids and action for shipped orders of current instance
         """
-        shipped_query = """select distinct(so.id) from stock_picking sp
-                             inner join sale_order so on so.procurement_group_id=sp.group_id inner 
-                             join stock_location on stock_location.id=sp.location_dest_id and stock_location.usage='customer' 
-                             where sp.is_magento_picking = True and sp.state = 'done' and 
-                             so.magento_instance_id=%s and so.magento_website_id=%s""" % \
-                        (record.magento_instance_id.id, record.id)
+        shipped_query = """
+            SELECT distinct(so.id) 
+            FROM stock_picking AS sp
+            JOIN sale_order AS so
+                ON sp.sale_id = so.id
+            JOIN stock_location AS sl 
+                ON sl.id = sp.location_dest_id 
+            WHERE 
+                sp.is_magento_picking = True AND 
+                sp.state = 'done' AND
+                so.magento_instance_id = {} AND
+                so.magento_website_id = {} AND
+                sl.usage='customer'
+        """.format(record.magento_instance_id.id, record.id)
 
         def website_vise_shipped_order_of_current_week(shipped_query):
             qry = shipped_query + " and date(so.date_order) >= (select date_trunc('week', date(current_date)))"

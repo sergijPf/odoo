@@ -408,7 +408,7 @@
             parent="menu_configuration_root" sequence="1"
             action="action_magento_config_settings"/>
 
-        <template id="inherit_assets_backend_magento" inherit_id="web.assets_backend">
+        <template id="inherit_assets_magento_backend" inherit_id="web.assets_backend">
             <xpath expr="." position="inside">
                 <script src="/odoo_magento2_ept/static/src/js/magento_icon_view.js"/>
             </xpath>
