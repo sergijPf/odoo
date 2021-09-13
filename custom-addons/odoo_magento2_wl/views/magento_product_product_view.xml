@@ -53,7 +53,7 @@
             </xpath>
 
             <xpath expr="//field[@name='magento_instance_id']" position="after">
-                <field name="magento_website_ids" readonly="1"/>
+                <field name="magento_website_ids" widget="many2many_tags" readonly="1"/>
             </xpath>
 
             <xpath expr="//field[@name='magento_website_ids']" position="after">
