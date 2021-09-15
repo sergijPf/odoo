@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <odoo>
-     <record id="view_exported_product_log_book_filter" model="ir.ui.view">
+     <record id="view_exported_magento_product_log_book_filter" model="ir.ui.view">
         <field name="name">Magento Product Log Book Search</field>
-        <field name="model">product.log.book</field>
+        <field name="model">magento.product.log.book</field>
         <field name="arch" type="xml">
             <search string="Export Products Log Book">
                 <field name="magento_sku"/>
@@ -29,7 +29,7 @@
 
     <record id="view_magento_exported_products_log_book_tree" model="ir.ui.view">
         <field name="name">Magento Product Log Book Tree</field>
-        <field name="model">product.log.book</field>
+        <field name="model">magento.product.log.book</field>
         <field name="arch" type="xml">
             <tree create="0" delete="0" default_order="magento_status">
                 <field name="magento_instance_id"/>
@@ -54,7 +54,7 @@
 
     <record id="view_magento_exported_products_log_book_form" model="ir.ui.view">
         <field name="name">Magento Product Log Book Form</field>
-        <field name="model">product.log.book</field>
+        <field name="model">magento.product.log.book</field>
         <field name="arch" type="xml">
             <form create="0" delete="0" edit="0">
                 <sheet>
@@ -88,14 +88,14 @@
 
     <record id="action_show_log_messages_of_exported_products" model="ir.actions.act_window">
         <field name="name">Exported Product Logs</field>
-        <field name="res_model">product.log.book</field>
+        <field name="res_model">magento.product.log.book</field>
         <field name="view_mode">tree,form</field>
         <field name="view_id" ref="view_magento_exported_products_log_book_tree"/>
-        <field name="search_view_id" ref="view_exported_product_log_book_filter"/>
+        <field name="search_view_id" ref="view_exported_magento_product_log_book_filter"/>
         <field name="context">
             {'group_by': ['magento_instance_id', 'prod_categ_name'],
             'search_default_error_to_export':1,
-            'form_view_ref' : 'odoo_magento2_wl.view_magento_exported_products_log_book_form'}
+            'form_view_ref' : 'view_magento_exported_products_log_book_form'}
         </field>
         <field name="help" type="html">
             <div class="oe_empty_magento_instance">

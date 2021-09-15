@@ -18,6 +18,7 @@
                             <group>
                                 <field name="store_id" readonly="1"/>
                                 <field name="magento_payment_method_id" readonly="1"/>
+                                <field name="magento_carrier_name" readonly="1"/>
                                 <field name="order_transaction_id" readonly="1" attrs="{'invisible' : [('order_transaction_id','=',False)]}"/>
                             </group>
                         </group>

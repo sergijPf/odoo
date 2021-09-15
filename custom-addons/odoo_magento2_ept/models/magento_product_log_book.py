@@ -2,11 +2,11 @@
 
 from odoo import fields, models, _
 
-class ProductLogBook(models.Model):
+class MagentoProductLogBook(models.Model):
     """
     Describes fields and methods for Magento products
     """
-    _name = 'product.log.book'
+    _name = 'magento.product.log.book'
     _inherits = {'magento.product.product': 'magento_product_id'}
     _description = 'Product Log Book'
     _rec_name = 'magento_sku'

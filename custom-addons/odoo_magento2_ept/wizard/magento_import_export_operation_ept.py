@@ -62,8 +62,8 @@ class MagentoImportExportEpt(models.TransientModel):
         help="If checked, Shipped orders will be imported"
     )
     export_method = fields.Selection([
-        ("csv", "Export in CSV file"), ("direct", "Export in Magento Layer")
-    ], default="csv")
+        ("direct", "Export in Magento Layer"), ("csv", "Export in CSV file")
+    ], default="direct")
     do_not_update_existing_product = fields.Boolean(
         string="Do not update existing Products?",
         help="If checked and Product(s) found in odoo/magento layer, then not update the Product(s)"

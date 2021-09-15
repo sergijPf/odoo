@@ -18,7 +18,6 @@ class Binary(http.Controller):
         """
         Download link for files stored as binary fields.
         :param str model: name of the model to fetch the binary from
-        :param str field: binary field
         :param str id: id of the record from which to fetch the binary
         :param str filename: field holding the file's name, if any
         :returns: :class:`werkzeug.wrappers.Response`
@@ -38,7 +37,6 @@ class Binary(http.Controller):
                     ('Content-Disposition', content_disposition(filename))
                 ])
         return return_val
-
 
     @http.route('/web_magento_place_order', csrf=False, auth="public", type="http")
     def place_order(self, **kwargs):
@@ -75,5 +73,5 @@ class Binary(http.Controller):
             search([('magento_instance_id', '=', magento_instance.id),
                     ('magento_order_id', '=', int(order_id))], limit=1)
         if sale_order:
-           sale_order.sudo().cancel_order_from_magento()
+            sale_order.sudo().cancel_order_from_magento()
         return True

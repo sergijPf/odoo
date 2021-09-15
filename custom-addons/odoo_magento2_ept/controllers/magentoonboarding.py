@@ -24,8 +24,7 @@ class MagentoOnboarding(http.Controller):
             company = request.env['res.company'].sudo().search([('id', '=', int(current_company_id[0]))])
         if not company:
             company = request.env.company
-        if not request.env.is_admin() or \
-                company.magento_onboarding_state == 'closed':
+        if not request.env.is_admin() or company.magento_onboarding_state == 'closed':
             return {}
         hide_panel = company.magento_onboarding_toggle_state != 'open'
         btn_value = 'Create more Magento instance' if hide_panel else 'Hide On boarding Panel'

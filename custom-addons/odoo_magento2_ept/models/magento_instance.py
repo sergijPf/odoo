@@ -69,7 +69,8 @@ class MagentoInstance(models.Model):
     magento_version = fields.Selection([
         ('2.1', '2.1.*'),
         ('2.2', '2.2.*'),
-        ('2.3', '2.3.*')
+        ('2.3', '2.3.*'),
+        ('2.4', '2.4.*')
     ], string="Magento Versions", required=True, help="Version of Magento Instance")
     magento_url = fields.Char(string='Magento URLs', required=False, help="URL of Magento")
     warehouse_ids = fields.Many2many(
@@ -141,7 +142,6 @@ class MagentoInstance(models.Model):
         string="Import Product Stock Warehouse",
         help="Warehouse for import stock from Magento to Odoo"
     )
-    active = fields.Boolean(string="Status", default=True)
     company_id = fields.Many2one(
         'res.company',
         string='Magento Company',
@@ -197,7 +197,6 @@ class MagentoInstance(models.Model):
         "Import Order Status",
         default=_default_order_status,
         help="Select order status in which you want to import the orders from Magento to Odoo.")
-    active = fields.Boolean("Status", default=True)
     magento_import_customer_current_page = fields.Integer(
         string="Magento Import Customer Current Pages",
         default=1,
@@ -217,8 +216,8 @@ class MagentoInstance(models.Model):
         help="While importing a product, "
              "the selected category will set in that product."
     )
-    is_instance_create_from_onboarding_panel = fields.Boolean(default=False)
-    is_onboarding_configurations_done = fields.Boolean(default=False)
+    # is_instance_create_from_onboarding_panel = fields.Boolean(default=False)
+    # is_onboarding_configurations_done = fields.Boolean(default=False)
     import_order_after_date = fields.Datetime(help="Connector only imports those orders which"
                                                    " have created after a "
                                                    "given date.",
@@ -231,6 +230,10 @@ class MagentoInstance(models.Model):
         "magento_instance_id",
         string='Active Users',
         help='Active Users')
+    #added by SPf
+    user_ids = fields.Many2many('res.users', string="Allowed magento users",
+                                help="Users who have access to this magento instance",
+                                domain=[('groups_id.full_name', '=', 'Magento / User')])
 
     def check_dashboard_view(self):
         """
@@ -393,18 +396,18 @@ class MagentoInstance(models.Model):
             magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
             magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
             magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
-            company = self.company_id
-            company.write({
-                'magento_instance_onboarding_state': 'not_done',
-                'magento_basic_configuration_onboarding_state': 'not_done',
-                'magento_financial_status_onboarding_state': 'not_done',
-                'magento_cron_configuration_onboarding_state': 'not_done',
-                'is_create_magento_more_instance': False
-            })
+            # company = self.company_id
+            # company.write({
+            #     'magento_instance_onboarding_state': 'not_done',
+            #     'magento_basic_configuration_onboarding_state': 'not_done',
+            #     'magento_financial_status_onboarding_state': 'not_done',
+            #     'magento_cron_configuration_onboarding_state': 'not_done',
+            #     'is_create_magento_more_instance': False
+            # })
             magento_order_counts = self.active_user_ids
             for magento_order_count in magento_order_counts:
                 magento_order_count.write({'magento_import_order_page_count': 1})
-            self.write({'is_onboarding_configurations_done': True})
+            # self.write({'is_onboarding_configurations_done': True})
         else:
             activate = {"active": True}
             domain.append(("active", "=", False))
@@ -425,22 +428,22 @@ class MagentoInstance(models.Model):
 
         return True
 
-    def unlink(self):
-        """
-        Unlink onboarding panel flags when instance is unlink.
-        :return:
-        """
-        company = self.company_id
-        company.write({
-            'magento_instance_onboarding_state': 'not_done',
-            'magento_basic_configuration_onboarding_state': 'not_done',
-            'magento_financial_status_onboarding_state': 'not_done',
-            'magento_cron_configuration_onboarding_state': 'not_done',
-            'is_create_magento_more_instance': False
-        })
-        self.write({'is_onboarding_configurations_done': True})
-        res = super(MagentoInstance, self).unlink()
-        return res
+    # def unlink(self):
+    #     """
+    #     Unlink onboarding panel flags when instance is unlink.
+    #     :return:
+    #     """
+    #     company = self.company_id
+    #     company.write({
+    #         'magento_instance_onboarding_state': 'not_done',
+    #         'magento_basic_configuration_onboarding_state': 'not_done',
+    #         'magento_financial_status_onboarding_state': 'not_done',
+    #         'magento_cron_configuration_onboarding_state': 'not_done',
+    #         'is_create_magento_more_instance': False
+    #     })
+    #     self.write({'is_onboarding_configurations_done': True})
+    #     res = super(MagentoInstance, self).unlink()
+    #     return res
 
     def cron_configuration_action(self):
         """
@@ -895,20 +898,20 @@ class MagentoInstance(models.Model):
         res = super(MagentoInstance, self).write(vals)
         return res
 
-    def search_magento_instance(self):
-        """
-        Search Magento Instance for on-boarding panel.
-        :return: magento.instance object
-        """
-        company = self.env.company or self.env.user.company_id
-        instance = self.search([('is_instance_create_from_onboarding_panel', '=', True),
-                                ('is_onboarding_configurations_done', '=', False),
-                                ('company_id', '=', company.id)], limit=1, order='id desc')
-        if not instance:
-            instance = self.search([('company_id', '=', company.id), ('is_onboarding_configurations_done', '=', False)],
-                                   limit=1, order='id desc')
-            instance.write({'is_instance_create_from_onboarding_panel': True})
-        return instance
+    # def search_magento_instance(self):
+    #     """
+    #     Search Magento Instance for on-boarding panel.
+    #     :return: magento.instance object
+    #     """
+    #     company = self.env.company or self.env.user.company_id
+    #     instance = self.search([('is_instance_create_from_onboarding_panel', '=', True),
+    #                             ('is_onboarding_configurations_done', '=', False),
+    #                             ('company_id', '=', company.id)], limit=1, order='id desc')
+    #     if not instance:
+    #         instance = self.search([('company_id', '=', company.id), ('is_onboarding_configurations_done', '=', False)],
+    #                                limit=1, order='id desc')
+    #         instance.write({'is_instance_create_from_onboarding_panel': True})
+    #     return instance
 
     # Add new dashboard view
 

@@ -107,6 +107,20 @@ class SaleOrder(models.Model):
         string="Order fulfilled in magento", compute="_get_magento_order_status", search="_search_magento_order_ids",
         copy=False
     )
+    #added by SPf
+    magento_carrier_title = fields.Char(
+        related='magento_shipping_method_id.magento_carrier_title',
+        string='Magento Carrier Title'
+    )
+    magento_carrier_label = fields.Char(
+        related='magento_shipping_method_id.carrier_label',
+        string='Magento Carrier Label'
+    )
+    magento_carrier_name = fields.Char(
+        compute="_carrier_name",
+        string="Magento Carrier Name",
+
+    )
 
     _sql_constraints = [('_magento_sale_order_unique_constraint',
                          'unique(magento_order_id,magento_instance_id,magento_order_reference)',
@@ -850,3 +864,13 @@ class SaleOrder(models.Model):
                     if shipping_tax_dict:
                         tax_percent = shipping_tax_dict.get('percent')
         return is_tax_included, tax_percent
+
+    #added by SPf
+    def _carrier_name(self):
+        """"
+        Computes Magento carrier Title and Label
+        :return:
+        """
+        for record in self:
+            self.magento_carrier_name = str(self.magento_carrier_title) + ' / ' + str(self. magento_carrier_label)
+

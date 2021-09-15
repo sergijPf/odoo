@@ -328,12 +328,12 @@ class MagentoCronConfiguration(models.TransientModel):
         vals['auto_import_product'] = self.auto_import_product or False
         self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(magento_instance)
         magento_instance.write(vals)
-        # Below code is used for only onboarding panel purpose.
-        if self._context.get('is_calling_from_magento_onboarding_panel', False):
-            action = ir_action_obj._for_xml_id(
-                "odoo_magento2_ept.magento_onboarding_confirmation_wizard_action")
-            action['context'] = {'magento_instance_id': magento_instance.id}
-            return action
+        # # Below code is used for only onboarding panel purpose.
+        # if self._context.get('is_calling_from_magento_onboarding_panel', False):
+        #     action = ir_action_obj._for_xml_id(
+        #         "odoo_magento2_ept.magento_onboarding_confirmation_wizard_action")
+        #     action['context'] = {'magento_instance_id': magento_instance.id}
+        #     return action
         return True
 
     def auto_import_sale_order(self, magento_instance):
@@ -590,20 +590,20 @@ class MagentoCronConfiguration(models.TransientModel):
                 cron_exist.write({'active': False})
         return True
 
-    @api.model
-    def action_magento_open_cron_configuration_wizard(self):
-        """
-        Called by onboarding panel above the Instance.
-        Return the action for open the cron configuration wizard
-        :return: True
-        """
-        magento_instance_obj = self.env['magento.instance']
-        ir_action_obj = self.env["ir.actions.actions"]
-        action = ir_action_obj._for_xml_id(
-            "odoo_magento2_ept.action_magento_wizard_cron_configuration_ept")
-        instance = magento_instance_obj.search_magento_instance()
-        action['context'] = {'is_calling_from_magento_onboarding_panel': True}
-        if instance:
-            action.get('context').update({'default_magento_instance_id': instance.id,
-                                          'is_instance_exists': True})
-        return action
+    # @api.model
+    # def action_magento_open_cron_configuration_wizard(self):
+    #     """
+    #     Called by onboarding panel above the Instance.
+    #     Return the action for open the cron configuration wizard
+    #     :return: True
+    #     """
+    #     magento_instance_obj = self.env['magento.instance']
+    #     ir_action_obj = self.env["ir.actions.actions"]
+    #     action = ir_action_obj._for_xml_id(
+    #         "odoo_magento2_ept.action_magento_wizard_cron_configuration_ept")
+    #     instance = magento_instance_obj.search_magento_instance()
+    #     action['context'] = {'is_calling_from_magento_onboarding_panel': True}
+    #     if instance:
+    #         action.get('context').update({'default_magento_instance_id': instance.id,
+    #                                       'is_instance_exists': True})
+    #     return action

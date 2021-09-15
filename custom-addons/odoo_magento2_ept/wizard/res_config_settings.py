@@ -15,12 +15,12 @@ class ResConfigSettings(models.TransientModel):
     """
     _inherit = 'res.config.settings'
 
-    def _get_magento_default_financial_statuses(self):
-        if self._context.get('default_magento_instance_id', False):
-            financial_status_ids = self.env[MAGENTO_FINANCIAL_STATUS_EPT].search(
-                [('magento_instance_id', '=', self._context.get('default_magento_instance_id', False))]).ids
-            return [(6, 0, financial_status_ids)]
-        return [(6, 0, [])]
+    # def _get_magento_default_financial_statuses(self):
+    #     if self._context.get('default_magento_instance_id', False):
+    #         financial_status_ids = self.env[MAGENTO_FINANCIAL_STATUS_EPT].search(
+    #             [('magento_instance_id', '=', self._context.get('default_magento_instance_id', False))]).ids
+    #         return [(6, 0, financial_status_ids)]
+    #     return [(6, 0, [])]
 
     magento_instance_id = fields.Many2one(
         'magento.instance',
@@ -28,23 +28,19 @@ class ResConfigSettings(models.TransientModel):
         ondelete='cascade',
         help="This field relocates magento instance"
     )
-
     magento_website_id = fields.Many2one(
         'magento.website',
         string="Website",
         help="Magento Websites",
         domain="[('magento_instance_id', '=', magento_instance_id)]"
     )
-
     magento_storeview_id = fields.Many2one(
         'magento.storeview',
         string="Storeviews",
         help="Magento Storeviews",
         domain="[('magento_website_id', '=', magento_website_id)]"
     )
-
     magento_team_id = fields.Many2one('crm.team', string='Sales Team', help="Sales Team")
-
     magento_sale_prefix = fields.Char(
         string="Sale Order Prefix",
         help="A prefix put before the name of imported sales orders.\n"
@@ -70,7 +66,6 @@ class ResConfigSettings(models.TransientModel):
         string="Pricelist",
         help="Product price will be taken/set from this pricelist if Catalog Price Scope is global"
     )
-
     allow_import_image_of_products = fields.Boolean(
         "Import Images of Products",
         default=False,
@@ -90,7 +85,8 @@ class ResConfigSettings(models.TransientModel):
     magento_stock_field = fields.Selection([
         ('free_qty', 'Free Quantity'),
         ('virtual_available', 'Forecast Quantity')
-    ], string="Magento Stock Type", default='free_qty', help="Magento Stock Type")
+    ], string="Magento Stock Type", default='free_qty', help="Magento Stock Type"
+    )
     auto_create_product = fields.Boolean(
         string="Automatically Create Odoo Product If Not Found?",
         default=False,
@@ -123,12 +119,12 @@ class ResConfigSettings(models.TransientModel):
         string="Magento Pricelist",
         help="Product price will be taken/set from this pricelist if Catalog Price Scope is website"
     )
-
     magento_version = fields.Selection([
         ('2.1', '2.1+'),
         ('2.2', '2.2+'),
-        ('2.3', '2.3+')
-    ], string="Magento Versions", required=True, help="Version of Magento Instance", default='2.2')
+        ('2.3', '2.3+'),
+        ('2.4', '2.4+')
+    ], string="Magento Versions", required=True, help="Version of Magento Instance", default='2.4')
     magento_url = fields.Char(string='Magento URLs', required=False, help="URL of Magento")
     import_product_category = fields.Many2one(
         'product.category',
@@ -136,12 +132,11 @@ class ResConfigSettings(models.TransientModel):
         help="While importing a product, "
              "the selected category will set in that product."
     )
-    magento_financial_status_ids = fields.Many2many(
-        MAGENTO_FINANCIAL_STATUS_EPT,
-        'magento_sale_auto_workflow_conf_rel',
-        'financial_onboarding_status_id', 'workflow_id',
-        string='Magento Financial Status', default=_get_magento_default_financial_statuses)
-
+    # magento_financial_status_ids = fields.Many2many(
+    #     MAGENTO_FINANCIAL_STATUS_EPT,
+    #     'magento_sale_auto_workflow_conf_rel',
+    #     'financial_onboarding_status_id', 'workflow_id',
+    #     string='Magento Financial Status', default=_get_magento_default_financial_statuses)
     dashboard_view_type = fields.Selection([('instance_level', 'Instance Level'), ('website_level', 'Website Level')],
                                            'View Dashboard Based on',
                                            config_parameter='odoo_magento2_ept.dashboard_view_type',
@@ -267,102 +262,102 @@ class ResConfigSettings(models.TransientModel):
         })
         magento_instance_id.write(values)
 
-    @api.model
-    def action_magento_open_basic_configuration_wizard(self):
-        """
-        Called by on boarding panel above the Instance.
-        return the action for open the basic configurations wizard
-        :return: True
-        """
-        try:
-            view_id = self.env.ref('odoo_magento2_ept.magento_basic_configurations_onboarding_wizard_view')
-        except Exception:
-            return True
-        return self.magento_res_config_view_action(view_id)
+    # @api.model
+    # def action_magento_open_basic_configuration_wizard(self):
+    #     """
+    #     Called by on boarding panel above the Instance.
+    #     return the action for open the basic configurations wizard
+    #     :return: True
+    #     """
+    #     try:
+    #         view_id = self.env.ref('odoo_magento2_ept.magento_basic_configurations_onboarding_wizard_view')
+    #     except Exception:
+    #         return True
+    #     return self.magento_res_config_view_action(view_id)
+    #
+    # @api.model
+    # def action_magento_open_financial_status_wizard(self):
+    #     """
+    #     Called by onboarding panel above the Instance.
+    #     Return the action for open the basic configurations wizard
+    #     :return: True
+    #     """
+    #     try:
+    #         view_id = self.env.ref('odoo_magento2_ept.magento_financial_status_onboarding_wizard_view')
+    #     except Exception:
+    #         return True
+    #     return self.magento_res_config_view_action(view_id)
+    #
+    # def magento_res_config_view_action(self, view_id):
+    #     """
+    #     Return the action for open the configurations wizard
+    #     :param view_id: XML View Id
+    #     :return:
+    #     """
+    #     magento_instance_obj = self.env['magento.instance']
+    #     action = self.env["ir.actions.actions"]._for_xml_id(
+    #         "odoo_magento2_ept.action_magento_config_settings")
+    #     action_data = {'view_id': view_id.id, 'views': [(view_id.id, 'form')], 'target': 'new',
+    #                    'name': 'Configurations'}
+    #     instance = magento_instance_obj.search_magento_instance()
+    #     if instance:
+    #         action['context'] = {'default_magento_instance_id': instance.id}
+    #     else:
+    #         action['context'] = {}
+    #     action.update(action_data)
+    #     return action
 
-    @api.model
-    def action_magento_open_financial_status_wizard(self):
-        """
-        Called by onboarding panel above the Instance.
-        Return the action for open the basic configurations wizard
-        :return: True
-        """
-        try:
-            view_id = self.env.ref('odoo_magento2_ept.magento_financial_status_onboarding_wizard_view')
-        except Exception:
-            return True
-        return self.magento_res_config_view_action(view_id)
+    # def magento_save_basic_configurations(self):
+    #     """
+    #     Save the basic configuration changes in the instance
+    #     :return: True
+    #     """
+    #     magento_instance_id = self.magento_instance_id
+    #     if magento_instance_id:
+    #         basic_onboard_configurations = {
+    #             'warehouse_ids': [
+    #                 (6, 0, self.warehouse_ids.ids)] if self.warehouse_ids else False,
+    #             'magento_stock_field': self.magento_stock_field,
+    #             'auto_create_product': self.auto_create_product,
+    #             'allow_import_image_of_products': self.allow_import_image_of_products,
+    #             'catalog_price_scope': self.catalog_price_scope,
+    #             'is_multi_warehouse_in_magento': self.is_multi_warehouse_in_magento,
+    #             'pricelist_id': self.pricelist_id.id if self.pricelist_id else False,
+    #             'is_import_product_stock': self.is_import_product_stock,
+    #             'import_stock_warehouse': self.import_stock_warehouse.id if self.import_stock_warehouse else False,
+    #             'invoice_done_notify_customer': self.invoice_done_notify_customer,
+    #             'import_magento_order_status_ids': self.import_magento_order_status_ids.ids,
+    #             'import_product_category': self.import_product_category if self.import_product_category else "",
+    #             # 'is_export_dropship_picking': magento_instance_id.is_export_dropship_picking if magento_instance_id.is_export_dropship_picking else False
+    #         }
+    #         magento_instance_id.write(basic_onboard_configurations)
+    #         company = magento_instance_id.company_id
+    #         company.set_onboarding_step_done('magento_basic_configuration_onboarding_state')
+    #     if self.magento_website_id:
+    #         self.magento_website_id.write({
+    #             'warehouse_id': self.magento_website_warehouse_id.id,
+    #             'tax_calculation_method': self.tax_calculation_method
+    #         })
+    #     if self.magento_storeview_id:
+    #         self.magento_storeview_id.write({
+    #             'team_id': self.magento_team_id,
+    #             'sale_prefix': self.magento_sale_prefix,
+    #             'is_use_odoo_order_sequence': self.is_use_odoo_order_sequence
+    #         })
+    #     return True
 
-    def magento_res_config_view_action(self, view_id):
-        """
-        Return the action for open the configurations wizard
-        :param view_id: XML View Id
-        :return:
-        """
-        magento_instance_obj = self.env['magento.instance']
-        action = self.env["ir.actions.actions"]._for_xml_id(
-            "odoo_magento2_ept.action_magento_config_settings")
-        action_data = {'view_id': view_id.id, 'views': [(view_id.id, 'form')], 'target': 'new',
-                       'name': 'Configurations'}
-        instance = magento_instance_obj.search_magento_instance()
-        if instance:
-            action['context'] = {'default_magento_instance_id': instance.id}
-        else:
-            action['context'] = {}
-        action.update(action_data)
-        return action
-
-    def magento_save_basic_configurations(self):
-        """
-        Save the basic configuration changes in the instance
-        :return: True
-        """
-        magento_instance_id = self.magento_instance_id
-        if magento_instance_id:
-            basic_onboard_configurations = {
-                'warehouse_ids': [
-                    (6, 0, self.warehouse_ids.ids)] if self.warehouse_ids else False,
-                'magento_stock_field': self.magento_stock_field,
-                'auto_create_product': self.auto_create_product,
-                'allow_import_image_of_products': self.allow_import_image_of_products,
-                'catalog_price_scope': self.catalog_price_scope,
-                'is_multi_warehouse_in_magento': self.is_multi_warehouse_in_magento,
-                'pricelist_id': self.pricelist_id.id if self.pricelist_id else False,
-                'is_import_product_stock': self.is_import_product_stock,
-                'import_stock_warehouse': self.import_stock_warehouse.id if self.import_stock_warehouse else False,
-                'invoice_done_notify_customer': self.invoice_done_notify_customer,
-                'import_magento_order_status_ids': self.import_magento_order_status_ids.ids,
-                'import_product_category': self.import_product_category if self.import_product_category else "",
-                # 'is_export_dropship_picking': magento_instance_id.is_export_dropship_picking if magento_instance_id.is_export_dropship_picking else False
-            }
-            magento_instance_id.write(basic_onboard_configurations)
-            company = magento_instance_id.company_id
-            company.set_onboarding_step_done('magento_basic_configuration_onboarding_state')
-        if self.magento_website_id:
-            self.magento_website_id.write({
-                'warehouse_id': self.magento_website_warehouse_id.id,
-                'tax_calculation_method': self.tax_calculation_method
-            })
-        if self.magento_storeview_id:
-            self.magento_storeview_id.write({
-                'team_id': self.magento_team_id,
-                'sale_prefix': self.magento_sale_prefix,
-                'is_use_odoo_order_sequence': self.is_use_odoo_order_sequence
-            })
-        return True
-
-    def magento_save_financial_status_configurations(self):
-        """
-        Save the changes in the Instance.
-        :return: True
-        """
-        magento_financial_status_obj = self.env[MAGENTO_FINANCIAL_STATUS_EPT]
-        instance = self.magento_instance_id
-        if instance:
-            company = instance.company_id
-            company.set_onboarding_step_done('magento_financial_status_onboarding_state')
-            financials_status = magento_financial_status_obj.search(
-                [('magento_instance_id', '=', instance.id)])
-            unlink_for_financials_status = financials_status - self.magento_financial_status_ids
-            unlink_for_financials_status.unlink()
-        return True
+    # def magento_save_financial_status_configurations(self):
+    #     """
+    #     Save the changes in the Instance.
+    #     :return: True
+    #     """
+    #     magento_financial_status_obj = self.env[MAGENTO_FINANCIAL_STATUS_EPT]
+    #     instance = self.magento_instance_id
+    #     if instance:
+    #         company = instance.company_id
+    #         company.set_onboarding_step_done('magento_financial_status_onboarding_state')
+    #         financials_status = magento_financial_status_obj.search(
+    #             [('magento_instance_id', '=', instance.id)])
+    #         unlink_for_financials_status = financials_status - self.magento_financial_status_ids
+    #         unlink_for_financials_status.unlink()
+    #     return True

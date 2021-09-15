@@ -14,7 +14,6 @@ class ProductTemplate(models.Model):
         """
         Prepares vals for creating common product image record.
         @param vals: Vals having image data.
-        @param product: Record of Product.
         @return:Dictionary
         @author: Maulik Barad on Date 17-Oct-2020.
         """

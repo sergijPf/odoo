@@ -37,8 +37,8 @@
                                readonly="context.get('is_already_instance_created', False)"/>
                     </group>
                 </group>
-                <group invisible="context.get('is_calling_from_magento_onboarding_panel', False) == False"
-                       class="o_onboard_padding">
+                <group class="o_onboard_padding">
+                    <!-- invisible="context.get('is_calling_from_magento_onboarding_panel', False) == False"-->
                     <p colspan="2" class="alert alert-warning" role="alert">
                         <div style="color:#ff0000; font-size:15px;">
                             <b>Important Note:</b>

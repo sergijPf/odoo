@@ -3,9 +3,8 @@
 """
 Describes methods for importing magento customers into Odoo.
 """
-import json
 import logging
-from odoo import models, fields, api, _
+from odoo import models, fields, api
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 _logger = logging.getLogger(__name__)

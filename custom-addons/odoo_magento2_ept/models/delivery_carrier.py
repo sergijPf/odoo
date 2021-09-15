@@ -30,7 +30,6 @@ class DeliveryCarrier(models.Model):
             if carrier.magento_carrier.carrier_code:
                 self.magento_carrier_code = carrier.magento_carrier.carrier_code
 
-
     @api.constrains('magento_carrier')
     def _check_magento_carrier_id(self):
         """
@@ -41,4 +40,4 @@ class DeliveryCarrier(models.Model):
             filtered(lambda x: x.id != self.id)
         if delivery_carrier_obj:
             raise UserError(_("Can't set this same Magento carrier "
-                                    "with multiple Delivery Methods for the same Magento Instance"))
+                              "with multiple Delivery Methods for the same Magento Instance"))

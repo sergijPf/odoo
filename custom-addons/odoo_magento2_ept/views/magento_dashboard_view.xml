@@ -4,7 +4,8 @@
             <field name="name">Magento Dashboard</field>
             <field name="model">magento.website</field>
             <field name="arch" type="xml">
-                <kanban class="oe_background_grey o_kanban_dashboard o_magento_kanban" create="false" sample="1" js_class="MagentoOnBoardingToggle" banner_route="/magento_instances/magento_instances_onboarding_panel">
+<!--                <kanban class="oe_background_grey o_kanban_dashboard o_magento_kanban" create="false" sample="1" js_class="MagentoOnBoardingToggle" banner_route="/magento_instances/magento_instances_onboarding_panel">-->
+                <kanban class="oe_background_grey o_kanban_dashboard o_magento_kanban" create="false" sample="1">
                     <field name="name" />
                     <field name="color"/>
                     <field name="magento_instance_id" />
@@ -121,7 +122,8 @@
             <field name="name">Magento Instance</field>
             <field name="model">magento.instance</field>
             <field name="arch" type="xml">
-                <kanban class="oe_background_grey o_kanban_dashboard o_magento_kanban" create="false" sample="1" js_class="MagentoOnBoardingToggle" banner_route="/magento_instances/magento_instances_onboarding_panel">
+<!--                <kanban class="oe_background_grey o_kanban_dashboard o_magento_kanban" create="false" sample="1" js_class="MagentoOnBoardingToggle" banner_route="/magento_instances/magento_instances_onboarding_panel">-->
+                <kanban class="oe_background_grey o_kanban_dashboard o_magento_kanban" create="false" sample="1">
                     <field name="name" />
                     <field name="color"/>
                     <field name="id" />

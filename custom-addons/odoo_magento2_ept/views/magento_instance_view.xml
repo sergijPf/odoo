@@ -85,6 +85,13 @@
                             </group>
                         </group>
                         <notebook>
+                            <page name="allowed_users" string="Users" >
+                                <group>
+                                    <field name="user_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"/>
+                                </group>
+                            </page>
                             <page name="other_info" string="Other Info">
                                 <group>
                                     <group cols="2">

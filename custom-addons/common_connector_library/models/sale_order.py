@@ -249,8 +249,7 @@ class SaleOrder(models.Model):
         domain = [('account_internal_type', 'in', ('receivable', 'payable')),
                   ('reconciled', '=', False)]
         line_ids = move_line_obj.search([('move_id', '=', invoice.id)])
-        to_reconcile = [line_ids.filtered( \
-                lambda line: line.account_internal_type == 'receivable')]
+        to_reconcile = [line_ids.filtered(lambda line: line.account_internal_type == 'receivable')]
 
         for payment, lines in zip([payment_id], to_reconcile):
             payment_lines = payment.line_ids.filtered_domain(domain)

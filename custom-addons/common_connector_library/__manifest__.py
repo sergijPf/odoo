@@ -20,7 +20,6 @@
              'view/common_product_brand_view.xml',
              'view/common_product_image_ept.xml',
              'view/product_view.xml',
-             'view/product_template.xml',
              'view/sale_order_view.xml',
              'view/sale_workflow_process_view.xml',
              'data/automatic_workflow_data.xml',

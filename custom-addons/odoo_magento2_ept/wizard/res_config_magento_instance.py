@@ -18,8 +18,9 @@ class ResConfigMagentoInstance(models.TransientModel):
     magento_version = fields.Selection([
         ('2.1', '2.1+'),
         ('2.2', '2.2+'),
-        ('2.3', '2.3+')
-    ], string="Magento Versions", required=True, help="Version of Magento Instance", default='2.2')
+        ('2.3', '2.3+'),
+        ('2.4', '2.4+')
+    ], string="Magento Versions", required=True, help="Version of Magento Instance", default='2.4')
     magento_url = fields.Char(string='Magento URLs', required=True, help="URL of Magento")
     access_token = fields.Char(
         string="Magento Access Token",
@@ -75,11 +76,11 @@ class ResConfigMagentoInstance(models.TransientModel):
         except Exception as error:
             magento_instance.sudo().unlink()
             raise UserError(str(error))
-        if self._context.get('is_calling_from_magento_onboarding_panel', False):
-            company = magento_instance.company_id
-            magento_instance.write({'is_instance_create_from_onboarding_panel': True})
-            company.set_onboarding_step_done('magento_instance_onboarding_state')
-            company.write({'is_create_magento_more_instance': True})
+        # if self._context.get('is_calling_from_magento_onboarding_panel', False):
+        #     company = magento_instance.company_id
+        #     magento_instance.write({'is_instance_create_from_onboarding_panel': True})
+        #     company.set_onboarding_step_done('magento_instance_onboarding_state')
+        #     company.write({'is_create_magento_more_instance': True})
         return {
             'type': 'ir.actions.client',
             'tag': 'reload',
@@ -98,28 +99,28 @@ class ResConfigMagentoInstance(models.TransientModel):
             'nodestroy': False,
         }
 
-    @api.model
-    def action_open_magento_instance_wizard(self):
-        """ Called by onboarding panel above the Instance."""
-        ir_action_obj = self.env["ir.actions.actions"]
-        magento_instance_obj = self.env['magento.instance']
-        action = ir_action_obj._for_xml_id(
-            "odoo_magento2_ept.magento_on_board_instance_configuration_action")
-        action['context'] = {'is_calling_from_magento_onboarding_panel': True}
-        instance = magento_instance_obj.search_magento_instance()
-        if instance:
-            action.get('context').update({
-                'default_name': instance.name,
-                'default_magento_version': instance.magento_version,
-                'default_access_token': instance.access_token,
-                'default_company_id': instance.company_id.id,
-                'default_magento_url': instance.magento_url,
-                'default_is_multi_warehouse_in_magento': instance.is_multi_warehouse_in_magento,
-                'default_magento_verify_ssl': instance.magento_verify_ssl,
-                'is_already_instance_created': True,
-                'is_calling_from_magento_onboarding_panel': False
-            })
-            company = instance.company_id
-            if company.magento_instance_onboarding_state != 'done':
-                company.set_onboarding_step_done('magento_instance_onboarding_state')
-        return action
+    # @api.model
+    # def action_open_magento_instance_wizard(self):
+    #     """ Called by onboarding panel above the Instance."""
+    #     ir_action_obj = self.env["ir.actions.actions"]
+    #     magento_instance_obj = self.env['magento.instance']
+    #     action = ir_action_obj._for_xml_id(
+    #         "odoo_magento2_ept.magento_on_board_instance_configuration_action")
+    #     action['context'] = {'is_calling_from_magento_onboarding_panel': True}
+    #     instance = magento_instance_obj.search_magento_instance()
+    #     if instance:
+    #         action.get('context').update({
+    #             'default_name': instance.name,
+    #             'default_magento_version': instance.magento_version,
+    #             'default_access_token': instance.access_token,
+    #             'default_company_id': instance.company_id.id,
+    #             'default_magento_url': instance.magento_url,
+    #             'default_is_multi_warehouse_in_magento': instance.is_multi_warehouse_in_magento,
+    #             'default_magento_verify_ssl': instance.magento_verify_ssl,
+    #             'is_already_instance_created': True,
+    #             'is_calling_from_magento_onboarding_panel': False
+    #         })
+    #         company = instance.company_id
+    #         if company.magento_instance_onboarding_state != 'done':
+    #             company.set_onboarding_step_done('magento_instance_onboarding_state')
+    #     return action

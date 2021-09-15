@@ -28,36 +28,36 @@
                             </div>
                         </div>
                     </div>
-                        <div name="description_config">
-                            <h2 style="font-size:25px;background-color:#e9ecef;">
-                                Odoo Product Configuration
-                            </h2>
-                            <div class="row mt16 o_settings_container o_settings_container_magento_config">
-                                <div class="col-12 o_setting_box o_setting_box o_setting_box_magento_config">
-                                    <div class="o_setting_left_pane">
-                                        <field name="magento_set_sales_description_in_product" widget="boolean_toggle"/>
-                                    </div>
-                                    <div class="o_setting_right_pane">
-                                        <label for="magento_set_sales_description_in_product"/>
-                                        <div class="text-muted">
-                                            If checked, it will be attached with Magento Layer's Product's description and short description.
-                                            <br/>
-                                            - This configuration applies to all Magento instances, not to particular
-                                            one.
-                                            <br/>
-                                            - The Description value is being received from Magento is in HTML format,
-                                            while it gets stored in Odoo product's field as Text format. Enable this, only
-                                            if works for you.
-                                            <br/>
-                                            - The Odoo product's Sales Description will be used in Sale order line.
-                                            <br/>
-                                            - When a new product from Magento will be created in Odoo, it will set the
-                                            Description into Odoo product's Internal Notes field and Short description into Sales Description field.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<!--                        <div name="description_config">-->
+<!--                            <h2 style="font-size:25px;background-color:#e9ecef;">-->
+<!--                                Odoo Product Configuration-->
+<!--                            </h2>-->
+<!--                            <div class="row mt16 o_settings_container o_settings_container_magento_config">-->
+<!--                                <div class="col-12 o_setting_box o_setting_box o_setting_box_magento_config">-->
+<!--                                    <div class="o_setting_left_pane">-->
+<!--                                        <field name="magento_set_sales_description_in_product" widget="boolean_toggle"/>-->
+<!--                                    </div>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="magento_set_sales_description_in_product"/>-->
+<!--                                        <div class="text-muted">-->
+<!--                                            If checked, it will be attached with Magento Layer's Product's description and short description.-->
+<!--                                            <br/>-->
+<!--                                            - This configuration applies to all Magento instances, not to particular-->
+<!--                                            one.-->
+<!--                                            <br/>-->
+<!--                                            - The Description value is being received from Magento is in HTML format,-->
+<!--                                            while it gets stored in Odoo product's field as Text format. Enable this, only-->
+<!--                                            if works for you.-->
+<!--                                            <br/>-->
+<!--                                            - The Odoo product's Sales Description will be used in Sale order line.-->
+<!--                                            <br/>-->
+<!--                                            - When a new product from Magento will be created in Odoo, it will set the-->
+<!--                                            Description into Odoo product's Internal Notes field and Short description into Sales Description field.-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <h2 style="font-size:25px;background-color:#e9ecef;">Magento Instances
                         </h2>
                         <div class="row mt16 o_settings_container">
@@ -119,29 +119,29 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-lg-6 o_setting_box">
-                                <div class="o_setting_left_pane">
-                                    <field name="allow_import_image_of_products" widget="boolean_toggle"/>
-                                </div>
-                                <div class="o_setting_right_pane">
-                                    <label for="allow_import_image_of_products" string="Import Products with Images?"/>
-                                    <div class="text-muted" id="allow_import_image_of_products">
-                                        If checked, import product images along with product from Magento while import products.
-                                    </div>
-                                </div>
-                            </div>
+<!--                            <div class="col-12 col-lg-6 o_setting_box">-->
+<!--                                <div class="o_setting_left_pane">-->
+<!--                                    <field name="allow_import_image_of_products" widget="boolean_toggle"/>-->
+<!--                                </div>-->
+<!--                                <div class="o_setting_right_pane">-->
+<!--                                    <label for="allow_import_image_of_products" string="Import Products with Images?"/>-->
+<!--                                    <div class="text-muted" id="allow_import_image_of_products">-->
+<!--                                        If checked, import product images along with product from Magento while import products.-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
 
-                            <div class="col-12 col-lg-6 o_setting_box">
-                                <div class="o_setting_right_pane">
-                                    <label for="import_product_category" string="Product Category" />
-                                    <field name="import_product_category"
-                                           attrs="{'required':[('magento_instance_id','!=',False)]}"
-                                           class="oe_inline" />
-                                    <div class="text-muted" id="import_product_category">
-                                        The selected category will set in that product.
-                                    </div>
-                                </div>
-                            </div>
+<!--                            <div class="col-12 col-lg-6 o_setting_box">-->
+<!--                                <div class="o_setting_right_pane">-->
+<!--                                    <label for="import_product_category" string="Product Category" />-->
+<!--                                    <field name="import_product_category"-->
+<!--                                           attrs="{'required':[('magento_instance_id','!=',False)]}"-->
+<!--                                           class="oe_inline" />-->
+<!--                                    <div class="text-muted" id="import_product_category">-->
+<!--                                        The selected category will set in that product.-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
                         </div>
 
                         <h2 style="font-size:25px;background-color:#e9ecef;" attrs="{'invisible': [('magento_instance_id', '=', False)]}">Order</h2>
