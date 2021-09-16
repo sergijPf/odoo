@@ -96,29 +96,29 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-lg-6 o_setting_box">
-                                <div class="o_setting_left_pane">
-                                    <field name="auto_create_product" widget="boolean_toggle"/>
+<!--                            <div class="col-12 col-lg-6 o_setting_box">-->
+<!--                                <div class="o_setting_left_pane">-->
+<!--                                    <field name="auto_create_product" widget="boolean_toggle"/>-->
 
-                                </div>
-                                <div class="o_setting_right_pane">
-                                    <label for="auto_create_product" />
-                                    <div class="text-muted">
-                                        - This option creates a new product in your Odoo catalog
-                                        if system couldn't find the product based on SKU /
-                                        Internal Reference / Default Product Code.
-                                        <br/>
-                                        - If you are selling on multiple sales channels and
-                                        having different SKU / Internal Reference / Default
-                                        Product Code on each sales channel, it may lead to
-                                        creation of duplicate products in your product catalogue
-                                        in your database.
-                                        <br/>
-                                        - So we request you to enable this option, as per
-                                        your product catalogue configuration.
-                                    </div>
-                                </div>
-                            </div>
+<!--                                </div>-->
+<!--                                <div class="o_setting_right_pane">-->
+<!--                                    <label for="auto_create_product" />-->
+<!--                                    <div class="text-muted">-->
+<!--                                        - This option creates a new product in your Odoo catalog-->
+<!--                                        if system couldn't find the product based on SKU /-->
+<!--                                        Internal Reference / Default Product Code.-->
+<!--                                        <br/>-->
+<!--                                        - If you are selling on multiple sales channels and-->
+<!--                                        having different SKU / Internal Reference / Default-->
+<!--                                        Product Code on each sales channel, it may lead to-->
+<!--                                        creation of duplicate products in your product catalogue-->
+<!--                                        in your database.-->
+<!--                                        <br/>-->
+<!--                                        - So we request you to enable this option, as per-->
+<!--                                        your product catalogue configuration.-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
 <!--                            <div class="col-12 col-lg-6 o_setting_box">-->
 <!--                                <div class="o_setting_left_pane">-->
 <!--                                    <field name="allow_import_image_of_products" widget="boolean_toggle"/>-->

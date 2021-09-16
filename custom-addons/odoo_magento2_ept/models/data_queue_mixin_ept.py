@@ -12,5 +12,6 @@ class DataQueueMixinEpt(models.AbstractModel):
         """
         if not queue_data:
             queue_data = []
-        queue_data += ['sync_import_magento_product_queue', 'magento_order_data_queue_ept']
+        # queue_data += ['sync_import_magento_product_queue', 'magento_order_data_queue_ept']
+        queue_data += ['magento_order_data_queue_ept']
         return super(DataQueueMixinEpt, self).delete_data_queue_ept(queue_data, is_delete_queue)

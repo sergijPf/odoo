@@ -1,15 +1,14 @@
 {
     # App information
-    'name': "Odoo Magento 2 Connector",
-    'version': '14.0.8.3',
+    'name': "Odoo Magento 2 Connector customized",
+    'version': '10.0',
     'category': 'Sales',
-    'license': 'OPL-1',
-    'summary': 'Odoo Magento 2 Connector helps you integrate your Magento 2.x website with Odoo '
-               'and automates various operations between Odoo and Magento.',
+    'summary': 'Odoo Magento 2 Connector to integrate Magento 2.4 website with Odoo '
+               'as per Smartino specifications',
     # Author
-    'author': 'Emipro Technologies Pvt. Ltd.',
+    'author': 'Emipro Technologies Pvt. Ltd. Customized by White Label',
     'website': 'http://www.emiprotechnologies.com/',
-    'maintainer': 'Emipro Technologies Pvt. Ltd.',
+    'maintainer': 'White Label',
 
     # Dependencies
     'depends': ['common_connector_library'],
@@ -40,8 +39,8 @@
         'views/sale_order_cancel_view.xml',
         'views/magento_order_data_queue_ept.xml',
         'views/magento_order_data_queue_line_ept.xml',
-        'views/sync_import_magento_product_queue.xml',
-        'views/sync_import_magento_product_queue_line.xml',
+        # 'views/sync_import_magento_product_queue.xml',
+        # 'views/sync_import_magento_product_queue_line.xml',
         'data/magento_data_cron.xml',
         'data/ir_cron_data.xml',
         'views/stock_picking_view.xml',
@@ -62,9 +61,9 @@
         # 'wizard_views/basic_configuration_onboarding.xml',
         # 'wizard_views/financial_status_onboarding_view.xml',
         # 'wizard_views/magento_onboarding_confirmation_ept.xml',
-        'wizard_views/magento_export_product_ept.xml',
+        # 'wizard_views/magento_export_product_ept.xml',
         'wizard_views/magento_product_category_update_view.xml',
-        'data/ecommerce_data.xml',
+        # 'data/ecommerce_data.xml',
         'security/ir.model.access.csv',
         'data/update_magento_partner.xml'
     ],
@@ -77,9 +76,5 @@
     'images': ['static/description/Magento-2-v14.png'],
     'installable': True,
     'auto_install': False,
-    'application': True,
-    'live_test_url': 'https://www.emiprotechnologies.com/free-trial?app=odoo-magento2-ept&version=14',
-    'price': 379.00,
-    'currency': 'EUR',
-
+    'application': True
 }

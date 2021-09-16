@@ -163,17 +163,17 @@ class SyncImportMagentoProductQueueLine(models.Model):
                 """update sync_import_magento_product_queue set is_process_queue = False 
                 where is_process_queue = True and id = %s""" % queue_id.id)
             self._cr.commit()
-            if not self.magento_instance_id.import_product_category:
-                # check product category set in the instance or not
-                # if the category is not set then create log line
-                # set the state as Failed
-                message = 'You are trying to "Import Product" \n ' \
-                          "But Still, you didn't set the " \
-                          "'Import Product Category' for %s Instance." % (self.magento_instance_id.name)
-                log_book_id.add_log_line(message, False, queue_id.id,
-                                         "import_product_queue_line_id")
-                self.write({'state': 'failed'})
-                return True
+            # if not self.magento_instance_id.import_product_category:
+            #     # check product category set in the instance or not
+            #     # if the category is not set then create log line
+            #     # set the state as Failed
+            #     message = 'You are trying to "Import Product" \n ' \
+            #               "But Still, you didn't set the " \
+            #               "'Import Product Category' for %s Instance." % (self.magento_instance_id.name)
+            #     log_book_id.add_log_line(message, False, queue_id.id,
+            #                              "import_product_queue_line_id")
+            #     self.write({'state': 'failed'})
+            #     return True
             for product_queue_line in self:
                 magento_pr_sku, product_count, product_total_queue = magento_product_obj.create_magento_product_in_odoo(
                     product_queue_line.magento_instance_id, product_queue_line, magento_pr_sku,

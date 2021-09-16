@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!--This is a comman view for queue process wizard-->
+        <!--This is a common view for queue process wizard-->
         <record id="view_queue_process_action" model="ir.ui.view">
             <field name="name">Queue Process Action</field>
             <field name="model">magento.queue.process.ept</field>
@@ -32,7 +32,8 @@
                         <footer>
                             <button string="Process Queues Manually" class="oe_highlight"
                                     type="object" name="manual_queue_process"
-                                    invisible="context.get('queue_process','') not in ['process_order_queue_manually','process_product_queue_manually','process_customer_queue_manually']"/>
+                                    invisible="context.get('queue_process','') not in ['process_order_queue_manually','process_customer_queue_manually']"/>
+<!--                                    invisible="context.get('queue_process','') not in ['process_order_queue_manually','process_product_queue_manually','process_customer_queue_manually']"/>-->
                             <button string="Cancel" class="oe_highlight" special="cancel"/>
                         </footer>
                     </sheet>
@@ -40,7 +41,7 @@
             </field>
         </record>
 
-        <!--This is a comman view for set completed queue-->
+        <!--This is a common view for set completed queue-->
         <record id="view_set_to_completed_queue_process_action" model="ir.ui.view">
             <field name="name">Set To Completed Queue Action</field>
             <field name="model">magento.queue.process.ept</field>
@@ -81,14 +82,14 @@
             <field name="context">{'queue_process':'process_order_queue_manually'}</field>
         </record>
 
-        <record id="action_wizard_magento_import_product" model="ir.actions.act_window">
-            <field name="name">Process Queue Manually</field>
-            <field name="res_model">magento.queue.process.ept</field>
-            <field name="view_id" ref="view_queue_process_action" />
-            <field name="target">new</field>
-            <field name="binding_model_id" ref="model_sync_import_magento_product_queue" />
-            <field name="context">{'queue_process':'process_product_queue_manually'}</field>
-        </record>
+<!--        <record id="action_wizard_magento_import_product" model="ir.actions.act_window">-->
+<!--            <field name="name">Process Queue Manually</field>-->
+<!--            <field name="res_model">magento.queue.process.ept</field>-->
+<!--            <field name="view_id" ref="view_queue_process_action" />-->
+<!--            <field name="target">new</field>-->
+<!--            <field name="binding_model_id" ref="model_sync_import_magento_product_queue" />-->
+<!--            <field name="context">{'queue_process':'process_product_queue_manually'}</field>-->
+<!--        </record>-->
 
         <record id="action_wizard_magento_import_customer" model="ir.actions.act_window">
             <field name="name">Process Queue Manually</field>

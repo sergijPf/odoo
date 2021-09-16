@@ -16,10 +16,10 @@ class CommonLogLineEpt(models.Model):
         "magento.order.data.queue.line.ept",
         "Order Queue Line"
     )
-    import_product_queue_line_id = fields.Many2one(
-        "sync.import.magento.product.queue.line",
-        "Product Queue Line"
-    )
+    # import_product_queue_line_id = fields.Many2one(
+    #     "sync.import.magento.product.queue.line",
+    #     "Product Queue Line"
+    # )
     magento_customer_data_queue_line_id = fields.Many2one(
         "magento.customer.data.queue.line.ept",
         "Customer Queue Line")

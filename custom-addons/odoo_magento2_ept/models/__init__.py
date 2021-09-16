@@ -17,8 +17,8 @@ from . import product_product
 from . import product_template
 from . import magento_product_template
 from . import magento_product_image
-from . import sync_import_magento_product_queue
-from . import sync_import_magento_product_queue_line
+# from . import sync_import_magento_product_queue
+# from . import sync_import_magento_product_queue_line
 from . import common_product_image_ept
 from . import magento_order_data_queue_ept
 from . import magento_order_data_queue_line_ept

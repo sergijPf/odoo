@@ -18,7 +18,7 @@ IR_ACTION_ACT_WINDOW = 'ir.actions.act_window'
 IR_MODEL_DATA = 'ir.model.data'
 VIEW_MODE = 'tree,form'
 COMPLETED_STATE = "[('state', '!=', 'completed' )]"
-IMPORT_MAGENTO_PRODUCT_QUEUE = 'sync.import.magento.product.queue'
+# IMPORT_MAGENTO_PRODUCT_QUEUE = 'sync.import.magento.product.queue'
 MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
 
 
@@ -35,9 +35,9 @@ class MagentoImportExportEpt(models.TransientModel):
         ('import_customer', 'Import Customer'),
         ('import_sale_order', 'Import Sale Order'),
         ('import_specific_order', 'Import Specific Order'),
-        ('import_products', 'Import Products'),
-        ('map_products', 'Map Products'),
-        ('import_specific_product', 'Import Specific Product'),
+        # ('import_products', 'Import Products'),
+        # ('map_products', 'Map Products'),
+        # ('import_specific_product', 'Import Specific Product'),
         ('import_product_stock', 'Import Product Stock'),
         ('export_shipment_information', 'Export Shipment Information'),
         ('export_invoice_information', 'Export Invoice Information'),
@@ -51,30 +51,32 @@ class MagentoImportExportEpt(models.TransientModel):
         help="You can import Magento Order by giving order number here,Ex.000000021 \n "
              "If multiple orders are there give order number comma (,) seperated "
     )
-    import_specific_product = fields.Char(
-        string='Product Reference',
-        help="You can import Magento prduct by giving product sku here, Ex.24-MB04 \n "
-             "If Multiple product are there give product sku comma(,) seperated"
-    )
+    # import_specific_product = fields.Char(
+    #     string='Product Reference',
+    #     help="You can import Magento product by giving product sku here, Ex.24-MB04 \n "
+    #          "If Multiple product are there give product sku comma(,) seperated"
+    # )
     datas = fields.Binary(string="Choose File", filters="*.csv")
     is_import_shipped_orders = fields.Boolean(
         string="Import Shipped Orders?",
         help="If checked, Shipped orders will be imported"
     )
     export_method = fields.Selection([
-        ("direct", "Export in Magento Layer"), ("csv", "Export in CSV file")
+        ("direct", "Export in Magento Layer")
+        # ("direct", "Export in Magento Layer"), ("csv", "Export in CSV file")
     ], default="direct")
-    do_not_update_existing_product = fields.Boolean(
-        string="Do not update existing Products?",
-        help="If checked and Product(s) found in odoo/magento layer, then not update the Product(s)"
-    )
+    # do_not_update_existing_product = fields.Boolean(
+    #     string="Do not update existing Products?",
+    #     help="If checked and Product(s) found in odoo/magento layer, then not update the Product(s)"
+    # )
 
     @api.onchange('operations')
     def on_change_operation(self):
         """
         Set end date when change operations
         """
-        if self.operations in ["import_products", "import_sale_order", "import_customer"]:
+        # if self.operations in ["import_products", "import_sale_order", "import_customer"]:
+        if self.operations in ["import_sale_order", "import_customer"]:
             self.start_date = datetime.today() - timedelta(days=10)
             self.end_date = datetime.now()
         else:
@@ -96,16 +98,16 @@ class MagentoImportExportEpt(models.TransientModel):
         result = False
         if self.operations == 'import_customer':
             self.import_customer_operation(instances)
-        elif self.operations == 'map_products':
-            self.map_product_operation(instances)
+        # elif self.operations == 'map_products':
+        #     self.map_product_operation(instances)
         elif self.operations == 'import_sale_order':
             result = self.import_sale_order_operation(instances)
         elif self.operations == 'import_specific_order':
             result = self.import_specific_sale_order_operation(instances)
-        elif self.operations == 'import_products':
-            result = self.import_products_operation(instances)
-        elif self.operations == 'import_specific_product':
-            result = self.import_specific_product_operation(instances)
+        # elif self.operations == 'import_products':
+        #     result = self.import_products_operation(instances)
+        # elif self.operations == 'import_specific_product':
+        #     result = self.import_specific_product_operation(instances)
         elif self.operations == 'import_product_stock':
             result = self.import_product_stock_operation(instances)
         elif self.operations == 'export_shipment_information':
@@ -126,15 +128,15 @@ class MagentoImportExportEpt(models.TransientModel):
             }
         return result
 
-    def map_product_operation(self, instances):
-        """
-        Perform map product operation.
-        :param instances: Magento instances
-        """
-        if not self.datas:
-            raise UserError(_("Please Upload File to Continue Mapping Products..."))
-        for instance in instances:
-            self.import_magento_csv(instance.id)
+    # def map_product_operation(self, instances):
+    #     """
+    #     Perform map product operation.
+    #     :param instances: Magento instances
+    #     """
+    #     if not self.datas:
+    #         raise UserError(_("Please Upload File to Continue Mapping Products..."))
+    #     for instance in instances:
+    #         self.import_magento_csv(instance.id)
 
     def import_customer_operation(self, instances):
         """
@@ -211,72 +213,72 @@ class MagentoImportExportEpt(models.TransientModel):
             })
         return result
 
-    def import_products_operation(self, instances):
-        """
-        Create queues of imported products
-        :param instances: Magento Instances
-        :return:
-        """
-        magento_import_product_queue_obj = self.env[IMPORT_MAGENTO_PRODUCT_QUEUE]
-        from_date = datetime.strftime(self.start_date, MAGENTO_DATETIME_FORMAT) if self.start_date else {}
-        to_date = datetime.strftime(self.end_date, MAGENTO_DATETIME_FORMAT)
-        do_not_update_product = self.do_not_update_existing_product
-        for instance in instances:
-            product_queue_data = magento_import_product_queue_obj.create_sync_import_product_queues(
-                instance, from_date, to_date, do_not_update_product)
-        result = self.return_form_or_tree_view(product_queue_data)
-        return result
+    # def import_products_operation(self, instances):
+    #     """
+    #     Create queues of imported products
+    #     :param instances: Magento Instances
+    #     :return:
+    #     """
+    #     magento_import_product_queue_obj = self.env[IMPORT_MAGENTO_PRODUCT_QUEUE]
+    #     from_date = datetime.strftime(self.start_date, MAGENTO_DATETIME_FORMAT) if self.start_date else {}
+    #     to_date = datetime.strftime(self.end_date, MAGENTO_DATETIME_FORMAT)
+    #     do_not_update_product = self.do_not_update_existing_product
+    #     for instance in instances:
+    #         product_queue_data = magento_import_product_queue_obj.create_sync_import_product_queues(
+    #             instance, from_date, to_date, do_not_update_product)
+    #     result = self.return_form_or_tree_view(product_queue_data)
+    #     return result
 
-    def return_form_or_tree_view(self, product_queue_data):
-        """
-        it's return the tree view or form view based on the total_product_queues.
-        :param product_queue_data: {'product_queue': sync.import.magento.product.queue(X,), 'count': X, 'total_product_queues': X}
-        :return: view with domain
-        """
-        result = {
-            'name': _('Magento Product Data Queue'),
-            'res_model': IMPORT_MAGENTO_PRODUCT_QUEUE,
-            'type': IR_ACTION_ACT_WINDOW,
-        }
-        if product_queue_data.get('total_product_queues') == 1:
-            view_ref = self.env[IR_MODEL_DATA].get_object_reference(
-                'odoo_magento2_ept', 'view_sync_import_magento_product_queue_ept_form'
-            )
-            view_id = view_ref[1] if view_ref else False
-            result.update({
-                'views': [(view_id, 'form')],
-                'view_mode': 'form',
-                'view_id': view_id,
-                'res_id': product_queue_data.get('product_queue').id,
-                'target': 'current'
-            })
-        else:
-            result.update({
-                'view_mode': VIEW_MODE,
-                'domain': COMPLETED_STATE
-            })
-        return result
+    # def return_form_or_tree_view(self, product_queue_data):
+    #     """
+    #     it's return the tree view or form view based on the total_product_queues.
+    #     :param product_queue_data: {'product_queue': sync.import.magento.product.queue(X,), 'count': X, 'total_product_queues': X}
+    #     :return: view with domain
+    #     """
+    #     result = {
+    #         'name': _('Magento Product Data Queue'),
+    #         'res_model': IMPORT_MAGENTO_PRODUCT_QUEUE,
+    #         'type': IR_ACTION_ACT_WINDOW,
+    #     }
+    #     if product_queue_data.get('total_product_queues') == 1:
+    #         view_ref = self.env[IR_MODEL_DATA].get_object_reference(
+    #             'odoo_magento2_ept', 'view_sync_import_magento_product_queue_ept_form'
+    #         )
+    #         view_id = view_ref[1] if view_ref else False
+    #         result.update({
+    #             'views': [(view_id, 'form')],
+    #             'view_mode': 'form',
+    #             'view_id': view_id,
+    #             'res_id': product_queue_data.get('product_queue').id,
+    #             'target': 'current'
+    #         })
+    #     else:
+    #         result.update({
+    #             'view_mode': VIEW_MODE,
+    #             'domain': COMPLETED_STATE
+    #         })
+    #     return result
 
-    def import_specific_product_operation(self, instances):
-        """
-        Create queue of imported specific product
-        :param instances: Magento Instances
-        :return:
-        """
-        if not self.import_specific_product:
-            raise Warning(_("Please enter Magento product"
-                            " SKU for performing this operation."))
-        magento_import_product_queue_obj = self.env[IMPORT_MAGENTO_PRODUCT_QUEUE]
-        product_sku_lists = self.import_specific_product.split(',')
-        do_not_update_product = self.do_not_update_existing_product
-        for instance in instances:
-            product_queue_data = magento_import_product_queue_obj.import_specific_product(
-                instance,
-                product_sku_lists,
-                do_not_update_product
-            )
-        result = self.return_form_or_tree_view(product_queue_data)
-        return result
+    # def import_specific_product_operation(self, instances):
+    #     """
+    #     Create queue of imported specific product
+    #     :param instances: Magento Instances
+    #     :return:
+    #     """
+    #     if not self.import_specific_product:
+    #         raise Warning(_("Please enter Magento product"
+    #                         " SKU for performing this operation."))
+    #     magento_import_product_queue_obj = self.env[IMPORT_MAGENTO_PRODUCT_QUEUE]
+    #     product_sku_lists = self.import_specific_product.split(',')
+    #     do_not_update_product = self.do_not_update_existing_product
+    #     for instance in instances:
+    #         product_queue_data = magento_import_product_queue_obj.import_specific_product(
+    #             instance,
+    #             product_sku_lists,
+    #             do_not_update_product
+    #         )
+    #     result = self.return_form_or_tree_view(product_queue_data)
+    #     return result
 
     def import_product_stock_operation(self, instances):
         """
@@ -363,64 +365,64 @@ class MagentoImportExportEpt(models.TransientModel):
                     'type': 'rainbow_man',
                 }
             }
-        elif self.export_method == "csv":
-            return self.export_product_for_magento(product_templates)
+        # elif self.export_method == "csv":
+        #     return self.export_product_for_magento(product_templates)
 
-    def export_product_for_magento(self, odoo_templates):
-        """
-        Create and download CSV file for export product in Magento.
-        :param odoo_templates: Odoo product template object
-        """
-        field_name = ['product_template_id', 'product_id', 'template_name', 'product_name',
-                      'product_default_code', 'magento_sku', 'description', 'sale_description', 'instance_id']
-        buffer = StringIO()
-        csv_writer = DictWriter(buffer, field_name, delimiter=',')
-        csv_writer.writer.writerow(field_name)
-        product_dic = []
-        for instance in self.magento_instance_ids:
-            for odoo_template in odoo_templates:
-                if len(odoo_template.product_variant_ids.ids) == 1 and not odoo_template.default_code:
-                    continue
-                for variant in odoo_template.product_variant_ids.filtered(
-                        lambda variant: variant.default_code != False):
-                    row = self.prepare_data_for_export_to_csv_ept(odoo_template, variant, instance)
-                    product_dic.append(row)
-        if not product_dic:
-            raise Warning(_('No data found to be exported.\n\nPossible Reasons:\n   - SKU(s) are not set properly.'))
-        csv_writer.writerows(product_dic)
-        buffer.seek(0)
-        file_data = buffer.read().encode("utf-8")
-        magento_product_export_file_encoded = base64.b64encode(file_data)
-        self.write({'datas': magento_product_export_file_encoded})
-        return {
-            'type': 'ir.actions.act_url',
-            'url': '/web/binary/download_document?model=magento.import.export.ept&'
-                   'field=datas&id=%s&filename=magento_product_export_%s.csv' % (
-                       self.id, datetime.now().strftime("%m_%d_%Y-%H_%M_%S")),
-            'target': 'self',
-        }
+    # def export_product_for_magento(self, odoo_templates):
+    #     """
+    #     Create and download CSV file for export product in Magento.
+    #     :param odoo_templates: Odoo product template object
+    #     """
+    #     field_name = ['product_template_id', 'product_id', 'template_name', 'product_name',
+    #                   'product_default_code', 'magento_sku', 'description', 'sale_description', 'instance_id']
+    #     buffer = StringIO()
+    #     csv_writer = DictWriter(buffer, field_name, delimiter=',')
+    #     csv_writer.writer.writerow(field_name)
+    #     product_dic = []
+    #     for instance in self.magento_instance_ids:
+    #         for odoo_template in odoo_templates:
+    #             if len(odoo_template.product_variant_ids.ids) == 1 and not odoo_template.default_code:
+    #                 continue
+    #             for variant in odoo_template.product_variant_ids.filtered(
+    #                     lambda variant: variant.default_code != False):
+    #                 row = self.prepare_data_for_export_to_csv_ept(odoo_template, variant, instance)
+    #                 product_dic.append(row)
+    #     if not product_dic:
+    #         raise Warning(_('No data found to be exported.\n\nPossible Reasons:\n   - SKU(s) are not set properly.'))
+    #     csv_writer.writerows(product_dic)
+    #     buffer.seek(0)
+    #     file_data = buffer.read().encode("utf-8")
+    #     magento_product_export_file_encoded = base64.b64encode(file_data)
+    #     self.write({'datas': magento_product_export_file_encoded})
+    #     return {
+    #         'type': 'ir.actions.act_url',
+    #         'url': '/web/binary/download_document?model=magento.import.export.ept&'
+    #                'field=datas&id=%s&filename=magento_product_export_%s.csv' % (
+    #                    self.id, datetime.now().strftime("%m_%d_%Y-%H_%M_%S")),
+    #         'target': 'self',
+    #     }
 
-    @staticmethod
-    def prepare_data_for_export_to_csv_ept(odoo_template, variant, instance):
-        """
-        Prepare data for Export Operations at map Odoo Products csv with Magento Products.
-        :param odoo_template: product.template()
-        :param variant: product.product()
-        :param instance: magento.instance()
-        :return: dictionary
-        """
-        position = 0
-        return {
-            'product_template_id': odoo_template.id,
-            'product_id': variant.id,
-            'template_name': odoo_template.name,
-            'product_name': variant.name,
-            'product_default_code': variant.default_code,
-            'magento_sku': variant.default_code,
-            'description': variant.description or "",
-            'sale_description': odoo_template.description_sale if position == 0 and odoo_template.description_sale else '',
-            'instance_id': instance.id
-        }
+    # @staticmethod
+    # def prepare_data_for_export_to_csv_ept(odoo_template, variant, instance):
+    #     """
+    #     Prepare data for Export Operations at map Odoo Products csv with Magento Products.
+    #     :param odoo_template: product.template()
+    #     :param variant: product.product()
+    #     :param instance: magento.instance()
+    #     :return: dictionary
+    #     """
+    #     position = 0
+    #     return {
+    #         'product_template_id': odoo_template.id,
+    #         'product_id': variant.id,
+    #         'template_name': odoo_template.name,
+    #         'product_name': variant.name,
+    #         'product_default_code': variant.default_code,
+    #         'magento_sku': variant.default_code,
+    #         'description': variant.description or "",
+    #         'sale_description': odoo_template.description_sale if position == 0 and odoo_template.description_sale else '',
+    #         'instance_id': instance.id
+    #     }
 
     def prepare_product_for_magento(self, odoo_templates):
         """
@@ -439,17 +441,17 @@ class MagentoImportExportEpt(models.TransientModel):
             raise UserError(_('Missing Internal References For %s', str(list(magento_sku_missing.values()))))
         return True
 
-    def import_magento_csv(self, instance_id):
-        """
-        Import CSV file and add product and product template into magento.
-        :param instance: instance of magento.
-        """
-        magento_sku_missing = {}
-        csv_reader = csv.DictReader(StringIO(base64.b64decode(self.datas).decode()), delimiter=',')
-        for product_dict in csv_reader:
-            if int(product_dict.get('instance_id')) == instance_id:
-                magento_sku_missing = self.mapped_magento_products(product_dict, magento_sku_missing)
-        return magento_sku_missing
+    # def import_magento_csv(self, instance_id):
+    #     """
+    #     Import CSV file and add product and product template into magento.
+    #     :param instance: instance of magento.
+    #     """
+    #     magento_sku_missing = {}
+    #     csv_reader = csv.DictReader(StringIO(base64.b64decode(self.datas).decode()), delimiter=',')
+    #     for product_dict in csv_reader:
+    #         if int(product_dict.get('instance_id')) == instance_id:
+    #             magento_sku_missing = self.mapped_magento_products(product_dict, magento_sku_missing)
+    #     return magento_sku_missing
 
     def mapped_magento_products(self, product_dict, magento_sku_missing):
         """
@@ -574,18 +576,18 @@ class MagentoImportExportEpt(models.TransientModel):
             })
         return magento_product_vals
 
-    def download_sample_attachment(self):
-        """
-        This Method relocates download sample file of internal transfer.
-        :return: This Method return file download file.
-        """
-        attachment = self.env['ir.attachment'].search([('name', '=', 'magento_product_export.csv')])
-        return {
-            'type': 'ir.actions.act_url',
-            'url': '/web/content/%s?download=true' % (attachment.id),
-            'target': 'new',
-            'nodestroy': False,
-        }
+    # def download_sample_attachment(self):
+    #     """
+    #     This Method relocates download sample file of internal transfer.
+    #     :return: This Method return file download file.
+    #     """
+    #     attachment = self.env['ir.attachment'].search([('name', '=', 'magento_product_export.csv')])
+    #     return {
+    #         'type': 'ir.actions.act_url',
+    #         'url': '/web/content/%s?download=true' % (attachment.id),
+    #         'target': 'new',
+    #         'nodestroy': False,
+    #     }
 
     def create_magento_template_images(self, magento_template, odoo_template):
         """

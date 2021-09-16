@@ -52,13 +52,13 @@
             <field name="mode">primary</field>
             <field name="arch" type="xml">
                 <form string="Product" create="false">
-                    <header>
-                        <button name="open_export_product_in_magento_ept_wizard" string="Export Product to Magento"
-                            type="object"  attrs="{'invisible':[('sync_product_with_magento','=',True)]}"
-                            context="{'allow_to_create': True}" class="oe_highlight" />
-                        <button name="open_export_product_in_magento_ept_wizard" string="Update Product in Magento"
-                                type="object" context="{'allow_to_update': True}" attrs="{'invisible':[('sync_product_with_magento','=',False)]}" class="oe_highlight" />
-                    </header>
+<!--                    <header>-->
+<!--                        <button name="open_export_product_in_magento_ept_wizard" string="Export Product to Magento"-->
+<!--                            type="object"  attrs="{'invisible':[('sync_product_with_magento','=',True)]}"-->
+<!--                            context="{'allow_to_create': True}" class="oe_highlight" />-->
+<!--                        <button name="open_export_product_in_magento_ept_wizard" string="Update Product in Magento"-->
+<!--                                type="object" context="{'allow_to_update': True}" attrs="{'invisible':[('sync_product_with_magento','=',False)]}" class="oe_highlight" />-->
+<!--                    </header>-->
                     <sheet>
                         <field name="id" invisible="True" />
                         <field name="active" invisible="True" />

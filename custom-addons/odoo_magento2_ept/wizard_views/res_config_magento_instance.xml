@@ -44,11 +44,8 @@
                                             <ul>
                                                 <li>
                                                     After creating the instance, please make sure you
-                                                    complete all
-                                                    the other
-                                                    necessary configurations such as
-                                                    Warehouse, Pricelist etc. from
-                                                    the Magento setting screen.
+                                                    complete all the other necessary configurations such as
+                                                    Warehouse, Pricelist etc. from the Magento setting screen.
                                                 </li>
                                                 <li>
                                                     Magento =&gt; Configurations =&gt; Settings

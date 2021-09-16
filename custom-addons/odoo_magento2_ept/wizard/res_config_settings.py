@@ -4,7 +4,7 @@
 Describes configuration for Magento Instance.
 """
 from odoo import models, fields, api
-from odoo.http import request
+# from odoo.http import request
 MAGENTO_FINANCIAL_STATUS_EPT = 'magento.financial.status.ept'
 STOCK_WAREHOUSE = 'stock.warehouse'
 
@@ -66,11 +66,11 @@ class ResConfigSettings(models.TransientModel):
         string="Pricelist",
         help="Product price will be taken/set from this pricelist if Catalog Price Scope is global"
     )
-    allow_import_image_of_products = fields.Boolean(
-        "Import Images of Products",
-        default=False,
-        help="Import product images along with product from Magento while import product?"
-    )
+    # allow_import_image_of_products = fields.Boolean(
+    #     "Import Images of Products",
+    #     default=False,
+    #     help="Import product images along with product from Magento while import product?"
+    # )
     # Import Product Stock
     is_import_product_stock = fields.Boolean(
         'Is Import Magento Product Stock?',
@@ -87,12 +87,12 @@ class ResConfigSettings(models.TransientModel):
         ('virtual_available', 'Forecast Quantity')
     ], string="Magento Stock Type", default='free_qty', help="Magento Stock Type"
     )
-    auto_create_product = fields.Boolean(
-        string="Automatically Create Odoo Product If Not Found?",
-        default=False,
-        help="If checked, It will create new odoo products, if not found while import products/ orders. "
-             "\nIf not checked, Queue will be failed while import order or product and product not found."
-    )
+    # auto_create_product = fields.Boolean(
+    #     string="Automatically Create Odoo Product If Not Found?",
+    #     default=False,
+    #     help="If checked, It will create new odoo products, if not found while import products/ orders. "
+    #          "\nIf not checked, Queue will be failed while import order or product and product not found."
+    # )
     is_use_odoo_order_sequence = fields.Boolean(
         "Is Use Odoo Order Sequences?",
         default=False,
@@ -126,12 +126,12 @@ class ResConfigSettings(models.TransientModel):
         ('2.4', '2.4+')
     ], string="Magento Versions", required=True, help="Version of Magento Instance", default='2.4')
     magento_url = fields.Char(string='Magento URLs', required=False, help="URL of Magento")
-    import_product_category = fields.Many2one(
-        'product.category',
-        string="Import Product Category",
-        help="While importing a product, "
-             "the selected category will set in that product."
-    )
+    # import_product_category = fields.Many2one(
+    #     'product.category',
+    #     string="Import Product Category",
+    #     help="While importing a product, "
+    #          "the selected category will set in that product."
+    # )
     # magento_financial_status_ids = fields.Many2many(
     #     MAGENTO_FINANCIAL_STATUS_EPT,
     #     'magento_sale_auto_workflow_conf_rel',
@@ -149,11 +149,11 @@ class ResConfigSettings(models.TransientModel):
         help="This indicates whether product prices received from Magento is including tax or excluding tax,"
              " when import sale order from Magento"
     )
-    magento_set_sales_description_in_product = fields.Boolean(
-        string="Use Sales Description of Magento Product",
-        config_parameter="odoo_magento2_ept.set_magento_sales_description",
-        help="In both odoo products and Magento layer products, it is used to set the description and short description"
-    )
+    # magento_set_sales_description_in_product = fields.Boolean(
+    #     string="Use Sales Description of Magento Product",
+    #     config_parameter="odoo_magento2_ept.set_magento_sales_description",
+    #     help="In both odoo products and Magento layer products, it is used to set the description and short description"
+    # )
 
     @api.onchange('magento_instance_id')
     def onchange_magento_instance_id(self):
@@ -167,8 +167,8 @@ class ResConfigSettings(models.TransientModel):
                     (6, 0, magento_instance_id.warehouse_ids.ids)] if magento_instance_id.warehouse_ids else False,
                 'magento_stock_field': magento_instance_id.magento_stock_field,
                 'magento_version': magento_instance_id.magento_version,
-                'auto_create_product': magento_instance_id.auto_create_product,
-                'allow_import_image_of_products': magento_instance_id.allow_import_image_of_products,
+                # 'auto_create_product': magento_instance_id.auto_create_product,
+                # 'allow_import_image_of_products': magento_instance_id.allow_import_image_of_products,
                 'catalog_price_scope': magento_instance_id.catalog_price_scope,
                 'is_multi_warehouse_in_magento': magento_instance_id.is_multi_warehouse_in_magento,
                 'pricelist_id': magento_instance_id.pricelist_id.id if magento_instance_id.pricelist_id else False,
@@ -176,7 +176,7 @@ class ResConfigSettings(models.TransientModel):
                 'import_stock_warehouse': magento_instance_id.import_stock_warehouse.id if magento_instance_id.import_stock_warehouse else False,
                 'invoice_done_notify_customer': magento_instance_id.invoice_done_notify_customer,
                 'import_magento_order_status_ids': magento_instance_id.import_magento_order_status_ids.ids,
-                'import_product_category': magento_instance_id.import_product_category if magento_instance_id.import_product_category else False,
+                # 'import_product_category': magento_instance_id.import_product_category if magento_instance_id.import_product_category else False,
                 'import_order_after_date': magento_instance_id.import_order_after_date or False,
                 # 'is_export_dropship_picking': magento_instance_id.is_export_dropship_picking if magento_instance_id.is_export_dropship_picking else False
             })
@@ -247,16 +247,16 @@ class ResConfigSettings(models.TransientModel):
         values.update({
             'warehouse_ids': [(6, 0, self.warehouse_ids.ids)] if self.warehouse_ids else False,
             'magento_stock_field': self.magento_stock_field,
-            'auto_create_product': self.auto_create_product,
+            # 'auto_create_product': self.auto_create_product,
             'catalog_price_scope': magento_instance_id.catalog_price_scope if magento_instance_id else False,
-            'allow_import_image_of_products': self.allow_import_image_of_products,
+            # 'allow_import_image_of_products': self.allow_import_image_of_products,
             'pricelist_id': self.pricelist_id.id if self.pricelist_id else False,
             'is_import_product_stock': self.is_import_product_stock,
             'import_stock_warehouse': self.import_stock_warehouse.id if self.import_stock_warehouse else False,
             'invoice_done_notify_customer': self.invoice_done_notify_customer,
             'import_magento_order_status_ids': [(6, 0, self.import_magento_order_status_ids.ids)],
             'is_multi_warehouse_in_magento': self.is_multi_warehouse_in_magento if self.is_multi_warehouse_in_magento else False,
-            'import_product_category': self.import_product_category if self.import_product_category else "",
+            # 'import_product_category': self.import_product_category if self.import_product_category else "",
             'import_order_after_date': self.import_order_after_date if self.import_order_after_date else "",
             # 'is_export_dropship_picking': self.is_export_dropship_picking if self.is_export_dropship_picking else ""
         })

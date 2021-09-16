@@ -8,7 +8,7 @@
             <field name="public">True</field>
         </record>
         <record id="view_magento_import_export_operation" model="ir.ui.view">
-            <field name="name">Magento Opration</field>
+            <field name="name">Magento Operation</field>
             <field name="model">magento.import.export.ept</field>
             <field name="arch" type="xml">
                 <form>
@@ -22,41 +22,42 @@
                     <group>
                         <field name="import_specific_sale_order"
                                attrs="{'invisible' : [('operations','!=','import_specific_order')], 'required':[('operations','==','import_specific_order')]}"/>
-                        <field name="import_specific_product"
-                               attrs="{'invisible' : [('operations','!=','import_specific_product')], 'required':[('operations','==','import_specific_product')]}"/>
+<!--                        <field name="import_specific_product"-->
+<!--                           attrs="{'invisible' : [('operations','!=','import_specific_product')], 'required':[('operations','==','import_specific_product')]}"/>-->
                     </group>
+<!--                    <group>-->
+<!--                        <field name="do_not_update_existing_product"-->
+<!--                           attrs="{'invisible' : [('operations','not in',['import_products','import_specific_product'])],'required':[('operations','in',['import_products','import_specific_product'])]}"/>-->
+
+<!--                    </group>-->
                     <group>
-                        <field name="do_not_update_existing_product"
-                               attrs="{'invisible' : [('operations','not in',['import_products','import_specific_product'])],
-                               'required':[('operations','in',['import_products','import_specific_product'])]}"/>
-                    </group>
-                    <group>
-                        <group string="Select Date Range For Import"
-                               attrs="{'invisible':[('operations','not in',['import_products','import_customer','import_sale_order'])]}"
-                               class="w-100">
+                        <group string="Select Date Range For Import" class="w-100"
+                               attrs="{'invisible':[('operations','not in',['import_customer','import_sale_order'])]}">
+<!--                               attrs="{'invisible':[('operations','not in',['import_products','import_customer','import_sale_order'])]}">-->
                             <label for="start_date" string="Date"/>
                             <div class="d-inline-block">
                                 <field name="start_date" widget="daterange"
                                        options="{'related_end_date': 'end_date'}" class="oe_inline"/>
                                 To
                                 <field name="end_date" widget="daterange"
-                                       attrs="{'required': [('operations', '=', 'import_products')]}"
                                        options="{'related_start_date': 'start_date'}" class="oe_inline"/>
+<!--                                       attrs="{'required': [('operations', '=', 'import_products')]}"-->
+
                             </div>
                         </group>
                     </group>
-                    <group string="Mapping Magento Products Using CSV"
-                           attrs="{'invisible':[('operations','!=','map_products')]}">
-                        <div>
-                            <div attrs="{'invisible':[('operations','!=','map_products')]}">
-                                <field name="datas" class="oe_inline"/>
-                            </div>
-                        </div>
-                        <div>
-                            <button string="Download Sample Attachment" name="download_sample_attachment"
-                                    type="object"/>
-                        </div>
-                    </group>
+<!--                    <group string="Mapping Magento Products Using CSV"-->
+<!--                           attrs="{'invisible':[('operations','!=','map_products')]}">-->
+<!--                        <div>-->
+<!--                            <div attrs="{'invisible':[('operations','!=','map_products')]}">-->
+<!--                                <field name="datas" class="oe_inline"/>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div>-->
+<!--                            <button string="Download Sample Attachment" name="download_sample_attachment"-->
+<!--                                    type="object"/>-->
+<!--                        </div>-->
+<!--                    </group>-->
                     <footer>
                         <button name="execute" string="Execute" type="object"
                                 class="oe_highlight"/>

@@ -33,9 +33,9 @@ class MagentoInstance(models.Model):
     _description = 'Magento Instance'
 
     @api.model
-    def _default_set_import_product_category(self):
-        return self.env.ref('product.product_category_all').id \
-            if self.env.ref('product.product_category_all') else False
+    # def _default_set_import_product_category(self):
+    #     return self.env.ref('product.product_category_all').id \
+    #         if self.env.ref('product.product_category_all') else False
 
     @api.model
     def _default_order_status(self):
@@ -108,17 +108,17 @@ class MagentoInstance(models.Model):
         help="Product Price is set in selected Pricelist"
     )
     access_token = fields.Char(string="Magento Access Token", help="Magento Access Token")
-    auto_create_product = fields.Boolean(
-        string="Auto Create Magento Product",
-        default=False,
-        help="Checked True, if you want to create new product in Odoo if not found. "
-             "\nIf not checked, Job will be failed while import order or product.."
-    )
-    allow_import_image_of_products = fields.Boolean(
-        "Import Images of Products",
-        default=False,
-        help="Import product images along with product from Magento while import product?"
-    )
+    # auto_create_product = fields.Boolean(
+    #     string="Auto Create Magento Product",
+    #     default=False,
+    #     help="Checked True, if you want to create new product in Odoo if not found. "
+    #          "\nIf not checked, Job will be failed while import order or product.."
+    # )
+    # allow_import_image_of_products = fields.Boolean(
+    #     "Import Images of Products",
+    #     default=False,
+    #     help="Import product images along with product from Magento while import product?"
+    # )
     last_product_import_date = fields.Datetime(
         string='Last Import Products date',
         help="Last Import Products date"
@@ -164,10 +164,10 @@ class MagentoInstance(models.Model):
         default=False,
         help="This Field relocate auto import sale orders."
     )
-    auto_import_product = fields.Boolean(
-        string='Auto import product?',
-        help="Auto Automatic Import Product"
-    )
+    # auto_import_product = fields.Boolean(
+    #     string='Auto import product?',
+    #     help="Auto Automatic Import Product"
+    # )
     auto_export_product_stock = fields.Boolean(
         string='Auto Export Product Stock?',
         help="Automatic Export Product Stock"
@@ -205,17 +205,17 @@ class MagentoInstance(models.Model):
         string="Magento Import order Page Count",
         default=1,
         help="It will fetch order of Magento from given page numbers.")
-    magento_import_product_page_count = fields.Integer(
-        string="Magento Import Products Page Count",
-        default=1,
-        help="It will fetch products of Magento from given page numbers.")
-    import_product_category = fields.Many2one(
-        'product.category',
-        string="Import Product Categories",
-        default=_default_set_import_product_category,
-        help="While importing a product, "
-             "the selected category will set in that product."
-    )
+    # magento_import_product_page_count = fields.Integer(
+    #     string="Magento Import Products Page Count",
+    #     default=1,
+    #     help="It will fetch products of Magento from given page numbers.")
+    # import_product_category = fields.Many2one(
+    #     'product.category',
+    #     string="Import Product Categories",
+    #     default=_default_set_import_product_category,
+    #     help="While importing a product, "
+    #          "the selected category will set in that product."
+    # )
     # is_instance_create_from_onboarding_panel = fields.Boolean(default=False)
     # is_onboarding_configurations_done = fields.Boolean(default=False)
     import_order_after_date = fields.Datetime(help="Connector only imports those orders which"
@@ -806,31 +806,31 @@ class MagentoInstance(models.Model):
             )
             instance.last_order_import_date = datetime.now()
 
-    @api.model
-    def _scheduler_import_product(self, args=None):
-        """
-        This method is used to import product from Magento via cron job.
-        :param args: arguments to import products
-        :return:
-        """
-        if args is None:
-            args = {}
-        magento_import_product_queue_obj = self.env['sync.import.magento.product.queue']
-        magento_instance = self.env[MAGENTO_INSTANCE]
-        magento_instance_id = args.get('magento_instance_id')
-        if magento_instance_id:
-            instance = magento_instance.browse(magento_instance_id)
-            last_product_import_date = instance.last_product_import_date
-            if not last_product_import_date:
-                last_product_import_date = ''
-            from_date = last_product_import_date
-            to_date = datetime.now()
-            magento_import_product_queue_obj.create_sync_import_product_queues(
-                instance,
-                from_date,
-                to_date
-            )
-            instance.last_product_import_date = datetime.now()
+    # @api.model
+    # def _scheduler_import_product(self, args=None):
+    #     """
+    #     This method is used to import product from Magento via cron job.
+    #     :param args: arguments to import products
+    #     :return:
+    #     """
+    #     if args is None:
+    #         args = {}
+    #     magento_import_product_queue_obj = self.env['sync.import.magento.product.queue']
+    #     magento_instance = self.env[MAGENTO_INSTANCE]
+    #     magento_instance_id = args.get('magento_instance_id')
+    #     if magento_instance_id:
+    #         instance = magento_instance.browse(magento_instance_id)
+    #         last_product_import_date = instance.last_product_import_date
+    #         if not last_product_import_date:
+    #             last_product_import_date = ''
+    #         from_date = last_product_import_date
+    #         to_date = datetime.now()
+    #         magento_import_product_queue_obj.create_sync_import_product_queues(
+    #             instance,
+    #             from_date,
+    #             to_date
+    #         )
+    #         instance.last_product_import_date = datetime.now()
 
     @api.model
     def _scheduler_update_product_stock_qty(self, args=None):
