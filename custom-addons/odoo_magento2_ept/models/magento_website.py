@@ -76,8 +76,7 @@ class MagentoWebsite(models.Model):
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
     magento_order_data = fields.Text(compute="_compute_kanban_magento_order_data")
-    website_display_currency = fields.Many2one(RES_CURRENCY,
-                                               readonly=True,
+    website_display_currency = fields.Many2one(RES_CURRENCY, readonly=True,
                                                help="Display currency of the magento website.")
     tax_calculation_method = fields.Selection([
         ('excluding_tax', 'Excluding Tax'), ('including_tax', 'Including Tax')],
@@ -723,13 +722,12 @@ class MagentoWebsite(models.Model):
         }
         return action
 
-    def show_instace(self):
+    def show_instance(self):
         """
         Use: To prepare Magento Instance action
         :return: Magento Instance action details
         """
-        view_ref = self.env['ir.model.data'].get_object_reference('odoo_magento2_ept',
-                                                                  'view_magento_instance_form')
+        view_ref = self.env['ir.model.data'].get_object_reference('odoo_magento2_ept', 'view_magento_instance_form')
         view_id = view_ref[1] if view_ref else False
         return {
             'name': _('Magento Instance'),

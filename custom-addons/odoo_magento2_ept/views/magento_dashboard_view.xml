@@ -22,7 +22,7 @@
 <!--                                            </div>-->
                                         </div>
                                         <div>
-                                            <button name="show_instace" data-toggle="tooltip" data-placement="left" t-att-title="record.magento_instance_id.value" class="btn border magento_instance_name_text_overflow_btn" type="object"
+                                            <button name="show_instance" data-toggle="tooltip" data-placement="left" t-att-title="record.magento_instance_id.value" class="btn border magento_instance_name_text_overflow_btn" type="object"
                                                     style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;width: 30%;border-radius: 5px;">
                                                 <span><t t-esc="record.magento_instance_id.value"/></span>
                                                 <span class="ml-1"><i class="fa fa-caret-right" aria-label="Instance" title="Instance"></i></span>

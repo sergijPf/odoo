@@ -512,7 +512,7 @@ class MagentoImportExportEpt(models.TransientModel):
             'product_type': 'configurable' if odoo_template.product_variant_count > 1 else 'simple',
             'magento_product_name': odoo_template.name,
             'magento_sku': False if odoo_template.product_variant_count > 1 else product_dict.get('magento_sku'),
-            'export_product_to_all_website': True
+            # 'export_product_to_all_website': True
         }
         if ir_config_parameter_obj.sudo().get_param("odoo_magento2_ept.set_magento_sales_description"):
             magneto_product_template_dict.update({

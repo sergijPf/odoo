@@ -139,7 +139,7 @@
                                         <group>
                                             <field name="sync_product_with_magento" invisible= '1' />
                                             <field name="attribute_set_id"  widget="selection" domain="[('instance_id','=',magento_instance_id)]" attrs="{'readonly':[('sync_product_with_magento','=',True)]}"/>
-                                            <field name="export_product_to_all_website" />
+<!--                                            <field name="export_product_to_all_website" />-->
 <!--                                            <field name="magento_website_ids" widget="many2many_tags" options="{'no_create_edit': True}" attrs="{'invisible':[('export_product_to_all_website','=',True)]}"/>-->
                                             <field name="magento_tax_class" options="{'no_open':True,'no_create': True}" domain="[('magento_tax_class_type','=','PRODUCT'), ('magento_instance_id','=',magento_instance_id)]"/>
                                         </group>

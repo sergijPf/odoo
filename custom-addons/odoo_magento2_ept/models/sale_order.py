@@ -460,7 +460,7 @@ class SaleOrder(models.Model):
         :param skip_order: True/False
         :return: skip order and job
         """
-        magento_product = self.env['magento.product.product']
+        # magento_product = self.env['magento.product.product']
         order_ref = order_response['increment_id']
         payment_method = order_response['payment'].get('method')
         skip_order, message = self.check_magento_payment_method_configuration(
@@ -473,10 +473,10 @@ class SaleOrder(models.Model):
         )
         if skip_order:
             return skip_order
-        order_lines = order_response['items']
-        skip_order = magento_product.create_or_update_product_in_magento(
-            order_lines, magento_instance_id, magento_product_sku, order_ref, order_data_queue_line_id, log_book_id
-        )
+        # order_lines = order_response['items']
+        # skip_order = magento_product.create_or_update_product_in_magento(
+        #     order_lines, magento_instance_id, magento_product_sku, order_ref, order_data_queue_line_id, log_book_id
+        # )
         return skip_order
 
     @staticmethod

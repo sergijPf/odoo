@@ -300,197 +300,197 @@ class MagentoProductProduct(models.Model):
     #         magento_per_sku.update({instance.id: {magento_sku: magento_sku}})
     #     return error
 
-    def update_magento_product_and_template(
-            self, item, magento_websites, instance, magento_product, magento_prod_tmpl, conf_product_item):
-        """
-        Update Magento Product and product template details.
-        :param item: Item received from Magento
-        :param magento_websites: Magento website object
-        :param instance: Magento instance object
-        :param magento_product: Magento product object
-        :param magento_prod_tmpl: Magento product template object or False
-        :param conf_product_item: Child product items received from Magento
-        :return: Magento product object
-        """
-        self.update_magento_product(item, magento_websites, instance, magento_product)
-        # below code for set magento sku and magento product id while import
-        # the product and product was already mapped before perform the import operation
-        template_vals = {}
-        if not magento_prod_tmpl and (
-                (not magento_product.magento_tmpl_id.magento_product_template_id or
-                 not magento_product.magento_tmpl_id.magento_sku)
-                or
-                (magento_product.magento_tmpl_id and
-                 magento_product.odoo_product_id.product_tmpl_id)
-        ):
-            # case 1 (configurable product): map product first.
-            # So magento product id and created and updated date not set in the template
-            # now while import that same configurable product then update that template and
-            # set magento product ID and other value
-            # Case 2 : During the time of the map product if not set the magento SKU
-            # then set the magento sku as well
-            # Case 3 : While import product first time and then change the product data from the magento
-            # then update that data in magento layer product template as well
-            itm = conf_product_item if conf_product_item else item
-            if itm.get('sku') == magento_product.magento_tmpl_id.magento_sku:
-                # While configurable product's simple product update
-                # at that time template name and type was changed,
-                # So this condition added
-                template_vals = magento_product.magento_tmpl_id.prepare_magento_product_template_vals(
-                    itm, instance, magento_product.odoo_product_id.product_tmpl_id)
-                template_vals.pop('magento_product_name')  # not change the product name,
-                # because it's change the odoo product/template name as well
-        if template_vals or not magento_product.magento_tmpl_id.magento_sku:
-            # Add "or" condition for below case
-            # case : first map the product and then import that specific product,
-            # So set the magento template id and sku
-            if conf_product_item:
-                conf_product_item_id = conf_product_item.get('id')
-                conf_product_item_sku = conf_product_item.get('sku')
-                magento_product_type = 'configurable'
-            else:
-                conf_product_item_id = item.get('id')
-                conf_product_item_sku = item.get('sku')
-                magento_product_type = 'simple'
-            template_vals.update({
-                'magento_product_template_id': conf_product_item_id,
-                'magento_sku': conf_product_item_sku,
-                'product_type': magento_product_type,
-                'sync_product_with_magento': True
-            })
-            magento_product.magento_tmpl_id.write(template_vals)
-        return magento_product
+    # def update_magento_product_and_template(
+    #         self, item, magento_websites, instance, magento_product, magento_prod_tmpl, conf_product_item):
+    #     """
+    #     Update Magento Product and product template details.
+    #     :param item: Item received from Magento
+    #     :param magento_websites: Magento website object
+    #     :param instance: Magento instance object
+    #     :param magento_product: Magento product object
+    #     :param magento_prod_tmpl: Magento product template object or False
+    #     :param conf_product_item: Child product items received from Magento
+    #     :return: Magento product object
+    #     """
+    #     self.update_magento_product(item, magento_websites, instance, magento_product)
+    #     # below code for set magento sku and magento product id while import
+    #     # the product and product was already mapped before perform the import operation
+    #     template_vals = {}
+    #     if not magento_prod_tmpl and (
+    #             (not magento_product.magento_tmpl_id.magento_product_template_id or
+    #              not magento_product.magento_tmpl_id.magento_sku)
+    #             or
+    #             (magento_product.magento_tmpl_id and
+    #              magento_product.odoo_product_id.product_tmpl_id)
+    #     ):
+    #         # case 1 (configurable product): map product first.
+    #         # So magento product id and created and updated date not set in the template
+    #         # now while import that same configurable product then update that template and
+    #         # set magento product ID and other value
+    #         # Case 2 : During the time of the map product if not set the magento SKU
+    #         # then set the magento sku as well
+    #         # Case 3 : While import product first time and then change the product data from the magento
+    #         # then update that data in magento layer product template as well
+    #         itm = conf_product_item if conf_product_item else item
+    #         if itm.get('sku') == magento_product.magento_tmpl_id.magento_sku:
+    #             # While configurable product's simple product update
+    #             # at that time template name and type was changed,
+    #             # So this condition added
+    #             template_vals = magento_product.magento_tmpl_id.prepare_magento_product_template_vals(
+    #                 itm, instance, magento_product.odoo_product_id.product_tmpl_id)
+    #             template_vals.pop('magento_product_name')  # not change the product name,
+    #             # because it's change the odoo product/template name as well
+    #     if template_vals or not magento_product.magento_tmpl_id.magento_sku:
+    #         # Add "or" condition for below case
+    #         # case : first map the product and then import that specific product,
+    #         # So set the magento template id and sku
+    #         if conf_product_item:
+    #             conf_product_item_id = conf_product_item.get('id')
+    #             conf_product_item_sku = conf_product_item.get('sku')
+    #             magento_product_type = 'configurable'
+    #         else:
+    #             conf_product_item_id = item.get('id')
+    #             conf_product_item_sku = item.get('sku')
+    #             magento_product_type = 'simple'
+    #         template_vals.update({
+    #             'magento_product_template_id': conf_product_item_id,
+    #             'magento_sku': conf_product_item_sku,
+    #             'product_type': magento_product_type,
+    #             'sync_product_with_magento': True
+    #         })
+    #         magento_product.magento_tmpl_id.write(template_vals)
+    #     return magento_product
 
-    def manage_price_scope(self, instance, magento_product, item, do_not_update):
-        """
-        :param instance: Magento Instance
-        :param magento_product: magento Product
-        :param item: Item received from Magento
-        :param do_not_update: If True, it will update existing magento product.
-        :return:
-        """
-        # Case : Price Scope = Global
-        # ===========================================
-        # add this for update price in the price-list
-        # if the product and it's price is exist in configured price-list then update
-        # else create new line in price-list with that simple product and price
-        # Case : Price Scope = Website
-        # ===========================================
-        # If price scope is "website" then add product price in the configured -
-        # price-list. [Path : Magento Instance > Magento Websites > price-list]
-        # if bool object for the price update is checked then only price -
-        # update if the product was exist in that price-list
-        # If the bool obj of the update price not checked any product not exist
-        # in the price-list then also the price will be added to the configured price-list
-        # Add/Update Price Based on the magento Default Price
-        price = item.get('price') or 0.0
-        if magento_product and not do_not_update:
-            self.create_pricelist_item(instance, price, magento_product, item)
+    # def manage_price_scope(self, instance, magento_product, item, do_not_update):
+    #     """
+    #     :param instance: Magento Instance
+    #     :param magento_product: magento Product
+    #     :param item: Item received from Magento
+    #     :param do_not_update: If True, it will update existing magento product.
+    #     :return:
+    #     """
+    #     # Case : Price Scope = Global
+    #     # ===========================================
+    #     # add this for update price in the price-list
+    #     # if the product and it's price is exist in configured price-list then update
+    #     # else create new line in price-list with that simple product and price
+    #     # Case : Price Scope = Website
+    #     # ===========================================
+    #     # If price scope is "website" then add product price in the configured -
+    #     # price-list. [Path : Magento Instance > Magento Websites > price-list]
+    #     # if bool object for the price update is checked then only price -
+    #     # update if the product was exist in that price-list
+    #     # If the bool obj of the update price not checked any product not exist
+    #     # in the price-list then also the price will be added to the configured price-list
+    #     # Add/Update Price Based on the magento Default Price
+    #     price = item.get('price') or 0.0
+    #     if magento_product and not do_not_update:
+    #         self.create_pricelist_item(instance, price, magento_product, item)
 
-    def create_pricelist_item(self, magento_instance, price, product, item):
-        """
-        Added product into price list.
-        :param magento_instance: Instance of Magento
-        :param price: Product Price
-        :param product: Magento Product object
-        :return: product pricelist item object
-        """
-        pricelist_item_obj = self.env['product.pricelist.item']
-        if magento_instance.catalog_price_scope == 'global':
-            pricelist_id = magento_instance.pricelist_id.id
-            pricelist_item = pricelist_item_obj.search([
-                ('pricelist_id', '=', pricelist_id),
-                ('product_id', '=', product.odoo_product_id.id)
-            ])
-            self.create_or_update_price(pricelist_id, product, price, pricelist_item)
-        elif item.get('extension_attributes').get('website_wise_product_price_data'):
-            for website_product_price in item.get('extension_attributes').get('website_wise_product_price_data'):
-                website_product_price = json.loads(website_product_price)
-                magento_website = self.env['magento.website'].\
-                    search([('magento_website_id', '=', website_product_price.get('website_id'))], limit=1)
-                if magento_website:
-                    pricelist_ids = magento_website.pricelist_ids
-                    price = website_product_price.get('product_price')
-                    website_pricelist = self.get_website_price_list(website_product_price, pricelist_ids)
-                    if website_pricelist:
-                        pricelist_items = pricelist_item_obj.\
-                            search([('pricelist_id', '=', website_pricelist.id),
-                                    ('product_id', '=', product.odoo_product_id.id)])
-                        self.create_or_update_price(website_pricelist.id,
-                                                    product,
-                                                    price, pricelist_items)
+    # def create_pricelist_item(self, magento_instance, price, product, item):
+    #     """
+    #     Added product into price list.
+    #     :param magento_instance: Instance of Magento
+    #     :param price: Product Price
+    #     :param product: Magento Product object
+    #     :return: product pricelist item object
+    #     """
+    #     pricelist_item_obj = self.env['product.pricelist.item']
+    #     if magento_instance.catalog_price_scope == 'global':
+    #         pricelist_id = magento_instance.pricelist_id.id
+    #         pricelist_item = pricelist_item_obj.search([
+    #             ('pricelist_id', '=', pricelist_id),
+    #             ('product_id', '=', product.odoo_product_id.id)
+    #         ])
+    #         self.create_or_update_price(pricelist_id, product, price, pricelist_item)
+    #     elif item.get('extension_attributes').get('website_wise_product_price_data'):
+    #         for website_product_price in item.get('extension_attributes').get('website_wise_product_price_data'):
+    #             website_product_price = json.loads(website_product_price)
+    #             magento_website = self.env['magento.website'].\
+    #                 search([('magento_website_id', '=', website_product_price.get('website_id'))], limit=1)
+    #             if magento_website:
+    #                 pricelist_ids = magento_website.pricelist_ids
+    #                 price = website_product_price.get('product_price')
+    #                 website_pricelist = self.get_website_price_list(website_product_price, pricelist_ids)
+    #                 if website_pricelist:
+    #                     pricelist_items = pricelist_item_obj.\
+    #                         search([('pricelist_id', '=', website_pricelist.id),
+    #                                 ('product_id', '=', product.odoo_product_id.id)])
+    #                     self.create_or_update_price(website_pricelist.id,
+    #                                                 product,
+    #                                                 price, pricelist_items)
 
-    def get_website_price_list(self, website_product_price, pricelist_ids):
-        """
-        Get price list of products magento website vise.
-        :param website_product_price: website wise product price
-        :param pricelist_ids: product pricelist ids
-        :return:
-        """
-        default_store_currency = website_product_price.get('default_store_currency')
-        currency_obj = self.env['res.currency']
-        currency_id = currency_obj.with_context(active_test=False). \
-            search([('name', '=', default_store_currency)], limit=1)
-        return pricelist_ids.filtered(lambda x: x.currency_id.id == currency_id.id)
+    # def get_website_price_list(self, website_product_price, pricelist_ids):
+    #     """
+    #     Get price list of products magento website vise.
+    #     :param website_product_price: website wise product price
+    #     :param pricelist_ids: product pricelist ids
+    #     :return:
+    #     """
+    #     default_store_currency = website_product_price.get('default_store_currency')
+    #     currency_obj = self.env['res.currency']
+    #     currency_id = currency_obj.with_context(active_test=False). \
+    #         search([('name', '=', default_store_currency)], limit=1)
+    #     return pricelist_ids.filtered(lambda x: x.currency_id.id == currency_id.id)
 
-    def create_or_update_price(self, pricelist_id, product, price, pricelist_item):
-        pricelist_item_obj = self.env['product.pricelist.item']
-        if pricelist_item:
-            pricelist_item.write({'fixed_price': price})
-        else:
-            pricelist_item_obj.create({
-                'pricelist_id': pricelist_id,
-                'applied_on': '0_product_variant',
-                'product_id': product.odoo_product_id.id,
-                'product_tmpl_id': product.odoo_product_id.product_tmpl_id.id,
-                'compute_price': 'fixed',
-                'min_quantity': 1,
-                'fixed_price': price
-            })
+    # def create_or_update_price(self, pricelist_id, product, price, pricelist_item):
+    #     pricelist_item_obj = self.env['product.pricelist.item']
+    #     if pricelist_item:
+    #         pricelist_item.write({'fixed_price': price})
+    #     else:
+    #         pricelist_item_obj.create({
+    #             'pricelist_id': pricelist_id,
+    #             'applied_on': '0_product_variant',
+    #             'product_id': product.odoo_product_id.id,
+    #             'product_tmpl_id': product.odoo_product_id.product_tmpl_id.id,
+    #             'compute_price': 'fixed',
+    #             'min_quantity': 1,
+    #             'fixed_price': price
+    #         })
 
-    @staticmethod
-    def get_website_wise_product_price(web_id, item):
-        """
-        return product price per website
-        :param web_id: magento website ID
-        :param item: product data
-        :return: product price
-        """
-        for website_product_price in item.get('extension_attributes').get('website_wise_product_price_data'):
-            website_product_price = json.loads(website_product_price)
-            if int(website_product_price.get('website_id')) == web_id:
-                return website_product_price.get('product_price'), website_product_price.get('default_store_currency')
-        return True
+    # @staticmethod
+    # def get_website_wise_product_price(web_id, item):
+    #     """
+    #     return product price per website
+    #     :param web_id: magento website ID
+    #     :param item: product data
+    #     :return: product price
+    #     """
+    #     for website_product_price in item.get('extension_attributes').get('website_wise_product_price_data'):
+    #         website_product_price = json.loads(website_product_price)
+    #         if int(website_product_price.get('website_id')) == web_id:
+    #             return website_product_price.get('product_price'), website_product_price.get('default_store_currency')
+    #     return True
 
 
-    def update_magento_product(self, item, magento_websites, instance, magento_product):
-        """
-        magento product found, then prepare the new magento product vals and write it
-        :param item: product item API response
-        :param magento_websites: website data
-        :param instance:  magento instance
-        :param magento_product: magento product object
-        :return:
-        """
-        values = self.prepare_magento_product_vals(item, magento_websites, instance.id)
-        values.update({
-            'magento_product_id': item.get('id'),
-            'magento_tmpl_id': magento_product.magento_tmpl_id.id,
-            'odoo_product_id': magento_product.odoo_product_id.id,
-            'sync_product_with_magento': True
-        })
-        # Below code is for all the configurable's simple product is only simple product in odoo
-        # not map all this odoo simple with configurable's simple product
-        # and import configurable product, so set all the simple product's id and sync as true in magento.product.template
-        magento_product_tmpl = self.env[MAGENTO_PRODUCT_TEMPLATE].search(
-            [('magento_product_template_id', '=', False), ('sync_product_with_magento', '=', False),
-             ('magento_sku', '=', magento_product.magento_sku)])
-        if magento_product_tmpl:
-            magento_product_tmpl.write({
-                'magento_product_template_id': item.get('id'),
-                'sync_product_with_magento': True
-            })
-        magento_product.write(values)
+    # def update_magento_product(self, item, magento_websites, instance, magento_product):
+    #     """
+    #     magento product found, then prepare the new magento product vals and write it
+    #     :param item: product item API response
+    #     :param magento_websites: website data
+    #     :param instance:  magento instance
+    #     :param magento_product: magento product object
+    #     :return:
+    #     """
+    #     values = self.prepare_magento_product_vals(item, magento_websites, instance.id)
+    #     values.update({
+    #         'magento_product_id': item.get('id'),
+    #         'magento_tmpl_id': magento_product.magento_tmpl_id.id,
+    #         'odoo_product_id': magento_product.odoo_product_id.id,
+    #         'sync_product_with_magento': True
+    #     })
+    #     # Below code is for all the configurable's simple product is only simple product in odoo
+    #     # not map all this odoo simple with configurable's simple product
+    #     # and import configurable product, so set all the simple product's id and sync as true in magento.product.template
+    #     magento_product_tmpl = self.env[MAGENTO_PRODUCT_TEMPLATE].search(
+    #         [('magento_product_template_id', '=', False), ('sync_product_with_magento', '=', False),
+    #          ('magento_sku', '=', magento_product.magento_sku)])
+    #     if magento_product_tmpl:
+    #         magento_product_tmpl.write({
+    #             'magento_product_template_id': item.get('id'),
+    #             'sync_product_with_magento': True
+    #         })
+    #     magento_product.write(values)
 
 
     # def map_odoo_product_with_magento_product(
@@ -616,36 +616,36 @@ class MagentoProductProduct(models.Model):
     #         self._cr.commit()
     #     return magento_product, error
 
-    def prepare_magento_product_vals(self, item, magento_websites, instance_id):
-        """
-        Prepare vals for Magento product and template
-        :param item: Item received from Magento
-        :param magento_websites: Magento Website Object
-        :param instance_id: Magento Instance Id
-        :return: Return dictionary of values
-        """
-        ir_config_parameter_obj = self.env["ir.config_parameter"]
-        description = short_description = ''
-        for attribute_code in item.get('custom_attributes'):
-            if attribute_code.get('attribute_code') == 'description':
-                description = attribute_code.get('value')
-            if attribute_code.get('attribute_code') == 'short_description':
-                short_description = attribute_code.get('value')
-        magento_product_vals = {
-            'magento_product_name': item.get('name'),
-            'magento_instance_id': instance_id,
-            'magento_website_ids': [(6, 0, magento_websites.ids)],
-            'magento_sku': item.get('sku'),
-            'product_type': item.get('type_id'),
-            'created_at': item.get('created_at'),
-            'updated_at': item.get('updated_at'),
-        }
-        if ir_config_parameter_obj.sudo().get_param("odoo_magento2_ept.set_magento_sales_description"):
-            magento_product_vals.update({
-                'description': description,
-                'short_description': short_description,
-            })
-        return magento_product_vals
+    # def prepare_magento_product_vals(self, item, magento_websites, instance_id):
+    #     """
+    #     Prepare vals for Magento product and template
+    #     :param item: Item received from Magento
+    #     :param magento_websites: Magento Website Object
+    #     :param instance_id: Magento Instance Id
+    #     :return: Return dictionary of values
+    #     """
+    #     ir_config_parameter_obj = self.env["ir.config_parameter"]
+    #     description = short_description = ''
+    #     for attribute_code in item.get('custom_attributes'):
+    #         if attribute_code.get('attribute_code') == 'description':
+    #             description = attribute_code.get('value')
+    #         if attribute_code.get('attribute_code') == 'short_description':
+    #             short_description = attribute_code.get('value')
+    #     magento_product_vals = {
+    #         'magento_product_name': item.get('name'),
+    #         'magento_instance_id': instance_id,
+    #         'magento_website_ids': [(6, 0, magento_websites.ids)],
+    #         'magento_sku': item.get('sku'),
+    #         'product_type': item.get('type_id'),
+    #         'created_at': item.get('created_at'),
+    #         'updated_at': item.get('updated_at'),
+    #     }
+    #     if ir_config_parameter_obj.sudo().get_param("odoo_magento2_ept.set_magento_sales_description"):
+    #         magento_product_vals.update({
+    #             'description': description,
+    #             'short_description': short_description,
+    #         })
+    #     return magento_product_vals
 
     # def create_odoo_product(
     #         self, magento_sku, prod, instance, log_book_id,
@@ -696,98 +696,98 @@ class MagentoProductProduct(models.Model):
     #         error = True
     #     return odoo_product, error
 
-    def get_magento_product_by_sku(self, magento_instance, prod_response, queue_line, error,
-                                   log_book_id, order_data_queue_line_id):
-        """
-        This method is used to call API for getting product data from magento.
-        :param magento_instance: Instance of Magento
-        :param prod_response: Dictionary of product sku get from magento
-        :param queue_line: Sync import magento product queue line object
-        :param error: True if any error else False
-        :param log_book_id: common log book object
-        :param order_data_queue_line_id: Sync import magento product queue line id
-        :return:
-        """
-        final_prod_res = {}
-        result_list = []
-        for prod_res in prod_response:
-            try:
-                sku = Php.quote_sku(prod_res.get('sku'))
-                api_url = '/V1/products/%s' % format(sku)
-                response = req(magento_instance, api_url)
-                result_list.append(response)
-            except Exception:
-                if log_book_id:
-                    # Before process queue, delete some configurable's simple product.
-                    # So mark that queue as Failed state and add log line
-                    message = 'Magento Product not found with SKU %s' % prod_res.get('sku')
-                    log_book_id.add_log_line(message, False,
-                                             order_data_queue_line_id,
-                                             queue_line,
-                                             prod_res.get('sku'))
-                    error = True
-        final_prod_res.update({'items': result_list})
-        return final_prod_res, error
+    # def get_magento_product_by_sku(self, magento_instance, prod_response, queue_line, error,
+    #                                log_book_id, order_data_queue_line_id):
+    #     """
+    #     This method is used to call API for getting product data from magento.
+    #     :param magento_instance: Instance of Magento
+    #     :param prod_response: Dictionary of product sku get from magento
+    #     :param queue_line: Sync import magento product queue line object
+    #     :param error: True if any error else False
+    #     :param log_book_id: common log book object
+    #     :param order_data_queue_line_id: Sync import magento product queue line id
+    #     :return:
+    #     """
+    #     final_prod_res = {}
+    #     result_list = []
+    #     for prod_res in prod_response:
+    #         try:
+    #             sku = Php.quote_sku(prod_res.get('sku'))
+    #             api_url = '/V1/products/%s' % format(sku)
+    #             response = req(magento_instance, api_url)
+    #             result_list.append(response)
+    #         except Exception:
+    #             if log_book_id:
+    #                 # Before process queue, delete some configurable's simple product.
+    #                 # So mark that queue as Failed state and add log line
+    #                 message = 'Magento Product not found with SKU %s' % prod_res.get('sku')
+    #                 log_book_id.add_log_line(message, False,
+    #                                          order_data_queue_line_id,
+    #                                          queue_line,
+    #                                          prod_res.get('sku'))
+    #                 error = True
+    #     final_prod_res.update({'items': result_list})
+    #     return final_prod_res, error
 
-    def create_or_update_product_in_magento(
-            self, order_responses, magento_instance, magento_per_sku, order_ref, order_data_queue_line_id, log_book_id
-    ):
-        """
-        Create or update product when import orders from Magento.
-        :param order_responses: Order Response received from Magento
-        :param magento_instance: Instance of Magento
-        :param magento_per_sku: Dictionary of Magento Product
-        :param order_ref: Order reference
-        :param order_data_queue_line_id: Order data queue line id
-        :return: common log book object and skip order
-        """
-        skip_order = False
-        for order_response in order_responses:
-
-            # Check the ordered product is already exist in the magento product product layer or not.
-            # If product is already exist then no need to again send the API call.
-            # Used existing product.
-            magento_product_obj = self.search(
-                [('magento_instance_id', '=', magento_instance.id), '|',
-                 ('magento_product_id', '=', order_response.get('product_id')),
-                 ('magento_sku', '=', order_response.get('sku'))],
-                limit=1)
-            product_obj = self.env[PRODUCT_PRODUCT].search([('default_code', '=', order_response.get('sku'))])
-            if not magento_product_obj and not product_obj:
-                if order_response.get('product_type') not in ['simple', 'configurable']:
-                    skip_order = True
-                    message = "Order %s skipped due to %s product type is not supported" % (
-                        order_ref, order_response.get('product_type'))
-                    log_book_id.add_log_line(message, order_ref,
-                                             order_data_queue_line_id, "magento_order_data_queue_line_id",
-                                             order_response.get('sku'))
-                    break
-                try:
-                    # every time send the product API call by using product id.
-                    # To stop the product API call by using SKU because at that time
-                    # wrong product id set in the magento product template and also
-                    # create only single simple product which was ordered (Configurable product)
-                    # Using this code if only single simple product ordered then also if main
-                    # configurable product not found then create that main configurable product with all the variants.
-                    product_filter = {'entity_id': order_response.get('product_id')}
-                    search_criteria = create_search_criteria(product_filter)
-                    query_string = Php.http_build_query(search_criteria)
-                    api_url = '/V1/products?%s' % query_string
-                    response = req(magento_instance, api_url).get('items')[0]
-                except Exception:
-                    #Add below code for while order processing and product
-                    # not found for the particular queue line then add log line and skip that queue line.
-                    skip_order = True
-                    message = _("Error While Requesting Product SKU %s") % order_response.get('sku')
-                    log_book_id.add_log_line(message, order_ref,
-                                             order_data_queue_line_id, "magento_order_data_queue_line_id",
-                                             order_response.get('sku'))
-                    continue
-                magento_sku = response.get('sku')
-                skip_order = self.create_or_update_magento_product(
-                    order_response, response, magento_sku, magento_instance, log_book_id,
-                    skip_order, magento_per_sku, order_data_queue_line_id, order_ref)
-        return skip_order
+    # def create_or_update_product_in_magento(
+    #         self, order_responses, magento_instance, magento_per_sku, order_ref, order_data_queue_line_id, log_book_id
+    # ):
+    #     """
+    #     Create or update product when import orders from Magento.
+    #     :param order_responses: Order Response received from Magento
+    #     :param magento_instance: Instance of Magento
+    #     :param magento_per_sku: Dictionary of Magento Product
+    #     :param order_ref: Order reference
+    #     :param order_data_queue_line_id: Order data queue line id
+    #     :return: common log book object and skip order
+    #     """
+    #     skip_order = False
+    #     for order_response in order_responses:
+    #
+    #         # Check the ordered product is already exist in the magento product product layer or not.
+    #         # If product is already exist then no need to again send the API call.
+    #         # Used existing product.
+    #         magento_product_obj = self.search(
+    #             [('magento_instance_id', '=', magento_instance.id), '|',
+    #              ('magento_product_id', '=', order_response.get('product_id')),
+    #              ('magento_sku', '=', order_response.get('sku'))],
+    #             limit=1)
+    #         product_obj = self.env[PRODUCT_PRODUCT].search([('default_code', '=', order_response.get('sku'))])
+    #         if not magento_product_obj and not product_obj:
+    #             if order_response.get('product_type') not in ['simple', 'configurable']:
+    #                 skip_order = True
+    #                 message = "Order %s skipped due to %s product type is not supported" % (
+    #                     order_ref, order_response.get('product_type'))
+    #                 log_book_id.add_log_line(message, order_ref,
+    #                                          order_data_queue_line_id, "magento_order_data_queue_line_id",
+    #                                          order_response.get('sku'))
+    #                 break
+    #             try:
+    #                 # every time send the product API call by using product id.
+    #                 # To stop the product API call by using SKU because at that time
+    #                 # wrong product id set in the magento product template and also
+    #                 # create only single simple product which was ordered (Configurable product)
+    #                 # Using this code if only single simple product ordered then also if main
+    #                 # configurable product not found then create that main configurable product with all the variants.
+    #                 product_filter = {'entity_id': order_response.get('product_id')}
+    #                 search_criteria = create_search_criteria(product_filter)
+    #                 query_string = Php.http_build_query(search_criteria)
+    #                 api_url = '/V1/products?%s' % query_string
+    #                 response = req(magento_instance, api_url).get('items')[0]
+    #             except Exception:
+    #                 #Add below code for while order processing and product
+    #                 # not found for the particular queue line then add log line and skip that queue line.
+    #                 skip_order = True
+    #                 message = _("Error While Requesting Product SKU %s") % order_response.get('sku')
+    #                 log_book_id.add_log_line(message, order_ref,
+    #                                          order_data_queue_line_id, "magento_order_data_queue_line_id",
+    #                                          order_response.get('sku'))
+    #                 continue
+    #             magento_sku = response.get('sku')
+    #             skip_order = self.create_or_update_magento_product(
+    #                 order_response, response, magento_sku, magento_instance, log_book_id,
+    #                 skip_order, magento_per_sku, order_data_queue_line_id, order_ref)
+    #     return skip_order
 
     # def create_or_update_magento_product(
     #         self, order_response, response, magento_sku, magento_instance, log_book_id,
