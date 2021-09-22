@@ -22,6 +22,8 @@
                             context="{'group_by': 'prod_categ_name'}"/>
                     <filter string="Magento Status" name="group_by_status"
                             context="{'group_by': 'magento_status'}"/>
+                    <filter string="Product Error" name="group_by_error"
+                            context="{'group_by': 'magento_log_message'}"/>
                 </group>
             </search>
         </field>
@@ -93,7 +95,7 @@
         <field name="view_id" ref="view_magento_exported_products_log_book_tree"/>
         <field name="search_view_id" ref="view_exported_magento_product_log_book_filter"/>
         <field name="context">
-            {'group_by': ['magento_instance_id', 'prod_categ_name'],
+            {'group_by': ['magento_instance_id'],
             'search_default_error_to_export':1,
             'form_view_ref' : 'view_magento_exported_products_log_book_form'}
         </field>
