@@ -76,7 +76,7 @@
                         <notebook>
                             <page string="General Information" name="general_information">
 <!--                                <group>-->
-                                    <group name="group_general" string="General" >
+                                    <group name="group_general" string="General">
                                         <field name="magento_tmpl_id" readonly="1"/>
                                         <field name="odoo_product_id" readonly="1"/>
                                         <br/>
