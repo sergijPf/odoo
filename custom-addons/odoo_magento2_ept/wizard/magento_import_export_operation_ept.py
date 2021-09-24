@@ -539,7 +539,7 @@ class MagentoImportExportEpt(models.TransientModel):
             domain = self.prepare_domain_for_magento_product_ept(product_dict, product)
             magento_variant = magento_product_object.search(domain)
             if not magento_variant:
-                magento_template = self.create_or_update_magento_product_template(product_dict,product)
+                magento_template = self.create_or_update_magento_product_template(product_dict, product)
                 prod_vals = self.prepare_magento_product_vals_ept(product_dict, product, magento_template,
                                                                   magento_prod_sku)
                 magento_product = magento_product_object.create(prod_vals)
@@ -567,6 +567,7 @@ class MagentoImportExportEpt(models.TransientModel):
             'odoo_product_id': product.id,
             'magento_tmpl_id': magento_template.id,
             'magento_sku': magento_prod_sku,
+            'prod_categ_name': product.categ_id.magento_name,
             'magento_product_name': product.name
         }
         if ir_config_parameter_obj.sudo().get_param("odoo_magento2_ept.set_magento_sales_description"):
