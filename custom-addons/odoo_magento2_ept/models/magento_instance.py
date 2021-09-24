@@ -369,12 +369,12 @@ class MagentoInstance(models.Model):
         magento_financial_status_obj = self.env["magento.financial.status.ept"]
         magento_payment_method_obj = self.env["magento.payment.method"]
         magento_inventory_location_obj = self.env["magento.inventory.locations"]
-        magento_product_category_obj = self.env['magento.product.category']
-        magento_attribute_set_obj = self.env['magento.attribute.set']
-        magento_attribute_group_obj = self.env['magento.attribute.group']
-        magento_product_attribute_obj = self.env['magento.product.attribute']
-        magento_product_attribute_option_obj = self.env['magento.attribute.option']
-        magento_tax_class_obj = self.env['magento.tax.class']
+        # magento_product_category_obj = self.env['magento.product.category']
+        # magento_attribute_set_obj = self.env['magento.attribute.set']
+        # magento_attribute_group_obj = self.env['magento.attribute.group']
+        # magento_product_attribute_obj = self.env['magento.product.attribute']
+        # magento_product_attribute_option_obj = self.env['magento.attribute.option']
+        # magento_tax_class_obj = self.env['magento.tax.class']
         magento_website_obj = self.env[MAGENTO_WEBSITE]
         magento_storeview_obj = self.env[MAGENTO_STOREVIEW]
         data_queue_mixin_obj = self.env['data.queue.mixin.ept']
@@ -390,12 +390,12 @@ class MagentoInstance(models.Model):
             magento_inventory_location_obj.search(domain).write(activate)
             magento_financial_status_obj.search(domain).write(activate)
             magento_payment_method_obj.search(domain).write(activate)
-            magento_tax_class_obj.search(domain).write(activate)
-            magento_product_category_obj.search(attribute_instance_domain).write(activate)
-            magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
-            magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
-            magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
-            magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
+            # magento_tax_class_obj.search(domain).write(activate)
+            # magento_product_category_obj.search(attribute_instance_domain).write(activate)
+            # magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
+            # magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
+            # magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
+            # magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
             # company = self.company_id
             # company.write({
             #     'magento_instance_onboarding_state': 'not_done',
@@ -416,12 +416,12 @@ class MagentoInstance(models.Model):
             magento_inventory_location_obj.search(domain).write(activate)
             magento_financial_status_obj.search(domain).write(activate)
             magento_payment_method_obj.search(domain).write(activate)
-            magento_tax_class_obj.search(domain).write(activate)
-            magento_product_category_obj.search(attribute_instance_domain).write(activate)
-            magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
-            magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
-            magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
-            magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
+            # magento_tax_class_obj.search(domain).write(activate)
+            # magento_product_category_obj.search(attribute_instance_domain).write(activate)
+            # magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
+            # magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
+            # magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
+            # magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
             self.synchronize_metadata()
         self.write(activate)
         magento_template_obj.search(domain).write(activate)
@@ -507,13 +507,13 @@ class MagentoInstance(models.Model):
             record.import_magento_inventory_locations()
             self.env['magento.financial.status.ept'].create_financial_status(record, 'not_paid')
             self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(record)
-            record.get_category()
-            record.import_tax_class()
-            self.env['magento.attribute.set'].import_magento_product_attribute_set(record)
+            # record.get_category()
+            # record.import_tax_class()
+            # self.env['magento.attribute.set'].import_magento_product_attribute_set(record)
 
-    def get_category(self):
-        magento_category_obj = self.env['magento.product.category']
-        magento_category_obj.get_all_category(self)
+    # def get_category(self):
+    #     magento_category_obj = self.env['magento.product.category']
+    #     magento_category_obj.get_all_category(self)
 
     def sync_price_scop(self):
         """
@@ -728,27 +728,27 @@ class MagentoInstance(models.Model):
                     else:
                         magento_location.write({'active': inventory_location.get('enabled')})
 
-    def import_tax_class(self):
-        """
-        This method used for import Tax Classes.
-        """
-        tax_class_obj = self.env['magento.tax.class']
-        url = '/V1/taxClasses/search?searchCriteria[page_size]=50&searchCriteria[currentPage]=1'
-        tax_class_req = req(self, url)
-        all_tax_class = tax_class_req.get('items')
-        for tax_class in all_tax_class:
-            tax_class_id = tax_class.get('class_id')
-            new_tax_class = tax_class_obj.search([
-                ('magento_tax_class_id', '=', tax_class_id),
-                ('magento_instance_id', '=', self.id)
-            ])
-            if not new_tax_class:
-                tax_class_obj.create({
-                    'magento_tax_class_id': tax_class.get('class_id'),
-                    'magento_tax_class_name': tax_class.get('class_name'),
-                    'magento_tax_class_type': tax_class.get('class_type'),
-                    'magento_instance_id': self.id
-                })
+    # def import_tax_class(self):
+    #     """
+    #     This method used for import Tax Classes.
+    #     """
+    #     tax_class_obj = self.env['magento.tax.class']
+    #     url = '/V1/taxClasses/search?searchCriteria[page_size]=50&searchCriteria[currentPage]=1'
+    #     tax_class_req = req(self, url)
+    #     all_tax_class = tax_class_req.get('items')
+    #     for tax_class in all_tax_class:
+    #         tax_class_id = tax_class.get('class_id')
+    #         new_tax_class = tax_class_obj.search([
+    #             ('magento_tax_class_id', '=', tax_class_id),
+    #             ('magento_instance_id', '=', self.id)
+    #         ])
+    #         if not new_tax_class:
+    #             tax_class_obj.create({
+    #                 'magento_tax_class_id': tax_class.get('class_id'),
+    #                 'magento_tax_class_name': tax_class.get('class_name'),
+    #                 'magento_tax_class_type': tax_class.get('class_type'),
+    #                 'magento_instance_id': self.id
+    #             })
 
     @api.model
     def import_currency(self):

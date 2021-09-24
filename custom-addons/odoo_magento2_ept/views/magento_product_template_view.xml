@@ -138,22 +138,22 @@
                                         </group>
                                         <group>
                                             <field name="sync_product_with_magento" invisible= '1' />
-                                            <field name="attribute_set_id"  widget="selection" domain="[('instance_id','=',magento_instance_id)]" attrs="{'readonly':[('sync_product_with_magento','=',True)]}"/>
+<!--                                            <field name="attribute_set_id"  widget="selection" domain="[('instance_id','=',magento_instance_id)]" attrs="{'readonly':[('sync_product_with_magento','=',True)]}"/>-->
 <!--                                            <field name="export_product_to_all_website" />-->
 <!--                                            <field name="magento_website_ids" widget="many2many_tags" options="{'no_create_edit': True}" attrs="{'invisible':[('export_product_to_all_website','=',True)]}"/>-->
-                                            <field name="magento_tax_class" options="{'no_open':True,'no_create': True}" domain="[('magento_tax_class_type','=','PRODUCT'), ('magento_instance_id','=',magento_instance_id)]"/>
+<!--                                            <field name="magento_tax_class" options="{'no_open':True,'no_create': True}" domain="[('magento_tax_class_type','=','PRODUCT'), ('magento_instance_id','=',magento_instance_id)]"/>-->
                                         </group>
                                     </group>
                                 </group>
                             </page>
                             <page string="Magento Categories">
                                 <group name="classification_categories">
-                                    <field name="category_ids" nolabel="1" colspan="2"
-                                           options="{'no_create': True}" modifiers="{}" domain="[('instance_id','=',magento_instance_id)]">
-                                        <tree delete="1">
-                                            <field name="complete_category_name" />
-                                        </tree>
-                                    </field>
+<!--                                    <field name="category_ids" nolabel="1" colspan="2"-->
+<!--                                           options="{'no_create': True}" modifiers="{}" domain="[('instance_id','=',magento_instance_id)]">-->
+<!--                                        <tree delete="1">-->
+<!--                                            <field name="complete_category_name" />-->
+<!--                                        </tree>-->
+<!--                                    </field>-->
                                 </group>
                             </page>
 <!--                            <page string="Images" name="images">-->

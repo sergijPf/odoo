@@ -13,4 +13,4 @@ class ProductAttribute(models.Model):
     _inherit = "product.attribute"
     _description = 'Product Attribute'
 
-    magento_attribute_id = fields.Many2one('magento.product.attribute', string='Magento Attribute', ondelete='cascade')
+    #magento_attribute_id = fields.Many2one('magento.product.attribute', string='Magento Attribute', ondelete='cascade')

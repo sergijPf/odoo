@@ -20,12 +20,12 @@ MAGENTO_WEBSITE = 'magento.website'
 MAGENTO_PRODUCT_IMAGE = 'magento.product.image'
 PRODUCT_PRODUCT = 'product.product'
 PRODUCT_ATTRIBUTE = 'product.attribute'
-MAGENTO_ATTRIBUTE_SET = 'magento.attribute.set'
+# MAGENTO_ATTRIBUTE_SET = 'magento.attribute.set'
 IR_ACTIONS_ACT_WINDOW = 'ir.actions.act_window'
 IR_CONFIG_PARAMETER = "ir.config_parameter"
 SET_MAGENTO_SALES_DESCRIPTION = "odoo_magento2_ept.set_magento_sales_description"
-MAGENTO_ATTRIBUTE_OPTION = 'magento.attribute.option'
-MAGENTO_PRODUCT_ATTRIBUTE = 'magento.product.attribute'
+# MAGENTO_ATTRIBUTE_OPTION = 'magento.attribute.option'
+# MAGENTO_PRODUCT_ATTRIBUTE = 'magento.product.attribute'
 MAGENTO_STOREVIEW = 'magento.storeview'
 _logger = logging.getLogger(__name__)
 
@@ -121,12 +121,12 @@ class MagentoProductTemplate(models.Model):
         digits='Product Price')
     attribute_line_ids = fields.One2many(related='odoo_product_template_id.attribute_line_ids')
     currency_id = fields.Many2one(related='odoo_product_template_id.currency_id')
-    category_ids = fields.Many2many("magento.product.category", string="Categories", help="Magento Categories")
-    attribute_set_id = fields.Many2one(MAGENTO_ATTRIBUTE_SET, string='Attribute Set', help="Magento Attribute Sets")
+    # category_ids = fields.Many2many("magento.product.category", string="Categories", help="Magento Categories")
+    # attribute_set_id = fields.Many2one(MAGENTO_ATTRIBUTE_SET, string='Attribute Set', help="Magento Attribute Sets")
     # export_product_to_all_website = fields.Boolean(
     #     string="Export product to all website?",
     #     help="If checked, product will be exported for all websites otherwise export for the selected websites")
-    magento_tax_class = fields.Many2one('magento.tax.class', string='Tax Class', help="Magento Tax Class")
+    # magento_tax_class = fields.Many2one('magento.tax.class', string='Tax Class', help="Magento Tax Class")
 
     _sql_constraints = [('_magento_template_unique_constraint',
                          'unique(magento_sku,magento_instance_id,magento_product_template_id)',
