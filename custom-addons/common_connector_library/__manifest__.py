@@ -5,7 +5,7 @@
     'version': '10.0',
     'category': 'Sales',
     'author': 'Emipro Technologies Pvt. Ltd. customized by White Label',
-    'website': 'http://www.emiprotechnologies.com',
+    # 'website': 'http://www.emiprotechnologies.com',
     'summary': """Develop generalize method to process different operations & auto workflow process to manage
     order process automatically.""",
     'depends': ['delivery', 'sale_stock', 'account', 'sale_management'],
