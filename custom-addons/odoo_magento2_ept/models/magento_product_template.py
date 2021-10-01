@@ -55,7 +55,7 @@ class MagentoProductTemplate(models.Model):
     )
     odoo_product_template_id = fields.Many2one(
         PRODUCT_TEMPLATE,
-        string="Odoo Product Template",
+        string="Related Odoo Product Template",
         ondelete='restrict',
         required=True
     )
@@ -88,7 +88,7 @@ class MagentoProductTemplate(models.Model):
         ('group', 'Group Product'),
         ('bundle', 'Bundle Product'),
     ], string='Magento Product Type', help='Magento Product Type', default='simple')
-    magento_sku = fields.Char(string="Magento Product SKU", help="Magento Product SKU")
+    magento_sku = fields.Char(string="Magento Simple Product SKU", help="Magento Product SKU")
     description = fields.Text(string="Product Description", help="Description", translate=True)
     short_description = fields.Text(
         string='Product Short Description',

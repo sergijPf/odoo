@@ -65,6 +65,6 @@
         </record>
 
         <menuitem id="menu_item_magento_tax_class_ept" name="Tax Class"
-            parent="odoo_magento2_ept.menu_magento_proucts_parent" sequence="5"
+            parent="odoo_magento2_ept.menu_magento_products_parent" sequence="5"
             action="magento_tax_class_action_ept"/>
 </odoo>

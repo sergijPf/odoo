@@ -42,7 +42,7 @@ from . import magento_api_request_page
 # from . import magento_attribute_option
 # from . import magento_attribute_group
 # from . import product_attribute
-# from . import magento_product_category
+from . import magento_product_category
 # from . import magento_tax_class
 from . import product_category
 from . import magento_product_log_book

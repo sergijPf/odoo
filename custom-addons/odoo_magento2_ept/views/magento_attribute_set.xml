@@ -64,6 +64,6 @@
         </record>
 
         <menuitem id="menu_item_magento_attribute_set_ept" name="Attribute Sets"
-            parent="odoo_magento2_ept.menu_magento_proucts_parent" sequence="6"
+            parent="odoo_magento2_ept.menu_magento_products_parent" sequence="6"
             action="magento_attribute_set_action"/>
 </odoo>

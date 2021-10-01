@@ -113,7 +113,7 @@
 		<menuitem id="menu_magento_product_attribute"
 		          name="Attributes"
 		          action="magento_product_attribute_action"
-		          parent="odoo_magento2_ept.menu_magento_proucts_parent"
+		          parent="odoo_magento2_ept.menu_magento_products_parent"
 		          sequence="8"/>
            
     </data>

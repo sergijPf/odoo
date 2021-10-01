@@ -97,7 +97,7 @@
                                         <field name="odoo_product_template_id" readonly="1"/>
 <!--                                        <field name="magento_sku" attrs="{'readonly':[('sync_product_with_magento','=',True)]}"/>-->
                                         <field name="magento_sku" readonly="1"/>
-                                        <field name="magento_product_template_id" readonly="1"/>
+<!--                                        <field name="magento_product_template_id" readonly="1"/>-->
                                     </group>
                                     <group name="group_standard_price">
                                         <field name="currency_id" invisible="1"/>
@@ -146,16 +146,16 @@
                                     </group>
                                 </group>
                             </page>
-                            <page string="Magento Categories">
-                                <group name="classification_categories">
-<!--                                    <field name="category_ids" nolabel="1" colspan="2"-->
-<!--                                           options="{'no_create': True}" modifiers="{}" domain="[('instance_id','=',magento_instance_id)]">-->
-<!--                                        <tree delete="1">-->
-<!--                                            <field name="complete_category_name" />-->
-<!--                                        </tree>-->
-<!--                                    </field>-->
-                                </group>
-                            </page>
+<!--                            <page string="Magento Categories">-->
+<!--                                <group name="classification_categories">-->
+<!--&lt;!&ndash;                                    <field name="category_ids" nolabel="1" colspan="2"&ndash;&gt;-->
+<!--&lt;!&ndash;                                           options="{'no_create': True}" modifiers="{}" domain="[('instance_id','=',magento_instance_id)]">&ndash;&gt;-->
+<!--&lt;!&ndash;                                        <tree delete="1">&ndash;&gt;-->
+<!--&lt;!&ndash;                                            <field name="complete_category_name" />&ndash;&gt;-->
+<!--&lt;!&ndash;                                        </tree>&ndash;&gt;-->
+<!--&lt;!&ndash;                                    </field>&ndash;&gt;-->
+<!--                                </group>-->
+<!--                            </page>-->
 <!--                            <page string="Images" name="images">-->
 <!--                                <group string="Images Info" colspan="4">-->
 <!--                                    <field name="magento_product_image_ids"-->
@@ -239,6 +239,6 @@
     </record>
 
     <menuitem id="menu_item_magento_products_ept" name="Products"
-        parent="odoo_magento2_ept.menu_magento_proucts_parent" sequence="2"
+        parent="odoo_magento2_ept.menu_magento_products_parent" sequence="2"
         action="magento_product_template_normal_action_sell_ept" />
 </odoo>

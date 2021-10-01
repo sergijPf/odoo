@@ -369,7 +369,7 @@ class MagentoInstance(models.Model):
         magento_financial_status_obj = self.env["magento.financial.status.ept"]
         magento_payment_method_obj = self.env["magento.payment.method"]
         magento_inventory_location_obj = self.env["magento.inventory.locations"]
-        # magento_product_category_obj = self.env['magento.product.category']
+        magento_product_category_obj = self.env['magento.product.category']
         # magento_attribute_set_obj = self.env['magento.attribute.set']
         # magento_attribute_group_obj = self.env['magento.attribute.group']
         # magento_product_attribute_obj = self.env['magento.product.attribute']
@@ -391,7 +391,7 @@ class MagentoInstance(models.Model):
             magento_financial_status_obj.search(domain).write(activate)
             magento_payment_method_obj.search(domain).write(activate)
             # magento_tax_class_obj.search(domain).write(activate)
-            # magento_product_category_obj.search(attribute_instance_domain).write(activate)
+            magento_product_category_obj.search(attribute_instance_domain).write(activate)
             # magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
             # magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
             # magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
@@ -417,7 +417,7 @@ class MagentoInstance(models.Model):
             magento_financial_status_obj.search(domain).write(activate)
             magento_payment_method_obj.search(domain).write(activate)
             # magento_tax_class_obj.search(domain).write(activate)
-            # magento_product_category_obj.search(attribute_instance_domain).write(activate)
+            magento_product_category_obj.search(attribute_instance_domain).write(activate)
             # magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
             # magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
             # magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
@@ -507,13 +507,13 @@ class MagentoInstance(models.Model):
             record.import_magento_inventory_locations()
             self.env['magento.financial.status.ept'].create_financial_status(record, 'not_paid')
             self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(record)
-            # record.get_category()
+            record.get_category()
             # record.import_tax_class()
             # self.env['magento.attribute.set'].import_magento_product_attribute_set(record)
 
-    # def get_category(self):
-    #     magento_category_obj = self.env['magento.product.category']
-    #     magento_category_obj.get_all_category(self)
+    def get_category(self):
+        magento_category_obj = self.env['magento.product.category']
+        magento_category_obj.get_all_category(self)
 
     def sync_price_scop(self):
         """

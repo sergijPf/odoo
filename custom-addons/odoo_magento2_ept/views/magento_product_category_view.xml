@@ -29,7 +29,6 @@
                                 </group>
                                 <group>
                                     <field name="magento_child_ids"/>
-
                                 </group>
                             </group>
                         </group>
@@ -52,6 +51,7 @@
                 </search>
             </field>
         </record>
+
         <record id="magento_product_category_action_ept" model="ir.actions.act_window">
                 <field name="name">Product Category</field>
                 <field name="type">ir.actions.act_window</field>
@@ -60,12 +60,14 @@
                 <field name="view_id" ref="view_magento_product_category_tree"/>
                 <field name="help" type="html">
                 <p>
-                    You can't create Product Category directly from Here. Please sync metadata from settings <i class="fa fa-angle-double-right" /> instance <i class="fa fa-angle-double-right" /> select instance <i class="fa fa-angle-double-right" /> Sync Metadata
+                    You can't create Product Category directly from Here. Please sync metadata from settings
+                    <i class="fa fa-angle-double-right" /> instance <i class="fa fa-angle-double-right" />
+                    select instance <i class="fa fa-angle-double-right" /> Sync Metadata
                 </p>
             </field>
         </record>
 
-        <menuitem id="menu_item_magento_product_category_ept" name="Product Category"
-            parent="odoo_magento2_ept.menu_magento_proucts_parent" sequence="4"
+        <menuitem id="menu_item_magento_product_category_ept" name="Product category"
+            parent="odoo_magento2_ept.menu_magento_products_parent" sequence="4"
             action="magento_product_category_action_ept"/>
 </odoo>

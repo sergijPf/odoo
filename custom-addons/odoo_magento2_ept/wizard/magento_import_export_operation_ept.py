@@ -567,7 +567,7 @@ class MagentoImportExportEpt(models.TransientModel):
             'odoo_product_id': product.id,
             'magento_tmpl_id': magento_template.id,
             'magento_sku': magento_prod_sku,
-            'prod_categ_name': product.categ_id.magento_name,
+            'prod_categ_name': product.categ_id.magento_name or product.categ_id.magento_sku,
             'magento_product_name': product.name
         }
         if ir_config_parameter_obj.sudo().get_param("odoo_magento2_ept.set_magento_sales_description"):

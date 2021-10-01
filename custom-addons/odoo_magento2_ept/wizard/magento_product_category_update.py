@@ -12,6 +12,6 @@ class ProductCategoryUpdate(models.TransientModel):
         active_product_ids = self._context.get("active_ids", [])
         update_products = self.env["magento.product.product"].browse(active_product_ids)
         for prod in update_products:
-            prod.prod_categ_name = self.product_categ.magento_name
+            prod.prod_categ_name = self.product_categ.magento_name or self.product_categ.magento_sku
             prod.magento_prod_categ = self.product_categ
 

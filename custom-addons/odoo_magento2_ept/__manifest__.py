@@ -1,17 +1,18 @@
 {
     # App information
     'name': "Odoo Magento 2 Connector customized",
-    'version': '10.0',
+    'version': '10.1',
     'category': 'Sales',
-    'summary': 'Odoo Magento 2 Connector to integrate Magento 2.4 website with Odoo '
+    'summary': 'Odoo Magento 2 Connector to integrate Magento 2.* website with Odoo '
                'as per Smartino specifications',
     # Author
     'author': 'Emipro Technologies Pvt. Ltd. Customized by White Label',
-    'website': 'http://www.emiprotechnologies.com/',
+    # 'website': 'http://www.emiprotechnologies.com/',
     'maintainer': 'White Label',
 
     # Dependencies
     'depends': ['common_connector_library'],
+    # 'depends': ['common_connector_library', 'smartino_common'],
     # Views
     'data': [
         'security/security.xml',
@@ -49,7 +50,7 @@
         'views/financial_status_view.xml',
         'views/magento_delivery_carrier.xml',
         # 'views/magento_instances_onboarding_panel_view.xml',
-        # 'views/magento_product_category_view.xml',
+        'views/magento_product_category_view.xml',
         # 'views/magento_tax_class.xml',
         # 'views/magento_attribute_set.xml',
         # 'views/magento_attribute_group.xml',
