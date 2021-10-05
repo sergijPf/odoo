@@ -46,3 +46,4 @@ from . import magento_product_category
 # from . import magento_tax_class
 from . import product_category
 from . import magento_product_log_book
+from . import magento_configurable_product

@@ -12,14 +12,15 @@ from .api_request import req
 class MagentoProductCategory(models.Model):
     _name = "magento.product.category"
 
-    _rec_name = 'complete_category_name'
+    _rec_name = 'name'
 
     @api.depends('name', 'magento_parent_id.complete_category_name')
     def _compute_complete_name(self):
         for category in self:
             if category.magento_parent_id:
                 category.complete_category_name = '%s / %s' % \
-                                                  (category.magento_parent_id.complete_category_name, category.name)
+                                                  ((category.magento_parent_id.complete_category_name).replace('Root Catalog', ''),
+                                                   category.name)
             else:
                 category.complete_category_name = category.name
 

@@ -935,7 +935,7 @@ class MagentoInstance(models.Model):
             total_sales = round(sum([key['y'] for key in values]), 2)
             # Product count query
             exported = 'All'
-            product_data = record.get_total_products(record, exported)
+            # product_data = record.get_total_products(record, exported)
             # Customer count query
             customer_data = record.get_customers(record)
             # Order count query
@@ -953,7 +953,7 @@ class MagentoInstance(models.Model):
                 "is_sample_data": False,
                 "total_sales": total_sales,
                 "order_data": order_data,
-                "product_date": product_data,
+                # "product_date": product_data,
                 "customer_data": customer_data,
                 "order_shipped": order_shipped,
                 "sort_on": self._context.get('sort'),

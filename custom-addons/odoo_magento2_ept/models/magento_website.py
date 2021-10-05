@@ -98,7 +98,7 @@ class MagentoWebsite(models.Model):
             total_sales = round(sum([key['y'] for key in values]), 2)
             # Product count website vise query
             exported = 'All'
-            product_data = record.get_total_products(record, exported)
+            # product_data = record.get_total_products(record, exported)
             # Customer count website vise query
             customer_data = record.get_customers(record)
             # Order count website vise query
@@ -117,7 +117,7 @@ class MagentoWebsite(models.Model):
                 "is_sample_data": False,
                 "order_data": order_data,
                 "customer_data": customer_data,
-                "product_date": product_data,
+                # "product_date": product_data,
                 "sort_on": self._context.get('sort'),
                 "order_shipped": order_shipped,
                 "graph_sale_percentage": {'type': data_type, 'value': comparison_value},

@@ -72,14 +72,14 @@ class MagentoProductTemplate(models.Model):
         domain="[('magento_instance_id','=',magento_instance_id)]",
         help='Magento Websites'
     )
-    created_at = fields.Date(
-        string='Product Created At',
-        help="Date when product created into Magento"
-    )
-    updated_at = fields.Date(
-        string='Product Updated At',
-        help="Date when product updated into Magento"
-    )
+    # created_at = fields.Date(
+    #     string='Product Created At',
+    #     help="Date when product created into Magento"
+    # )
+    # updated_at = fields.Date(
+    #     string='Product Updated At',
+    #     help="Date when product updated into Magento"
+    # )
     product_type = fields.Selection([
         ('simple', 'Simple Product'),
         ('configurable', 'Configurable Product'),
@@ -90,11 +90,11 @@ class MagentoProductTemplate(models.Model):
     ], string='Magento Product Type', help='Magento Product Type', default='simple')
     magento_sku = fields.Char(string="Magento Simple Product SKU", help="Magento Product SKU")
     description = fields.Text(string="Product Description", help="Description", translate=True)
-    short_description = fields.Text(
-        string='Product Short Description',
-        help='Short Description',
-        translate=True
-    )
+    # short_description = fields.Text(
+    #     string='Product Short Description',
+    #     help='Short Description',
+    #     translate=True
+    # )
     magento_product_image_ids = fields.One2many(
         MAGENTO_PRODUCT_IMAGE,
         'magento_tmpl_id',

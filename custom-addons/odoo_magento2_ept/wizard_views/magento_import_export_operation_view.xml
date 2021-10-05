@@ -126,7 +126,7 @@
         <record id="action_wizard_magento_product_for_prepare" model="ir.actions.act_window">
             <field name="name">Magento - Export Products</field>
             <field name="res_model">magento.import.export.ept</field>
-            <field name="binding_model_id" ref="product.model_product_template"/>
+            <field name="binding_model_id" ref="product.model_product_product"/>
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_magento_process_import_export_from_more_ept"/>
             <field name="target">new</field>

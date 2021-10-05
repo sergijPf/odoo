@@ -1,0 +1,46 @@
+<odoo>
+
+    <record id="view_magento_product_category_links_update" model="ir.ui.view">
+            <field name="name">Change Magento Product Category Links in Magento Layer</field>
+            <field name="model">product.category.links</field>
+            <field name="arch" type="xml">
+                <form string="Magento Product Category Links">
+                    <group>
+                        <field name="magento_instance_id" required="1"/>
+                        <field name="category_links" required="1" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <div style="color:#000000">
+                            <p class="alert alert-warning" role="alert">
+                                <u>
+                                    <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
+                                </u>
+                                <p>
+                                    <b>1. This action will change Product Category Links for the selected Products in Magento Layer!</b>
+                                </p>
+                                <p>
+                                    <b>2. The Product Category Links can be assigned to multiple Products at once but only within one instance!</b>
+                                </p>
+                            </p>
+                        </div>
+                    </group>
+                    <footer>
+                        <button string="Change Category Links" class="oe_highlight" type="object"
+                                name="update_product_category_links"/>
+                        <button string="Cancel" class="oe_highlight" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    <record id="magento_product_category_links_update_wizard" model="ir.actions.act_window">
+        <field name="name">Change Product Category Links</field>
+        <field name="res_model">product.category.links</field>
+        <field name="binding_model_id" ref="model_magento_product_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_magento_product_category_links_update"/>
+        <field name="target">new</field>
+    </record>
+
+</odoo>
