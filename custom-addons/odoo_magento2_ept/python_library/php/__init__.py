@@ -19,54 +19,40 @@ class Php(object):
     @classmethod
     def http_build_query(cls, params, convention="%s"):
         """
-
         This was ripped shamelessly from a PHP forum and ported to Python:
-
           http://www.codingforums.com/showthread.php?t=72179
 
         Essentially, it's a (hopefully perfect) replica of PHP's
         http_build_query() that allows you to pass multi-dimensional arrays
         to a URL via POST or GET.
-
         Example:
           from php import Php
           Php.http_build_query({"x": [1,2,3]})
-
         """
-
         if len(params) == 0:
             return ""
 
         output = ""
         for key in params.keys():
-
             if type(params[key]) is dict:
-
                 output = output + cls.http_build_query(params[key], convention % key + "[%s]")
-
             elif type(params[key]) is list:
-
                 i = 0
                 new_params = {}
                 for element in params[key]:
                     new_params[str(i)] = element
                     i += 1
-
                 output += cls.http_build_query(
                     new_params, convention % key + "[%s]")
-
             else:
-
                 key = quote(key)
                 val = quote(str(params[key]))
                 output = output + convention % key + "=" + val + "&"
-
         return output
 
     @classmethod
     def parse_ini_file(cls, filename, strip_quotes=True):
         """
-
         A hacked-together attempt at making an .ini file parser that's
         compatible with the "standards" that PHP follows in its
         parse_ini_file() function.  Among the handy features included are:
@@ -81,7 +67,6 @@ class Php(object):
           from php import Php
           config = Php.parse_ini_file("config.ini")
           print config["sectionName"]["keyName"]
-
         """
 
         ini = {}
@@ -111,15 +96,11 @@ class Php(object):
             keyval = cls.INI_REGEX_QUOTED_LINE.match(line)
 
         if header:
-
             ini[header.group(1)] = {}
             header_key = header.group(1)
-
         elif keyval:
-
             indexed_array = cls.INI_REGEX_INDEXED_ARRAY.match(keyval.group(1))
             associative_array = cls.INI_REGEX_ASSOCIATIVE_ARRAY.match(keyval.group(1))
-
             target = ini
             if header_key:
                 target = ini[header_key]

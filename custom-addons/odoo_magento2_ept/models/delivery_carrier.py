@@ -36,8 +36,7 @@ class DeliveryCarrier(models.Model):
         User can only map one Magento carrier code with odoo's single Delivery Method per instance.
         :return:
         """
-        delivery_carrier_obj = self.magento_carrier.delivery_carrier_ids.\
-            filtered(lambda x: x.id != self.id)
+        delivery_carrier_obj = self.magento_carrier.delivery_carrier_ids.filtered(lambda x: x.id != self.id)
         if delivery_carrier_obj:
             raise UserError(_("Can't set this same Magento carrier "
                               "with multiple Delivery Methods for the same Magento Instance"))

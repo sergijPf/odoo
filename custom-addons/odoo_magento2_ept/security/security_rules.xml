@@ -6,12 +6,12 @@
         <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>
     </record>
 
-    <record model="ir.rule" id="magento_product_template_instance_rule">
-        <field name="name">Magento Product Template Instance</field>
-        <field name="model_id" ref="model_magento_product_template"/>
-        <field name="groups" eval="[(4, ref('group_magento_user_ept'))]"/>
-        <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>
-    </record>
+<!--    <record model="ir.rule" id="magento_product_template_instance_rule">-->
+<!--        <field name="name">Magento Product Template Instance</field>-->
+<!--        <field name="model_id" ref="model_magento_product_template"/>-->
+<!--        <field name="groups" eval="[(4, ref('group_magento_user_ept'))]"/>-->
+<!--        <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>-->
+<!--    </record>-->
 
     <record model="ir.rule" id="magento_sale_orders_instance_rule">
         <field name="name">Magento Sale Orders by Instance</field>

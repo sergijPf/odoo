@@ -97,14 +97,14 @@
 
         <div class="row">
             <div class="col-12 mt4 ep_kanban_records">
-                <a id="instance_product" class="ep-bg-2">
-                    <p class="text-center mb0 font-weight-bold">
-                        <t t-if="widget.graph_data.product_date">
-                            <t t-esc="widget.graph_data.product_date.product_count"/>
-                        </t>
-                    </p>
-                    <p class="text-center mb0">Products</p>
-                </a>
+<!--                <a id="instance_product" class="ep-bg-2">-->
+<!--                    <p class="text-center mb0 font-weight-bold">-->
+<!--                        <t t-if="widget.graph_data.product_date">-->
+<!--                            <t t-esc="widget.graph_data.product_date.product_count"/>-->
+<!--                        </t>-->
+<!--                    </p>-->
+<!--                    <p class="text-center mb0">Products</p>-->
+<!--                </a>-->
                 <a id="instance_customer" class="ep-bg-1">
                     <t t-if="widget.graph_data.customer_data">
                         <p class="text-center mb0 font-weight-bold">

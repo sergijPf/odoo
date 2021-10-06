@@ -6,7 +6,7 @@ from odoo import models, fields, api
 class ProductProduct(models.Model):
     _inherit = "product.product"
 
-    ept_image_ids = fields.One2many('common.product.image.ept', 'product_id', string='Product Images')
+    # ept_image_ids = fields.One2many('common.product.image.ept', 'product_id', string='Product Images')
     vendor_ids = fields.One2many('vendor.stock.ept', 'vendor_product_id', string="Vendor")
     is_drop_ship_product = fields.Boolean(store=False, compute="_compute_is_drop_ship_product")
 
@@ -28,48 +28,48 @@ class ProductProduct(models.Model):
         else:
             self.is_drop_ship_product = False
 
-    def prepare_common_image_vals(self, vals):
-        """
-        Prepares vals for creating common product image record.
-        @param vals: Vals having image data.
-        @return:Dictionary
-        @author: Maulik Barad on Date 17-Oct-2020.
-        """
-        image_vals = {"sequence":0,
-                      "image":vals.get("image_1920", False),
-                      "name":self.name,
-                      "product_id":self.id,
-                      "template_id":self.product_tmpl_id.id}
-        return image_vals
+    # def prepare_common_image_vals(self, vals):
+    #     """
+    #     Prepares vals for creating common product image record.
+    #     @param vals: Vals having image data.
+    #     @return:Dictionary
+    #     @author: Maulik Barad on Date 17-Oct-2020.
+    #     """
+    #     image_vals = {"sequence":0,
+    #                   "image":vals.get("image_1920", False),
+    #                   "name":self.name,
+    #                   "product_id":self.id,
+    #                   "template_id":self.product_tmpl_id.id}
+    #     return image_vals
 
-    @api.model
-    def create(self, vals):
-        """
-        Inherited for adding the main image in common images.
-        @author: Maulik Barad on Date 13-Dec-2019.
-        Migration done by twinkalc August 2020
-        """
-        res = super(ProductProduct, self).create(vals)
-        if vals.get("image_1920", False) and res:
-            image_vals = res.prepare_common_image_vals(vals)
-            self.env["common.product.image.ept"].create(image_vals)
-        return res
+    # @api.model
+    # def create(self, vals):
+    #     """
+    #     Inherited for adding the main image in common images.
+    #     @author: Maulik Barad on Date 13-Dec-2019.
+    #     Migration done by twinkalc August 2020
+    #     """
+    #     res = super(ProductProduct, self).create(vals)
+    #     if vals.get("image_1920", False) and res:
+    #         image_vals = res.prepare_common_image_vals(vals)
+    #         self.env["common.product.image.ept"].create(image_vals)
+    #     return res
 
-    def write(self, vals):
-        """
-        Inherited for adding the main image in common images.
-        @author: Maulik Barad on Date 13-Dec-2019.
-        Migration done by twinkalc August 2020
-        """
-        res = super(ProductProduct, self).write(vals)
-        if vals.get("image_1920", False) and self:
-            common_product_image_obj = self.env["common.product.image.ept"]
-            for record in self:
-                if vals.get("image_1920"):
-                    image_vals = record.prepare_common_image_vals(vals)
-                    common_product_image_obj.create(image_vals)
-
-        return res
+    # def write(self, vals):
+    #     """
+    #     Inherited for adding the main image in common images.
+    #     @author: Maulik Barad on Date 13-Dec-2019.
+    #     Migration done by twinkalc August 2020
+    #     """
+    #     res = super(ProductProduct, self).write(vals)
+    #     if vals.get("image_1920", False) and self:
+    #         common_product_image_obj = self.env["common.product.image.ept"]
+    #         for record in self:
+    #             if vals.get("image_1920"):
+    #                 image_vals = record.prepare_common_image_vals(vals)
+    #                 common_product_image_obj.create(image_vals)
+    #
+    #     return res
 
     def get_stock_ept(self, product_id, warehouse_id, fix_stock_type=False, fix_stock_value=0,
                       stock_type='virtual_available'):

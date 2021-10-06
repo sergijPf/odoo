@@ -17,6 +17,7 @@ class ProductCategoryLinks(models.TransientModel):
         active_product_ids = self._context.get("active_ids", [])
         update_products = self.env["magento.product.product"].browse(active_product_ids)
         for product in update_products:
-            product.category_ids = [(6, 0, [cat.id for cat in self.category_links if product.magento_instance_id == self.magento_instance_id])]
+            ids = [cat.id for cat in self.category_links if product.magento_instance_id == self.magento_instance_id]
+            product.category_ids = [(6, 0, ids)]
             product.update_date = datetime.now()
 

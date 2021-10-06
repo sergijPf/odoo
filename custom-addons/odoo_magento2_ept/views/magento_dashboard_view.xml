@@ -46,22 +46,22 @@
                                     </div>
                                     <div class="container o_kanban_card_manage_pane dropdown-menu" role="menu">
                                         <div class="row">
-                                            <div class="col-xs-3 o_kanban_card_manage_section o_kanban_manage_view">
-                                                <div role="menuitem" class="o_kanban_card_manage_title">
-                                                    <span>Products</span>
-                                                </div>
-<!--                                                <div role="menuitem">-->
-<!--                                                    <a name="magento_product_exported_ept" type="object" title="Exported">Exported</a>-->
+<!--                                            <div class="col-xs-3 o_kanban_card_manage_section o_kanban_manage_view">-->
+<!--                                                <div role="menuitem" class="o_kanban_card_manage_title">-->
+<!--                                                    <span>Products</span>-->
 <!--                                                </div>-->
-<!--                                                <div role="menuitem">-->
-<!--                                                    <a name="action_magento_simple_product_type"-->
-<!--                                                       type="object" title="Simple Products">Simple Products</a>-->
-<!--                                                </div>-->
-<!--                                                <div role="menuitem">-->
-<!--                                                    <a name="action_magento_configurable_product_type"-->
-<!--                                                       type="object" title="Configurable Products">Configurable Products</a>-->
-<!--                                                </div>-->
-                                            </div>
+<!--&lt;!&ndash;                                                <div role="menuitem">&ndash;&gt;-->
+<!--&lt;!&ndash;                                                    <a name="magento_product_exported_ept" type="object" title="Exported">Exported</a>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                </div>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                <div role="menuitem">&ndash;&gt;-->
+<!--&lt;!&ndash;                                                    <a name="action_magento_simple_product_type"&ndash;&gt;-->
+<!--&lt;!&ndash;                                                       type="object" title="Simple Products">Simple Products</a>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                </div>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                <div role="menuitem">&ndash;&gt;-->
+<!--&lt;!&ndash;                                                    <a name="action_magento_configurable_product_type"&ndash;&gt;-->
+<!--&lt;!&ndash;                                                       type="object" title="Configurable Products">Configurable Products</a>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                </div>&ndash;&gt;-->
+<!--                                            </div>-->
                                             <div class="col-xs-3 o_kanban_card_manage_section o_kanban_manage_view">
                                                 <div role="menuitem" class="o_kanban_card_manage_title">
                                                     <span>Sales</span>
@@ -148,22 +148,22 @@
                                     </div>
                                     <div class="container o_kanban_card_manage_pane dropdown-menu" role="menu">
                                         <div class="row">
-                                            <div class="col-xs-3 o_kanban_card_manage_section o_kanban_manage_view">
-                                                <div role="menuitem" class="o_kanban_card_manage_title">
-                                                    <span>Products</span>
-                                                </div>
-<!--                                                <div role="menuitem">-->
-<!--                                                    <a name="magento_product_exported_ept" type="object" title="Exported">Exported</a>-->
+<!--                                            <div class="col-xs-3 o_kanban_card_manage_section o_kanban_manage_view">-->
+<!--                                                <div role="menuitem" class="o_kanban_card_manage_title">-->
+<!--                                                    <span>Products</span>-->
 <!--                                                </div>-->
-<!--                                                <div role="menuitem">-->
-<!--                                                    <a name="action_magento_simple_product_type"-->
-<!--                                                       type="object" title="Simple Products">Simple Products</a>-->
-<!--                                                </div>-->
-<!--                                                <div role="menuitem">-->
-<!--                                                    <a name="action_magento_configurable_product_type"-->
-<!--                                                       type="object" title="Configurable Products">Configurable Products</a>-->
-<!--                                                </div>-->
-                                            </div>
+<!--&lt;!&ndash;                                                <div role="menuitem">&ndash;&gt;-->
+<!--&lt;!&ndash;                                                    <a name="magento_product_exported_ept" type="object" title="Exported">Exported</a>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                </div>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                <div role="menuitem">&ndash;&gt;-->
+<!--&lt;!&ndash;                                                    <a name="action_magento_simple_product_type"&ndash;&gt;-->
+<!--&lt;!&ndash;                                                       type="object" title="Simple Products">Simple Products</a>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                </div>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                <div role="menuitem">&ndash;&gt;-->
+<!--&lt;!&ndash;                                                    <a name="action_magento_configurable_product_type"&ndash;&gt;-->
+<!--&lt;!&ndash;                                                       type="object" title="Configurable Products">Configurable Products</a>&ndash;&gt;-->
+<!--&lt;!&ndash;                                                </div>&ndash;&gt;-->
+<!--                                            </div>-->
                                             <div class="col-xs-3 o_kanban_card_manage_section o_kanban_manage_view">
                                                 <div role="menuitem" class="o_kanban_card_manage_title">
                                                     <span>Sales</span>

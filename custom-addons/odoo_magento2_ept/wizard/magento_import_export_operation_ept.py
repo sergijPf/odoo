@@ -172,14 +172,11 @@ class MagentoImportExportEpt(models.TransientModel):
         :return:
         """
         if not self.import_specific_sale_order:
-            raise Warning(_("Please enter Magento sale "
-                            "order Reference for performing this operation."))
+            raise Warning(_("Please enter Magento sale order Reference for performing this operation."))
         magento_order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT]
         sale_order_list = self.import_specific_sale_order.split(',')
         for instance in instances:
-            order_queue_data = magento_order_data_queue_obj.import_specific_order(
-                instance, sale_order_list
-            )
+            order_queue_data = magento_order_data_queue_obj.import_specific_order(instance, sale_order_list)
         result = self.return_order_queue_form_or_tree_view(order_queue_data)
         return result
 
@@ -378,7 +375,7 @@ class MagentoImportExportEpt(models.TransientModel):
                 product_dict.update({'odoo_product_id': odoo_prod})
                 magento_sku_missing = self.create_or_update_magento_product_variant(product_dict, magento_sku_missing)
         if magento_sku_missing:
-            self._cr.commit()
+            # self._cr.commit()
             raise UserError(_('Missing Internal References For %s', str(list(magento_sku_missing.values()))))
         return True
 

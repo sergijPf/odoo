@@ -144,46 +144,46 @@ class MagentoWebsite(models.Model):
             action_dic['views'][0] = (action_dic['view_id'], 'list')
         return action_dic
 
-    def get_total_products(self, record, exported, product_type=False):
-        """
-        Use: To get the list of products exported from Magento website
-        Here if exported = True, then only get those record which having sync_product_with_magento= true
-        if exported = False, then only get those record which having sync_product_with_magento= false
-        if exported = All, then get all those records which having sync_product_with_magento = true and false
-        :param product_type: magento product type
-        :param record: magento website object
-        :param exported: exported is one of the "True" or "False" or "All"
-        :return: total number of Magento products ids and action for products
-        """
-        product_data = {}
-        main_sql = """select count(id) as total_count from magento_product_template
-        inner join magento_product_template_magento_website_rel on
-        magento_product_template_magento_website_rel.magento_product_template_id = magento_product_template.id  
-        where magento_product_template_magento_website_rel.magento_website_id = %s and
-        magento_product_template.magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
-        product_domain = []
-        if exported != 'All' and exported:
-            main_sql = main_sql + " and magento_product_template.sync_product_with_magento = True"
-            product_domain.append(('sync_product_with_magento', '=', True))
-        elif not exported:
-            main_sql = main_sql + " and magento_product_template.sync_product_with_magento = False"
-            product_domain.append(('sync_product_with_magento', '=', False))
-        elif exported == 'All':
-            product_domain.append(('sync_product_with_magento', 'in', (False, True)))
-
-        if product_type:
-            product_domain.append(('product_type', '=', product_type))
-        self._cr.execute(main_sql)
-        result = self._cr.dictfetchall()
-        total_count = 0
-        if result:
-            total_count = result[0].get('total_count')
-        view = self.env.ref('odoo_magento2_ept.action_magento_product_exported_ept').sudo().read()[0]
-        product_domain.append(('magento_instance_id', '=', record.magento_instance_id.id))
-        product_domain.append(('magento_website_ids', '=', record.name))
-        action = record.prepare_action(view, product_domain)
-        product_data.update({'product_count': total_count, 'product_action': action})
-        return product_data
+    # def get_total_products(self, record, exported, product_type=False):
+    #     """
+    #     Use: To get the list of products exported from Magento website
+    #     Here if exported = True, then only get those record which having sync_product_with_magento= true
+    #     if exported = False, then only get those record which having sync_product_with_magento= false
+    #     if exported = All, then get all those records which having sync_product_with_magento = true and false
+    #     :param product_type: magento product type
+    #     :param record: magento website object
+    #     :param exported: exported is one of the "True" or "False" or "All"
+    #     :return: total number of Magento products ids and action for products
+    #     """
+    #     product_data = {}
+    #     main_sql = """select count(id) as total_count from magento_product_template
+    #     inner join magento_product_template_magento_website_rel on
+    #     magento_product_template_magento_website_rel.magento_product_template_id = magento_product_template.id
+    #     where magento_product_template_magento_website_rel.magento_website_id = %s and
+    #     magento_product_template.magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
+    #     product_domain = []
+    #     if exported != 'All' and exported:
+    #         main_sql = main_sql + " and magento_product_template.sync_product_with_magento = True"
+    #         product_domain.append(('sync_product_with_magento', '=', True))
+    #     elif not exported:
+    #         main_sql = main_sql + " and magento_product_template.sync_product_with_magento = False"
+    #         product_domain.append(('sync_product_with_magento', '=', False))
+    #     elif exported == 'All':
+    #         product_domain.append(('sync_product_with_magento', 'in', (False, True)))
+    #
+    #     if product_type:
+    #         product_domain.append(('product_type', '=', product_type))
+    #     self._cr.execute(main_sql)
+    #     result = self._cr.dictfetchall()
+    #     total_count = 0
+    #     if result:
+    #         total_count = result[0].get('total_count')
+    #     view = self.env.ref('odoo_magento2_ept.action_magento_product_exported_ept').sudo().read()[0]
+    #     product_domain.append(('magento_instance_id', '=', record.magento_instance_id.id))
+    #     product_domain.append(('magento_website_ids', '=', record.name))
+    #     action = record.prepare_action(view, product_domain)
+    #     product_data.update({'product_count': total_count, 'product_action': action})
+    #     return product_data
 
     def get_customers(self, record):
         """
@@ -322,34 +322,34 @@ class MagentoWebsite(models.Model):
         order_data.update({'order_count': len(order_ids), 'order_action': shipped_order_action})
         return order_data
 
-    def magento_product_exported_ept(self):
-        """
-        get exported as true product action
-        :return:
-        """
-        exported = True
-        exported_product_data = self.get_total_products(self, exported)
-        return exported_product_data.get('product_action')
+    # def magento_product_exported_ept(self):
+    #     """
+    #     get exported as true product action
+    #     :return:
+    #     """
+    #     exported = True
+    #     exported_product_data = self.get_total_products(self, exported)
+    #     return exported_product_data.get('product_action')
 
-    def action_magento_simple_product_type(self):
-        """
-        get magento simple product type
-        :return:
-        """
-        product_type = "simple"
-        exported = "All"
-        simple_product_data = self.get_total_products(self, exported, product_type)
-        return simple_product_data.get('product_action')
+    # def action_magento_simple_product_type(self):
+    #     """
+    #     get magento simple product type
+    #     :return:
+    #     """
+    #     product_type = "simple"
+    #     exported = "All"
+    #     simple_product_data = self.get_total_products(self, exported, product_type)
+    #     return simple_product_data.get('product_action')
 
-    def action_magento_configurable_product_type(self):
-        """
-        get magento configurable product type
-        :return:
-        """
-        product_type = "configurable"
-        exported = "All"
-        configurable_product_data = self.get_total_products(self, exported, product_type)
-        return configurable_product_data.get('product_action')
+    # def action_magento_configurable_product_type(self):
+    #     """
+    #     get magento configurable product type
+    #     :return:
+    #     """
+    #     product_type = "configurable"
+    #     exported = "All"
+    #     configurable_product_data = self.get_total_products(self, exported, product_type)
+    #     return configurable_product_data.get('product_action')
 
     def magento_action_sales_quotations_ept(self):
         """

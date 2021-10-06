@@ -48,12 +48,12 @@ class MagentoProductImage(models.Model):
                     img = False
             each.file = img
 
-    odoo_image_id = fields.Many2one(
-        "common.product.image.ept",
-        ondelete="cascade",
-        string="Odoo Images",
-        help="Odoo Images"
-    )
+    # odoo_image_id = fields.Many2one(
+    #     "common.product.image.ept",
+    #     ondelete="cascade",
+    #     string="Odoo Images",
+    #     help="Odoo Images"
+    # )
     magento_instance_id = fields.Many2one(
         'magento.instance',
         'Instance',

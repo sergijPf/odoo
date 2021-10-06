@@ -33,8 +33,7 @@ class CommonLogBookEpt(models.Model):
             })]
         })
 
-    def add_log_line(self, message, order_ref,
-                     order_data_queue_line_id, queue_line, sku=False):
+    def add_log_line(self, message, order_ref, order_data_queue_line_id, queue_line, sku=False):
         """
         Create new log line based on the product queue and order queue
         If queue_line = order data queue then set order_ref = False

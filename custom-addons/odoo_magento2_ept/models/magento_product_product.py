@@ -12,9 +12,9 @@ from ..python_library.php import Php
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 PRODUCT_PRODUCT = 'product.product'
-STOCK_INVENTORY = 'stock.inventory'
+# STOCK_INVENTORY = 'stock.inventory'
 COMMON_LOG_LINES_EPT = 'common.log.lines.ept'
-MAGENTO_PRODUCT_TEMPLATE = 'magento.product.template'
+# MAGENTO_PRODUCT_TEMPLATE = 'magento.product.template'
 MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
 
 
@@ -36,12 +36,12 @@ class MagentoProductProduct(models.Model):
         string="Magento Simple Product Name",
         translate=True
     )
-    magento_tmpl_id = fields.Many2one(
-        MAGENTO_PRODUCT_TEMPLATE,
-        string="Magento Layer Product Template",
-        help="Product Template related to current Product Variant in Odoo",
-        ondelete="cascade"
-    )
+    # magento_tmpl_id = fields.Many2one(
+    #     MAGENTO_PRODUCT_TEMPLATE,
+    #     string="Magento Layer Product Template",
+    #     help="Product Template related to current Product Variant in Odoo",
+    #     ondelete="cascade"
+    # )
     odoo_product_id = fields.Many2one(
         PRODUCT_PRODUCT,
         string='Odoo Product Variant',
@@ -55,14 +55,14 @@ class MagentoProductProduct(models.Model):
         readonly=False,
         domain="[('magento_instance_id','=',magento_instance_id)]"
     )
-    product_type = fields.Selection([
-        ('simple', 'Simple Product'),
-        ('configurable', 'Configurable Product'),
-        ('virtual', 'Virtual Product'),
-        ('downloadable', 'Downloadable Product'),
-        ('group', 'Group Product'),
-        ('bundle', 'Bundle Product'),
-    ], string='Magento Product Type', help='Magento Product Type', default='simple')
+    # product_type = fields.Selection([
+    #     ('simple', 'Simple Product'),
+    #     ('configurable', 'Configurable Product'),
+    #     ('virtual', 'Virtual Product'),
+    #     ('downloadable', 'Downloadable Product'),
+    #     ('group', 'Group Product'),
+    #     ('bundle', 'Bundle Product'),
+    # ], string='Magento Product Type', help='Magento Product Type', default='simple')
     # created_at = fields.Date(
     #     string='Product Created At',
     #     help="Date when product created into Magento"
@@ -72,18 +72,18 @@ class MagentoProductProduct(models.Model):
     #     help="Date when product updated into Magento"
     # )
     magento_sku = fields.Char(string="Magento Simple Product SKU")
-    description = fields.Text(string="Product Description", help="Description", translate=True)
+    # description = fields.Text(string="Product Description", help="Description", translate=True)
     # short_description = fields.Text(
     #     string='Product Short Description',
     #     help='Short Description',
     #     translate=True
     # )
-    magento_product_image_ids = fields.One2many(
-        'magento.product.image',
-        'magento_product_id',
-        string="Magento Product Images",
-        help="Magento Product Images"
-    )
+    # magento_product_image_ids = fields.One2many(
+    #     'magento.product.image',
+    #     'magento_product_id',
+    #     string="Magento Product Images",
+    #     help="Magento Product Images"
+    # )
     # sync_product_with_magento = fields.Boolean(
     #     string='Sync Product with Magento',
     #     help="If Checked means, Product synced With Magento Product"
@@ -133,35 +133,35 @@ class MagentoProductProduct(models.Model):
         product.update_date = product.create_date
         return product
 
-    def unlink(self):
-        unlink_magento_products = self.env[MAGENTO_PRODUCT_PRODUCT]
-        unlink_magento_templates = self.env[MAGENTO_PRODUCT_TEMPLATE]
-        for magento_product in self:
-            # Check if the product is last product of this template...
-            if not unlink_magento_templates or (
-                    unlink_magento_templates and unlink_magento_templates != magento_product.magento_tmpl_id):
-                unlink_magento_templates |= magento_product.magento_tmpl_id
-            unlink_magento_products |= magento_product
-        res = super(MagentoProductProduct, unlink_magento_products).unlink()
-        # delete templates after calling super, as deleting template could lead to deleting
-        # products due to ondelete='cascade'
-        if not unlink_magento_templates.magento_product_ids:
-            unlink_magento_templates.unlink()
-        self.clear_caches()
-        return res
+    # def unlink(self):
+    #     unlink_magento_products = self.env[MAGENTO_PRODUCT_PRODUCT]
+    #     unlink_magento_templates = self.env[MAGENTO_PRODUCT_TEMPLATE]
+    #     for magento_product in self:
+    #         # Check if the product is last product of this template...
+    #         if not unlink_magento_templates or (
+    #                 unlink_magento_templates and unlink_magento_templates != magento_product.magento_tmpl_id):
+    #             unlink_magento_templates |= magento_product.magento_tmpl_id
+    #         unlink_magento_products |= magento_product
+    #     res = super(MagentoProductProduct, unlink_magento_products).unlink()
+    #     # delete templates after calling super, as deleting template could lead to deleting
+    #     # products due to ondelete='cascade'
+    #     if not unlink_magento_templates.magento_product_ids:
+    #         unlink_magento_templates.unlink()
+    #     self.clear_caches()
+    #     return res
 
-    def toggle_active(self):
-        """ Archiving related magento.product.template if there is not any more active magento.product.product
-        (and vice versa, unarchiving the related magento product template if there is now an active magento.product.product) """
-        result = super().toggle_active()
-        # We deactivate product templates which are active with no active variants.
-        tmpl_to_deactivate = self.filtered(lambda product: (product.magento_tmpl_id.active
-                                                            and not product.magento_tmpl_id.magento_product_ids)).mapped('magento_tmpl_id')
-        # We activate product templates which are inactive with active variants.
-        tmpl_to_activate = self.filtered(lambda product: (not product.magento_tmpl_id.active
-                                                          and product.magento_tmpl_id.magento_product_ids)).mapped('magento_tmpl_id')
-        (tmpl_to_deactivate + tmpl_to_activate).toggle_active()
-        return result
+    # def toggle_active(self):
+    #     """ Archiving related magento.product.template if there is not any more active magento.product.product
+    #     (and vice versa, unarchiving the related magento product template if there is now an active magento.product.product) """
+    #     result = super().toggle_active()
+    #     # We deactivate product templates which are active with no active variants.
+    #     tmpl_to_deactivate = self.filtered(lambda product: (product.magento_tmpl_id.active
+    #                                                         and not product.magento_tmpl_id.magento_product_ids)).mapped('magento_tmpl_id')
+    #     # We activate product templates which are inactive with active variants.
+    #     tmpl_to_activate = self.filtered(lambda product: (not product.magento_tmpl_id.active
+    #                                                       and product.magento_tmpl_id.magento_product_ids)).mapped('magento_tmpl_id')
+    #     (tmpl_to_deactivate + tmpl_to_activate).toggle_active()
+    #     return result
 
     def view_odoo_product(self):
         """

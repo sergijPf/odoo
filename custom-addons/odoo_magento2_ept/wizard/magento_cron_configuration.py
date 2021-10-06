@@ -313,7 +313,7 @@ class MagentoCronConfiguration(models.TransientModel):
         This method is used to save all cron configurations
         :return:
         """
-        ir_action_obj = self.env["ir.actions.actions"]
+        # ir_action_obj = self.env["ir.actions.actions"]
         magento_instance = self.magento_instance_id
         vals = {}
         self.auto_import_sale_order(magento_instance)

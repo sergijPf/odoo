@@ -17,7 +17,7 @@ from odoo import models, fields, api
 PRODUCT_TEMPLATE = 'product.template'
 MAGENTO_PRODUCT = 'magento.product.product'
 MAGENTO_WEBSITE = 'magento.website'
-MAGENTO_PRODUCT_IMAGE = 'magento.product.image'
+# MAGENTO_PRODUCT_IMAGE = 'magento.product.image'
 PRODUCT_PRODUCT = 'product.product'
 PRODUCT_ATTRIBUTE = 'product.attribute'
 # MAGENTO_ATTRIBUTE_SET = 'magento.attribute.set'
@@ -95,12 +95,12 @@ class MagentoProductTemplate(models.Model):
     #     help='Short Description',
     #     translate=True
     # )
-    magento_product_image_ids = fields.One2many(
-        MAGENTO_PRODUCT_IMAGE,
-        'magento_tmpl_id',
-        string="Magento Product Images",
-        help="Magento Product Images"
-    )
+    # magento_product_image_ids = fields.One2many(
+    #     MAGENTO_PRODUCT_IMAGE,
+    #     'magento_tmpl_id',
+    #     string="Magento Product Images",
+    #     help="Magento Product Images"
+    # )
     magento_product_price = fields.Float(
         string="Magento Product Prices",
         help="Magento Product Price"
