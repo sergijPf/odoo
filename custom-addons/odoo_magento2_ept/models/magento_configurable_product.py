@@ -23,7 +23,6 @@ class MagentoConfigurableProduct(models.Model):
     magento_instance_id = fields.Many2one('magento.instance', 'Magento Instance',
                                           help="This field relocates magento instance")
     magento_sku = fields.Char(string="Magento Product SKU")
-    magento_product_name = fields.Char(string="Magento Configurable Product Name", translate=True)
     magento_website_ids = fields.Many2many('magento.website', string='Magento Product Websites', readonly=False,
                                            domain="[('magento_instance_id','=',magento_instance_id)]")
     magento_status = fields.Selection([
@@ -36,21 +35,27 @@ class MagentoConfigurableProduct(models.Model):
         ('deleted', 'Deleted in Magento')
     ], string='Export Status', help='The status of Configurable Product Export to Magento ',
         default='not_exported')
-    image_1920 = fields.Image(related="odoo_prod_category.ecommerce_category_id.image_1920")
+    image_1920 = fields.Image(related="odoo_prod_category.image_1920")
     magento_product_id = fields.Char(string="Magento Product Id")
     active = fields.Boolean("Active", default=True)
-    odoo_prod_category = fields.Many2one('product.category', string='Related Odoo Product Category')
-    category_ids = fields.Many2many("magento.product.category", string="Product Categories", help="Magento Categories",
-                                    domain="[('instance_id','=',magento_instance_id)]")
+    odoo_prod_category = fields.Many2one('product.public.category', string='Product Public Category')
+    magento_product_name = fields.Char(string="Magento Configurable Product Name", related='odoo_prod_category.name')
+
+    # category_ids = fields.Many2many("magento.product.category", string="Product Categories", help="Magento Categories",
+    #                                 domain="[('instance_id','=',magento_instance_id)]")
     magento_attr_set = fields.Char(string='Magento Product Attribute Set', help='Magento Attribute set',
                                    default="Default")
-    do_not_create_flag = fields.Boolean(related="odoo_prod_category.do_not_create_in_magento",
+    do_not_create_flag = fields.Boolean(related="odoo_prod_category.x_magento_no_create",
                                         string="Don't create Product in Magento")
-    mag_assign_attributes = fields.Many2many(related="odoo_prod_category.magento_assigned_attr",
+    mag_assign_attributes = fields.Many2many(related="odoo_prod_category.x_magento_attr_ids",
                                              string="Configurable Attribute(s)")
     magento_export_date = fields.Datetime(string="Last Export Date",
                                           help="Configurable Product last Export Date to Magento")
     update_date = fields.Datetime(string="Configurable Product Update Date")
+    product_variant_ids = fields.One2many('magento.product.product', 'magento_conf_product', 'Magento Products',
+                                          required=True)
+    product_variant_count = fields.Integer(
+        '# Product Variants', compute='_compute_magento_product_variant_count')
 
     _sql_constraints = [('_magento_conf_product_unique_constraint',
                          'unique(magento_sku,magento_instance_id)',
@@ -61,6 +66,12 @@ class MagentoConfigurableProduct(models.Model):
         product = super(MagentoConfigurableProduct, self).create(vals)
         product.update_date = product.create_date
         return product
+
+    @api.depends('product_variant_ids.magento_conf_product')
+    def _compute_magento_product_variant_count(self):
+        for template in self:
+            # do not pollute variants to be prefetched when counting variants
+            template.product_variant_count = len(template.with_prefetch().product_variant_ids)
 
     def delete_in_magento(self):
         """
@@ -82,6 +93,6 @@ class MagentoConfigurableProduct(models.Model):
                 'magento_website_ids': [(5, 0, 0)]
             })
 
-    @api.onchange('magento_product_name', 'category_ids', 'magento_attr_set')
+    @api.onchange('magento_attr_set')
     def onchange_configurable_product(self):
         self.update_date = self.write_date

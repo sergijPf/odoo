@@ -7,5 +7,5 @@ from . import magento_cron_configuration
 from . import magento_queue_process_wizard
 # from . import magento_onboarding_confirmation_ept
 # from . import magento_export_product_ept
-from . import magento_product_category_update
-from . import magento_product_category_links_update
+# from . import magento_product_category_update
+from . import product_public_category_update

@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="product.product_category_form_view"/>
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='account_property']" position="after">
-                    <group name="magento_details" string="Magento Details" modifiers="{}">
+                    <group name="magento_details" string="Magento Details" modifiers="{}" groups="odoo_magento2_ept.group_magento_user_ept">
 <!--                        <field name="magento_attr_set" required="1"/>-->
                         <field name="do_not_create_in_magento"/>
                         <field name="magento_sku" placeholder="SKU for Magento"/>

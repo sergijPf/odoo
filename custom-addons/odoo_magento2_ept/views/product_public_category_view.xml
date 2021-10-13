@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="product_public_category_form_inherit_view" model="ir.ui.view">
+            <field name="name">product_public_category_form_inherit_view</field>
+            <field name="model">product.public.category</field>
+            <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='sequence']" position="after">
+                    <field name="is_magento_config"/>
+                </xpath>
+
+<!--                <xpath expr="//group[@name='x_category_image_ids']" position="before">-->
+<!--                    <group name="magento_details" string="Magento Details" modifiers="{}"-->
+<!--                           groups="odoo_magento2_ept.group_magento_user_ept"-->
+<!--                           attrs="{'invisible': [('is_magento_config', '=', False)]}">-->
+<!--                        <field name="do_not_create_in_magento"/>-->
+<!--                        <field name="magento_sku" placeholder="SKU for Magento"/>-->
+<!--                        <field name="magento_assigned_attr" widget="many2many_tags"-->
+<!--                               attrs="{'invisible': [('do_not_create_in_magento', '=', True)]}"-->
+<!--                               options="{'no_create_edit': True}"/>-->
+<!--                    </group>-->
+<!--                </xpath>-->
+
+                <xpath expr="//group[@name='x_magento_details']" position="attributes">
+                    <attribute name="groups">odoo_magento2_ept.group_magento_user_ept</attribute>
+                    <attribute name="attrs">{'invisible': [('is_magento_config', '=', False)]}</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='x_magento_attr_set']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+
+            </field>
+        </record>
+
+        <record id="product_public_category_search_view" model="ir.ui.view">
+            <field name="name">product.public.category.search.view</field>
+            <field name="model">product.public.category</field>
+            <field name="arch" type="xml">
+                <search string="Product Public Category search view">
+                    <field name="is_magento_config"/>
+                    <filter string="Is Magento Configurable" name="is_config_in_magento"
+                            domain="[('is_magento_config', '=', True)]"/>
+                </search>
+            </field>
+        </record>
+    </data>
+</odoo>

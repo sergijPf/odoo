@@ -93,23 +93,23 @@
                                     <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
                                 </u>
                                 <b>
-                                    <ol>
-                                        <li>
-                                            Products without Internal Reference (SKU) will not
-                                            be export in Magento Product Layer.
-                                        </li>
-                                        <li>
-                                            You can import CSV file here: Magento =>
-                                            Operations
-                                            =>Map Products
-                                        </li>
-                                        <li>
-                                            Do not change the name of the Header fields of csv file
-                                        </li>
-                                        <li>
-                                            Only change the Lower case fields value as per your need
-                                        </li>
-                                    </ol>
+<!--                                    <ol>-->
+<!--                                        <li>-->
+                                            Products without Internal Reference (SKU) and Product Category will not
+                                            be export to Magento Product Layer.
+<!--                                        </li>-->
+<!--                                        <li>-->
+<!--                                            You can import CSV file here: Magento =>-->
+<!--                                            Operations-->
+<!--                                            =>Map Products-->
+<!--                                        </li>-->
+<!--                                        <li>-->
+<!--                                            Do not change the name of the Header fields of csv file-->
+<!--                                        </li>-->
+<!--                                        <li>-->
+<!--                                            Only change the Lower case fields value as per your need-->
+<!--                                        </li>-->
+<!--                                    </ol>-->
                                 </b>
                             </p>
                         </div>

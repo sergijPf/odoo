@@ -368,18 +368,27 @@ class MagentoImportExportEpt(models.TransientModel):
         :return:
         """
         magento_sku_missing = {}
+        conf_missing = []
         product_dict = {}
         for instance in self.magento_instance_ids:
             product_dict.update({'instance_id': instance.id})
             for odoo_prod in odoo_products:
                 product_dict.update({'odoo_product_id': odoo_prod})
-                magento_sku_missing = self.create_or_update_magento_product_variant(product_dict, magento_sku_missing)
+                magento_sku_missing, conf_missing = self.create_or_update_magento_product_variant(product_dict,
+                                                                                                  magento_sku_missing,
+                                                                                                  conf_missing)
         if magento_sku_missing:
             # self._cr.commit()
             raise UserError(_('Missing Internal References For %s', str(list(magento_sku_missing.values()))))
+        if conf_missing:
+            text = _("Missing Configurable Product for:\n")
+            for conf in conf_missing:
+                text += '%s\n' % conf
+            raise UserError(text)
+
         return True
 
-    def create_or_update_magento_product_variant(self, product_dict, magento_sku_missing):
+    def create_or_update_magento_product_variant(self, product_dict, magento_sku_missing, conf_missing):
         """
         Create or update Magento Product Variant
         :param product_dict: dict {}
@@ -397,22 +406,27 @@ class MagentoImportExportEpt(models.TransientModel):
             magento_variant = magento_product_object.search(domain)
             if not magento_variant:
                 product_category = self.create_or_update_configurable_product_in_magento_layer(product_dict)
-                prod_vals = self.prepare_magento_product_variant_dict(product_dict, product_category)
-                magento_product_object.create(prod_vals)
-        return magento_sku_missing
+                if not product_category:
+                    conf_missing.append(magento_prod_sku)
+                else:
+                    prod_vals = self.prepare_magento_product_variant_dict(product_dict, product_category)
+                    magento_product_object.create(prod_vals)
+        return magento_sku_missing, conf_missing
 
     def create_or_update_configurable_product_in_magento_layer(self, product_dict):
         configurable_product_object = self.env['magento.configurable.product']
         product = product_dict.get('odoo_product_id')
+        if not product.config_product_id:
+            return
         domain = [('magento_instance_id', '=', int(product_dict.get('instance_id'))),
-                  ('odoo_prod_category', '=', product.categ_id.id)]
+                  ('odoo_prod_category', '=', product.config_product_id.id)]
         configurable_product = configurable_product_object.search(domain)
         if not configurable_product:
             values = {
                 'magento_instance_id': product_dict.get('instance_id'),
-                'odoo_prod_category': product.categ_id.id,
-                'magento_sku': product.categ_id.magento_sku or product.categ_id.name,
-                'magento_product_name': product.categ_id.name
+                'odoo_prod_category': product.config_product_id.id,
+                'magento_sku': product.config_product_id.name,
+                'magento_product_name': product.config_product_id.name
             }
             configurable_product = configurable_product_object.create(values)
         return configurable_product
