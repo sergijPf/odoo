@@ -1,7 +1,7 @@
 {
     # App information
     'name': "Odoo Magento 2 Connector customized",
-    'version': '10.1',
+    'version': '10.2',
     'category': 'Sales',
     'summary': 'Odoo Magento 2 Connector to integrate Magento 2.* website with Odoo '
                'as per Smartino specifications',
@@ -11,8 +11,8 @@
     'maintainer': 'White Label',
 
     # Dependencies
-    'depends': ['common_connector_library'],
-    # 'depends': ['common_connector_library', 'smartino_common'],
+    # 'depends': ['common_connector_library'],
+    'depends': ['common_connector_library', 'smartino_common'],
     # Views
     'data': [
         'security/security.xml',
@@ -50,7 +50,7 @@
         'views/financial_status_view.xml',
         'views/magento_delivery_carrier.xml',
         # 'views/magento_instances_onboarding_panel_view.xml',
-        # 'views/magento_product_category_view.xml',
+        'views/magento_product_category_view.xml',
         # 'views/magento_tax_class.xml',
         # 'views/magento_attribute_set.xml',
         # 'views/magento_attribute_group.xml',
@@ -67,8 +67,9 @@
         # 'wizard_views/financial_status_onboarding_view.xml',
         # 'wizard_views/magento_onboarding_confirmation_ept.xml',
         # 'wizard_views/magento_export_product_ept.xml',
-        # 'wizard_views/magento_product_category_update_view.xml',
+        'wizard_views/magento_product_category_update_view.xml',
         'wizard_views/product_public_category_update_view.xml',
+        'wizard_views/magento_product_categories_configuration_view.xml',
         # 'data/ecommerce_data.xml',
         'security/ir.model.access.csv',
         'data/update_magento_partner.xml'

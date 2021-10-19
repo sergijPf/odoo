@@ -12,6 +12,13 @@
                     <sheet>
                         <field name="active" invisible="1"/>
                         <div class="oe_right oe_button_box" position="inside" name="button_box" style="float:inherit !important">
+                            <button class="oe_stat_button" name="product_categories_action"
+                                type="object" icon="fa-list" style="width:14.5%" groups="odoo_magento2_ept.group_magento_manager_ept">
+                                 <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_text">Product</span>
+                                    <span class="o_stat_text">Categories</span>
+                                </div>
+                            </button>
                             <button class="oe_stat_button" name="list_of_delivery_method"
                                 type="object" icon="fa-truck" style="width:14.5%" groups="base.group_system">
                                  <div class="o_field_widget o_stat_info">

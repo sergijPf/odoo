@@ -3,8 +3,8 @@
 """
 Describes fields and methods for Magento configurable products
 """
-import json
-from datetime import datetime, timedelta
+
+from datetime import datetime
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 from .api_request import req
@@ -40,9 +40,8 @@ class MagentoConfigurableProduct(models.Model):
     active = fields.Boolean("Active", default=True)
     odoo_prod_category = fields.Many2one('product.public.category', string='Product Public Category')
     magento_product_name = fields.Char(string="Magento Configurable Product Name", related='odoo_prod_category.name')
-
-    # category_ids = fields.Many2many("magento.product.category", string="Product Categories", help="Magento Categories",
-    #                                 domain="[('instance_id','=',magento_instance_id)]")
+    category_ids = fields.Many2many("magento.product.category", string="Product Categories", help="Magento Categories",
+                                    domain="[('instance_id','=',magento_instance_id)]")
     magento_attr_set = fields.Char(string='Magento Product Attribute Set', help='Magento Attribute set',
                                    default="Default")
     do_not_create_flag = fields.Boolean(related="odoo_prod_category.x_magento_no_create",
@@ -54,8 +53,7 @@ class MagentoConfigurableProduct(models.Model):
     update_date = fields.Datetime(string="Configurable Product Update Date")
     product_variant_ids = fields.One2many('magento.product.product', 'magento_conf_product', 'Magento Products',
                                           required=True)
-    product_variant_count = fields.Integer(
-        '# Product Variants', compute='_compute_magento_product_variant_count')
+    product_variant_count = fields.Integer('# Product Variants', compute='_compute_magento_product_variant_count')
 
     _sql_constraints = [('_magento_conf_product_unique_constraint',
                          'unique(magento_sku,magento_instance_id)',
@@ -93,6 +91,6 @@ class MagentoConfigurableProduct(models.Model):
                 'magento_website_ids': [(5, 0, 0)]
             })
 
-    @api.onchange('magento_attr_set')
+    @api.onchange('magento_attr_set', 'category_ids')
     def onchange_configurable_product(self):
-        self.update_date = self.write_date
+        self.browse(self._origin.id).write({"update_date": datetime.now()})

@@ -42,6 +42,10 @@
                     <field name="is_magento_config"/>
                     <filter string="Is Magento Configurable" name="is_config_in_magento"
                             domain="[('is_magento_config', '=', True)]"/>
+                    <group expand="1" string="Group By Top">
+                        <filter string="By Top Parent" name="group_by_parent"
+                                context="{'group_by': 'top_level_parent'}"/>
+                </group>
                 </search>
             </field>
         </record>

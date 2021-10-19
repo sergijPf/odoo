@@ -8,11 +8,6 @@ from datetime import datetime
 class ProductPublicCategoryUpdate(models.TransientModel):
     _name = "product.public.category.update"
 
-    # magento_product = fields.Many2many('magento.product.product', "Magento Product")
-    # magento_instance_id = fields.Many2one('magento.instance', 'Magento Instance',
-    #                                       help="This field relocates magento instance")
-    # category_links = fields.Many2many('magento.product.category', string="Magento Product Category Links",
-    #                                   domain="[('instance_id','=',magento_instance_id)]")
     category_id = fields.Many2one('product.public.category', string="Assigned Product Category")
 
     def update_product_public_category(self):

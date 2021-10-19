@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--This is a common view for cron configuration wizard -->
+        <record id="magento_product_category_configuration_form_view" model="ir.ui.view">
+            <field name="name">magento.product.category.configuration</field>
+            <field name="model">magento.product.category.configuration</field>
+            <field name="arch" type="xml">
+                <form string="Product Category Configuration">
+                    <group>
+                        <field name="public_product_categ" required="1" options="{'no_create':True,'no_create_edit': True}"/>
+                    </group>
+                    <group>
+                        <div style="color:#000000">
+                            <p class="alert alert-warning" role="alert">
+                                <u>
+                                    <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
+                                </u>
+                                <p>
+                                    <b>1. This action will create Product Category structure in Magento and Odoo's Magento Layer</b>
+                                </p>
+                                <p>
+<!--                                    <b>2.  .</b>-->
+                                </p>
+                            </p>
+                        </div>
+                    </group>
+                    <footer>
+                        <button string="Create" class="oe_highlight" type="object"
+                                name="create_product_public_category_structure"/>
+                        <button string="Cancel" class="oe_highlight" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_wizard_magento_product_category_configuration" model="ir.actions.act_window">
+            <field name="name">Magento Product Categories Configuration</field>
+            <field name="res_model">magento.product.category.configuration</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="magento_product_category_configuration_form_view"/>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>

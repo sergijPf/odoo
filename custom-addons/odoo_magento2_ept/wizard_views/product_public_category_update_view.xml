@@ -6,7 +6,7 @@
             <field name="arch" type="xml">
                 <form string="Product Public Category Update">
                     <group>
-                        <field name="category_id" required="1"/>
+                        <field name="category_id" required="1" options="{'no_create':True,'no_create_edit': True}"/>
                     </group>
                     <group>
                         <div style="color:#000000">

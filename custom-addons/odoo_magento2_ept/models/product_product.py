@@ -15,7 +15,8 @@ class ProductProduct(models.Model):
     """
     _inherit = 'product.product'
 
-    config_product_id = fields.Many2one('product.public.category', string="Configurable Product")
+    config_product_id = fields.Many2one('product.public.category', string="Configurable Product",
+                                        domain="[('is_magento_config','=',True)]")
 
     def _compute_magento_product_count(self):
         """

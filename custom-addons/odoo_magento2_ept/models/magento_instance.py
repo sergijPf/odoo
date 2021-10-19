@@ -32,7 +32,7 @@ class MagentoInstance(models.Model):
     _name = MAGENTO_INSTANCE
     _description = 'Magento Instance'
 
-    @api.model
+    # @api.model
     # def _default_set_import_product_category(self):
     #     return self.env.ref('product.product_category_all').id \
     #         if self.env.ref('product.product_category_all') else False
@@ -507,13 +507,13 @@ class MagentoInstance(models.Model):
             record.import_magento_inventory_locations()
             self.env['magento.financial.status.ept'].create_financial_status(record, 'not_paid')
             self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(record)
-            record.get_category()
+            # record.get_category()
             # record.import_tax_class()
             # self.env['magento.attribute.set'].import_magento_product_attribute_set(record)
 
-    def get_category(self):
-        magento_category_obj = self.env['magento.product.category']
-        magento_category_obj.get_all_category(self)
+    # def get_category(self):
+    #     magento_category_obj = self.env['magento.product.category']
+    #     magento_category_obj.get_all_category(self)
 
     def sync_price_scop(self):
         """
@@ -1523,3 +1523,15 @@ class MagentoInstance(models.Model):
         if previous_data and previous_data.get('previous_year'):
             previous_total = previous_data.get('previous_year')
         return current_total, previous_total
+
+    def product_categories_action(self):
+        """
+        Return action for product categories configuration
+        :return:
+        """
+        action = self.env.ref('odoo_magento2_ept.action_wizard_magento_product_category_configuration').read()[0]
+        context = {
+            'magento_instance_id': self.id
+        }
+        action['context'] = context
+        return action
