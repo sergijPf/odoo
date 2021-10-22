@@ -52,7 +52,7 @@ class MagentoConfigurableProduct(models.Model):
                                           help="Configurable Product last Export Date to Magento")
     update_date = fields.Datetime(string="Configurable Product Update Date")
     product_variant_ids = fields.One2many('magento.product.product', 'magento_conf_product', 'Magento Products',
-                                          required=True)
+                                          required=True, context={'active_test': False})
     product_variant_count = fields.Integer('# Product Variants', compute='_compute_magento_product_variant_count')
 
     _sql_constraints = [('_magento_conf_product_unique_constraint',
@@ -64,6 +64,17 @@ class MagentoConfigurableProduct(models.Model):
         product = super(MagentoConfigurableProduct, self).create(vals)
         product.update_date = product.create_date
         return product
+
+    def write(self, vals):
+        if 'magento_attr_set' in vals or 'category_ids' in vals:
+            vals.update({'update_date': datetime.now()})
+
+        # archive/unarchive related simple products
+        if 'active' in vals:
+            if self.product_variant_ids:
+                self.product_variant_ids.write({'active': vals["active"]})
+        res = super(MagentoConfigurableProduct, self).write(vals)
+        return res
 
     @api.depends('product_variant_ids.magento_conf_product')
     def _compute_magento_product_variant_count(self):
@@ -91,6 +102,6 @@ class MagentoConfigurableProduct(models.Model):
                 'magento_website_ids': [(5, 0, 0)]
             })
 
-    @api.onchange('magento_attr_set', 'category_ids')
-    def onchange_configurable_product(self):
-        self.browse(self._origin.id).write({"update_date": datetime.now()})
+    # @api.onchange('magento_attr_set', 'category_ids')
+    # def onchange_configurable_product(self):
+    #     self.browse(self._origin.id).write({"update_date": datetime.now()})

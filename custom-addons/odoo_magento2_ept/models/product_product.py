@@ -3,7 +3,7 @@
 """
 Describes fields mapping to Magento products
 """
-from datetime import datetime
+# import re
 from odoo import fields, models, api
 from odoo.exceptions import UserError
 MAGENTO_PRODUCT = 'magento.product.product'
@@ -55,41 +55,40 @@ class ProductProduct(models.Model):
         This method will archive/unarchive Magento product based on Odoo Product
         :param vals: Dictionary of Values
         """
-        if 'active' in vals.keys():
-            magento_product_product_obj = self.env[MAGENTO_PRODUCT]
+        magento_product_product_obj = self.env[MAGENTO_PRODUCT]
+        if 'active' in vals:
             for product in self:
                 magento_product = magento_product_product_obj.search(
-                        [('odoo_product_id', '=', product.id)])
+                    [('odoo_product_id', '=', product.id)])
                 if vals.get('active'):
                     magento_product = magento_product_product_obj.search(
-                            [('odoo_product_id', '=', product.id), ('active', '=', False)])
+                        [('odoo_product_id', '=', product.id), ('active', '=', False)])
                 magento_product and magento_product.write({'active': vals.get('active')})
+
+        if 'config_product_id' in vals:
+            # applicable only to products which are in Magento Layer already
+            magento_conf_product_obj = self.env['magento.configurable.product']
+            domain = [('magento_sku', '=', self.default_code)]
+
+            # check if product is in Magento Layer
+            magento_simp_prod = magento_product_product_obj.with_context(active_test=False).search(domain)
+            if magento_simp_prod:
+                # check if config.product exists
+                dmn = [('odoo_prod_category', '=', self.config_product_id.id)]
+                for prod in magento_simp_prod:
+                    dmn.append(('magento_instance_id', '=', prod.magento_instance_id.id))
+                    conf_prod = magento_conf_product_obj.with_context(active_test=False).search(dmn)
+                    if not conf_prod:
+                        conf_prod = magento_conf_product_obj.create({
+                            'magento_instance_id': prod.magento_instance_id.id,
+                            'odoo_prod_category': self.config_product_id.id,
+                            'magento_sku': self.config_product_id.name.replace(' ', '_').replace('%', '').
+                                replace('#', '').replace('/', '')
+                            # 'magento_sku': re.sub('[^a-zA-Z0-9 \n\.]', '', self.config_product_id.name),
+                            # 'magento_product_name': self.config_product_id.name
+                        })
+                    prod.magento_conf_product = conf_prod.id
+
         res = super(ProductProduct, self).write(vals)
+
         return res
-
-    @api.onchange('config_product_id')
-    def onchange_product_public_category_manually(self):
-        # applicable only to products which are in Magento Layer already
-        magento_product_obj = self.env["magento.product.product"]
-        magento_conf_product_obj = self.env['magento.configurable.product']
-        domain = [('magento_sku', '=', self.default_code)]
-
-        if not self.config_product_id.is_magento_config:
-            raise UserError("The selected Product Public Category has to have 'Magento Config.Product' field checked")
-
-        # check if is in Magento Layer
-        magento_simp_prod = magento_product_obj.search(domain)
-        if magento_simp_prod:
-            # check if config.product exists
-            dmn = [('odoo_prod_category', '=', self.config_product_id.id)]
-            for prod in magento_simp_prod:
-                dmn.append(('magento_instance_id', '=', prod.magento_instance_id.id))
-                conf_prod = magento_conf_product_obj.search(dmn)
-                if not conf_prod:
-                    conf_prod = magento_conf_product_obj.create({
-                        'magento_instance_id': prod.magento_instance_id.id,
-                        'odoo_prod_category': self.config_product_id.id,
-                        'magento_sku': self.config_product_id.name,
-                        'magento_product_name': self.config_product_id.name
-                    })
-                prod.magento_conf_product = conf_prod.id

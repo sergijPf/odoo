@@ -7,16 +7,32 @@ class ProductAttribute(models.Model):
     is_ignored_in_magento = fields.Boolean(string="Ignore for Magento", default=False,
                                               help="The attribute will be ignored while Product's Export to Magento")
 
+    def write(self, vals):
+        res = super(ProductAttribute, self).write(vals)
 
-    @api.onchange('is_ignored_in_magento')
-    def onchange_magento_data(self):
-        attr_id = self._origin.id
-        magento_products = self.env['magento.product.product'].search([])
-        prod_ids = []
+        # check if attribute already assigned to any of magento products
+        if 'is_ignored_in_magento' in vals:
+            attr_id = self.id
+            magento_products = self.env['magento.product.product'].search([])
+            prod_ids = []
+            for p in magento_products:
+                if attr_id in p.product_template_attribute_value_ids.product_attribute_value_id.mapped(
+                        'attribute_id').mapped('id'):
+                    prod_ids.append(p.id)
+            if prod_ids:
+                magento_products = magento_products.browse(prod_ids)
+                magento_products.write({'update_date': datetime.now()})
+        return res
 
-        for p in magento_products:
-            if attr_id in p.product_template_attribute_value_ids.product_attribute_value_id.mapped('attribute_id').mapped('id'):
-                prod_ids.append(p.id)
-        if prod_ids:
-            magento_products = magento_products.browse(prod_ids)
-            magento_products.write({'update_date': datetime.now()})
+    # @api.onchange('is_ignored_in_magento')
+    # def onchange_magento_data(self):
+    #     attr_id = self._origin.id
+    #     magento_products = self.env['magento.product.product'].search([])
+    #     prod_ids = []
+    #
+    #     for p in magento_products:
+    #         if attr_id in p.product_template_attribute_value_ids.product_attribute_value_id.mapped('attribute_id').mapped('id'):
+    #             prod_ids.append(p.id)
+    #     if prod_ids:
+    #         magento_products = magento_products.browse(prod_ids)
+    #         magento_products.write({'update_date': datetime.now()})

@@ -4,8 +4,8 @@
 Describes methods for importing magento customers into Odoo.
 """
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
-from .api_request import req
+# from odoo.exceptions import UserError
+# from .api_request import req
 
 
 class MagentoProductCategory(models.Model):
@@ -21,7 +21,7 @@ class MagentoProductCategory(models.Model):
             else:
                 category.complete_category_name = category.name
 
-    name = fields.Char("Name")
+    # name = fields.Char("Name", translate=True)
     instance_id = fields.Many2one(
         'magento.instance',
         'Magento Instance',
@@ -60,7 +60,7 @@ class MagentoProductCategory(models.Model):
     )
     active = fields.Boolean(string="Status", default=True)
     product_public_categ = fields.Many2one('product.public.category', string="Product Public Category")
-
+    name = fields.Char("Name", related="product_public_categ.name")
 
     # def get_all_category(self, instance):
     #     all_category_data = self.get_all_magento_product_category(instance)

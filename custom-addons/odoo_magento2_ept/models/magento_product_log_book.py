@@ -16,4 +16,5 @@ class MagentoProductLogBook(models.Model):
 
     magento_product_id = fields.Many2one('magento.product.product', 'Magento Product', auto_join=True,
                                          ondelete="cascade")
+    magento_conf_prod = fields.Many2one(related="magento_product_id.magento_conf_product")
 

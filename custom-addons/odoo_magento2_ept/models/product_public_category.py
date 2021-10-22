@@ -39,19 +39,11 @@ class ProductPublicCategory(models.Model):
     #     prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category', '=', _id)])
     #     prod_to_update.write({'update_date': datetime.now()})
 
-    @api.onchange('x_magento_no_create', 'x_magento_attr_ids', 'name')
-    def onchange_magento_data(self):
-        _id = self._origin.id
-        prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category', '=', _id)])
-        if prod_to_update:
-            prod_to_update.write({'update_date': datetime.now()})
-
     @api.onchange('is_magento_config')
     def onchange_magento_config_check(self):
         _id = self._origin.id
         domain = [('odoo_prod_category', '=', _id)]
         conf_prod = self.env['magento.configurable.product'].with_context(active_test=False).search(domain)
-        # conf_prod = self.env['magento.configurable.product'].search(domain)
         if conf_prod:
             raise UserError("You're not able to uncheck it as there is already Configurable Product "
                             "created in Magento Layer")
@@ -59,19 +51,36 @@ class ProductPublicCategory(models.Model):
     @api.onchange('parent_id')
     def onchange_parent(self):
         _id = self._origin.id
-        related_product_categ_obj = self.env['magento.product.category']
-        if _id:
-            domain = [('product_public_categ', '=', _id)]
-            related_product_categ = related_product_categ_obj.with_context(active_test=False).search(domain)
-            if related_product_categ:
-                raise UserError("You're not able to change the parent category as it was already exported to Magento Layer")
+        curr_categ = self.browse(self._origin.id)
+        if curr_categ and curr_categ.magento_prod_categ:
+            raise UserError("You're not able to change the parent category as it was already exported to Magento.")
+
+    def write(self, vals):
+        res = super(ProductPublicCategory, self).write(vals)
+
+        # check if config.product in Magento Layer and let update it
+        prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category', '=', self.id)])
+        if prod_to_update:
+            prod_to_update.write({'update_date': datetime.now()})
+
+        # check if product category needs to be created in Magento
+        par_id = vals.get("parent_id")
+        if res and par_id:
+            par_rec = self.browse(par_id)
+            if par_rec and par_rec.magento_prod_categ:
+                categ_rec = self.browse(self._origin.id)
+                # loop on each product category in Magento Layer for parent record if any
+                for categ in par_rec.magento_prod_categ:
+                    categ.active and self.create_new_category_in_magento_and_layer(categ_rec, categ.instance_id, categ)
+        return res
 
     @api.model
     def create(self, vals):
+        par_id = self.browse(vals.get("parent_id"))
+        if par_id and par_id.magento_prod_categ:
+            raise UserError("You're not allowed to create and link to this parent category as it was already added to Magento.\n"
+                            "Please create category first, add translations and link to Parent category you'd like.")
         result = super(ProductPublicCategory, self).create(vals)
-        # loop on each product category in Magento Layer for parent record if any
-        for categ in result.parent_id.magento_prod_categ:
-            categ.active and self.create_new_category_in_magento_and_layer(result, categ.instance_id, categ)
         return result
 
     def unlink(self):
@@ -89,9 +98,8 @@ class ProductPublicCategory(models.Model):
                 try:
                     url = '/V1/categories/%s' % categ.category_id
                     res = req(categ.instance_id, url, 'DELETE')
-                except Exception as e:
+                except Exception:
                     res = False
-                    # raise UserError(_("Error while removing '%s' Product Category in Magento." % categ.name))
                 if res is True:
                     categ.unlink()
         result = super(ProductPublicCategory, self).unlink()
@@ -110,15 +118,31 @@ class ProductPublicCategory(models.Model):
             url = '/V1/categories'
             magento_category = req(magento_instance, url, 'POST', data)
         except Exception as e:
-            raise UserError(_("Error while creation '%s' Product Category in Magento." % new_product_categ.name))
+            raise UserError(_("Error while creating '%s' Product Category in Magento." % new_product_categ.name))
 
         if magento_category.get("id"):
+            self.process_storeview_translations_export(magento_instance, new_product_categ, magento_category['id'])
+
             ml_product_categ = self.env['magento.product.category'].create({
-                'name': new_product_categ.name,
+                # 'name': new_product_categ.name,
                 'instance_id': magento_instance.id,
                 'product_public_categ': new_product_categ.id,
                 'category_id': magento_category.get('id'),
                 'magento_parent_id': parent_categ.id
             })
-
             return ml_product_categ
+
+    def process_storeview_translations_export(self, magento_instance, product_category, magento_category_id):
+        magento_storeviews = [w.store_view_ids for w in magento_instance.magento_website_ids]
+        for view in magento_storeviews:
+            data = {
+                "category": {
+                    "name": product_category.with_context(lang=view.lang_id.code).name
+                }
+            }
+            try:
+                api_url = '/%s/V1/categories/%s' % (view.magento_storeview_code, magento_category_id)
+                req(magento_instance, api_url, 'PUT', data)
+            except Exception as e:
+                raise UserError(_("Error while exporting '%s' Product Category's translation to %s storeview "
+                                  "in Magento ." % (product_category.name, view.magento_storeview_code) + str(e)))

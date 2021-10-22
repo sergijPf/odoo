@@ -1,7 +1,7 @@
 <odoo>
 
     <record id="view_product_public_category_update" model="ir.ui.view">
-            <field name="name">Change Magento Product Public Category to be used for Magento Export</field>
+            <field name="name">Change Magento COnfigurable Product to be used for Export to Magento</field>
             <field name="model">product.public.category.update</field>
             <field name="arch" type="xml">
                 <form string="Product Public Category Update">
@@ -33,7 +33,7 @@
         </record>
 
     <record id="magento_product_public_category_update_wizard" model="ir.actions.act_window">
-        <field name="name">Update Product Public Category</field>
+        <field name="name">Update Magento Configurable Product</field>
         <field name="res_model">product.public.category.update</field>
         <field name="binding_model_id" ref="model_product_product"/>
         <field name="binding_view_types">list</field>

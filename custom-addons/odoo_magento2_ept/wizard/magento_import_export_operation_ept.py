@@ -398,46 +398,55 @@ class MagentoImportExportEpt(models.TransientModel):
         magento_product_object = self.env[MAGENTO_PRODUCT_PRODUCT]
         product = product_dict.get('odoo_product_id')
         magento_prod_sku = product.default_code
+        product_category = product.config_product_id
+
         if not magento_prod_sku:
             magento_sku_missing.update({product.id: product.name})
-        else:
+        if not product_category:
+            conf_missing.append(magento_prod_sku)
+
+        if magento_prod_sku and product_category:
+            conf_product = self.create_or_update_configurable_product_in_magento_layer(product_dict)
             domain = [('magento_instance_id', '=', int(product_dict.get('instance_id'))),
                       ('magento_sku', '=', magento_prod_sku)]
-            magento_variant = magento_product_object.search(domain)
+            magento_variant = magento_product_object.with_context(active_test=False).search(domain)
             if not magento_variant:
-                product_category = self.create_or_update_configurable_product_in_magento_layer(product_dict)
-                if not product_category:
-                    conf_missing.append(magento_prod_sku)
-                else:
-                    prod_vals = self.prepare_magento_product_variant_dict(product_dict, product_category)
-                    magento_product_object.create(prod_vals)
+                prod_vals = self.prepare_magento_product_variant_dict(product_dict, conf_product)
+                magento_product_object.create(prod_vals)
+            elif not magento_variant.active:
+                magento_variant.write({'magento_product_name': product.name, 'active': True})
+
         return magento_sku_missing, conf_missing
 
     def create_or_update_configurable_product_in_magento_layer(self, product_dict):
         configurable_product_object = self.env['magento.configurable.product']
         product = product_dict.get('odoo_product_id')
-        if not product.config_product_id:
-            return
         domain = [('magento_instance_id', '=', int(product_dict.get('instance_id'))),
                   ('odoo_prod_category', '=', product.config_product_id.id)]
-        configurable_product = configurable_product_object.search(domain)
+        configurable_product = configurable_product_object.with_context(active_test=False).search(domain)
         if not configurable_product:
             values = {
                 'magento_instance_id': product_dict.get('instance_id'),
                 'odoo_prod_category': product.config_product_id.id,
-                'magento_sku': product.config_product_id.name,
-                'magento_product_name': product.config_product_id.name
+                'magento_sku': product.config_product_id.name.replace(' ','_').replace('%','').replace('#','').replace('/','')
+                # 'magento_product_name': product.config_product_id.name
             }
             configurable_product = configurable_product_object.create(values)
+        elif not configurable_product.active:
+            configurable_product.write({
+                # 'magento_product_name': product.config_product_id.name,
+                'magento_sku': product.config_product_id.name.replace(' ','_').replace('%','').replace('#','').replace('/',''), # to remove later
+                'active': True
+            })
         return configurable_product
 
-    def prepare_magento_product_variant_dict(self, product_dict, product_category):
+    def prepare_magento_product_variant_dict(self, product_dict, conf_product):
         product = product_dict.get('odoo_product_id')
         magento_product_vals = {
             'magento_instance_id': product_dict.get('instance_id'),
             'odoo_product_id': product.id,
             'magento_sku': product.default_code,
-            'magento_conf_product': product_category.id,
+            'magento_conf_product': conf_product.id,
             'magento_product_name': product.name
         }
         return magento_product_vals

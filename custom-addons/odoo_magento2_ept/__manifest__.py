@@ -1,7 +1,7 @@
 {
     # App information
     'name': "Odoo Magento 2 Connector customized",
-    'version': '10.2',
+    'version': '10.3',
     'category': 'Sales',
     'summary': 'Odoo Magento 2 Connector to integrate Magento 2.* website with Odoo '
                'as per Smartino specifications',

@@ -32,10 +32,7 @@ class MagentoProductProduct(models.Model):
         help="This field relocates magento instance"
     )
     magento_product_id = fields.Char(string="Magento Product Id")
-    magento_product_name = fields.Char(
-        string="Magento Simple Product Name",
-        translate=True
-    )
+    magento_product_name = fields.Char(string="Magento Simple Product Name", translate=True)
     # magento_tmpl_id = fields.Many2one(
     #     MAGENTO_PRODUCT_TEMPLATE,
     #     string="Magento Layer Product Template",
@@ -132,6 +129,12 @@ class MagentoProductProduct(models.Model):
         product = super(MagentoProductProduct, self).create(vals)
         product.update_date = product.create_date
         return product
+
+    def write(self, vals):
+        if 'magento_product_name' in vals:
+            vals.update({'update_date': datetime.now()})
+        res = super(MagentoProductProduct, self).write(vals)
+        return res
 
     def view_odoo_product(self):
         """
@@ -1501,6 +1504,7 @@ class MagentoProductProduct(models.Model):
                 continue
             conf_obj = ml_conf_products[prod]['conf_object']
             mag_attr_set = conf_obj.magento_attr_set
+
             if not mag_attr_set:
                 text = "Missed 'Magento Product Attribute Set' field in Product Category. \n"
                 ml_conf_products[prod]['log_message'] += text
@@ -1551,10 +1555,9 @@ class MagentoProductProduct(models.Model):
                         # check if product images need to be updated
                         public_categ = conf_obj.odoo_prod_category
                         magento_images = ml_conf_products[prod].get('media_gallery', [])
-                        if public_categ and (public_categ.write_date > exp_date) or \
-                                (len(magento_images) != (len(public_categ.x_category_image_ids) +
-                                                         (1 if public_categ.image_256 else 0))):
-                            ml_conf_products['magento_status'] = 'update_needed'
+                        if public_categ and (len(magento_images) != (len(public_categ.x_category_image_ids) +
+                                                                     (1 if public_categ.image_256 else 0))):
+                            ml_conf_products[prod]['magento_status'] = 'update_needed'
                             continue
                         # check if assign attribute(s) and attribute-set are the same in Magento and Odoo
                         if ml_conf_products[prod]['magento_attr_set_id'] == prod_attr_set_id:
@@ -1811,6 +1814,7 @@ class MagentoProductProduct(models.Model):
                 "name": conf_product.magento_product_name.upper(),
                 "type_id": "configurable",
                 "attribute_set_id": attribute_set_id,
+                "custom_attributes": [],
                 "extension_attributes": {
                     "category_links": [{"position": 0, "category_id": cat_id} for cat_id in categ_list]
                 }
@@ -1819,6 +1823,13 @@ class MagentoProductProduct(models.Model):
         # if not True - means assign attributes were changed and will unlink all related simple products
         if not check_assign_attr:
             data['product']["extension_attributes"].update({"configurable_product_links": []})
+
+        # add Product's Website Description
+        if conf_product.odoo_prod_category:
+            data["product"]["custom_attributes"].append({
+                "attribute_code": 'description',
+                "value": conf_product.odoo_prod_category.website_description
+            })
 
         try:
             api_url = '/all/V1/products/%s' % magento_sku
@@ -2169,7 +2180,8 @@ class MagentoProductProduct(models.Model):
                     "status": 1,  # Enabled
                     "visibility": 4,  # Catalog, Search
                     "type_id": "configurable",
-                    "custom_attributes": [],
+                    "custom_attributes": [{"attribute_code": 'description', "value":
+                        conf_product.odoo_prod_category.website_description}] if conf_product.odoo_prod_category else [],
                     "extension_attributes": {
                         "category_links": [{"position": 0, "category_id": cat_id} for cat_id in categ_list]
                     }
@@ -2217,16 +2229,16 @@ class MagentoProductProduct(models.Model):
                     })
 
                 # prepare images export
-                config_images = conf_product.odoo_prod_category
-                if config_images:
+                config_prod = conf_product.odoo_prod_category
+                if config_prod:
                     # update product_media dict if product has images
-                    if len(config_images.x_category_image_ids):
+                    if len(config_prod.x_category_image_ids):
                         prod_media.update({
-                            prod: [(img.id, img.name, img.image_1920) for img in config_images.x_category_image_ids if img]
+                            prod: [(img.id, img.name, img.image_1920) for img in config_prod.x_category_image_ids if img]
                         })
                     # update if product has thumbnail image
-                    if config_images.image_256:
-                        thumb_images.update({prod: [(config_images.id, '', config_images.image_256)]})
+                    if config_prod.image_256:
+                        thumb_images.update({prod: [(config_prod.id, '', config_prod.image_256)]})
 
             if product_websites:
                 self.process_product_website_data_export_in_bulk(magento_instance, product_websites, new_conf_products,
@@ -2264,6 +2276,13 @@ class MagentoProductProduct(models.Model):
                 }
             }
         }
+
+        # add Product's Website Description
+        if conf_product.odoo_prod_category:
+            data["product"]["custom_attributes"].append({
+                "attribute_code": 'description',
+                "value": conf_product.odoo_prod_category.website_description
+            })
 
         try:
             api_url = '/V1/products'
@@ -2641,13 +2660,14 @@ class MagentoProductProduct(models.Model):
                 })
 
         # split api requests by 80
-        process_count = (len(images) // 80) + (1 if len(images) % 80 else 0)
+        limit = 20
+        process_count = (len(images) // limit) + (1 if len(images) % limit else 0)
         for cnt in range(process_count):
             try:
                 api_url = '/all/async/bulk/V1/products/bySku/media'
-                req(magento_instance, api_url, 'POST', images[cnt * 80:80 * (cnt + 1)])
+                req(magento_instance, api_url, 'POST', images[cnt * limit:limit * (cnt + 1)])
             except Exception:
-                text = "Error while Product (%s) Images export to Magento. / " % 'Thumbnail' if is_thumbnail else 'Base'
+                text = "Error while Product (%s) Images export to Magento in bulk. \n" % str('Thumbnail' if is_thumbnail else 'Base')
                 for prod_sku in products_media:
                     ml_simp_products[prod_sku]['log_message'] += text
 
@@ -2702,7 +2722,7 @@ class MagentoProductProduct(models.Model):
                 api_url = '/all/V1/products/%s/media' % prod_sku
                 req(magento_instance, api_url, 'POST', images)
             except Exception:
-                text = "Error while Product (%s) Images export to Magento./" % 'Thumbnail' if is_thumbnail else 'Base'
+                text = "Error while Product (%s) Images export to Magento.\n" % str('Thumbnail' if is_thumbnail else 'Base')
                 ml_products[prod_sku]['log_message'] += text
 
     def remove_product_images_from_magento(self, magento_instance, ml_products, magento_sku):
@@ -2711,7 +2731,7 @@ class MagentoProductProduct(models.Model):
                 api_url = '/all/V1/products/%s/media/%s' % (magento_sku, _id)
                 req(magento_instance, api_url, 'DELETE')
             except Exception:
-                text = "Error while Product (%s) Images remove from Magento. / "
+                text = "Error while Product (%s) Images remove from Magento. \n"
                 ml_products[magento_sku]['log_message'] += text
 
     def assign_attr_to_config_products_in_bulk(self, magento_instance, export_prod_list, odoo_products,
@@ -3015,8 +3035,3 @@ class MagentoProductProduct(models.Model):
             return datetime.strftime(odoo_date, MAGENTO_DATETIME_FORMAT)
         else:
             return ""
-
-    # @api.onchange('magento_product_name', 'category_ids')
-    @api.onchange('magento_product_name')
-    def onchange_simple_product(self):
-        self.browse(self._origin.id).write({"update_date": datetime.now()})
