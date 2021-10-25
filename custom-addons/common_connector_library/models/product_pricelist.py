@@ -42,8 +42,18 @@ class ProductPricelist(models.Model):
                 'fixed_price': price,
             }
             new_record = product_pricelist_item_obj.new(vals)
-            new_record._onchange_product_id()
+            new_record.item_()
             new_vals = product_pricelist_item_obj._convert_to_write(
                 {name: new_record[name] for name in new_record._cache})
             product_pricelist_item = product_pricelist_item_obj.create(new_vals)
         return product_pricelist_item
+
+
+
+    # applied_on = fields.Selection([
+    #     ('3_global', 'All Products'),
+    #     ('2_product_category', 'Product Category'),
+    #     ('1_product', 'Product'),
+    #     ('0_product_variant', 'Product Variant')], "Apply On",
+    #     default='3_global', required=True,
+    #     help='Pricelist Item applicable on selected option')

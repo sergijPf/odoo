@@ -1847,7 +1847,9 @@ class MagentoProductProduct(models.Model):
             public_categ = ml_conf_products[magento_sku]['conf_object'].odoo_prod_category
             magento_images = ml_conf_products[magento_sku].get('media_gallery', [])
             if public_categ:
-                if public_categ.write_date > ml_conf_products[magento_sku]['export_date_to_magento'] or \
+                export_date_to_magento = ml_conf_products[magento_sku]['export_date_to_magento']
+                export_date_to_magento = export_date_to_magento or datetime.min
+                if public_categ.write_date > export_date_to_magento or \
                         len(magento_images) != (len(public_categ.x_category_image_ids) + (1 if public_categ.image_256 else 0)):
                     if len(magento_images):
                         self.remove_product_images_from_magento(magento_instance, ml_conf_products, magento_sku)

@@ -30,10 +30,10 @@ class MagentoWebsite(models.Model):
         help="This field relocates magento instance"
     )
     magento_website_id = fields.Char(string="Magento Website", help="Magento Website Id")
-    import_partners_from_date = fields.Datetime(
-        string='Last partner import date',
-        help='Date when partner last imported'
-    )
+    # import_partners_from_date = fields.Datetime(
+    #     string='Last partner import date',
+    #     help='Date when partner last imported'
+    # )
     pricelist_ids = fields.Many2many(
         'product.pricelist',
         string="Pricelists",
@@ -76,8 +76,8 @@ class MagentoWebsite(models.Model):
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
     magento_order_data = fields.Text(compute="_compute_kanban_magento_order_data")
-    website_display_currency = fields.Many2one(RES_CURRENCY, readonly=True,
-                                               help="Display currency of the magento website.")
+    # website_display_currency = fields.Many2one(RES_CURRENCY, readonly=True,
+    #                                            help="Display currency of the magento website.")
     tax_calculation_method = fields.Selection([
         ('excluding_tax', 'Excluding Tax'), ('including_tax', 'Including Tax')],
         string="Tax Calculation Method into Magento Website", default="excluding_tax",
@@ -97,7 +97,7 @@ class MagentoWebsite(models.Model):
             # Total sales website vise
             total_sales = round(sum([key['y'] for key in values]), 2)
             # Product count website vise query
-            exported = 'All'
+            # exported = 'All'
             # product_data = record.get_total_products(record, exported)
             # Customer count website vise query
             customer_data = record.get_customers(record)
@@ -484,8 +484,7 @@ class MagentoWebsite(models.Model):
         Use: To prepare Magento operation action
         :return: Magento operation action details
         """
-        view = self.env.ref('odoo_magento2_ept.'
-                            'action_wizard_magento_instance_import_export_operations').sudo().read()[0]
+        view = self.env.ref('odoo_magento2_ept.action_wizard_magento_instance_import_export_operations').sudo().read()[0]
         action = self.prepare_action(view, [])
         website = self.browse(record_id)
         action.update({'context': {'default_magento_instance_ids': website.magento_instance_id.ids}})

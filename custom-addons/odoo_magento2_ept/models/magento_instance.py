@@ -119,10 +119,10 @@ class MagentoInstance(models.Model):
     #     default=False,
     #     help="Import product images along with product from Magento while import product?"
     # )
-    last_product_import_date = fields.Datetime(
-        string='Last Import Products date',
-        help="Last Import Products date"
-    )
+    # last_product_import_date = fields.Datetime(
+    #     string='Last Import Products date',
+    #     help="Last Import Products date"
+    # )
     last_order_import_date = fields.Datetime(
         string="Last Orders import date",
         help="Last Orders import date",
@@ -450,9 +450,7 @@ class MagentoInstance(models.Model):
         Return action for cron configuration
         :return:
         """
-        action = self.env.ref(
-            'odoo_magento2_ept.action_magento_wizard_cron_configuration_ept'
-        ).read()[0]
+        action = self.env.ref('odoo_magento2_ept.action_magento_wizard_cron_configuration_ept').read()[0]
         context = {
             'magento_instance_id': self.id
         }
@@ -498,7 +496,7 @@ class MagentoInstance(models.Model):
         Sync all the websites, store view , Payment methods and delivery methods
         """
         for record in self:
-            record.sync_price_scop()
+            record.sync_price_scope()
             record.import_currency()
             record.sync_website()
             record.sync_storeview()
@@ -515,7 +513,7 @@ class MagentoInstance(models.Model):
     #     magento_category_obj = self.env['magento.product.category']
     #     magento_category_obj.get_all_category(self)
 
-    def sync_price_scop(self):
+    def sync_price_scope(self):
         """
         get price attribute scope and set it in the current instance.
         :return:
@@ -574,7 +572,7 @@ class MagentoInstance(models.Model):
 
     def sync_storeview(self):
         """
-        This method used for import all storeview from magento.
+        This method used for import all storeviews from magento.
         """
         storeview_obj = self.env[MAGENTO_STOREVIEW]
         response = req(self, "/V1/store/storeConfigs", method='GET')
@@ -646,7 +644,7 @@ class MagentoInstance(models.Model):
             elif not currency_id:
                 currency_id = self.env.user.currency_id
             price_list_name = self.name + ' ' + 'PriceList - ' + odoo_website_id.name
-            pricelist_id = pricelist_obj.search([
+            pricelist_id = pricelist_obj.with_context(active_test=False).search([
                 ('name', '=', price_list_name), ('currency_id', '=', currency_id.id)
             ], limit=1)
             if not pricelist_id:
@@ -666,7 +664,7 @@ class MagentoInstance(models.Model):
         payment_methods = req(self, url)
         for payment_method in payment_methods:
             payment_method_code = payment_method.get('value')
-            new_payment_method = payment_method_obj.search([
+            new_payment_method = payment_method_obj.with_context(active_test=False).search([
                 ('payment_method_code', '=', payment_method_code),
                 ('magento_instance_id', '=', self.id)
             ])
@@ -687,7 +685,7 @@ class MagentoInstance(models.Model):
         for delivery_method in delivery_methods:
             for method_value in delivery_method.get('value'):
                 delivery_method_code = method_value.get('value')
-                new_delivery_carrier = delivery_method_obj.search([
+                new_delivery_carrier = delivery_method_obj.with_context(active_test=False).search([
                     ('carrier_code', '=', delivery_method_code),
                     ('magento_instance_id', '=', self.id)
                 ])
@@ -762,11 +760,11 @@ class MagentoInstance(models.Model):
         magento_base_currency = magento_currency.get('base_currency_code')
         pricelist_obj = self.env[PRODUCT_PRICELIST]
         for active_currency in magento_currency.get('exchange_rates'):
-            currency_id = currency_obj.with_context(active_test=False). \
-                search([('name', '=', active_currency.get('currency_to'))], limit=1)
+            domain = [('name', '=', active_currency.get('currency_to'))]
+            currency_id = currency_obj.with_context(active_test=False).search(domain, limit=1)
             if not currency_id.active:
                 currency_id.write({'active': True})
-            price_list = pricelist_obj.search([('currency_id', '=', currency_id.id)])
+            price_list = pricelist_obj.with_context(active_test=False).search([('currency_id', '=', currency_id.id)])
             if price_list:
                 price_list = price_list[0]
             elif not price_list or price_list.currency_id != currency_id:
@@ -918,9 +916,7 @@ class MagentoInstance(models.Model):
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
     magento_order_data = fields.Text(compute="_compute_kanban_magento_order_data")
-    website_display_currency = fields.Many2one("res.currency",
-                                               readonly=True,
-                                               help="Display currency of the magento website.")
+    # website_display_currency = fields.Many2one("res.currency", readonly=True, help="Display currency of the magento website.")
 
     def _compute_kanban_magento_order_data(self):
         if not self._context.get('sort'):
@@ -934,7 +930,7 @@ class MagentoInstance(models.Model):
             # Total sales
             total_sales = round(sum([key['y'] for key in values]), 2)
             # Product count query
-            exported = 'All'
+            # exported = 'All'
             # product_data = record.get_total_products(record, exported)
             # Customer count query
             customer_data = record.get_customers(record)
@@ -1311,8 +1307,7 @@ class MagentoInstance(models.Model):
         Use: To prepare Magento operation action
         :return: Magento operation action details
         """
-        view = self.env.ref('odoo_magento2_ept.'
-                            'action_wizard_magento_instance_import_export_operations').sudo().read()[0]
+        view = self.env.ref('odoo_magento2_ept.action_wizard_magento_instance_import_export_operations').sudo().read()[0]
         action = self.prepare_action(view, [])
         action.update({'context': {'default_magento_instance_id': record_id}})
         return action
