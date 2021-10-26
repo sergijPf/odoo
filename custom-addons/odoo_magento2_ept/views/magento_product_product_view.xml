@@ -26,7 +26,7 @@
             <field name="name">magento.product.product.form</field>
             <field name="model">magento.product.product</field>
             <field name="arch" type="xml">
-                <form string="Product" name="product_form" create="false">
+                <form string="Product" name="product_form" create="false" delete="true">
                     <header>
                         <button name="process_manually"
                                 string="Process Export Manually"
@@ -123,7 +123,7 @@
             <field name="name">magento.product.product.tree</field>
             <field name="model">magento.product.product</field>
             <field name="arch" type="xml">
-                <tree string="Magento Product" create="false" default_order="magento_instance_id,magento_sku">
+                <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku">
                     <header>
                         <button name="status_check_of_export"
                                 context="{'status_check': True}"

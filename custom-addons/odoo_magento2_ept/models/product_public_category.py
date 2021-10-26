@@ -14,6 +14,8 @@ class ProductPublicCategory(models.Model):
     top_level_parent = fields.Char(string="The Top Parent", compute='_compute_top_level_parent', store=True)
     magento_prod_categ = fields.One2many('magento.product.category', 'product_public_categ', string="Magento categories",
                                          context={'active_test': False})
+    magento_conf_prod = fields.One2many('magento.configurable.product', 'odoo_prod_category',
+                                         string="Magento Configurable Products", context={'active_test': False})
 
     @api.depends('name', 'parent_id', 'parent_id.top_level_parent')
     def _compute_top_level_parent(self):
@@ -41,11 +43,12 @@ class ProductPublicCategory(models.Model):
 
     @api.onchange('is_magento_config')
     def onchange_magento_config_check(self):
-        _id = self._origin.id
-        domain = [('odoo_prod_category', '=', _id)]
-        conf_prod = self.env['magento.configurable.product'].with_context(active_test=False).search(domain)
-        if conf_prod:
-            raise UserError("You're not able to uncheck it as there is already Configurable Product "
+        # _id = self._origin.id
+        # domain = [('odoo_prod_category', '=', _id)]
+        # conf_prod = self.env['magento.configurable.product'].with_context(active_test=False).search(domain)
+        # if conf_prod:
+        if self.magento_conf_prod:
+            raise UserError("You're not able to uncheck it as there is already Configurable Product(s) "
                             "created in Magento Layer")
 
     @api.onchange('parent_id')
@@ -59,9 +62,11 @@ class ProductPublicCategory(models.Model):
         res = super(ProductPublicCategory, self).write(vals)
 
         # check if config.product in Magento Layer and let update it
-        prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category', '=', self.id)])
-        if prod_to_update:
-            prod_to_update.write({'update_date': datetime.now()})
+        for prod in self.magento_conf_prod:
+            prod.update_date = datetime.now()
+        # prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category', '=', self.id)])
+        # if prod_to_update:
+        #     prod_to_update.write({'update_date': datetime.now()})
 
         # check if product category needs to be created in Magento
         par_id = vals.get("parent_id")
@@ -85,10 +90,20 @@ class ProductPublicCategory(models.Model):
 
     def unlink(self):
         reject_to_remove = []
+        reject_config = []
         to_remove = []
+
         for categ in self:
-            for mag_categ in categ.magento_prod_categ:
-                reject_to_remove.append(categ.name) if mag_categ.active is True else to_remove.append(mag_categ)
+            if categ.is_magento_config:
+                if self.magento_conf_prod:
+                    reject_config.append([c.magento_sku for c in self.magento_conf_prod])
+            else:
+                for mag_categ in categ.magento_prod_categ:
+                    reject_to_remove.append(categ.name) if mag_categ.active else to_remove.append(mag_categ)
+
+        if reject_config:
+            raise UserError("It's not allowed to delete these categories as they were already added to Magento Layer "
+                            "as Configurable Products: %s\n" % (str(tuple(reject_config))))
 
         if reject_to_remove:
             raise UserError("It is not allowed to remove following categories "

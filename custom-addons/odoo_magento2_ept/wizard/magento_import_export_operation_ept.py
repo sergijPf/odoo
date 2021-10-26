@@ -428,14 +428,16 @@ class MagentoImportExportEpt(models.TransientModel):
             values = {
                 'magento_instance_id': product_dict.get('instance_id'),
                 'odoo_prod_category': product.config_product_id.id,
-                'magento_sku': product.config_product_id.name.replace(' ','_').replace('%','').replace('#','').replace('/','')
+                'magento_sku': product.config_product_id.with_context(lang='en_US').name.replace(' ','_').
+                    replace('%','').replace('#','').replace('/','')
                 # 'magento_product_name': product.config_product_id.name
             }
             configurable_product = configurable_product_object.create(values)
         elif not configurable_product.active:
             configurable_product.write({
                 # 'magento_product_name': product.config_product_id.name,
-                'magento_sku': product.config_product_id.name.replace(' ','_').replace('%','').replace('#','').replace('/',''), # to remove later
+                # 'magento_sku': product.config_product_id.with_context(lang='en_US').name.replace(' ','_').
+                #     replace('%','').replace('#','').replace('/',''), # to remove later
                 'active': True
             })
         return configurable_product

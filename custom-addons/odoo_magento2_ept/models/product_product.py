@@ -58,12 +58,13 @@ class ProductProduct(models.Model):
         magento_product_product_obj = self.env[MAGENTO_PRODUCT]
         if 'active' in vals:
             for product in self:
-                magento_product = magento_product_product_obj.search(
-                    [('odoo_product_id', '=', product.id)])
+                magento_product = magento_product_product_obj.search([('odoo_product_id', '=', product.id)])
                 if vals.get('active'):
                     magento_product = magento_product_product_obj.search(
                         [('odoo_product_id', '=', product.id), ('active', '=', False)])
                 magento_product and magento_product.write({'active': vals.get('active')})
+
+        res = super(ProductProduct, self).write(vals)
 
         if 'config_product_id' in vals:
             # applicable only to products which are in Magento Layer already
@@ -72,23 +73,21 @@ class ProductProduct(models.Model):
 
             # check if product is in Magento Layer
             magento_simp_prod = magento_product_product_obj.with_context(active_test=False).search(domain)
-            if magento_simp_prod:
-                # check if config.product exists
-                dmn = [('odoo_prod_category', '=', self.config_product_id.id)]
-                for prod in magento_simp_prod:
-                    dmn.append(('magento_instance_id', '=', prod.magento_instance_id.id))
-                    conf_prod = magento_conf_product_obj.with_context(active_test=False).search(dmn)
-                    if not conf_prod:
-                        conf_prod = magento_conf_product_obj.create({
-                            'magento_instance_id': prod.magento_instance_id.id,
-                            'odoo_prod_category': self.config_product_id.id,
-                            'magento_sku': self.config_product_id.name.replace(' ', '_').replace('%', '').
-                                replace('#', '').replace('/', '')
-                            # 'magento_sku': re.sub('[^a-zA-Z0-9 \n\.]', '', self.config_product_id.name),
-                            # 'magento_product_name': self.config_product_id.name
-                        })
-                    prod.magento_conf_product = conf_prod.id
 
-        res = super(ProductProduct, self).write(vals)
+            # check if config.product exists, create if not and re-link simple products
+            for prod in magento_simp_prod:
+                dmn = [('odoo_prod_category', '=', self.config_product_id.id),
+                       ('magento_instance_id', '=', prod.magento_instance_id.id)]
+                conf_prod = magento_conf_product_obj.with_context(active_test=False).search(dmn)
+                if not conf_prod:
+                    conf_prod = magento_conf_product_obj.create({
+                        'magento_instance_id': prod.magento_instance_id.id,
+                        'odoo_prod_category': self.config_product_id.id,
+                        'magento_sku': self.config_product_id.with_context(lang='en_US').name.replace(' ', '_').
+                            replace('%', '').replace('#', '').replace('/', '')
+                        # 'magento_sku': re.sub('[^a-zA-Z0-9 \n\.]', '', self.config_product_id.name),
+                        # 'magento_product_name': self.config_product_id.name
+                    })
+                prod.magento_conf_product = conf_prod.id
 
         return res

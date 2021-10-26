@@ -2635,7 +2635,21 @@ class MagentoProductProduct(models.Model):
         :param is_thumbnail: If Image has to be exported as thumbnail (Boolean)
         :return: None
         """
+
+        files_size = 0
         images = []
+        last_prod = list(products_media)[-1]
+
+        def process(images):
+            try:
+                api_url = '/all/async/bulk/V1/products/bySku/media'
+                req(magento_instance, api_url, 'POST', images)
+            except Exception:
+                text = "Error while Product (%s) Images export to Magento in bulk. \n" % str(
+                    'Thumbnail' if is_thumbnail else 'Base')
+                for i in images:
+                    ml_simp_products[i['sku']]['log_message'] += text
+            return [], 0
 
         for prod_sku in products_media:
             for img in products_media[prod_sku]:
@@ -2646,6 +2660,10 @@ class MagentoProductProduct(models.Model):
                 ])
                 if not len(attachment):
                     continue
+
+                if files_size and files_size + attachment.file_size > 900000:
+                    images, files_size = process(images)
+
                 images.append({
                     "entry": {
                         "media_type": "image",
@@ -2660,18 +2678,11 @@ class MagentoProductProduct(models.Model):
                     },
                     "sku": prod_sku
                 })
+                files_size += attachment.file_size
 
-        # split api requests by 80
-        limit = 20
-        process_count = (len(images) // limit) + (1 if len(images) % limit else 0)
-        for cnt in range(process_count):
-            try:
-                api_url = '/all/async/bulk/V1/products/bySku/media'
-                req(magento_instance, api_url, 'POST', images[cnt * limit:limit * (cnt + 1)])
-            except Exception:
-                text = "Error while Product (%s) Images export to Magento in bulk. \n" % str('Thumbnail' if is_thumbnail else 'Base')
-                for prod_sku in products_media:
-                    ml_simp_products[prod_sku]['log_message'] += text
+                # valid for the last image of last product
+                if prod_sku == last_prod and img == products_media[prod_sku][-1]:
+                    images, files_size = process(images)
 
     def process_images_export_to_magento(self, magento_instance, ml_conf_products, magento_sku):
         # product images (Base)

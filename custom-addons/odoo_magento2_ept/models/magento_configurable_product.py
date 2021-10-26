@@ -76,6 +76,13 @@ class MagentoConfigurableProduct(models.Model):
         res = super(MagentoConfigurableProduct, self).write(vals)
         return res
 
+    def unlink(self):
+        if len(self.product_variant_ids.with_context(active_test=False)):
+            raise UserError("You can't remove this Product until it has related Simple Products: %s" % \
+                  str([s.magento_sku for s in self.product_variant_ids.with_context(active_test=False)]))
+        result = super(MagentoConfigurableProduct, self).unlink()
+        return result
+
     @api.depends('product_variant_ids.magento_conf_product')
     def _compute_magento_product_variant_count(self):
         for template in self:

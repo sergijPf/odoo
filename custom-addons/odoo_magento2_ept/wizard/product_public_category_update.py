@@ -24,20 +24,21 @@ class ProductPublicCategoryUpdate(models.TransientModel):
             # check if is in Magento Layer
             domain = [('magento_sku', '=', product.default_code)]
             magento_simp_prod = magento_product_obj.with_context(active_test=False).search(domain)
-            if magento_simp_prod:
-                # check if config.product exists, create if not
-                dmn = [('odoo_prod_category', '=', self.category_id.id)]
-                for prod in magento_simp_prod:
-                    dmn.append(('magento_instance_id', '=', prod.magento_instance_id.id))
-                    conf_prod = magento_conf_product_obj.with_context(active_test=False).search(dmn)
-                    if not conf_prod:
-                        conf_prod = magento_conf_product_obj.create({
-                            'magento_instance_id': prod.magento_instance_id.id,
-                            'odoo_prod_category': self.category_id.id,
-                            'magento_sku': self.category_id.name.replace(' ','_').replace('%','').replace('#','').replace('/','')
-                            # 'magento_product_name': self.category_id.name
-                        })
-                    prod.magento_conf_product = conf_prod.id
+
+            # check if config.product exists, create if not
+            for prod in magento_simp_prod:
+                dmn = [('magento_instance_id', '=', prod.magento_instance_id.id),
+                       ('odoo_prod_category', '=', self.category_id.id)]
+                conf_prod = magento_conf_product_obj.with_context(active_test=False).search(dmn)
+                if not conf_prod:
+                    conf_prod = magento_conf_product_obj.create({
+                        'magento_instance_id': prod.magento_instance_id.id,
+                        'odoo_prod_category': self.category_id.id,
+                        'magento_sku': self.category_id.with_context(lang='en_US').name.replace(' ','_').
+                            replace('%','').replace('#','').replace('/','')
+                        # 'magento_product_name': self.category_id.name
+                    })
+                prod.magento_conf_product = conf_prod.id
 
         return {
             'effect': {

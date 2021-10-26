@@ -4,7 +4,7 @@
             <field name="name">magento.configurable.product.form</field>
             <field name="model">magento.configurable.product</field>
             <field name="arch" type="xml">
-                <form string="Product" name="product_form" create="false">
+                <form string="Product" name="product_form" create="false" delete="1">
                     <header>
 <!--                        <button name="process_manually"-->
 <!--                                string="Process Export Manually"-->
@@ -86,7 +86,7 @@
             <field name="name">magento.configurable.product.tree</field>
             <field name="model">magento.configurable.product</field>
             <field name="arch" type="xml">
-                <tree string="Magento Product" create="false" default_order="magento_instance_id,magento_sku">
+                <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku">
 <!--                    <header>-->
 <!--                        <button name="export_status_check"-->
 <!--                                context="{'status_check': True}"-->
