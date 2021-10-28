@@ -56,7 +56,7 @@ def call_ssl_verify_request(method, api_url, headers, params, data):
     elif method == 'POST':
         resp = requests.post(api_url, headers=headers, data=json.dumps(data), verify=True, params=params)
     elif method == 'DELETE':
-        resp = requests.delete(api_url, headers=headers, verify=True, params=params)
+        resp = requests.delete(api_url, headers=headers, data=json.dumps(data) if data else {}, verify=True, params=params)
     elif method == 'PUT':
         resp = requests.put(api_url, headers=headers, data=json.dumps(data), verify=True, params=params)
     else:
@@ -70,7 +70,7 @@ def call_without_ssl_verify_request(method, api_url, headers, params, data):
     elif method == 'POST':
         resp = requests.post(api_url, headers=headers, data=json.dumps(data), params=params)
     elif method == 'DELETE':
-        resp = requests.delete(api_url, headers=headers, params=params)
+        resp = requests.delete(api_url, headers=headers, data=json.dumps(data) if data else {}, params=params)
     elif method == 'PUT':
         resp = requests.put(api_url, headers=headers, data=json.dumps(data), params=params)
     else:

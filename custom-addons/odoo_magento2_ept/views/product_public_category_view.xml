@@ -10,18 +10,6 @@
                     <field name="is_magento_config"/>
                 </xpath>
 
-<!--                <xpath expr="//group[@name='x_category_image_ids']" position="before">-->
-<!--                    <group name="magento_details" string="Magento Details" modifiers="{}"-->
-<!--                           groups="odoo_magento2_ept.group_magento_user_ept"-->
-<!--                           attrs="{'invisible': [('is_magento_config', '=', False)]}">-->
-<!--                        <field name="do_not_create_in_magento"/>-->
-<!--                        <field name="magento_sku" placeholder="SKU for Magento"/>-->
-<!--                        <field name="magento_assigned_attr" widget="many2many_tags"-->
-<!--                               attrs="{'invisible': [('do_not_create_in_magento', '=', True)]}"-->
-<!--                               options="{'no_create_edit': True}"/>-->
-<!--                    </group>-->
-<!--                </xpath>-->
-
                 <xpath expr="//group[@name='x_magento_details']" position="attributes">
                     <attribute name="groups">odoo_magento2_ept.group_magento_user_ept</attribute>
                     <attribute name="attrs">{'invisible': [('is_magento_config', '=', False)]}</attribute>
@@ -29,6 +17,15 @@
 
                 <xpath expr="//field[@name='x_magento_attr_set']" position="attributes">
                     <attribute name="invisible">1</attribute>
+                </xpath>
+
+                <xpath expr="//group[@name='x_magento_details']" position="inside">
+                    <field name="attribute_line_ids" widget="one2many" attrs="{'invisible': [('is_magento_config', '=', False)]}" context="{'show_attribute': False}">
+                        <tree string="Variants" editable="bottom" delete="1">
+                            <field name="attribute_id" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="value_id" options="{'no_create_edit': True}" context="{'default_attribute_id': attribute_id, 'show_attribute': False}"/>
+                        </tree>
+                    </field>
                 </xpath>
 
             </field>

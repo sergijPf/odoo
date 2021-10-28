@@ -436,8 +436,8 @@ class MagentoImportExportEpt(models.TransientModel):
         elif not configurable_product.active:
             configurable_product.write({
                 # 'magento_product_name': product.config_product_id.name,
-                # 'magento_sku': product.config_product_id.with_context(lang='en_US').name.replace(' ','_').
-                #     replace('%','').replace('#','').replace('/',''), # to remove later
+                'magento_sku': product.config_product_id.with_context(lang='en_US').name.replace(' ','_').
+                    replace('%','').replace('#','').replace('/',''), # to remove later
                 'active': True
             })
         return configurable_product

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from odoo import fields, models, api, _
 from datetime import datetime
 from odoo.exceptions import UserError
@@ -6,9 +8,6 @@ from .api_request import req
 class ProductPublicCategory(models.Model):
     _inherit = "product.public.category"
 
-    # magento_assigned_attr = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
-    #                                     help='Attribute(s) assigned as configurable for config.product in Magento')
-    # magento_sku = fields.Char(string='Conf.Product SKU', help='Configurable Product SKU to be used in Magento')
     is_magento_config = fields.Boolean(string='Is Magento Config.Product',
                                        help='Selected if current category is Configurable Product in Magento')
     top_level_parent = fields.Char(string="The Top Parent", compute='_compute_top_level_parent', store=True)
@@ -16,6 +15,8 @@ class ProductPublicCategory(models.Model):
                                          context={'active_test': False})
     magento_conf_prod = fields.One2many('magento.configurable.product', 'odoo_prod_category',
                                          string="Magento Configurable Products", context={'active_test': False})
+    attribute_line_ids = fields.One2many('product.category.attribute.line', 'config_prod_id', 'Product Attributes',
+                                         copy=True)
 
     @api.depends('name', 'parent_id', 'parent_id.top_level_parent')
     def _compute_top_level_parent(self):
@@ -25,28 +26,8 @@ class ProductPublicCategory(models.Model):
             else:
                 category.top_level_parent = category.name
 
-    # _sql_constraints = [('_magento_product_name_unique_constraint',
-    #                     'unique(magento_sku)',
-    #                     "Magento Product SKU must be unique")]
-
-    # @api.onchange('magento_sku')
-    # def onchange_magento_sku(self):
-    #     _id = self._origin.id
-    #     prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category','=',_id)])
-    #     prod_to_update.write({'magento_sku': self.magento_sku})
-    #
-    # @api.onchange('do_not_create_in_magento', 'magento_assigned_attr')
-    # def onchange_magento_data(self):
-    #     _id = self._origin.id
-    #     prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category', '=', _id)])
-    #     prod_to_update.write({'update_date': datetime.now()})
-
     @api.onchange('is_magento_config')
     def onchange_magento_config_check(self):
-        # _id = self._origin.id
-        # domain = [('odoo_prod_category', '=', _id)]
-        # conf_prod = self.env['magento.configurable.product'].with_context(active_test=False).search(domain)
-        # if conf_prod:
         if self.magento_conf_prod:
             raise UserError("You're not able to uncheck it as there is already Configurable Product(s) "
                             "created in Magento Layer")
@@ -64,9 +45,6 @@ class ProductPublicCategory(models.Model):
         # check if config.product in Magento Layer and let update it
         for prod in self.magento_conf_prod:
             prod.update_date = datetime.now()
-        # prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category', '=', self.id)])
-        # if prod_to_update:
-        #     prod_to_update.write({'update_date': datetime.now()})
 
         # check if product category needs to be created in Magento
         par_id = vals.get("parent_id")

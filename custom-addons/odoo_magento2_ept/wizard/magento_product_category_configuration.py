@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # See LICENSE file for full copyright and licensing details.
-"""
-Describes fields and methods for Magento Cron Configuration
-"""
+
 from odoo import models, fields, _
 from odoo.exceptions import UserError
 from ..models.api_request import req
@@ -24,36 +22,41 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
         default=_get_magento_instance,
         readonly=True
     )
-
+    update_existed = fields.Boolean(string="To Update Existed")
     public_product_categ = fields.Many2one('product.public.category', string="Product's Root Category")
 
-    def create_product_public_category_structure(self):
+    def create_update_product_public_category_structure(self):
         url = '/V1/categories'
+        magento_product_categ_obj = self.env['magento.product.category']
+        domain = [('instance_id', '=', self.magento_instance_id.id)]
+
         try:
             magento_root_category = req(self.magento_instance_id, url)
         except Exception as error:
             raise UserError(_("Error while requesting Product Category" + str(error)))
 
-        if magento_root_category.get("name") != self.public_product_categ.name:
-            raise UserError("Root Product Category has to have the same name in Magento and Odoo.")
+        if self.update_existed:
+            magento_categ = magento_product_categ_obj.with_context(active_test=False).search(domain)
+            for categ in magento_categ:
+                self.process_storeview_translations_export(self.magento_instance_id, categ.product_public_categ,
+                                                           categ['category_id'])
+        else:
+            if magento_root_category.get("name") != self.public_product_categ.name:
+                raise UserError("Root Product Category has to have the same name in Magento and Odoo.")
+            if magento_root_category.get("children_data"):
+                raise UserError("Root Product Category in Magento should not have any subcategories.")
 
-        if magento_root_category.get("children_data"):
-            raise UserError("Root Product Category in Magento should not have any subcategories.")
+            # remove existing records in Magento Layer related to current instance
+            rec_to_remove = magento_product_categ_obj.with_context(active_test=False).search(domain)
+            rec_to_remove and rec_to_remove.unlink()
 
-        magento_product_categ_obj = self.env['magento.product.category']
-
-        # remove existing records in Magento Layer related to current instance
-        domain = [('instance_id', '=', self.magento_instance_id.id)]
-        rec_to_remove = magento_product_categ_obj.with_context(active_test=False).search(domain)
-        rec_to_remove and rec_to_remove.unlink()
-
-        self.create_product_category_in_magento_and_layer(magento_product_categ_obj, self.public_product_categ,
-                                                      self.magento_instance_id, magento_root_category.get("id"), None)
-
+            self.create_product_category_in_magento_and_layer(magento_product_categ_obj, self.public_product_categ,
+                                                              self.magento_instance_id, magento_root_category.get("id"),
+                                                              None)
         return {
             'effect': {
                 'fadeout': 'slow',
-                'message': "Product Categories were successfully created in Magento and in Magento Layer!",
+                'message': "Product Categories were successfully created/updated in Magento and in Magento Layer!",
                 'img_url': '/web/static/src/img/smile.svg',
                 'type': 'rainbow_man',
             }
@@ -119,3 +122,4 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
             except Exception as e:
                 raise UserError(_("Error while exporting '%s' Product Category's translation to %s storeview "
                                   "in Magento." % (product_category.name, view.magento_storeview_code) + str(e)))
+        raise  UserError("")

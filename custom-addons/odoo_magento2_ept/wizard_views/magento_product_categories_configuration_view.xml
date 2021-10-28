@@ -8,7 +8,10 @@
             <field name="arch" type="xml">
                 <form string="Product Category Configuration">
                     <group>
-                        <field name="public_product_categ" required="1" options="{'no_create':True,'no_create_edit': True}"/>
+                        <field name="update_existed"/>
+                        <field name="public_product_categ"
+                               attrs="{'invisible': [('update_existed', '=', True)], 'required': [('update_existed', '=', False)]}"
+                               options="{'no_create':True,'no_create_edit': True}"/>
                     </group>
                     <group>
                         <div style="color:#000000">
@@ -20,14 +23,18 @@
                                     <b>1. This action will create Product Category structure in Magento and Odoo's Magento Layer</b>
                                 </p>
                                 <p>
+                                    <b>2. If "To Update Existed" field is checked, it'll update Product Category
+                                        Names for each website of already exported Categories to Magento. </b>
+                                </p>
+                                <p>
 <!--                                    <b>2.  .</b>-->
                                 </p>
                             </p>
                         </div>
                     </group>
                     <footer>
-                        <button string="Create" class="oe_highlight" type="object"
-                                name="create_product_public_category_structure"/>
+                        <button string="Run" class="oe_highlight" type="object"
+                                name="create_update_product_public_category_structure"/>
                         <button string="Cancel" class="oe_highlight" special="cancel"/>
                     </footer>
                 </form>
