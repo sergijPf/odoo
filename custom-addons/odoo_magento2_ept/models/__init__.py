@@ -50,5 +50,4 @@ from . import magento_configurable_product
 from . import product_attribute
 from . import product_product
 from . import product_public_category
-from . import product_category_attribute
-from . import product_attribute_value
+from . import config_product_attribute

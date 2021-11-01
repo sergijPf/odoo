@@ -20,12 +20,9 @@
                 </xpath>
 
                 <xpath expr="//group[@name='x_magento_details']" position="inside">
-                    <field name="attribute_line_ids" widget="one2many" attrs="{'invisible': [('is_magento_config', '=', False)]}" context="{'show_attribute': False}">
-                        <tree string="Variants" editable="bottom" delete="1">
-                            <field name="attribute_id" attrs="{'readonly': [('id', '!=', False)]}"/>
-                            <field name="value_id" options="{'no_create_edit': True}" context="{'default_attribute_id': attribute_id, 'show_attribute': False}"/>
-                        </tree>
-                    </field>
+                    <field name="attribute_ids" widget="many2many_tags"
+                           options="{'color_field': 'color', 'no_create':True, 'no_create_edit': True}"
+                           attrs="{'invisible': ['|',('is_magento_config', '=', False), ('x_magento_no_create', '=', True)]}"/>
                 </xpath>
 
             </field>

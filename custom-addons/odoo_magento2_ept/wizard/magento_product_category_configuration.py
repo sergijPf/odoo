@@ -65,7 +65,6 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
     def create_product_category_in_magento_and_layer(self, product_categ_object, product_categ, magento_instance,
                                                     magento_categ_id, parent_categ):
         magento_category = {}
-
         # create category in Magento if not root category
         if parent_categ:
             data = {
@@ -98,10 +97,13 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
             # add child ids and recursive call of current method
             if product_categ.child_id:
                 for child in product_categ.child_id:
-                    child_rec = self.create_product_category_in_magento_and_layer(product_categ_object, child,
-                                                                                  magento_instance,
-                                                                                  magento_category.get("id"),
-                                                                                  magento_prod_categ)
+                    child_rec = self.create_product_category_in_magento_and_layer(
+                        product_categ_object,
+                        child,
+                        magento_instance,
+                        magento_category.get('id') if parent_categ else magento_categ_id,
+                        magento_prod_categ
+                    )
                     child_rec and magento_prod_categ.write({
                         'magento_child_ids': [(4, child_rec.id, 0)]
                     })
@@ -122,4 +124,3 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
             except Exception as e:
                 raise UserError(_("Error while exporting '%s' Product Category's translation to %s storeview "
                                   "in Magento." % (product_category.name, view.magento_storeview_code) + str(e)))
-        raise  UserError("")

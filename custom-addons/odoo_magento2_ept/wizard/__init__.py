@@ -10,3 +10,4 @@ from . import magento_queue_process_wizard
 from . import magento_product_category_update
 from . import product_public_category_update
 from . import magento_product_category_configuration
+from . import config_product_attributes_update

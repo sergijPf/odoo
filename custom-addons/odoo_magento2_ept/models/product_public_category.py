@@ -15,8 +15,8 @@ class ProductPublicCategory(models.Model):
                                          context={'active_test': False})
     magento_conf_prod = fields.One2many('magento.configurable.product', 'odoo_prod_category',
                                          string="Magento Configurable Products", context={'active_test': False})
-    attribute_line_ids = fields.One2many('product.category.attribute.line', 'config_prod_id', 'Product Attributes',
-                                         copy=True)
+    attribute_ids = fields.Many2many('config.product.attribute', 'conf_prod_ids', string="Product Attributes")
+    color = fields.Integer(related="attribute_ids.color", string="Color")
 
     @api.depends('name', 'parent_id', 'parent_id.top_level_parent')
     def _compute_top_level_parent(self):

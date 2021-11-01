@@ -6,7 +6,6 @@ class ProductAttribute(models.Model):
 
     is_ignored_in_magento = fields.Boolean(string="Ignore for Magento", default=False,
                                               help="The attribute will be ignored while Product's Export to Magento")
-    c_attribute_line_ids = fields.One2many('product.category.attribute.line', 'attribute_id', 'Lines')
 
     def write(self, vals):
         res = super(ProductAttribute, self).write(vals)
