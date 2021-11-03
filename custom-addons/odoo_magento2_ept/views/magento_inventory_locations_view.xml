@@ -16,7 +16,7 @@
                                 <field name="export_stock_warehouse_ids" string="Export Stock Warehouses" widget="many2many_tags"/>
                             </group>
                             <group>
-                                <field name="import_stock_warehouse" string="Import Stock Warehouse"/>
+<!--                                <field name="import_stock_warehouse" string="Import Stock Warehouse"/>-->
                                 <field name="active"/>
                             </group>
                         </group>

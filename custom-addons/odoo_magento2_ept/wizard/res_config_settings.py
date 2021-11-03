@@ -5,7 +5,7 @@ Describes configuration for Magento Instance.
 """
 from odoo import models, fields, api
 # from odoo.http import request
-MAGENTO_FINANCIAL_STATUS_EPT = 'magento.financial.status.ept'
+# MAGENTO_FINANCIAL_STATUS_EPT = 'magento.financial.status.ept'
 STOCK_WAREHOUSE = 'stock.warehouse'
 
 
@@ -72,21 +72,20 @@ class ResConfigSettings(models.TransientModel):
     #     help="Import product images along with product from Magento while import product?"
     # )
     # Import Product Stock
-    is_import_product_stock = fields.Boolean(
-        'Is Import Magento Product Stock?',
-        default=False,
-        help="Import Product Stock from Magento to Odoo"
-    )
-    import_stock_warehouse = fields.Many2one(
-        STOCK_WAREHOUSE,
-        string="Import Product Stock Warehouse",
-        help="Warehouse for import stock from Magento to Odoo"
-    )
+    # is_import_product_stock = fields.Boolean(
+    #     'Is Import Magento Product Stock?',
+    #     default=False,
+    #     help="Import Product Stock from Magento to Odoo"
+    # )
+    # import_stock_warehouse = fields.Many2one(
+    #     STOCK_WAREHOUSE,
+    #     string="Import Product Stock Warehouse",
+    #     help="Warehouse for import stock from Magento to Odoo"
+    # )
     magento_stock_field = fields.Selection([
         ('free_qty', 'Free Quantity'),
         ('virtual_available', 'Forecast Quantity')
-    ], string="Magento Stock Type", default='free_qty', help="Magento Stock Type"
-    )
+    ], string="Magento Stock Type", default='free_qty', help="Magento Stock Type")
     # auto_create_product = fields.Boolean(
     #     string="Automatically Create Odoo Product If Not Found?",
     #     default=False,
@@ -145,7 +144,7 @@ class ResConfigSettings(models.TransientModel):
         help="Connector only imports those orders which have created after a given date.")
     tax_calculation_method = fields.Selection([
         ('excluding_tax', 'Excluding Tax'), ('including_tax', 'Including Tax')],
-        string="Tax Calculation Method into Magento Website", default="excluding_tax",
+        string="Tax Calculation Method into Magento Website", default="including_tax",
         help="This indicates whether product prices received from Magento is including tax or excluding tax,"
              " when import sale order from Magento"
     )
@@ -172,8 +171,8 @@ class ResConfigSettings(models.TransientModel):
                 'catalog_price_scope': magento_instance_id.catalog_price_scope,
                 'is_multi_warehouse_in_magento': magento_instance_id.is_multi_warehouse_in_magento,
                 'pricelist_id': magento_instance_id.pricelist_id.id if magento_instance_id.pricelist_id else False,
-                'is_import_product_stock': magento_instance_id.is_import_product_stock,
-                'import_stock_warehouse': magento_instance_id.import_stock_warehouse.id if magento_instance_id.import_stock_warehouse else False,
+                # 'is_import_product_stock': magento_instance_id.is_import_product_stock,
+                # 'import_stock_warehouse': magento_instance_id.import_stock_warehouse.id if magento_instance_id.import_stock_warehouse else False,
                 'invoice_done_notify_customer': magento_instance_id.invoice_done_notify_customer,
                 'import_magento_order_status_ids': magento_instance_id.import_magento_order_status_ids.ids,
                 # 'import_product_category': magento_instance_id.import_product_category if magento_instance_id.import_product_category else False,
@@ -251,8 +250,8 @@ class ResConfigSettings(models.TransientModel):
             'catalog_price_scope': magento_instance_id.catalog_price_scope if magento_instance_id else False,
             # 'allow_import_image_of_products': self.allow_import_image_of_products,
             'pricelist_id': self.pricelist_id.id if self.pricelist_id else False,
-            'is_import_product_stock': self.is_import_product_stock,
-            'import_stock_warehouse': self.import_stock_warehouse.id if self.import_stock_warehouse else False,
+            # 'is_import_product_stock': self.is_import_product_stock,
+            # 'import_stock_warehouse': self.import_stock_warehouse.id if self.import_stock_warehouse else False,
             'invoice_done_notify_customer': self.invoice_done_notify_customer,
             'import_magento_order_status_ids': [(6, 0, self.import_magento_order_status_ids.ids)],
             'is_multi_warehouse_in_magento': self.is_multi_warehouse_in_magento if self.is_multi_warehouse_in_magento else False,

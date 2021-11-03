@@ -49,18 +49,18 @@ class MagentoImportExportEpt(models.TransientModel):
     import_specific_sale_order = fields.Char(
         string="Sale Order Reference",
         help="You can import Magento Order by giving order number here,Ex.000000021 \n "
-             "If multiple orders are there give order number comma (,) seperated "
+             "If multiple orders are there give order number comma (,) separated "
     )
     # import_specific_product = fields.Char(
     #     string='Product Reference',
     #     help="You can import Magento product by giving product sku here, Ex.24-MB04 \n "
     #          "If Multiple product are there give product sku comma(,) seperated"
     # )
-    datas = fields.Binary(string="Choose File", filters="*.csv")
-    is_import_shipped_orders = fields.Boolean(
-        string="Import Shipped Orders?",
-        help="If checked, Shipped orders will be imported"
-    )
+    # datas = fields.Binary(string="Choose File", filters="*.csv")
+    # is_import_shipped_orders = fields.Boolean(
+    #     string="Import Shipped Orders?",
+    #     help="If checked, Shipped orders will be imported"
+    # )
     export_method = fields.Selection([
         ("direct", "Export in Magento Layer")
         # ("direct", "Export in Magento Layer"), ("csv", "Export in CSV file")

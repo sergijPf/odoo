@@ -11,8 +11,8 @@
     'maintainer': 'White Label',
 
     # Dependencies
-    'depends': ['common_connector_library'],
-    # 'depends': ['common_connector_library', 'smartino_common'],
+    # 'depends': ['common_connector_library'],
+    'depends': ['common_connector_library', 'smartino_common'],
     # Views
     'data': [
         'security/security.xml',
@@ -72,7 +72,7 @@
         'wizard_views/product_public_category_update_view.xml',
         'wizard_views/magento_product_categories_configuration_view.xml',
         'wizard_views/config_product_attributes_update_view.xml',
-        # 'data/ecommerce_data.xml',
+        'data/ecommerce_data.xml',
         'security/ir.model.access.csv',
         'data/update_magento_partner.xml'
     ],

@@ -95,6 +95,9 @@ class MagentoConfigurableProduct(models.Model):
         :return: None
         """
         self.ensure_one()
+        if len(self.product_variant_ids.with_context(active_test=False)):
+            raise UserError("You can't remove this Product until it has related Simple Products: %s" % \
+                  str([s.magento_sku for s in self.product_variant_ids.with_context(active_test=False)]))
         try:
             api_url = '/V1/products/%s' % self.magento_sku
             response = req(self.magento_instance_id, api_url, 'DELETE')
@@ -108,7 +111,3 @@ class MagentoConfigurableProduct(models.Model):
                 'update_date': '',
                 'magento_website_ids': [(5, 0, 0)]
             })
-
-    # @api.onchange('magento_attr_set', 'category_ids')
-    # def onchange_configurable_product(self):
-    #     self.browse(self._origin.id).write({"update_date": datetime.now()})

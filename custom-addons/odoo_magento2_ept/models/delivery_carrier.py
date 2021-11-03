@@ -38,5 +38,5 @@ class DeliveryCarrier(models.Model):
         """
         delivery_carrier_obj = self.magento_carrier.delivery_carrier_ids.filtered(lambda x: x.id != self.id)
         if delivery_carrier_obj:
-            raise UserError(_("Can't set this same Magento carrier "
+            raise UserError(_("Can't set the same Magento carrier "
                               "with multiple Delivery Methods for the same Magento Instance"))

@@ -26,12 +26,12 @@
                     </group>
                     <group>
                         <group string="Workflow Option">
-                            <field name="validate_order"/>
-                            <field name="create_invoice"
+                            <field name="validate_order" widget="boolean_toggle"/>
+                            <field name="create_invoice" widget="boolean_toggle"
                                    attrs="{'invisible':[('validate_order','=',False)]}"/>
-                            <field name="register_payment"
+                            <field name="register_payment" widget="boolean_toggle"
                                    attrs="{'invisible':[('create_invoice','=',False)]}"/>
-                            <field name="invoice_date_is_order_date"/>
+                            <field name="invoice_date_is_order_date" />
                         </group>
                         <group string="Order Configuration">
                             <field name="picking_policy" required="1"/>
@@ -47,12 +47,9 @@
                                         <ul>
                                             <li>
                                                 <b>Enterprise Edition :</b>
-                                                If 'Accounting'
-                                                module is installed, the invoice will be in "in
-                                                payment" state and
-                                                to register the payment one must use the Bank
-                                                Statement
-                                                Reconciliation process.
+                                                If 'Accounting' module is installed, the invoice will be in "in
+                                                payment" state and to register the payment one must use the Bank
+                                                Statement Reconciliation process.
                                             </li>
                                             <li>
                                                 In all other cases it will be registered by default

@@ -4,7 +4,7 @@
 Describes methods for Magento import customer data queue.
 """
 from datetime import datetime
-from odoo import models, fields, api
+from odoo import models, fields
 from odoo.exceptions import UserError
 from odoo.addons.odoo_magento2_ept.models.api_request import req, create_search_criteria
 from odoo.addons.odoo_magento2_ept.python_library.php import Php

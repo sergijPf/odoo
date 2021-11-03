@@ -5,7 +5,7 @@ Describes methods to store Customer Data queue line
 """
 import time
 import json
-from datetime import timedelta, datetime
+# from datetime import timedelta, datetime
 from odoo import models, fields
 MAGENTO_CUSTOMER_DATA_QUEUE_EPT = "magento.customer.data.queue.ept"
 

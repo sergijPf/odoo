@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record id="ir_attachment_import_transfer_product" model="ir.attachment">
-            <field name="name">magento_product_export.csv</field>
-            <field name="datas" type="base64" file="odoo_magento2_ept/data/magento_product_export.csv"/>
-            <field name="res_model">magento.import.export.ept</field>
-            <field name="public">True</field>
-        </record>
+<!--        <record id="ir_attachment_import_transfer_product" model="ir.attachment">-->
+<!--            <field name="name">magento_product_export.csv</field>-->
+<!--            <field name="datas" type="base64" file="odoo_magento2_ept/data/magento_product_export.csv"/>-->
+<!--            <field name="res_model">magento.import.export.ept</field>-->
+<!--            <field name="public">True</field>-->
+<!--        </record>-->
         <record id="view_magento_import_export_operation" model="ir.ui.view">
             <field name="name">Magento Operation</field>
             <field name="model">magento.import.export.ept</field>
@@ -22,14 +22,7 @@
                     <group>
                         <field name="import_specific_sale_order"
                                attrs="{'invisible' : [('operations','!=','import_specific_order')], 'required':[('operations','==','import_specific_order')]}"/>
-<!--                        <field name="import_specific_product"-->
-<!--                           attrs="{'invisible' : [('operations','!=','import_specific_product')], 'required':[('operations','==','import_specific_product')]}"/>-->
                     </group>
-<!--                    <group>-->
-<!--                        <field name="do_not_update_existing_product"-->
-<!--                           attrs="{'invisible' : [('operations','not in',['import_products','import_specific_product'])],'required':[('operations','in',['import_products','import_specific_product'])]}"/>-->
-
-<!--                    </group>-->
                     <group>
                         <group string="Select Date Range For Import" class="w-100"
                                attrs="{'invisible':[('operations','not in',['import_customer','import_sale_order'])]}">
@@ -41,23 +34,9 @@
                                 To
                                 <field name="end_date" widget="daterange"
                                        options="{'related_start_date': 'start_date'}" class="oe_inline"/>
-<!--                                       attrs="{'required': [('operations', '=', 'import_products')]}"-->
-
                             </div>
                         </group>
                     </group>
-<!--                    <group string="Mapping Magento Products Using CSV"-->
-<!--                           attrs="{'invisible':[('operations','!=','map_products')]}">-->
-<!--                        <div>-->
-<!--                            <div attrs="{'invisible':[('operations','!=','map_products')]}">-->
-<!--                                <field name="datas" class="oe_inline"/>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div>-->
-<!--                            <button string="Download Sample Attachment" name="download_sample_attachment"-->
-<!--                                    type="object"/>-->
-<!--                        </div>-->
-<!--                    </group>-->
                     <footer>
                         <button name="execute" string="Execute" type="object"
                                 class="oe_highlight"/>
@@ -93,23 +72,8 @@
                                     <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
                                 </u>
                                 <b>
-<!--                                    <ol>-->
-<!--                                        <li>-->
-                                            Products without Internal Reference (SKU) and Product Category will not
-                                            be export to Magento Product Layer.
-<!--                                        </li>-->
-<!--                                        <li>-->
-<!--                                            You can import CSV file here: Magento =>-->
-<!--                                            Operations-->
-<!--                                            =>Map Products-->
-<!--                                        </li>-->
-<!--                                        <li>-->
-<!--                                            Do not change the name of the Header fields of csv file-->
-<!--                                        </li>-->
-<!--                                        <li>-->
-<!--                                            Only change the Lower case fields value as per your need-->
-<!--                                        </li>-->
-<!--                                    </ol>-->
+                                    Products without Internal Reference (SKU) and Product Category will not
+                                    be export to Magento Product Layer.
                                 </b>
                             </p>
                         </div>
@@ -139,13 +103,11 @@
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">magento.import.export.ept</field>
             <field name="view_mode">form</field>
-            <field name="view_id"
-                   ref="odoo_magento2_ept.view_magento_import_export_operation"/>
+            <field name="view_id" ref="odoo_magento2_ept.view_magento_import_export_operation"/>
             <field name="target">new</field>
         </record>
 
         <menuitem id="operation_magento_parent_menu" parent="menu_magento_root"
                   name="Operations" action="action_wizard_magento_import_export_operation" sequence="7"/>
-
     </data>
 </odoo>

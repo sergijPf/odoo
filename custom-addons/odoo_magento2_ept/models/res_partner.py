@@ -21,16 +21,11 @@ class ResPartner(models.Model):
 
     magento_instance_id = fields.Many2one('magento.instance', string='Instance',
                                           help="This field relocates magento instance")
-    magento_website_id = fields.Many2one("magento.website", string="Magento Website",
-                                         help="Magento Website")
+    magento_website_id = fields.Many2one("magento.website", string="Magento Website", help="Magento Website")
     magento_customer_id = fields.Char(string="Magento Customer", help="Magento Customer Id")
     address_id = fields.Char(string="Address", help="Address Id")
-    magento_res_partner_ids = fields.One2many(
-        "magento.res.partner.ept",
-        inverse_name="partner_id",
-        string='Magento Customers',
-        help='This relocates Magento Customers'
-    )
+    magento_res_partner_ids = fields.One2many("magento.res.partner.ept", inverse_name="partner_id",
+                                              string='Magento Customers', help='This relocates Magento Customers')
 
     @api.model
     def update_partner_in_magento_res_partner(self):
@@ -466,7 +461,8 @@ class ResPartner(models.Model):
         company_name = partner_vals.get('company_name')
         partner_vals.update({'type': 'invoice'})
         if not magento_customer_id:
-            invoice_partner = self.create_or_update_invoice_partner_for_guest_magento_customer(partner_vals, magento_partner_vals,
+            invoice_partner = self.create_or_update_invoice_partner_for_guest_magento_customer(partner_vals,
+                                                                                               magento_partner_vals,
                                                                                                company_name)
         else:
             invoice_partner = self.create_or_update_invoice_partner_for_magento_customer(

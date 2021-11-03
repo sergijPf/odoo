@@ -36,11 +36,11 @@ class MagentoInventoryLocations(models.Model):
              'It will compute the stock quantities from those Warehouses \n'
              'and export them to the current source location in the Magento.'
     )
-    import_stock_warehouse = fields.Many2one(
-        'stock.warehouse',
-        string="Import Product Stock Warehouse",
-        help="Warehouse for import stock from Magento to Odoo"
-    )
+    # import_stock_warehouse = fields.Many2one(
+    #     'stock.warehouse',
+    #     string="Import Product Stock Warehouse",
+    #     help="Warehouse for import stock from Magento to Odoo"
+    # )
     active = fields.Boolean(string="Status", default=True)
 
     @api.constrains('export_stock_warehouse_ids')

@@ -5,7 +5,7 @@ Describes methods to store Order Data queue line
 """
 import json
 import time
-from datetime import timedelta, datetime
+# from datetime import timedelta, datetime
 from odoo import models, fields
 MAGENTO_ORDER_DATA_QUEUE_EPT = "magento.order.data.queue.ept"
 SALE_ORDER = 'sale.order'
@@ -20,11 +20,8 @@ class MagentoOrderDataQueueLineEpt(models.Model):
     _rec_name = "magento_order_id"
 
     magento_order_data_queue_id = fields.Many2one(MAGENTO_ORDER_DATA_QUEUE_EPT, ondelete="cascade")
-    magento_instance_id = fields.Many2one(
-        'magento.instance',
-        string='Magento Instance',
-        help="Order imported from this Magento Instance."
-    )
+    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance',
+                                          help="Order imported from this Magento Instance.")
     state = fields.Selection([
         ("draft", "Draft"),
         ("failed", "Failed"),
@@ -32,21 +29,11 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         ("cancel", "Cancelled")
     ], default="draft", copy=False)
     magento_order_id = fields.Char(help="Id of imported order.", copy=False)
-    sale_order_id = fields.Many2one(
-        "sale.order",
-        copy=False,
-        help="Order created in Odoo."
-    )
+    sale_order_id = fields.Many2one("sale.order", copy=False, help="Order created in Odoo.")
     order_data = fields.Text(help="Data imported from Magento of current order.", copy=False)
-    processed_at = fields.Datetime(
-        help="Shows Date and Time, When the data is processed",
-        copy=False
-    )
-    magento_order_common_log_lines_ids = fields.One2many(
-        "common.log.lines.ept",
-        "magento_order_data_queue_line_id",
-        help="Log lines created against which line."
-    )
+    processed_at = fields.Datetime(help="Shows Date and Time, When the data is processed", copy=False)
+    magento_order_common_log_lines_ids = fields.One2many("common.log.lines.ept", "magento_order_data_queue_line_id",
+                                                         help="Log lines created against which line.")
 
     def open_sale_order(self):
         """
@@ -88,7 +75,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
                 'state': 'draft',
             })
             self.create(order_queue_line_vals)
-            count = count + 1
+            count += 1
             if count == 50:
                 count = 0
                 order_queue = False
@@ -103,8 +90,8 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         """
         # Here search order queue having below 50 order queue line, then add queue line in that queue
         # Or else create new order queue
-        order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT].\
-            search([('state', '=', 'draft'), ('magento_instance_id', '=', magento_instance.id)]).\
+        domain = [('state', '=', 'draft'), ('magento_instance_id', '=', magento_instance.id)]
+        order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT].search(domain).\
             filtered(lambda x: x.order_queue_line_total_record and x.order_queue_line_total_record < 50)
         order_queue_data_id = order_data_queue_obj[0] if order_data_queue_obj else False
         if order_queue_data_id:

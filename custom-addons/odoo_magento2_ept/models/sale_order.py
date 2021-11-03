@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 from .api_request import req, create_search_criteria
-from ..python_library.php import Php
+# from ..python_library.php import Php
 from dateutil import parser
 utc = pytz.utc
 
@@ -65,62 +65,27 @@ class SaleOrder(models.Model):
         order_ids = list(set(order_ids))
         return [('id', 'in', order_ids)]
 
-    magento_instance_id = fields.Many2one(
-        'magento.instance',
-        string="Instance",
-        help="This field relocates Magento Instance"
-    )
+    magento_instance_id = fields.Many2one('magento.instance', string="Instance",
+                                          help="This field relocates Magento Instance")
     magento_order_id = fields.Char(string="Magento order Ids", help="Magento Order Id")
-    magento_website_id = fields.Many2one(
-        "magento.website",
-        string="Magento Website",
-        help="Magento Website"
-    )
-    magento_order_reference = fields.Char(
-        string="Magento Orders Reference",
-        help="Magento Order Reference"
-    )
-    store_id = fields.Many2one(
-        'magento.storeview',
-        string="Magento Storeview",
-        help="Magento_store_view"
-    )
-    is_exported_to_magento_shipment_status = fields.Boolean(
-        string="Is Order exported to Shipment Status",
-        help="Is exported to Shipment Status"
-    )
-    magento_payment_method_id = fields.Many2one(
-        'magento.payment.method',
-        string="Magento Payment Method",
-        help="Magento Payment Method"
-    )
-    magento_shipping_method_id = fields.Many2one(
-        'magento.delivery.carrier',
-        string="Magento Shipping Method",
-        help="Magento Shipping Method"
-    )
-    order_transaction_id = fields.Char(
-        string="Magento Orders Transaction ID",
-        help="Magento Orders Transaction ID"
-    )
-    updated_in_magento = fields.Boolean(
-        string="Order fulfilled in magento", compute="_get_magento_order_status", search="_search_magento_order_ids",
-        copy=False
-    )
+    magento_website_id = fields.Many2one("magento.website", string="Magento Website", help="Magento Website")
+    magento_order_reference = fields.Char(string="Magento Orders Reference", help="Magento Order Reference")
+    store_id = fields.Many2one('magento.storeview', string="Magento Storeview", help="Magento_store_view")
+    is_exported_to_magento_shipment_status = fields.Boolean(string="Is Order exported to Shipment Status",
+                                                            help="Is exported to Shipment Status")
+    magento_payment_method_id = fields.Many2one('magento.payment.method', string="Magento Payment Method",
+                                                help="Magento Payment Method")
+    magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Magento Shipping Method",
+                                                 help="Magento Shipping Method")
+    order_transaction_id = fields.Char(string="Magento Orders Transaction ID", help="Magento Orders Transaction ID")
+    updated_in_magento = fields.Boolean(string="Order fulfilled in magento", compute="_get_magento_order_status",
+                                        search="_search_magento_order_ids", copy=False)
     #added by SPf
-    magento_carrier_title = fields.Char(
-        related='magento_shipping_method_id.magento_carrier_title',
-        string='Magento Carrier Title'
-    )
-    magento_carrier_label = fields.Char(
-        related='magento_shipping_method_id.carrier_label',
-        string='Magento Carrier Label'
-    )
-    magento_carrier_name = fields.Char(
-        compute="_carrier_name",
-        string="Magento Carrier Name",
-
-    )
+    magento_carrier_title = fields.Char(related='magento_shipping_method_id.magento_carrier_title',
+                                        string='Magento Carrier Title')
+    magento_carrier_label = fields.Char(related='magento_shipping_method_id.carrier_label',
+                                        string='Magento Carrier Label')
+    magento_carrier_name = fields.Char(compute="_carrier_name", string="Magento Carrier Name")
 
     _sql_constraints = [('_magento_sale_order_unique_constraint',
                          'unique(magento_order_id,magento_instance_id,magento_order_reference)',
@@ -159,8 +124,7 @@ class SaleOrder(models.Model):
         pricelist_obj = self.env['product.pricelist']
         order_currency = order_response.get('order_currency_code')
         order_ref = order_response.get('increment_id')
-        currency_id = currency_obj.with_context(active_test=False). \
-            search([('name', '=', order_currency)], limit=1)
+        currency_id = currency_obj.with_context(active_test=False).search([('name', '=', order_currency)], limit=1)
         if not currency_id.active:
             currency_id.write({'active': True})
         price_list = pricelist_obj.search([('currency_id', '=', currency_id.id)])
@@ -169,9 +133,7 @@ class SaleOrder(models.Model):
         elif not price_list or price_list.currency_id != currency_id:
             skip_order = True
             message = "Order %s skipped due to pricelist not found for currency please synchronize metadata again." % order_ref
-            log_book_id.add_log_line(message, order_ref,
-                                     order_data_queue_line_id,
-                                     "magento_order_data_queue_line_id")
+            log_book_id.add_log_line(message, order_ref, order_data_queue_line_id, "magento_order_data_queue_line_id")
         return price_list, skip_order
 
     def get_magento_shipping_method(
@@ -206,8 +168,7 @@ class SaleOrder(models.Model):
                     message = "Order %s skipped due to shipping %s not found in Delivery Methods" % (
                         order_reference, shipping_method)
             if skip_order:
-                log_book_id.add_log_line(message, order_reference,
-                                         order_data_queue_line_id,
+                log_book_id.add_log_line(message, order_reference, order_data_queue_line_id,
                                          "magento_order_data_queue_line_id")
                 return skip_order
             if magento_carrier:
@@ -215,7 +176,8 @@ class SaleOrder(models.Model):
                 if not delivery_carrier:
                     product = self.env.ref('odoo_magento2_ept.product_product_shipping')
                     delivery_carrier_obj.create({
-                        'name': magento_carrier.carrier_label, 'product_id': product.id,
+                        'name': magento_carrier.carrier_label,
+                        'product_id': product.id,
                         'magento_carrier': magento_carrier.id
                     })
         return skip_order
@@ -281,7 +243,7 @@ class SaleOrder(models.Model):
             })
         return invoice_vals
 
-    def mgento_order_convert_date(self, order_response):
+    def magento_order_convert_date(self, order_response):
         """ This method is used to convert the order date in UTC and formate("%Y-%m-%d %H:%M:%S").
             :param order_response: Order response
         """
@@ -347,7 +309,7 @@ class SaleOrder(models.Model):
 
     def validate_magento_order(
             self, order_response, magento_instance_id, order_ref, log_book_id, order_dict, skip_order):
-        date_order = self.mgento_order_convert_date(order_response)
+        date_order = self.magento_order_convert_date(order_response)
         if str(magento_instance_id.import_order_after_date) > date_order:
             message = "Order %s is not imported in Odoo due to configuration mismatch." \
                       "\n Received order date is " \
@@ -620,7 +582,8 @@ class SaleOrder(models.Model):
         if not store_view.magento_website_id.warehouse_id.id:
             skip_order = True
             message = ("Warehouse is not set for the %s website."
-                       "\n Please configure it from Magento Instance > Magento Website > Select Website.") % store_view.magento_website_id.name
+                       "\n Please configure it from Magento Instance > "
+                       "Magento Website > Select Website.") % store_view.magento_website_id.name
             log_book_id.add_log_line(message, order_response['increment_id'],
                                                order_data_queue_line_id, "magento_order_data_queue_line_id")
             return {}, skip_order
@@ -634,10 +597,8 @@ class SaleOrder(models.Model):
         )
         return order_values, skip_order
 
-    def prepare_order_vals_dict(
-            self, magento_instance, partner_dict, order_response, price_list,
-            payment_option, store_view, delivery_method
-    ):
+    def prepare_order_vals_dict(self, magento_instance, partner_dict, order_response, price_list, payment_option,
+                                store_view, delivery_method):
         """
         Prepare dictionary of order values
         :param magento_instance: Magento Instance object
@@ -672,9 +633,8 @@ class SaleOrder(models.Model):
         }
         return ordervals
 
-    def update_order_vals_dict(
-            self, ordervals, magento_instance, store_view, order_response, shipping_carrier, payment_option
-    ):
+    def update_order_vals_dict(self, ordervals, magento_instance, store_view, order_response, shipping_carrier,
+                               payment_option):
         """
         Update dictionary of order values
         :param ordervals: Dictionary of order values
@@ -872,5 +832,5 @@ class SaleOrder(models.Model):
         :return:
         """
         for record in self:
-            self.magento_carrier_name = str(self.magento_carrier_title) + ' / ' + str(self. magento_carrier_label)
+            record.magento_carrier_name = str(record.magento_carrier_title) + ' / ' + str(record.magento_carrier_label)
 

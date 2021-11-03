@@ -246,8 +246,7 @@ class SaleOrder(models.Model):
     def reconcile_payment_ept(self, payment_id, invoice):
         """ Added by twinkalc to reconcile payment"""
         move_line_obj = self.env['account.move.line']
-        domain = [('account_internal_type', 'in', ('receivable', 'payable')),
-                  ('reconciled', '=', False)]
+        domain = [('account_internal_type', 'in', ('receivable', 'payable')), ('reconciled', '=', False)]
         line_ids = move_line_obj.search([('move_id', '=', invoice.id)])
         to_reconcile = [line_ids.filtered(lambda line: line.account_internal_type == 'receivable')]
 
@@ -319,7 +318,7 @@ class SaleOrder(models.Model):
 
         if product and product_qty and product_uom:
             vals = {
-                'name': _('Auto processed move : %s') %product.display_name,
+                'name': _('Auto processed move : %s') % product.display_name,
                 'company_id': self.company_id.id,
                 'product_id': product.id if product else False,
                 'product_uom_qty': product_qty,

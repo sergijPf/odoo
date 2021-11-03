@@ -4,13 +4,10 @@
 Describes methods for importing magento customers into Odoo.
 """
 from odoo import models, fields, api, _
-# from odoo.exceptions import UserError
-# from .api_request import req
 
 
 class MagentoProductCategory(models.Model):
     _name = "magento.product.category"
-
     _rec_name = 'name'
 
     @api.depends('name', 'magento_parent_id.complete_category_name')
@@ -21,7 +18,6 @@ class MagentoProductCategory(models.Model):
             else:
                 category.complete_category_name = category.name
 
-    # name = fields.Char("Name", translate=True)
     instance_id = fields.Many2one(
         'magento.instance',
         'Magento Instance',
@@ -40,14 +36,6 @@ class MagentoProductCategory(models.Model):
     )
     magento_child_ids = fields.One2many(comodel_name='magento.product.category', inverse_name='magento_parent_id',
                                         string='Child Categories')
-    # is_anchor = fields.Boolean(
-    #     string='Anchor?',
-    #     help="The Is Anchor display setting for categories allows a category to 'inherit'"
-    #          " and display all products from its child categories. When Is Anchor is set to 'Yes',"
-    #          " products assigned to child categories will be combined and displayed in the parent "
-    #          "category along with any products directly assigned to it.",
-    #     default=True
-    # )
     is_active = fields.Boolean(
         string='Is Active in Magento?',
         help="Enable the category in Magento by default Yes (uncheck to disable).",

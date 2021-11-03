@@ -132,16 +132,16 @@ class MagentoInstance(models.Model):
         help="Last Update Stock Time",
     )
     # Import Product Stock
-    is_import_product_stock = fields.Boolean(
-        'Is Import Magento Product Stock?',
-        default=False,
-        help="Import Product Stock from Magento to Odoo"
-    )
-    import_stock_warehouse = fields.Many2one(
-        'stock.warehouse',
-        string="Import Product Stock Warehouse",
-        help="Warehouse for import stock from Magento to Odoo"
-    )
+    # is_import_product_stock = fields.Boolean(
+    #     'Is Import Magento Product Stock?',
+    #     default=False,
+    #     help="Import Product Stock from Magento to Odoo"
+    # )
+    # import_stock_warehouse = fields.Many2one(
+    #     'stock.warehouse',
+    #     string="Import Product Stock Warehouse",
+    #     help="Warehouse for import stock from Magento to Odoo"
+    # )
     company_id = fields.Many2one(
         'res.company',
         string='Magento Company',

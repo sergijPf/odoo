@@ -2,7 +2,7 @@
 # See LICENSE file for full copyright and licensing details.
 """For Odoo Magento2 Connector Module"""
 from odoo import models, fields, api
-from datetime import datetime
+# from datetime import datetime
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 import json
 
@@ -65,16 +65,14 @@ class SaleOrderLine(models.Model):
                 odoo_product = magento_product.odoo_product_id
             custom_options = ''
             if description:
-                product_name = "Custom Option for Product" \
-                               " : %s \n" % odoo_product.name
+                product_name = "Custom Option for Product: %s \n" % odoo_product.name
                 custom_options = product_name + description
             sale_order_line = self.with_context(custom_options=custom_options).create_sale_order_line_vals(
                 item, item_price, odoo_product, magento_order)
             order_line = self.create(sale_order_line)
             sale_order_lines.append(order_line)
             if description:
-                product_name = "Custom Option for Product" \
-                               " : %s \n" % odoo_product.name
+                product_name = "Custom Option for Product: %s \n" % odoo_product.name
                 description = product_name + description
                 order_line_obj = self.create_order_line_note(description, magento_order.id)
                 sale_order_lines.append(order_line_obj)
@@ -92,8 +90,7 @@ class SaleOrderLine(models.Model):
             price = item.get('parent_item').get('price_incl_tax') if "parent_item" in item else item.get(
                 'price_incl_tax')
         else:
-            price = item.get('parent_item').get('price') if "parent_item" in item else item.get(
-                'price')
+            price = item.get('parent_item').get('price') if "parent_item" in item else item.get('price')
         original_price = item.get('parent_item').get('original_price') if "parent_item" in item else item.get(
             'original_price')
         item_price = price if price != original_price else original_price
@@ -137,9 +134,7 @@ class SaleOrderLine(models.Model):
                         description += option_data.get('label') + " : " + option_data.get('value') + "\n"
         return description
 
-    def create_sale_order_line_vals(
-            self, order_line_dict, price_unit, odoo_product=False, magento_order=False
-    ):
+    def create_sale_order_line_vals(self, order_line_dict, price_unit, odoo_product=False, magento_order=False):
         """
         Create Sale Order Line Values
         :param order_line_dict:  Magento sale order line object
