@@ -30,7 +30,7 @@ class MagentoQueueProcessEpt(models.TransientModel):
         """
         order_queue_ids = self._context.get('active_ids')
         order_queue_ids = self.env['magento.order.data.queue.ept'].browse(order_queue_ids).filtered(
-            lambda x: x.state != 'done')
+            lambda x: x.state != 'completed')### 'completed' was 'done'
         for order_queue_id in order_queue_ids:
             queue_lines = order_queue_id.order_data_queue_line_ids.filtered(
                 lambda line: line.state in ['draft', 'failed'])

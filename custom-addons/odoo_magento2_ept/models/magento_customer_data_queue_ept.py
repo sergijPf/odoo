@@ -20,30 +20,22 @@ class MagentoCustomerDataQueueEpt(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = "Magento Customer Data Queue EPT"
     name = fields.Char(help="Sequential name of imported customer.", copy=False)
-    magento_instance_id = fields.Many2one(
-        'magento.instance',
-        string='Magento Instance',
-        help="Customer imported from this Magento Instance."
-    )
+    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance',
+                                          help="Customer imported from this Magento Instance.")
     state = fields.Selection([
         ('draft', 'Draft'),
         ('partially_completed', 'Partially Completed'),
         ('completed', 'Completed'),
         ('failed', 'Failed')
     ], default='draft', copy=False, help="Status of Customer Data Queue", compute="_compute_queue_state", store=True)
-    customer_common_log_book_id = fields.Many2one(
-        "common.log.book.ept",
-        help="Related Log book which has all logs for current queue."
-    )
+    customer_common_log_book_id = fields.Many2one("common.log.book.ept",
+                                                  help="Related Log book which has all logs for current queue.")
     magento_customer_common_log_lines_ids = fields.One2many(
         related="customer_common_log_book_id.log_lines",
         help="Log lines of Common log book for particular customer queue"
     )
-    customer_queue_line_ids = fields.One2many(
-        "magento.customer.data.queue.line.ept",
-        "magento_customer_data_queue_id",
-        help="Customer data queue line ids"
-    )
+    customer_queue_line_ids = fields.One2many("magento.customer.data.queue.line.ept", "magento_customer_data_queue_id",
+                                              help="Customer data queue line ids")
 
     def create(self, vals):
         """
@@ -78,7 +70,7 @@ class MagentoCustomerDataQueueEpt(models.Model):
             customer_queue_line_obj.create_import_customer_queue_line(response.get('items', []), magento_instance)
             total_imported_products = customer_page_count * 200
             customer_page_count += 1
-            magento_instance.magento_import_customer_current_page = customer_page_count
+            # magento_instance.magento_import_customer_current_page = customer_page_count
             if total_imported_products <= response.get('total_count'):
                 magento_instance.magento_import_customer_current_page = customer_page_count
             else:

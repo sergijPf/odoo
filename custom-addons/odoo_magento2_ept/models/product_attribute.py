@@ -21,5 +21,6 @@ class ProductAttribute(models.Model):
                     prod_ids.append(p.id)
             if prod_ids:
                 magento_products = magento_products.browse(prod_ids)
-                magento_products.write({'update_date': datetime.now()})
+                # magento_products.write({'update_date': datetime.now()})
+                magento_products.write({'force_update': True})
         return res

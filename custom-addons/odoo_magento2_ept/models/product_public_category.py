@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import fields, models, api, _
-from datetime import datetime
+# from datetime import datetime
 from odoo.exceptions import UserError
 from .api_request import req
 
@@ -41,10 +41,10 @@ class ProductPublicCategory(models.Model):
 
     def write(self, vals):
         res = super(ProductPublicCategory, self).write(vals)
-
         # check if config.product in Magento Layer and let update it
         for prod in self.magento_conf_prod:
-            prod.update_date = datetime.now()
+            # prod.update_date = datetime.now()
+            prod.force_update = True
 
         # check if product category needs to be created in Magento
         par_id = vals.get("parent_id")

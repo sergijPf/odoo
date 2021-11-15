@@ -244,7 +244,7 @@ class MagentoExportProductEpt(models.TransientModel):
                     if not instance.warehouse_ids:
                         raise UserError(_("Please select Export Stock Warehouse for %s instance.") % instance.name)
                     export_product_stock = magento_product_product. \
-                        get_magento_product_stock_ept(instance, product_product_ids.ids,
+                        get_magento_product_stock(instance, product_product_ids.ids,
                                                       prod_obj, instance.warehouse_ids)
                     if export_product_stock:
                         magento_product_tmpl_obj.export_stock_in_magento(export_product_stock, instance, common_log_id, [])
@@ -258,7 +258,7 @@ class MagentoExportProductEpt(models.TransientModel):
                             raise UserError(_("Please select Export Stock Warehouse "
                                               "for %s location.") % magento_location.name)
                         export_product_stock = magento_product_product. \
-                            get_magento_product_stock_ept(instance,
+                            get_magento_product_stock(instance,
                                                           product_product_ids.ids,
                                                           prod_obj,
                                                           export_stock_locations)

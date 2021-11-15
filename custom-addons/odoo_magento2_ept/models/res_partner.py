@@ -15,10 +15,8 @@ _logger = logging.getLogger(__name__)
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    is_magento_customer = fields.Boolean(
-        string="Is Magento Customer?",
-        help="Used for identified that the customer is imported from Magento store.")
-
+    is_magento_customer = fields.Boolean(string="Is Magento Customer?",
+                                         help="Used for identified that the customer is imported from Magento store.")
     magento_instance_id = fields.Many2one('magento.instance', string='Instance',
                                           help="This field relocates magento instance")
     magento_website_id = fields.Many2one("magento.website", string="Magento Website", help="Magento Website")
@@ -78,8 +76,10 @@ class ResPartner(models.Model):
             'name': "%s %s" % (customer_response.get('firstname'), customer_response.get('lastname')),
             'email': customer_response.get('email'), 'type': 'contact',
             'vat': vat_number, 'is_magento_customer': True}
-        magento_partner = magento_partner_obj.search([('magento_customer_id', '=', customer_response.get('id')),
-                                              ('magento_instance_id', '=', magento_instance.id)], limit=1)
+        magento_partner = magento_partner_obj.search([
+            ('magento_customer_id', '=', customer_response.get('id')),
+            ('magento_instance_id', '=', magento_instance.id)
+        ], limit=1)
         if not magento_partner:
             partner = self.search([('email', '=', customer_response.get('email'))], limit=1)
             if len(partner) > 1:
@@ -93,8 +93,8 @@ class ResPartner(models.Model):
             }
             magento_partner = partner.create_magento_res_partner_ept(magento_partner_vals)
         magento_customer.update({customer_response.get('id'): magento_partner.partner_id})
-        self.create_or_update_child_magento_customer(
-            customer_response, state_dict, country_dict, magento_instance, magento_partner.partner_id.id)
+        self.create_or_update_child_magento_customer(customer_response, state_dict, country_dict, magento_instance,
+                                                     magento_partner.partner_id.id)
         customer_queue_line.sudo().unlink()
         return magento_customer, country_dict, state_dict
 
@@ -188,7 +188,7 @@ class ResPartner(models.Model):
         return address_type
 
     def prepare_customer_vals(self, state_dict, country_dict, magento_instance, customer_address,
-                              website_id, customer_id=False, item=False, ship=False):
+                              website_id, customer_id=False, item=False):
         """
         This method prepares the customer vals
         :param ship:
@@ -357,10 +357,9 @@ class ResPartner(models.Model):
         partner_args.update({'invoice_partner': invoice_partner})
         # If guest customer or customer id not found in existing delivery customers
         # or customer company name is different from response, then create or update delivery customer.
-        skip_order, shipping_partner = self.get_magento_sale_order_shipping_partner(response, partner_args,
-                                                                                    order_dict_id = order_dict_id,
-                                                                                    log_book_id=log_book_id,
-                                                                                    skip_order=skip_order)
+        skip_order, shipping_partner = self.get_magento_sale_order_shipping_partner(
+            response, partner_args, order_dict_id=order_dict_id, log_book_id=log_book_id, skip_order=skip_order
+        )
         if not skip_order:
             shipping_partner = shipping_partner.id if shipping_partner else invoice_partner.id
             partner = customer.partner_id.id if customer else invoice_partner.id
@@ -369,7 +368,7 @@ class ResPartner(models.Model):
             partner_dict = False
         return skip_order, partner_dict
 
-    def get_magento_sale_order_shipping_partner(self, response, partner_args, order_dict_id, log_book_id, skip_order= False):
+    def get_magento_sale_order_shipping_partner(self, response, partner_args, order_dict_id, log_book_id, skip_order=False):
         """
         Find Shipping Partner from Odoo if not found then create it.
         :param response: dict()
@@ -401,8 +400,8 @@ class ResPartner(models.Model):
                 partner_vals, magento_partner_values = self.prepare_customer_vals(
                     partner_args.get('state_dict'), partner_args.get('country_dict'),
                     partner_args.get('magento_instance'), ship_address_info,
-                    partner_args.get('magento_store').magento_website_id.id,
-                    customer_id, ship=True)
+                    partner_args.get('magento_store').magento_website_id.id, customer_id
+                )
                 shipping_partner = self.create_or_update_delivery_partner(
                     partner_vals, magento_partner_values, partner_args.get('magento_delivery_customer'),
                     partner_args.get('invoice_partner'), partner_args.get('customer'))
@@ -437,22 +436,22 @@ class ResPartner(models.Model):
             invoice_partner = False
             if bill_address_info:
                 partner_vals, magento_partner_values = self.prepare_customer_vals(
-                    partner_args.get('state_dict'), partner_args.get('country_dict'),
-                    partner_args.get('magento_instance'), bill_address_info,
-                    partner_args.get('magento_store').magento_website_id.id, customer_id)
-                invoice_partner = self.create_or_update_invoice_partner(
-                    partner_vals, magento_partner_values, partner_args.get('magento_instance'),
-                    partner_args.get('magento_invoice_customer'), partner_args.get('customer'))
+                    partner_args.get('state_dict'), partner_args.get('country_dict'), partner_args.get('magento_instance'),
+                    bill_address_info, partner_args.get('magento_store').magento_website_id.id, customer_id
+                )
+                invoice_partner = self.create_or_update_invoice_partner(partner_vals, magento_partner_values,
+                                                                        partner_args.get('magento_invoice_customer'),
+                                                                        partner_args.get('customer'))
         else:
             invoice_partner = partner_args.get('magento_invoice_customer').get(customer_id)
         return invoice_partner
 
-    def create_or_update_invoice_partner(self, partner_vals, magento_partner_vals, instance, magento_invoice_customer, magento_customer):
+    def create_or_update_invoice_partner(self, partner_vals, magento_partner_vals, magento_invoice_customer, magento_customer):
         """
         Creates or update customer for particular Magento website.
         :param partner_vals: Dictionary of Partner values
         :param magento_partner_vals: Dictionary of Magento Partner values
-        :param instance: instance of Magento
+        # :param instance: instance of Magento
         :param magento_invoice_customer: Magento invoice customer dictionary
         :param magento_customer: magento res partner object
         :return: dictionary of invoice address and delivery address.
@@ -465,14 +464,13 @@ class ResPartner(models.Model):
                                                                                                magento_partner_vals,
                                                                                                company_name)
         else:
-            invoice_partner = self.create_or_update_invoice_partner_for_magento_customer(
-                partner_vals, magento_partner_vals, company_name, magento_customer)
+            invoice_partner = self.create_or_update_invoice_partner_for_magento_customer(partner_vals, magento_partner_vals,
+                                                                                         company_name, magento_customer)
         if magento_customer_id:
             magento_invoice_customer.update({magento_customer_id: invoice_partner})
         return invoice_partner
 
-    def create_or_update_invoice_partner_for_guest_magento_customer(
-            self, partner_vals, magento_partner_vals, company_name):
+    def create_or_update_invoice_partner_for_guest_magento_customer(self, partner_vals, magento_partner_vals, company_name):
         """
         Create or update invoice partner for Magento Guest Customers.
         :param partner_vals: Dictionary of Partner values
@@ -549,13 +547,12 @@ class ResPartner(models.Model):
         :return: res.partner()
         """
         zip_code = partner_vals.get('zip_code')
-        delivery = invoice_partner if \
-            (invoice_partner and invoice_partner.name == partner_vals.get('name')
-             and invoice_partner.street == partner_vals.get('street')
-             and (not invoice_partner.street2 or invoice_partner.street2 == partner_vals.get('street2'))
-             and invoice_partner.zip == zip_code and invoice_partner.city == partner_vals.get('city')
-             and invoice_partner.country_id.id == partner_vals.get('country_id')
-             and invoice_partner.state_id.id == partner_vals.get('state_id')) else None
+        delivery = invoice_partner if (invoice_partner and invoice_partner.name == partner_vals.get('name')
+                                       and invoice_partner.street == partner_vals.get('street')
+                                       and (not invoice_partner.street2 or invoice_partner.street2 == partner_vals.get('street2'))
+                                       and invoice_partner.zip == zip_code and invoice_partner.city == partner_vals.get('city')
+                                       and invoice_partner.country_id.id == partner_vals.get('country_id')
+                                       and invoice_partner.state_id.id == partner_vals.get('state_id')) else None
         if not delivery:
             delivery = self.find_magento_partner_by_key(partner_vals)
             if delivery:
@@ -564,8 +561,7 @@ class ResPartner(models.Model):
                 if not magento_customer:
                     delivery.create_magento_res_partner_ept(magento_partner_vals)
             else:
-                delivery = self.create_delivery_partner(
-                    partner_vals, magento_partner_vals, magento_customer, invoice_partner)
+                delivery = self.create_delivery_partner(partner_vals, magento_partner_vals, magento_customer, invoice_partner)
         magento_delivery_customer.update({partner_vals.get('magento_customer_id'): delivery})
         return delivery
 

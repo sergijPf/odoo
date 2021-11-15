@@ -179,8 +179,8 @@
                                 <div class="o_setting_right_pane">
                                     <label for="import_order_after_date" string="Import Order After Date"/>
                                     <div class="text-muted">
-                                    System will import only those orders which are created
-                                    after this configured date.
+                                        System will import only those orders which are created
+                                        after this configured date.
                                     </div>
                                     <div class="content-group">
                                         <div class="mt16">
@@ -205,11 +205,19 @@
                                 </div>
                             </div>
                             <div class="col-12 col-lg-6 o_setting_box" attrs="{'invisible': [('is_multi_warehouse_in_magento', '=', True)]}">
+<!--                                <div class="o_setting_right_pane">-->
+<!--                                    <label for="warehouse_ids" string="Warehouses"/>-->
+<!--                                    <field name="warehouse_ids" class="oe_inline" attrs="{'required':[('magento_instance_id','!=', False), ('is_multi_warehouse_in_magento', '=', False)]}" widget="many2many_tags"/>-->
+<!--                                    <div class="text-muted" id="sale_coupon">-->
+<!--                                        Warehouses used to compute the stock quantities, when only single warehouse is in Magento-->
+<!--                                            and perform export product stock operation.-->
+<!--                                    </div>-->
+<!--                                </div>-->
                                 <div class="o_setting_right_pane">
-                                    <label for="warehouse_ids" string="Warehouses"/>
-                                    <field name="warehouse_ids" class="oe_inline" attrs="{'required':[('magento_instance_id','!=', False), ('is_multi_warehouse_in_magento', '=', False)]}" widget="many2many_tags"/>
+                                    <label for="location_ids" string="Locations"/>
+                                    <field name="location_ids" class="oe_inline" attrs="{'required':[('magento_instance_id','!=', False), ('is_multi_warehouse_in_magento', '=', False)]}" widget="many2many_tags"/>
                                     <div class="text-muted" id="sale_coupon">
-                                        Warehouses used to compute the stock quantities, when only single warehouse is in Magento
+                                        Locations used to compute the stock quantities, when only single warehouse is in Magento
                                             and perform export product stock operation.
                                     </div>
                                 </div>
@@ -299,7 +307,7 @@
                                         <div class="text-muted">Warehouse is used when import orders from Magento</div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="col-12 col-lg-6 o_setting_box" attrs="{'invisible':[('catalog_price_scope', '!=', 'website')]}">
                                     <div class="o_setting_right_pane">
                                         <label for="magento_website_pricelist_ids" string="Pricelist"/>
                                         <field name="magento_website_pricelist_ids" widget="many2many_tags" class="oe_inline" attrs="{'required':[('magento_website_id','!=', False)]}"/>

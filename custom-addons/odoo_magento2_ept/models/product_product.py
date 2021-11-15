@@ -29,6 +29,8 @@ class ProductProduct(models.Model):
             product.magento_product_count = len(magento_products) if magento_products else 0
 
     magento_product_count = fields.Integer(string='# Product Counts', compute='_compute_magento_product_count')
+    magento_product_ids = fields.One2many(MAGENTO_PRODUCT, 'odoo_product_id', string='Magento Products',
+                                          help='Magento Product Ids')
 
     def view_magento_products(self):
         """
@@ -42,13 +44,6 @@ class ProductProduct(models.Model):
         if not magento_product_ids:
             return {'type': 'ir.actions.act_window_close'}
         return action
-
-    magento_product_ids = fields.One2many(
-        MAGENTO_PRODUCT,
-        inverse_name='odoo_product_id',
-        string='Magento Products',
-        help='Magento Product Ids'
-    )
 
     def write(self, vals):
         """

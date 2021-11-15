@@ -55,8 +55,8 @@ class MagentoInstance(models.Model):
         order_after_date = datetime.now() - timedelta(30)
         for instance in instances:
             if not instance.import_order_after_date:
-                order = sale_order_obj.search([('magento_instance_id', '=', instance.id)],
-                                              order='date_order asc', limit=1) or False
+                order = sale_order_obj.search([('magento_instance_id', '=', instance.id)], order='date_order asc',
+                                              limit=1) or False
                 if order:
                     order_after_date = order.date_order
                 else:
@@ -73,27 +73,17 @@ class MagentoInstance(models.Model):
         ('2.4', '2.4.*')
     ], string="Magento Versions", required=True, help="Version of Magento Instance")
     magento_url = fields.Char(string='Magento URLs', required=False, help="URL of Magento")
-    warehouse_ids = fields.Many2many(
-        'stock.warehouse',
-        string="Warehouses",
-        required=True,
-        help='Warehouses used to compute the stock quantities.'
-             'If Warehouses is not selected then it is taken from Website'
-    )
-    magento_website_ids = fields.One2many(
-        MAGENTO_WEBSITE,
-        'magento_instance_id',
-        string='Website',
-        readonly=True,
-        help="Magento Websites"
-    )
-    lang_id = fields.Many2one(
-        'res.lang',
-        string='Default Language',
-        help="If a default language is selected, "
-             "the records will be imported in the translation of this language.\n"
-             "Note that a similar configuration exists for each storeview.",
-    )
+    # warehouse_ids = fields.Many2many('stock.warehouse', string="Warehouses", required=True,
+    #                                  help='Warehouses used to compute the stock quantities. If Warehouses is not '
+    #                                       'selected then it is taken from Website')
+    location_ids = fields.Many2many('stock.location', string="Locations", required=True,
+                                     help='Locations used to compute the stock quantities. If Location is not '
+                                          'selected then it is taken from Website')
+    magento_website_ids = fields.One2many(MAGENTO_WEBSITE, 'magento_instance_id', string='Website', readonly=True,
+                                          help="Magento Websites")
+    lang_id = fields.Many2one('res.lang', string='Default Language',
+                              help="If a default language is selected, the records will be imported in the translation "
+                                   "of this language.\n Note that a similar configuration exists for each storeview.")
     magento_stock_field = fields.Selection([
         ('free_qty', 'On Hand Quantity'),
         ('virtual_available', 'Forcast Quantity')
@@ -102,11 +92,8 @@ class MagentoInstance(models.Model):
         ('global', 'Global'),
         ('website', 'Website')
     ], string="Catalog Price Scopes", help="Scope of Price in Magento", default='global')
-    pricelist_id = fields.Many2one(
-        PRODUCT_PRICELIST,
-        string="Pricelist",
-        help="Product Price is set in selected Pricelist"
-    )
+    pricelist_id = fields.Many2one(PRODUCT_PRICELIST, string="Pricelist",
+                                   help="Product Price is set in selected Pricelist")
     access_token = fields.Char(string="Magento Access Token", help="Magento Access Token")
     # auto_create_product = fields.Boolean(
     #     string="Auto Create Magento Product",
@@ -123,14 +110,8 @@ class MagentoInstance(models.Model):
     #     string='Last Import Products date',
     #     help="Last Import Products date"
     # )
-    last_order_import_date = fields.Datetime(
-        string="Last Orders import date",
-        help="Last Orders import date",
-    )
-    last_update_stock_time = fields.Datetime(
-        string="Last Update Product Stock Time",
-        help="Last Update Stock Time",
-    )
+    last_order_import_date = fields.Datetime(string="Last Orders import date", help="Last Orders import date")
+    last_update_stock_time = fields.Datetime(string="Last Update Product Stock Time", help="Last Update Stock Time")
     # Import Product Stock
     # is_import_product_stock = fields.Boolean(
     #     'Is Import Magento Product Stock?',
@@ -142,54 +123,24 @@ class MagentoInstance(models.Model):
     #     string="Import Product Stock Warehouse",
     #     help="Warehouse for import stock from Magento to Odoo"
     # )
-    company_id = fields.Many2one(
-        'res.company',
-        string='Magento Company',
-        help="Magento Company"
-    )
-
-    invoice_done_notify_customer = fields.Boolean(
-        string="Invoices Done Notify customer",
-        default=False,
-        help="while export invoice send email"
-    )
-    is_multi_warehouse_in_magento = fields.Boolean(
-        string="Is Multi Warehouse in Magento?",
-        default=False,
-        help="If checked, Multi Warehouse used in Magento"
-    )
-    # Require filed for cron
-    auto_import_sale_orders = fields.Boolean(
-        "Auto Import Sale Orders?",
-        default=False,
-        help="This Field relocate auto import sale orders."
-    )
+    company_id = fields.Many2one('res.company', string='Magento Company', help="Magento Company")
+    invoice_done_notify_customer = fields.Boolean(string="Invoices Done Notify customer", default=False,
+                                                  help="while export invoice send email")
+    is_multi_warehouse_in_magento = fields.Boolean(string="Is Multi Warehouse in Magento?", default=False,
+                                                   help="If checked, Multi Warehouse used in Magento")
+    # Require field for cron
+    auto_import_sale_orders = fields.Boolean("Auto Import Sale Orders?", default=False,
+                                             help="This Field relocate auto import sale orders.")
     # auto_import_product = fields.Boolean(
     #     string='Auto import product?',
     #     help="Auto Automatic Import Product"
     # )
-    auto_export_product_stock = fields.Boolean(
-        string='Auto Export Product Stock?',
-        help="Automatic Export Product Stock"
-    )
-    auto_export_invoice = fields.Boolean(
-        string='Auto Export Invoice?',
-        help="Auto Automatic Export Invoice"
-    )
-    auto_export_shipment_order_status = fields.Boolean(
-        string='Auto Export Shipment Information?',
-        help="Automatic Export Shipment Information"
-    )
-    payment_method_ids = fields.One2many(
-        "magento.payment.method",
-        "magento_instance_id",
-        help="Payment Methods for Magento"
-    )
-    shipping_method_ids = fields.One2many(
-        "magento.delivery.carrier",
-        "magento_instance_id",
-        help="Shipping Methods for Magento"
-    )
+    auto_export_product_stock = fields.Boolean(string='Auto Export Product Stock?', help="Automatic Export Product Stock")
+    auto_export_invoice = fields.Boolean(string='Auto Export Invoice?', help="Auto Automatic Export Invoice")
+    auto_export_shipment_order_status = fields.Boolean(string='Auto Export Shipment Information?',
+                                                       help="Automatic Export Shipment Information")
+    payment_method_ids = fields.One2many("magento.payment.method", "magento_instance_id", help="Payment Methods for Magento")
+    shipping_method_ids = fields.One2many("magento.delivery.carrier", "magento_instance_id", help="Shipping Methods for Magento")
     import_magento_order_status_ids = fields.Many2many(
         'import.magento.order.status',
         'magento_instance_order_status_rel',
@@ -218,18 +169,12 @@ class MagentoInstance(models.Model):
     # )
     # is_instance_create_from_onboarding_panel = fields.Boolean(default=False)
     # is_onboarding_configurations_done = fields.Boolean(default=False)
-    import_order_after_date = fields.Datetime(help="Connector only imports those orders which"
-                                                   " have created after a "
-                                                   "given date.",
-                                              default=set_magento_import_after_date)
-    magento_verify_ssl = fields.Boolean(
-        string="Verify SSL", default=False,
-        help="Check this if your Magento site is using SSL certificate")
-    active_user_ids = fields.One2many(
-        "magento.api.request.page",
-        "magento_instance_id",
-        string='Active Users',
-        help='Active Users')
+    import_order_after_date = fields.Datetime(help="Connector only imports those orders which have created after a "
+                                                   "given date.", default=set_magento_import_after_date)
+    magento_verify_ssl = fields.Boolean(string="Verify SSL", default=False,
+                                        help="Check this if your Magento site is using SSL certificate")
+    active_user_ids = fields.One2many("magento.api.request.page", "magento_instance_id", string='Active Users',
+                                      help='Active Users')
     #added by SPf
     user_ids = fields.Many2many('res.users', string="Allowed magento users",
                                 help="Users who have access to this magento instance",
@@ -543,7 +488,7 @@ class MagentoInstance(models.Model):
                         'name': data.get('name'),
                         'magento_website_id': magento_website_id,
                         'magento_instance_id': self.id,
-                        'warehouse_id': self.warehouse_ids.id
+                        # 'warehouse_id': self.warehouse_ids.id
                     })
 
     def search_magento_website_id(self, magento_website_id):
@@ -643,15 +588,15 @@ class MagentoInstance(models.Model):
                 currency_id.write({'active': True})
             elif not currency_id:
                 currency_id = self.env.user.currency_id
-            price_list_name = self.name + ' ' + 'PriceList - ' + odoo_website_id.name
-            pricelist_id = pricelist_obj.with_context(active_test=False).search([
-                ('name', '=', price_list_name), ('currency_id', '=', currency_id.id)
-            ], limit=1)
-            if not pricelist_id:
-                pricelist_id = pricelist_obj.create({'name': price_list_name, 'currency_id': currency_id.id})
+            # price_list_name = self.name + ' ' + 'PriceList - ' + odoo_website_id.name
+            # pricelist_id = pricelist_obj.with_context(active_test=False).search([
+            #     ('name', '=', price_list_name), ('currency_id', '=', currency_id.id)
+            # ], limit=1)
+            # if not pricelist_id:
+            #     pricelist_id = pricelist_obj.create({'name': price_list_name, 'currency_id': currency_id.id})
             odoo_website_id.write({
                 'magento_base_currency' : currency_id,
-                'pricelist_ids': [(6, 0, [pricelist_id.id])],
+                # 'pricelist_ids': [(6, 0, [pricelist_id.id])],
             })
         return odoo_website_id
 
@@ -758,24 +703,24 @@ class MagentoInstance(models.Model):
         magento_currency = req(self, url)
         currency_obj = self.env['res.currency']
         magento_base_currency = magento_currency.get('base_currency_code')
-        pricelist_obj = self.env[PRODUCT_PRICELIST]
+        # pricelist_obj = self.env[PRODUCT_PRICELIST]
         for active_currency in magento_currency.get('exchange_rates'):
             domain = [('name', '=', active_currency.get('currency_to'))]
             currency_id = currency_obj.with_context(active_test=False).search(domain, limit=1)
             if not currency_id.active:
                 currency_id.write({'active': True})
-            price_list = pricelist_obj.with_context(active_test=False).search([('currency_id', '=', currency_id.id)])
-            if price_list:
-                price_list = price_list[0]
-            elif not price_list or price_list.currency_id != currency_id:
-                price_list = pricelist_obj.create({
-                    'name': self.name + " Pricelist - " + active_currency.get('currency_to'),
-                    'currency_id': currency_id.id,
-                    'discount_policy': 'with_discount',
-                    'company_id': self.company_id.id,
-                })
-            if magento_base_currency == active_currency.get('currency_to') and not self.pricelist_id:
-                self.write({'pricelist_id': price_list.id})
+            # price_list = pricelist_obj.with_context(active_test=False).search([('currency_id', '=', currency_id.id)])
+            # if price_list:
+            #     price_list = price_list[0]
+            # elif not price_list or price_list.currency_id != currency_id:
+            #     price_list = pricelist_obj.create({
+            #         'name': self.name + " Pricelist - " + active_currency.get('currency_to'),
+            #         'currency_id': currency_id.id,
+            #         'discount_policy': 'with_discount',
+            #         'company_id': self.company_id.id,
+            #     })
+            # if magento_base_currency == active_currency.get('currency_to') and not self.pricelist_id:
+            #     self.write({'pricelist_id': price_list.id})
         return magento_base_currency
 
     @api.model
@@ -797,11 +742,7 @@ class MagentoInstance(models.Model):
                 last_order_import_date = ''
             from_date = last_order_import_date
             to_date = datetime.now()
-            magento_order_data_queue_obj.magento_create_order_data_queues(
-                instance,
-                from_date,
-                to_date
-            )
+            magento_order_data_queue_obj.magento_create_order_data_queues(instance, from_date, to_date)
             instance.last_order_import_date = datetime.now()
 
     # @api.model
@@ -846,7 +787,7 @@ class MagentoInstance(models.Model):
         if magento_instance_id:
             instance = magento_instance.browse(magento_instance_id)
             if instance.magento_version in ['2.1', '2.2'] or not instance.is_multi_warehouse_in_magento:
-                magento_product_product.export_multiple_product_stock_to_magento(instance)
+                magento_product_product.export_products_stock_to_magento(instance)
             else:
                 inventory_locations = magento_inventory_locations_obj.search([
                     ('magento_instance_id', '=', instance.id)])

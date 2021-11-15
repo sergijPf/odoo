@@ -42,17 +42,17 @@
         </record>
 
         <!-- Inherited Search View Section -->
-        <record id="magento_view_res_partner_filter" model="ir.ui.view">
-            <field name="name">res.partner.search</field>
-            <field name="model">res.partner</field>
-            <field name="inherit_id" ref="base.view_res_partner_filter"/>
-            <field name="arch" type="xml">
-                <xpath expr="//filter[@name='group_country']" position="after">
-<!--                    <filter name="group_instance" string="Magento Instance" context="{'group_by' : 'magento_instance_id'}" />-->
-<!--                    <filter name="group_website" string="Website" context="{'group_by' : 'magento_website_id'}" />-->
-                </xpath>
-            </field>
-        </record>
+<!--        <record id="magento_view_res_partner_filter" model="ir.ui.view">-->
+<!--            <field name="name">res.partner.search</field>-->
+<!--            <field name="model">res.partner</field>-->
+<!--            <field name="inherit_id" ref="base.view_res_partner_filter"/>-->
+<!--            <field name="arch" type="xml">-->
+<!--                <xpath expr="//filter[@name='group_country']" position="after">-->
+<!--&lt;!&ndash;                    <filter name="group_instance" string="Magento Instance" context="{'group_by' : 'magento_instance_id'}" />&ndash;&gt;-->
+<!--&lt;!&ndash;                    <filter name="group_website" string="Website" context="{'group_by' : 'magento_website_id'}" />&ndash;&gt;-->
+<!--                </xpath>-->
+<!--            </field>-->
+<!--        </record>-->
 
         <record id="action_magento_partner_form" model="ir.actions.act_window">
             <field name="name">Customers</field>

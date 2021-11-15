@@ -18,61 +18,27 @@ class MagentoWebsite(models.Model):
     _order = 'sort_order ASC, id ASC'
 
     name = fields.Char(string="Website Name", required=True, readonly=True, help="Website Name")
-    sort_order = fields.Integer(
-        string='Website Sort Order',
-        readonly=True,
-        help='Website Sort Order'
-    )
-    magento_instance_id = fields.Many2one(
-        'magento.instance',
-        'Instance',
-        ondelete="cascade",
-        help="This field relocates magento instance"
-    )
-    magento_website_id = fields.Char(string="Magento Website", help="Magento Website Id")
+    sort_order = fields.Integer(string='Website Sort Order', readonly=True, help='Website Sort Order')
+    magento_instance_id = fields.Many2one('magento.instance', 'Instance', ondelete="cascade",
+                                          help="This field relocates magento instance")
+    catalog_price_scope = fields.Selection(related="magento_instance_id.catalog_price_scope", store=True, readonly=True)
+    magento_website_id = fields.Char(string="Magento Website Id", help="Website Id in Magento")
     # import_partners_from_date = fields.Datetime(
     #     string='Last partner import date',
     #     help='Date when partner last imported'
     # )
-    pricelist_ids = fields.Many2many(
-        'product.pricelist',
-        string="Pricelists",
-        help="Product Price is set in selected Pricelist if Catalog Price Scope is Website"
-    )
-    pricelist_id = fields.Many2one(
-        'product.pricelist',
-        string="Pricelist",
-        help="Product Price is set in selected Pricelist if Catalog Price Scope is Website"
-    )
-    store_view_ids = fields.One2many(
-        "magento.storeview",
-        inverse_name="magento_website_id",
-        string='Magento Store Views',
-        help='This relocates Magento Store Views'
-    )
-    warehouse_id = fields.Many2one(
-        comodel_name='stock.warehouse',
-        string='Warehouse',
-        help='Warehouse to be used to deliver an order from this website.'
-    )
-    company_id = fields.Many2one(
-        'res.company',
-        related='magento_instance_id.company_id',
-        string='Company',
-        readonly=True,
-        help="Magento Company"
-    )
-    currency_id = fields.Many2one(
-        RES_CURRENCY,
-        related='pricelist_id.currency_id',
-        readonly=True,
-        help="Currency"
-    )
-    magento_base_currency = fields.Many2one(
-        RES_CURRENCY,
-        readonly=True,
-        help="Magento Website Base Currency"
-    )
+    pricelist_ids = fields.Many2many('product.pricelist', string="Pricelists",
+                                     help="Product Price is set in selected Pricelist if Catalog Price Scope is Website")
+    # pricelist_id = fields.Many2one('product.pricelist', string="Pricelist",
+    #                                help="Product Price is set in selected Pricelist if Catalog Price Scope is Website")
+    store_view_ids = fields.One2many("magento.storeview", "magento_website_id", string='Magento Store Views',
+                                     help='This relocates Magento Store Views')
+    warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse',
+                                   help='Warehouse to be used to deliver an order from this website.')
+    company_id = fields.Many2one('res.company', related='magento_instance_id.company_id', string='Company',
+                                 readonly=True, help="Magento Company")
+    # currency_id = fields.Many2one(RES_CURRENCY, related='pricelist_id.currency_id', readonly=True, help="Currency")
+    magento_base_currency = fields.Many2one(RES_CURRENCY, readonly=True, help="Magento Website Base Currency")
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
     magento_order_data = fields.Text(compute="_compute_kanban_magento_order_data")

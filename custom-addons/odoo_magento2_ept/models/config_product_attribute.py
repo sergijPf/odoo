@@ -33,7 +33,8 @@ class ConfigProductAttributeGroup(models.Model):
     _name = "config.product.attribute.group"
     _rec_name = 'name'
 
-    name = fields.Char(string="Attributes Category", required=True, translate=True)
+    name = fields.Char(string="Attributes Category", help="Attribute name must match Attribute code in Magento",
+                       required=True)
     color = fields.Integer(string='Color Index')
     # config_prod_attributes_id = fields.One2many('config.product.attribute', 'categ_group_id')
     active = fields.Boolean("Active", default=True)

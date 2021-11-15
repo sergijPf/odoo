@@ -1,7 +1,7 @@
 {
     # App information
     'name': "Odoo Magento 2 Connector customized",
-    'version': '10.7',
+    'version': '10.8',
     'category': 'Sales',
     'summary': 'Odoo Magento 2 Connector to integrate Magento 2.* website with Odoo '
                'as per Smartino specifications',
@@ -77,7 +77,7 @@
         'data/update_magento_partner.xml'
     ],
     'qweb': [
-        'static/src/xml/*.xml',
+        'static/src/xml/dashboard_widget.xml',
     ],
 
     # Odoo Store Specific

@@ -4,7 +4,7 @@
 Describes fields and methods for Magento configurable products
 """
 
-from datetime import datetime
+# from datetime import datetime
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 from .api_request import req
@@ -50,7 +50,8 @@ class MagentoConfigurableProduct(models.Model):
                                              string="Configurable Attribute(s)")
     magento_export_date = fields.Datetime(string="Last Export Date",
                                           help="Configurable Product last Export Date to Magento")
-    update_date = fields.Datetime(string="Configurable Product Update Date")
+    # update_date = fields.Datetime(string="Configurable Product Update Date")
+    force_update = fields.Boolean(string="To force run of Configurable Product Export", default=False)
     product_variant_ids = fields.One2many('magento.product.product', 'magento_conf_product', 'Magento Products',
                                           required=True, context={'active_test': False})
     product_variant_count = fields.Integer('# Product Variants', compute='_compute_magento_product_variant_count')
@@ -59,15 +60,16 @@ class MagentoConfigurableProduct(models.Model):
                          'unique(magento_sku,magento_instance_id)',
                          "Magento Configurable Product SKU must be unique within Magento instance")]
 
-    @api.model
-    def create(self, vals):
-        product = super(MagentoConfigurableProduct, self).create(vals)
-        product.update_date = product.create_date
-        return product
+    # @api.model
+    # def create(self, vals):
+    #     product = super(MagentoConfigurableProduct, self).create(vals)
+    #     product.update_date = product.create_date
+    #     return product
 
     def write(self, vals):
         if 'magento_attr_set' in vals or 'category_ids' in vals:
-            vals.update({'update_date': datetime.now()})
+            # vals.update({'update_date': datetime.now()})
+            vals.update({'force_update': True})
 
         # archive/unarchive related simple products
         if 'active' in vals:
@@ -108,6 +110,6 @@ class MagentoConfigurableProduct(models.Model):
                 'magento_status': 'deleted',
                 'magento_product_id': '',
                 'magento_export_date': '',
-                'update_date': '',
+                'force_update': False,
                 'magento_website_ids': [(5, 0, 0)]
             })

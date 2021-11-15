@@ -159,9 +159,8 @@ class MagentoImportExportEpt(models.TransientModel):
         from_date = datetime.strftime(self.start_date, MAGENTO_DATETIME_FORMAT) if self.start_date else {}
         to_date = datetime.strftime(self.end_date, MAGENTO_DATETIME_FORMAT)
         for instance in instances:
-            order_queue_data = magento_order_data_queue_obj.magento_create_order_data_queues(
-                instance, from_date, to_date, True
-            )
+            order_queue_data = magento_order_data_queue_obj.magento_create_order_data_queues(instance, from_date,
+                                                                                             to_date, True)
         result = self.return_order_queue_form_or_tree_view(order_queue_data)
         return result
 
@@ -333,7 +332,7 @@ class MagentoImportExportEpt(models.TransientModel):
         magento_product_product = self.env[MAGENTO_PRODUCT_PRODUCT]
         for instance in instances:
             if instance.magento_version in ['2.1', '2.2'] or not instance.is_multi_warehouse_in_magento:
-                magento_product_product.export_multiple_product_stock_to_magento(instance)
+                magento_product_product.export_products_stock_to_magento(instance)
             else:
                 inventory_locations = magento_inventory_locations_obj.search([
                     ('magento_instance_id', '=', instance.id)])
@@ -414,7 +413,8 @@ class MagentoImportExportEpt(models.TransientModel):
                 prod_vals = self.prepare_magento_product_variant_dict(product_dict, conf_product)
                 magento_product_object.create(prod_vals)
             elif not magento_variant.active:
-                magento_variant.write({'magento_product_name': product.name, 'active': True})
+                # magento_variant.write({'magento_product_name': product.name, 'active': True})
+                magento_variant.write({'active': True})
 
         return magento_sku_missing, conf_missing
 
@@ -448,7 +448,8 @@ class MagentoImportExportEpt(models.TransientModel):
             'magento_instance_id': product_dict.get('instance_id'),
             'odoo_product_id': product.id,
             'magento_sku': product.default_code,
-            'magento_conf_product': conf_product.id,
-            'magento_product_name': product.name
+            # 'magento_product_name': product.name,
+            'magento_conf_product': conf_product.id
+
         }
         return magento_product_vals

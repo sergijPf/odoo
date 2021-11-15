@@ -9,7 +9,7 @@ import time
 from datetime import datetime, timedelta
 from odoo import models, fields, api
 from odoo.exceptions import UserError
-from .api_request import req, create_search_criteria
+from .api_request import req
 # from ..python_library.php import Php
 from dateutil import parser
 utc = pytz.utc
@@ -108,9 +108,7 @@ class SaleOrder(models.Model):
                                                 store=False)
 
     @api.model
-    def check_price_list_for_order_exit(
-            self, order_response, skip_order, log_book_id, order_data_queue_line_id
-    ):
+    def check_price_list_for_order_exist(self, order_response, log_book_id, order_data_queue_line_id):
         """
         This method is used to check price list is exist or not in odoo.
         When import order from Magento to Odoo.
@@ -122,6 +120,7 @@ class SaleOrder(models.Model):
         """
         currency_obj = self.env['res.currency']
         pricelist_obj = self.env['product.pricelist']
+        skip_order = False
         order_currency = order_response.get('order_currency_code')
         order_ref = order_response.get('increment_id')
         currency_id = currency_obj.with_context(active_test=False).search([('name', '=', order_currency)], limit=1)
@@ -136,9 +135,7 @@ class SaleOrder(models.Model):
             log_book_id.add_log_line(message, order_ref, order_data_queue_line_id, "magento_order_data_queue_line_id")
         return price_list, skip_order
 
-    def get_magento_shipping_method(
-            self, magento_instance, order_response, log_book_id, order_data_queue_line_id
-    ):
+    def get_magento_shipping_method(self, magento_instance, order_response, log_book_id, order_data_queue_line_id):
         """
         This method is used to get shipping method.
         if shipping method not found it will create(base on carrier_code) new shipping method.
@@ -182,7 +179,7 @@ class SaleOrder(models.Model):
                     })
         return skip_order
 
-    def cancel_order_from_magento(self):
+    def cancel_order_from_magento_by_webhook(self):
         """
         this method will call while sale order cancel from webhook
         :return:
@@ -256,15 +253,12 @@ class SaleOrder(models.Model):
 
         return date_order
 
-    def create_magento_sales_order_ept(
-            self, magento_instance_id, orders, magento_product_sku, magento_invoice_customer,
-            magento_delivery_customer, order_count, order_total_queue, log_book_id
-    ):
+    def create_magento_sales_order_ept(self, orders, magento_invoice_customer, magento_delivery_customer, order_count,
+                                       order_total_queue, log_book_id):
         """
-        This method create orders into Odoo.
-        :param magento_instance_id: instance of Magento
+        This method create orders in Odoo.
         :param orders: orders dictionary received from Magento API
-        :param magento_product_sku: Dictionary of Magento products
+        # :param magento_product_sku: Dictionary of Magento products
         :param magento_invoice_customer: Dictionary of Magento invoice customer
         :param magento_delivery_customer: Dictionary of Magento delivery customer
         :param order_count: Order count variable for commit after 10 orders
@@ -273,6 +267,8 @@ class SaleOrder(models.Model):
         :return: Inserted orders dictionary
         """
         country_dict = state_dict = {}
+        magento_instance_id = orders.magento_instance_id
+
         for order_dict in orders:
             order_response = json.loads(order_dict.order_data)
             order_ref = order_response['increment_id']
@@ -288,8 +284,8 @@ class SaleOrder(models.Model):
                 continue
             if magento_instance_id:
                 magento_order, skip_order = self.get_magento_order_details_and_create_sale_order(
-                    magento_instance_id, order_dict, order_response, log_book_id, magento_product_sku,
-                    magento_invoice_customer, magento_delivery_customer, state_dict, country_dict)
+                    magento_instance_id, order_dict, order_response, log_book_id, magento_invoice_customer,
+                    magento_delivery_customer, state_dict, country_dict)
                 if skip_order:
                     # here we set queue line as fail state,
                     # because warehouse is not set in website
@@ -305,29 +301,27 @@ class SaleOrder(models.Model):
                     'magento_order_id': magento_order.magento_order_reference,
                     'sale_order_id': magento_order.id # save sale_order_id for new order.
                 })
-        return magento_product_sku, magento_invoice_customer, magento_delivery_customer, order_count, order_total_queue
+        return magento_invoice_customer, magento_delivery_customer, order_count, order_total_queue
 
-    def validate_magento_order(
-            self, order_response, magento_instance_id, order_ref, log_book_id, order_dict, skip_order):
+    def validate_magento_order(self, order_response, magento_instance_id, order_ref, log_book_id, order_dict):
+        skip_order = False
+        message = ''
         date_order = self.magento_order_convert_date(order_response)
         if str(magento_instance_id.import_order_after_date) > date_order:
-            message = "Order %s is not imported in Odoo due to configuration mismatch." \
-                      "\n Received order date is " \
-                      "%s. \n Please check the order after date in Magento configuration." % (order_ref,
-                                                                                              date_order)
+            message = "Order %s is not imported in Odoo due to configuration mismatch.\n Received order date is %s.\n" \
+                      "Please check the order after date in Magento configuration." % (order_ref, date_order)
             skip_order = True
         elif 'is_invoice' not in order_response.get('extension_attributes'):
             message = "Please check Apichange extention is installed in Magento store."
+
+        if message:
             skip_order = True
-        if skip_order:
-            log_book_id.add_log_line(message, order_ref,
-                                     order_dict.id,
-                                     "magento_order_data_queue_line_id")
+            log_book_id.add_log_line(message, order_ref, order_dict.id, "magento_order_data_queue_line_id")
         return skip_order
 
-    def get_magento_order_details_and_create_sale_order(
-            self, magento_instance_id, order_dict, order_response, log_book_id, magento_product_sku,
-            magento_invoice_customer, magento_delivery_customer, state_dict, country_dict):
+    def get_magento_order_details_and_create_sale_order(self, magento_instance_id, order_dict, order_response,
+                                                        log_book_id, magento_invoice_customer,
+                                                        magento_delivery_customer, state_dict, country_dict):
         """
         Create/ update Magento payment options, financial status, products,
          shipping details, customers, pricelists.
@@ -336,7 +330,7 @@ class SaleOrder(models.Model):
         :param order_dict: magento order data queue line object
         :param order_response: response received from Magento
         :param log_book_id: common log book object
-        :param magento_product_sku: Magento product SKU
+        # :param magento_product_sku: Magento product SKU
         :param magento_invoice_customer: dictionary for invoice customer
         :param magento_delivery_customer: dictionary for delivery customer
         :param state_dict: dictionary for state
@@ -344,29 +338,31 @@ class SaleOrder(models.Model):
         :return: orcer values dictionary, skip_order
         """
         magento_order = False
-        skip_order = False
-        order_ref = order_response['increment_id']
-        skip_order = self.validate_magento_order(
-            order_response, magento_instance_id, order_ref, log_book_id, order_dict, skip_order)
-        if not skip_order:
-            skip_order = self.check_payment_shipping_and_products_of_order(
-                order_dict.id, order_response, magento_instance_id, log_book_id, magento_product_sku, skip_order)
         price_list = False
+        order_ref = order_response['increment_id']
+        skip_order = self.validate_magento_order(order_response, magento_instance_id, order_ref, log_book_id, order_dict)
+
         if not skip_order:
-            price_list, skip_order = self.check_price_list_for_order_exit(
-                order_response, skip_order, log_book_id, order_dict.id)
+            skip_order = self.check_payment_and_shipping_and_product_info_of_order(
+                order_dict.id, order_response, magento_instance_id, log_book_id, skip_order
+            )
+        if not skip_order:
+            price_list, skip_order = self.check_price_list_for_order_exist(order_response, log_book_id, order_dict.id)
         if not skip_order:
             skip_order, partner_dict = self.env['res.partner'].create_or_update_magento_customer(
                 magento_instance_id, order_response, magento_invoice_customer,
-                magento_delivery_customer, state_dict, country_dict, skip_order, log_book_id, order_dict.id)
+                magento_delivery_customer, state_dict, country_dict, skip_order, log_book_id, order_dict.id
+            )
         if not skip_order:
             # Prepare Sale Order Values
             order_values, skip_order = self.create_magento_sales_order_vals(
-                partner_dict, order_response, magento_instance_id, price_list, log_book_id, order_dict.id)
+                partner_dict, order_response, magento_instance_id, price_list, log_book_id, order_dict.id
+            )
         if not skip_order:
             magento_order = self.create(order_values)
             skip_order = self.create_magento_sale_order_line(
-                order_response, magento_instance_id, magento_order, log_book_id, order_dict)
+                order_response, magento_instance_id, magento_order, log_book_id, order_dict
+            )
         return magento_order, skip_order
 
     def process_sale_order_workflow_based_on_status(self, order_response, magento_order, log_book_id):
@@ -409,36 +405,33 @@ class SaleOrder(models.Model):
             order_dict.magento_order_data_queue_id.is_process_queue = True
         return order_dict, order_count
 
-    def check_payment_shipping_and_products_of_order(
-            self, order_data_queue_line_id, order_response, magento_instance_id,
-            log_book_id, magento_product_sku, skip_order):
+    def check_payment_and_shipping_and_product_info_of_order(self, order_data_queue_line_id, order_response,
+                                                             magento_instance_id, log_book_id, skip_order):
         """
-        Check Payment method, payment term, shipping method and create/ update product
+        Check Payment method, payment term and shipping method
         :param order_data_queue_line_id: order data queue line id
         :param order_response: order dictionary received from Magento API
         :param magento_instance_id: Instance of Magento
         :param log_book_id: common log book object or False
-        :param magento_product_sku: Magento product dictionary
+        # :param magento_product_sku: Magento product dictionary
         :param skip_order: True/False
         :return: skip order and job
         """
-        # magento_product = self.env['magento.product.product']
         order_ref = order_response['increment_id']
         payment_method = order_response['payment'].get('method')
-        skip_order, message = self.check_magento_payment_method_configuration(
-            magento_instance_id, order_response, payment_method, skip_order)
+        skip_order, message = self.check_magento_payment_method_configuration(magento_instance_id, order_response,
+                                                                              payment_method, skip_order)
         if skip_order:
             log_book_id.create_order_log_lines(message, order_ref, order_data_queue_line_id)
             return skip_order
-        skip_order = self.get_magento_shipping_method(
-            magento_instance_id, order_response, log_book_id, order_data_queue_line_id
-        )
+
+        skip_order = self.get_magento_shipping_method(magento_instance_id, order_response, log_book_id,
+                                                      order_data_queue_line_id)
         if skip_order:
             return skip_order
-        # order_lines = order_response['items']
-        # skip_order = magento_product.create_or_update_product_in_magento(
-        #     order_lines, magento_instance_id, magento_product_sku, order_ref, order_data_queue_line_id, log_book_id
-        # )
+        order_lines = order_response['items']
+        skip_order = self.check_products_exist_in_odoo(order_lines, magento_instance_id, order_ref,
+                                                       order_data_queue_line_id, log_book_id)
         return skip_order
 
     @staticmethod
@@ -475,8 +468,8 @@ class SaleOrder(models.Model):
         """
         is_invoice = order_response.get('extension_attributes').get('is_invoice')
         is_shipment = order_response.get('extension_attributes').get('is_shipment')
-        financial_status_code, financial_status_name = self.get_magento_financial_status(
-            order_response.get('status'), is_invoice, is_shipment)
+        financial_status_code, financial_status_name = self.get_magento_financial_status(order_response.get('status'),
+                                                                                         is_invoice, is_shipment)
         workflow_config = self.env['magento.financial.status.ept'].search(
             [('magento_instance_id', '=', magento_instance.id),
              ('payment_method_id', '=', payment_option.id),
@@ -500,8 +493,7 @@ class SaleOrder(models.Model):
                 'increment_id')
         return True, message
 
-    def check_magento_payment_method_configuration(
-            self, magento_instance, order_response, payment_method, skip_order):
+    def check_magento_payment_method_configuration(self, magento_instance, order_response, payment_method, skip_order):
         """
         Check Configuration All Configuration of Payment Methods
         :param magento_instance: Magento Instance Object
@@ -510,53 +502,88 @@ class SaleOrder(models.Model):
         :param skip_order: True/ False
         :return: skip_order (boolean)
         """
-        payment_option = magento_instance.payment_method_ids.filtered(
-            lambda x: x.payment_method_code == payment_method)
+        payment_option = magento_instance.payment_method_ids.filtered(lambda x: x.payment_method_code == payment_method)
         order_ref = order_response['increment_id']
         message = ''
         import_rule = payment_option.import_rule
         max_days = payment_option.days_before_cancel
         amount_paid = order_response.get('payment').get('amount_paid', False)
-
-        workflow_config, financial_status_name = self.search_order_financial_status(
-            order_response, magento_instance, payment_option)
+        workflow_config, financial_status_name = self.search_order_financial_status(order_response, magento_instance,
+                                                                                    payment_option)
         if not workflow_config and financial_status_name == "":
             skip_order, message = self.check_order_is_processing_and_shipped_and_invoiced(order_response)
         elif not workflow_config:
             skip_order = True
-            message = "- Automatic order process workflow configuration not found for this order " \
-                      "%s. \n - System tries to find the workflow based on combination of Payment " \
+            message = "- Automatic order process workflow configuration not found for this order %s. \n -" \
+                      " System tries to find the workflow based on combination of Payment " \
                       "Gateway(such as Bank Transfer etc.) and Financial Status(such as Pending Orders," \
-                      "Completed Orders etc.).\n - In this order, Payment Gateway is %s and Financial Status is %s." \
-                      " \n - You can configure the Automatic order process workflow " \
-                      "under the menu Magento > Configuration > Financial Status." % (
-                      order_response.get('increment_id'),
-                      payment_method,
-                      financial_status_name)
+                      "Completed Orders etc.).\n - In this order, Payment Gateway is %s and Financial Status is %s.\n " \
+                      "- You can configure the Automatic order process workflow under the menu Magento > Configuration" \
+                      " > Financial Status." % (order_response.get('increment_id'), payment_method,
+                                                financial_status_name)
         elif not workflow_config.auto_workflow_id and financial_status_name != "":
             skip_order = True
-            message = "Order %s skipped due to auto workflow configuration not found for payment method - %s and financial status - %s" % (
-                order_ref, payment_method, financial_status_name)
+            message = "Order %s skipped due to auto workflow configuration not found for payment method - %s " \
+                      "and financial status - %s" % (order_ref, payment_method, financial_status_name)
         elif not workflow_config.payment_term_id and financial_status_name != "":
             skip_order = True
-            message = "Order %s skipped due to Payment Term not found in payment method - %s and financial status - %s" % (
-                order_ref, payment_method, financial_status_name)
+            message = "Order %s skipped due to Payment Term not found in payment method - %s and financial status -" \
+                      "%s" % (order_ref, payment_method, financial_status_name)
         elif max_days:
             order_date = datetime.strptime(order_response.get('created_at'), '%Y-%m-%d %H:%M:%S')
             if order_date + timedelta(days=max_days) < datetime.now():
                 skip_order = True
-                message = '%s has not been imported because it is %d before.' % (
-                    order_ref, max_days)
+                message = '%s has not been imported because it is %d before.' % (order_ref, max_days)
         elif import_rule == 'never':
             skip_order = True
-            message = "Orders with payment method %s are never imported." % payment_method
+            message = "Orders with payment method %s have the rule never to be imported." % payment_method
         elif not amount_paid and import_rule == 'paid':
             skip_order = True
-            message = "Order '%s' has not been paid yet,So order will be imported later" % order_ref
+            message = "Order '%s' has not been paid yet, So order will be imported later" % order_ref
         return skip_order, message
 
-    def create_magento_sales_order_vals(self, partner_dict, order_response,
-                                        magento_instance_id, price_list, log_book_id, order_data_queue_line_id):
+
+
+    def check_products_exist_in_odoo(self, order_response, magento_instance, order_ref, order_data_queue_line_id,
+                                     log_book_id):
+        """
+        Check if products in imported order exist in Odoo.
+        :param order_response: Order Response received from Magento
+        :param magento_instance: Instance of Magento
+        :param order_ref: Order reference
+        :param order_data_queue_line_id: Order data queue line id
+        :return: common log book object and skip order
+        """
+        skip_order = False
+        message = ""
+
+        for order_item in order_response:
+            prod_sku = order_item.get('sku')
+            if order_item.get('product_type') not in ['simple', 'configurable']:
+                message = "Order %s skipped due to %s product type is not supported" % (
+                    order_ref, order_item.get('product_type')
+                )
+                break
+
+            # Check the ordered product is already exist in the magento product product layer or not.
+            magento_product_obj = self.env['magento.product.product'].search(
+                [('magento_instance_id', '=', magento_instance.id),
+                 ('magento_sku', '=', order_item.get('sku'))], limit=1)
+            if not magento_product_obj:
+                message = "Order %s skipped due to product with sku '%s' is missed " \
+                          "in magento layer in Odoo" % (order_ref, prod_sku)
+                break
+
+        if message:
+            skip_order = True
+            log_book_id.add_log_line(message, order_ref, order_data_queue_line_id, "magento_order_data_queue_line_id",
+                                     prod_sku)
+        return skip_order
+
+
+
+    def create_magento_sales_order_vals(self, partner_dict, order_response, magento_instance_id, price_list,
+                                        log_book_id, order_data_queue_line_id):
         """
         Prepare dictionary for Magento sale order
         :param partner_dict: partner invoice address and delivery address dictionary
@@ -574,27 +601,24 @@ class SaleOrder(models.Model):
         )
         payment_method = order_response['payment'].get('method')
         payment_option = magento_instance_id.payment_method_ids.filtered(
-            lambda x: x.payment_method_code == payment_method)
+            lambda x: x.payment_method_code == payment_method
+        )
         store_id = order_response.get('store_id')
         store_view = magento_instance_id.magento_website_ids.store_view_ids.filtered(
             lambda x: x.magento_storeview_id == str(store_id)
         )
         if not store_view.magento_website_id.warehouse_id.id:
             skip_order = True
-            message = ("Warehouse is not set for the %s website."
-                       "\n Please configure it from Magento Instance > "
+            message = ("Warehouse is not set for the %s website.\n Please configure it from Magento Instance > "
                        "Magento Website > Select Website.") % store_view.magento_website_id.name
-            log_book_id.add_log_line(message, order_response['increment_id'],
-                                               order_data_queue_line_id, "magento_order_data_queue_line_id")
+            log_book_id.add_log_line(message, order_response['increment_id'], order_data_queue_line_id,
+                                     "magento_order_data_queue_line_id")
             return {}, skip_order
-        order_values = self.prepare_order_vals_dict(
-            magento_instance_id, partner_dict, order_response, price_list,
-            payment_option, store_view, delivery_method
-        )
+        order_values = self.prepare_order_vals_dict(magento_instance_id, partner_dict, order_response, price_list,
+                                                    payment_option, store_view, delivery_method)
         order_values = self.create_sales_order_vals_ept(order_values)
-        order_values = self.update_order_vals_dict(
-            order_values, magento_instance_id, store_view, order_response, shipping_carrier, payment_option
-        )
+        order_values = self.update_order_vals_dict(order_values, magento_instance_id, store_view, order_response,
+                                                   shipping_carrier, payment_option)
         return order_values, skip_order
 
     def prepare_order_vals_dict(self, magento_instance, partner_dict, order_response, price_list, payment_option,
@@ -610,8 +634,8 @@ class SaleOrder(models.Model):
         :param delivery_method: Delivery carrier object
         :return: Dictionary of order values
         """
-        financial_status, financial_status_name = self.search_order_financial_status(
-            order_response, magento_instance, payment_option)
+        financial_status, financial_status_name = self.search_order_financial_status(order_response, magento_instance,
+                                                                                     payment_option)
         workflow_process_id = False
         payment_term_id = False
         if financial_status and financial_status.auto_workflow_id:
@@ -646,8 +670,8 @@ class SaleOrder(models.Model):
         :return:
         """
         order_ref = order_response.get('increment_id')
-        financial_status, financial_status_name = self.search_order_financial_status(
-            order_response, magento_instance, payment_option)
+        financial_status, financial_status_name = self.search_order_financial_status(order_response, magento_instance,
+                                                                                     payment_option)
         workflow_process_id = False
         if financial_status.auto_workflow_id:
             workflow_process_id = financial_status.auto_workflow_id.id
@@ -689,8 +713,9 @@ class SaleOrder(models.Model):
         :param instance: instance of Magento
         :param magento_order: sale order object
         """
-        skip_order, sale_order_lines = self.env[SALE_ORDER_LINE].\
-            magento_create_sale_order_line(instance, order_response, magento_order, log_book_id, order_dict)
+        skip_order, sale_order_lines = self.env[SALE_ORDER_LINE].magento_create_sale_order_line(
+            instance, order_response, magento_order, log_book_id, order_dict
+        )
         if not skip_order:
             skip_order = self.create_shipping_order_line(order_response, magento_order, log_book_id, order_dict)
             if not skip_order:

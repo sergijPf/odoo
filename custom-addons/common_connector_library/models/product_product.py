@@ -2,6 +2,7 @@
 # See LICENSE file for full copyright and licensing details.
 from datetime import datetime
 from odoo import models, fields, api
+from odoo.exceptions import UserError
 
 class ProductProduct(models.Model):
     _inherit = "product.product"
@@ -71,25 +72,25 @@ class ProductProduct(models.Model):
     #
     #     return res
 
-    def get_stock_ept(self, product_id, warehouse_id, fix_stock_type=False, fix_stock_value=0,
-                      stock_type='virtual_available'):
-        """
-        Need to remove this old method.@Maulik
-        """
-        product = self.with_context(warehouse=warehouse_id).browse(product_id.id)
-        actual_stock = getattr(product, stock_type)
-        if actual_stock >= 1.00:
-            if fix_stock_type == 'fix':
-                if fix_stock_value >= actual_stock:
-                    return actual_stock
-                return fix_stock_value
-
-            if fix_stock_type == 'percentage':
-                quantity = int((actual_stock * fix_stock_value) / 100.0)
-                if quantity >= actual_stock:
-                    return actual_stock
-                return quantity
-        return actual_stock
+    # def get_stock_ept(self, product_id, warehouse_id, fix_stock_type=False, fix_stock_value=0,
+    #                   stock_type='virtual_available'):
+    #     """
+    #     Need to remove this old method.@Maulik
+    #     """
+    #     product = self.with_context(warehouse=warehouse_id).browse(product_id.id)
+    #     actual_stock = getattr(product, stock_type)
+    #     if actual_stock >= 1.00:
+    #         if fix_stock_type == 'fix':
+    #             if fix_stock_value >= actual_stock:
+    #                 return actual_stock
+    #             return fix_stock_value
+    #
+    #         if fix_stock_type == 'percentage':
+    #             quantity = int((actual_stock * fix_stock_value) / 100.0)
+    #             if quantity >= actual_stock:
+    #                 return actual_stock
+    #             return quantity
+    #     return actual_stock
 
     def get_products_based_on_movement_date_ept(self, from_datetime, company=False):
         """
@@ -127,7 +128,7 @@ class ProductProduct(models.Model):
 
         return list(set(product_ids))
 
-    def prepare_location_and_product_ids(self, warehouse, product_list):
+    def prepare_location_and_product_ids(self, locations, product_list):
         """
         This method prepares location and product ids from warehouse and list of product id.
         @param warehouse: Record of Warehouse
@@ -135,7 +136,11 @@ class ProductProduct(models.Model):
         @return: Ids of locations and products in string.
         @author: Maulik Barad on Date 21-Oct-2020.
         """
-        locations = self.env['stock.location'].search([('location_id', 'child_of', warehouse.lot_stock_id.ids)])
+        # locations = self.env['stock.location'].search([('location_id', 'child_of', warehouse.lot_stock_id.ids)])
+        if not len(locations):
+            raise UserError("Need to specify the location(s) for each instance in Magento >> Configuration >> Settings")
+        locations = locations.search([('location_id', 'child_of', locations.ids), ('usage', '!=', 'view')])
+
         location_ids = ','.join(str(e) for e in locations.ids)
         product_ids = ','.join(str(e) for e in product_list)
         return location_ids, product_ids
@@ -196,7 +201,7 @@ class ProductProduct(models.Model):
                  simple_product_list_ids, location_ids))
         return query
 
-    def get_free_qty_ept(self, warehouse, product_list):
+    def get_free_qty_ept(self, locations, product_list):
         """
         This method returns On hand quantity based on warehouse and product list.
         @author:Krushnasinh Jadeja
@@ -206,11 +211,10 @@ class ProductProduct(models.Model):
         Migration done by twinkalc August 2020
         """
         qty_on_hand = {}
-        location_ids, product_ids = self.prepare_location_and_product_ids(warehouse, product_list)
-
+        location_ids, product_ids = self.prepare_location_and_product_ids(locations, product_list)
         bom_product_ids = self.check_for_bom_products(product_ids)
         if bom_product_ids:
-            bom_products = self.with_context(warehouse=warehouse.ids).browse(bom_product_ids)
+            bom_products = self.with_context(location=locations.ids).browse(bom_product_ids)
             for product in bom_products:
                 actual_stock = getattr(product, 'free_qty')
                 qty_on_hand.update({product.id:actual_stock})
@@ -225,7 +229,7 @@ class ProductProduct(models.Model):
                 qty_on_hand.update({i.get('product_id'):i.get('stock')})
         return qty_on_hand
 
-    def get_forecasted_qty_ept(self, warehouse, product_list):
+    def get_forecasted_qty_ept(self, locations, product_list):
         """
         This method is return forecasted quantity based on warehouse and product list
         @author:Krushnasinh Jadeja
@@ -235,11 +239,11 @@ class ProductProduct(models.Model):
         Migration done by twinkalc August 2020
         """
         forcasted_qty = {}
-        location_ids, product_ids = self.prepare_location_and_product_ids(warehouse, product_list)
+        location_ids, product_ids = self.prepare_location_and_product_ids(locations, product_list)
 
         bom_product_ids = self.check_for_bom_products(product_ids)
         if bom_product_ids:
-            bom_products = self.with_context(warehouse=warehouse.ids).browse(bom_product_ids)
+            bom_products = self.with_context(location=locations.ids).browse(bom_product_ids)
             for product in bom_products:
                 actual_stock = getattr(product, 'free_qty') + getattr(product, 'incoming_qty')
                 forcasted_qty.update({product.id:actual_stock})

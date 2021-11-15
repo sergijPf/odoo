@@ -47,25 +47,18 @@ class ResConfigSettings(models.TransientModel):
              "For example, if the prefix is 'mag-', the sales "
              "order 100000692 in Magento, will be named 'mag-100000692' in ERP."
     )
-    magento_website_warehouse_id = fields.Many2one(
-        STOCK_WAREHOUSE,
-        string='Warehouse',
-        help='Warehouse to be used to deliver an order from this website.'
-    )
-    warehouse_ids = fields.Many2many(
-        STOCK_WAREHOUSE,
-        string="Warehouses",
-        help='Warehouses used to compute stock to update on Magento.'
-    )
+    magento_website_warehouse_id = fields.Many2one(STOCK_WAREHOUSE, string='Warehouse',
+                                                   help='Warehouse to be used to deliver an order from this website.')
+    # warehouse_ids = fields.Many2many(STOCK_WAREHOUSE, string="Warehouses",
+    #                                  help='Warehouses used to compute stock to update on Magento.')
+    location_ids = fields.Many2many('stock.location', string="Locations",
+                                     help='Locations used to compute stupdate_pricelist_in_websiteock to update on Magento.')
     catalog_price_scope = fields.Selection([
         ('global', 'Global'),
         ('website', 'Website')
     ], string="Magento Catalog Price Scope", help="Scope of Price in Magento", default='global')
-    pricelist_id = fields.Many2one(
-        'product.pricelist',
-        string="Pricelist",
-        help="Product price will be taken/set from this pricelist if Catalog Price Scope is global"
-    )
+    pricelist_id = fields.Many2one('product.pricelist', string="Pricelist",
+                                   help="Product price will be taken/set from this pricelist if Catalog Price Scope is global")
     # allow_import_image_of_products = fields.Boolean(
     #     "Import Images of Products",
     #     default=False,
@@ -162,8 +155,8 @@ class ResConfigSettings(models.TransientModel):
         magento_instance_id = self.magento_instance_id
         if magento_instance_id:
             self.write({
-                'warehouse_ids': [
-                    (6, 0, magento_instance_id.warehouse_ids.ids)] if magento_instance_id.warehouse_ids else False,
+                # 'warehouse_ids': [(6, 0, magento_instance_id.warehouse_ids.ids)] if magento_instance_id.warehouse_ids else False,
+                'location_ids': [(6, 0, magento_instance_id.location_ids.ids)] if magento_instance_id.location_ids else False,
                 'magento_stock_field': magento_instance_id.magento_stock_field,
                 'magento_version': magento_instance_id.magento_version,
                 # 'auto_create_product': magento_instance_id.auto_create_product,
@@ -195,7 +188,7 @@ class ResConfigSettings(models.TransientModel):
         magento_website_id = self.magento_website_id
         self.magento_storeview_id = self.magento_website_warehouse_id = self.magento_website_pricelist_ids = False
         if magento_website_id:
-            if magento_website_id.pricelist_ids.ids:
+            if magento_website_id.pricelist_ids.ids and self.catalog_price_scope == 'website':
                 self.magento_website_pricelist_ids = magento_website_id.pricelist_ids.ids
             if magento_website_id.warehouse_id:
                 self.magento_website_warehouse_id = magento_website_id.warehouse_id.id
@@ -244,7 +237,8 @@ class ResConfigSettings(models.TransientModel):
         """
         values = {}
         values.update({
-            'warehouse_ids': [(6, 0, self.warehouse_ids.ids)] if self.warehouse_ids else False,
+            # 'warehouse_ids': [(6, 0, self.warehouse_ids.ids)] if self.warehouse_ids else False,
+            'location_ids': [(6, 0, self.location_ids.ids)] if self.location_ids else False,
             'magento_stock_field': self.magento_stock_field,
             # 'auto_create_product': self.auto_create_product,
             'catalog_price_scope': magento_instance_id.catalog_price_scope if magento_instance_id else False,

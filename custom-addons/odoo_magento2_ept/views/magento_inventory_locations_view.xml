@@ -13,7 +13,7 @@
                             <group>
                                 <field name="magento_location_code" />
                                 <field name="magento_instance_id" readonly="1"/>
-                                <field name="export_stock_warehouse_ids" string="Export Stock Warehouses" widget="many2many_tags"/>
+                                <field name="export_stock_warehouse_ids" string="Export Stock Locations" widget="many2many_tags"/>
                             </group>
                             <group>
 <!--                                <field name="import_stock_warehouse" string="Import Stock Warehouse"/>-->

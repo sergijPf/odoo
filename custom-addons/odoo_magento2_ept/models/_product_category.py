@@ -24,4 +24,5 @@ class ProductCategory(models.Model):
     def onchange_magento_data(self):
         _id = self._origin.id
         prod_to_update = self.env['magento.configurable.product'].search([('odoo_prod_category', '=', _id)])
-        prod_to_update.write({'update_date': datetime.now()})
+        # prod_to_update.write({'update_date': datetime.now()})
+        prod_to_update.write({'force_update': True})

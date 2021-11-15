@@ -91,8 +91,9 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         # Here search order queue having below 50 order queue line, then add queue line in that queue
         # Or else create new order queue
         domain = [('state', '=', 'draft'), ('magento_instance_id', '=', magento_instance.id)]
-        order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT].search(domain).\
-            filtered(lambda x: x.order_queue_line_total_record and x.order_queue_line_total_record < 50)
+        order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT].search(domain).filtered(
+            lambda x: x.order_queue_line_total_record and x.order_queue_line_total_record < 50
+        )
         order_queue_data_id = order_data_queue_obj[0] if order_data_queue_obj else False
         if order_queue_data_id:
             return order_queue_data_id
@@ -154,7 +155,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
         This method processes order queue lines.
         """
         sale_order_obj = self.env[SALE_ORDER]
-        magento_prod = {}
+        # magento_prod = {}
         inv_cust = {}
         del_cust = {}
         order = 1
@@ -166,12 +167,13 @@ class MagentoOrderDataQueueLineEpt(models.Model):
                 """update magento_order_data_queue_ept set is_process_queue = False 
                 where is_process_queue = True and id = %s""" % queue_id.id)
             self._cr.commit()
+
             for order_queue_line in self:
-                magento_prod, inv_cust, del_cust, order, order_total_queue = sale_order_obj.create_magento_sales_order_ept(
-                    order_queue_line.magento_instance_id, order_queue_line, magento_prod,
-                    inv_cust, del_cust, order, order_total_queue, log_book_id
+                inv_cust, del_cust, order, order_total_queue = sale_order_obj.create_magento_sales_order_ept(
+                    order_queue_line, inv_cust, del_cust, order, order_total_queue, log_book_id
                 )
                 queue_id.is_process_queue = False
+
             if not log_book_id.log_lines:
                 log_book_id.sudo().unlink()
             if log_book_id and log_book_id.log_lines:
@@ -179,7 +181,6 @@ class MagentoOrderDataQueueLineEpt(models.Model):
                 queue_common_log_book_id = queue_id.order_common_log_book_id
                 if queue_common_log_book_id and not queue_common_log_book_id.log_lines:
                     queue_id.order_common_log_book_id.sudo().unlink()
-        return True
 
     def create_update_magento_order_queue_log(self, queue_id):
         """

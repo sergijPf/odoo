@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
-from datetime import datetime
+# from datetime import datetime
 
 class ProductCategoryUpdate(models.TransientModel):
     _name = "magento.product.category.update"
@@ -14,8 +14,10 @@ class ProductCategoryUpdate(models.TransientModel):
     def update_products_category_for_magento(self):
         active_product_ids = self._context.get("active_ids", [])
         products_to_update = self.env['magento.configurable.product'].browse(active_product_ids)
-        update_data = {
-            'category_ids': [(6, 0, [c.id for c in self.product_categ])],
-            'update_date': datetime.now()
-        }
-        products_to_update.write(update_data)
+        if products_to_update:
+            update_data = {
+                'category_ids': [(6, 0, [c.id for c in self.product_categ])],
+                # 'update_date': datetime.now()
+                'force_update': True
+            }
+            products_to_update.write(update_data)

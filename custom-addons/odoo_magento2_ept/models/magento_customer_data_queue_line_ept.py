@@ -18,32 +18,19 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
     _description = "Magento Customer Data Queue Line EPT"
     _rec_name = "magento_customer_id"
     magento_customer_data_queue_id = fields.Many2one(MAGENTO_CUSTOMER_DATA_QUEUE_EPT, ondelete="cascade")
-    magento_instance_id = fields.Many2one(
-        'magento.instance',
-        string='Magento Instance',
-        help="Customer imported from this Magento Instance."
-    )
+    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance',
+                                          help="Customer imported from this Magento Instance.")
     state = fields.Selection([
         ("draft", "Draft"),
         ("failed", "Failed"),
         ("done", "Done")
     ], default="draft", copy=False)
     magento_customer_id = fields.Char(help="Id of imported customer.", copy=False)
-    customer_id = fields.Many2one(
-        "res.partner",
-        copy=False,
-        help="Customer created in Odoo."
-    )
+    customer_id = fields.Many2one("res.partner", copy=False, help="Customer created in Odoo.")
     customer_data = fields.Text(help="Data imported from Magento of current customer.", copy=False)
-    processed_at = fields.Datetime(
-        help="Shows Date and Time, When the data is processed",
-        copy=False
-    )
-    magento_customer_common_log_lines_ids = fields.One2many(
-        "common.log.lines.ept",
-        "magento_customer_data_queue_line_id",
-        help="Log lines created against which line."
-    )
+    processed_at = fields.Datetime(help="Shows Date and Time, When the data is processed", copy=False)
+    magento_customer_common_log_lines_ids = fields.One2many("common.log.lines.ept", "magento_customer_data_queue_line_id",
+                                                            help="Log lines created against which line.")
 
     def create_import_customer_queue_line(self, customers, magento_instance):
         """
@@ -61,7 +48,7 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
                 'magento_instance_id': magento_instance and magento_instance.id or False,
                 'customer_data': data,
                 'magento_customer_data_queue_id': customer_queue and customer_queue.id or False,
-                'state': 'draft',
+                'state': 'draft'
             }
             self.create(customer_queue_line_values)
         return True
@@ -74,11 +61,9 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
         """
         customer_queue_vals = {
             'magento_instance_id': magento_instance and magento_instance.id or False,
-            'state': 'draft',
+            'state': 'draft'
         }
-        customer_queue_data = self.env[MAGENTO_CUSTOMER_DATA_QUEUE_EPT].create(
-            customer_queue_vals
-        )
+        customer_queue_data = self.env[MAGENTO_CUSTOMER_DATA_QUEUE_EPT].create(customer_queue_vals)
         return customer_queue_data
 
     def auto_import_customer_queue_data(self):
@@ -106,7 +91,7 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
             for customer_queue in customer_queues:
                 customer_queue_lines = customer_queue.customer_queue_line_ids.filtered(lambda x: x.state == "draft")
                 if customer_queue_lines:
-                    customer_dict, country_dict, state_dict = customer_queue_lines.process_import_customer_queue_data(
+                    country_dict, state_dict, customer_dict = customer_queue_lines.process_import_customer_queue_data(
                         country_dict, state_dict, customer_dict)
                 if time.time() - start > customer_queue_process_cron_time - 60:
                     return True
@@ -123,4 +108,4 @@ class MagentoCustomerDataQueueLineEpt(models.Model):
                 customer_queue_line, country_dict, state_dict, customer_dict)
         if not customer_queue.customer_queue_line_ids:
             customer_queue.sudo().unlink()
-        return customer_dict, country_dict, state_dict
+        return country_dict, state_dict, customer_dict

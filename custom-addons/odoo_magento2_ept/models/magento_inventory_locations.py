@@ -29,11 +29,11 @@ class MagentoInventoryLocations(models.Model):
         help="This field relocates magento instance"
     )
     export_stock_warehouse_ids = fields.Many2many(
-        'stock.warehouse',
-        string="Warehouses",
-        help='If you have product stock in various Warehouses that you need to export in the Magento, \n'
-             ' then configure current odoo Warehouses here for the current stock location. \n'
-             'It will compute the stock quantities from those Warehouses \n'
+        'stock.location',
+        string="Locations",
+        help='If you have product stock in various Locations that you need to export to Magento, \n'
+             ' then configure current odoo Loactions here for the current stock location. \n'
+             'It will compute the stock quantities from those Locations \n'
              'and export them to the current source location in the Magento.'
     )
     # import_stock_warehouse = fields.Many2one(
@@ -54,5 +54,5 @@ class MagentoInventoryLocations(models.Model):
         locations = self.search([('magento_instance_id', '=', location_instance.id), ('id', '!=', self.id)])
         for location in locations:
             if any([location in location_warehouse.ids for location in location.export_stock_warehouse_ids.ids]):
-                raise ValidationError(_("Can't set this warehouse in "
-                                        "different locations with same instance."))
+                raise ValidationError(_("Can't set this location as it already used in different Magento "
+                                        "location within this instance."))

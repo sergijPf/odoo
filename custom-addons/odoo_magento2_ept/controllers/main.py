@@ -24,7 +24,6 @@ class Binary(http.Controller):
         """
         wizard_id = request.env[model].browse([int(id)])
         filecontent = base64.b64decode(wizard_id.datas or '')
-        return_val = False
         if not filecontent:
             return_val = request.not_found()
         else:
@@ -50,11 +49,8 @@ class Binary(http.Controller):
         magento_instance = request.env['magento.instance'].sudo().search([
             ('magento_url', '=', magento_url.rstrip('/'))
         ])
-        request.env['magento.order.data.queue.ept'].sudo().import_specific_order(
-            magento_instance,
-            [order_id]
-        )
-        return True
+        request.env['magento.order.data.queue.ept'].sudo().import_specific_order(magento_instance, [order_id])
+        return 'true'
 
     @http.route('/web_magento_order_cancel', csrf=False, auth="public", type="http")
     def cancel_order(self, **kwargs):
@@ -69,9 +65,8 @@ class Binary(http.Controller):
         magento_instance = request.env['magento.instance'].sudo().search([
             ('magento_url', '=', magento_url.rstrip('/'))
         ])
-        sale_order = request.env['sale.order'].sudo().\
-            search([('magento_instance_id', '=', magento_instance.id),
-                    ('magento_order_id', '=', int(order_id))], limit=1)
+        sale_order = request.env['sale.order'].sudo().search([('magento_instance_id', '=', magento_instance.id),
+                                                              ('magento_order_id', '=', int(order_id))], limit=1)
         if sale_order:
-            sale_order.sudo().cancel_order_from_magento()
-        return True
+            sale_order.sudo().cancel_order_from_magento_by_webhook()
+        return 'true'

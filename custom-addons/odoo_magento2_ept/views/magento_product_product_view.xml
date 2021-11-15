@@ -68,7 +68,7 @@
                         <div class="oe_title">
                             <label class="oe_edit_only" for="magento_product_name"/>
                             <h1>
-                                <field name="magento_product_name" placeholder="Product Name" modifiers="{'required': true}"/>
+                                <field name="magento_product_name" placeholder="Product Name" readonly="1" modifiers="{'required': true}"/>
                             </h1>
                             <h3>
                                 <field name="x_magento_name" placeholder="Name for Magento" modifiers="{}" id="x_magento_name"/>
@@ -139,7 +139,7 @@
                     <field name="magento_product_name"/>
                     <field name="product_template_attribute_value_ids" widget="many2many_tags" readonly="1"
                            optional="show" can_create="false" can_write="false" modifiers="{'readonly':true}"/>
-                    <field name="qty_available"/>
+<!--                    <field name="qty_available"/>-->
                     <!--                        <field name="product_type"/>-->
                     <field name="magento_status" widget="badge" optional="show" on_change="1"
                            decoration-success="magento_status == 'in_magento'"
