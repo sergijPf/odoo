@@ -253,7 +253,7 @@ class SaleOrder(models.Model):
 
         return date_order
 
-    def create_magento_sales_order_ept(self, orders, magento_invoice_customer, magento_delivery_customer, order_count,
+    def create_magento_sales_order(self, orders, magento_invoice_customer, magento_delivery_customer, order_count,
                                        order_total_queue, log_book_id):
         """
         This method create orders in Odoo.

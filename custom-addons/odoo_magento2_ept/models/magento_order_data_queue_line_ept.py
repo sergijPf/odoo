@@ -169,7 +169,7 @@ class MagentoOrderDataQueueLineEpt(models.Model):
             self._cr.commit()
 
             for order_queue_line in self:
-                inv_cust, del_cust, order, order_total_queue = sale_order_obj.create_magento_sales_order_ept(
+                inv_cust, del_cust, order, order_total_queue = sale_order_obj.create_magento_sales_order(
                     order_queue_line, inv_cust, del_cust, order, order_total_queue, log_book_id
                 )
                 queue_id.is_process_queue = False

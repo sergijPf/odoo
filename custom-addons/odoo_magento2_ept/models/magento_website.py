@@ -27,8 +27,8 @@ class MagentoWebsite(models.Model):
     #     string='Last partner import date',
     #     help='Date when partner last imported'
     # )
-    pricelist_ids = fields.Many2many('product.pricelist', string="Pricelists",
-                                     help="Product Price is set in selected Pricelist if Catalog Price Scope is Website")
+    pricelist_id = fields.Many2one('product.pricelist', string="Pricelist",
+                                   help="Product Price is set in selected Pricelist if Catalog Price Scope is Website")
     # pricelist_id = fields.Many2one('product.pricelist', string="Pricelist",
     #                                help="Product Price is set in selected Pricelist if Catalog Price Scope is Website")
     store_view_ids = fields.One2many("magento.storeview", "magento_website_id", string='Magento Store Views',
@@ -89,6 +89,16 @@ class MagentoWebsite(models.Model):
                 "graph_sale_percentage": {'type': data_type, 'value': comparison_value},
                 "currency_symbol": record.magento_base_currency.symbol or '',  # remove currency symbol same as odoo
             })
+
+    def write(self, vals):
+        if 'pricelist_id' in vals and self.pricelist_id.id != vals['pricelist_id']:
+            self.env['magento.product.product'].search([
+                ('magento_instance_id', '=', self.magento_instance_id.id)
+            ]).write({'force_update': True})
+
+        res = super(MagentoWebsite, self).write(vals)
+
+        return res
 
     @staticmethod
     def prepare_action(view, domain):
@@ -158,7 +168,7 @@ class MagentoWebsite(models.Model):
         """
         customer_data = {}
         main_sql = """select DISTINCT(rp.id) as partner_id from res_partner as rp
-                        inner join magento_res_partner_ept mp on mp.partner_id = rp.id
+                        inner join magento_res_partner mp on mp.partner_id = rp.id
                         where mp.magento_website_id = %s and
                         mp.magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
         view = self.env.ref('base.action_partner_form').sudo().read()[0]

@@ -4,7 +4,7 @@
 from odoo import fields, models
 # from datetime import datetime
 
-class ProductCategoryUpdate(models.TransientModel):
+class MagentoProductCategoryUpdate(models.TransientModel):
     _name = "magento.product.category.update"
 
     magento_instance_id = fields.Many2one('magento.instance', 'Magento Instance', help="This field relocates magento instance")

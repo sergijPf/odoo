@@ -91,7 +91,7 @@ class MagentoInstance(models.Model):
     catalog_price_scope = fields.Selection([
         ('global', 'Global'),
         ('website', 'Website')
-    ], string="Catalog Price Scopes", help="Scope of Price in Magento", default='global')
+    ], string="Catalog Price Scopes", help="Scope of Price in Magento", default='website')
     pricelist_id = fields.Many2one(PRODUCT_PRICELIST, string="Pricelist",
                                    help="Product Price is set in selected Pricelist")
     access_token = fields.Char(string="Magento Access Token", help="Magento Access Token")
@@ -445,6 +445,7 @@ class MagentoInstance(models.Model):
             record.import_currency()
             record.sync_website()
             record.sync_storeview()
+            record.sync_customer_groups()
             record.import_payment_method()
             record.import_delivery_method()
             record.import_magento_inventory_locations()
@@ -454,9 +455,28 @@ class MagentoInstance(models.Model):
             # record.import_tax_class()
             # self.env['magento.attribute.set'].import_magento_product_attribute_set(record)
 
-    # def get_category(self):
-    #     magento_category_obj = self.env['magento.product.category']
-    #     magento_category_obj.get_all_category(self)
+    def sync_customer_groups(self):
+        api_url = "/V1/customerGroups/search?searchCriteria[pageSize]=200&searchCriteria[currentPage]=1"
+        try:
+            customer_groups = req(self, api_url, method='GET')
+        except Exception as error:
+            raise UserError(error)
+
+        if customer_groups.get('items'):
+            customer_group_obj = self.env['magento.customer.groups'].search([('magento_instance_id', '=', self.id)])
+
+            for group in customer_groups.get('items'):
+                c_group = customer_group_obj.search([('group_id', '=', str(group['id'])),
+                                                     ('magento_instance_id', '=', self.id)])
+                if c_group:
+                   if c_group.group_name != group['code']:
+                       c_group.group_name = group['code']
+                else:
+                    customer_group_obj.create({
+                        'group_id': str(group['id']),
+                        'group_name': group['code'],
+                        'magento_instance_id': self.id
+                    })
 
     def sync_price_scope(self):
         """
@@ -596,7 +616,7 @@ class MagentoInstance(models.Model):
             #     pricelist_id = pricelist_obj.create({'name': price_list_name, 'currency_id': currency_id.id})
             odoo_website_id.write({
                 'magento_base_currency' : currency_id,
-                # 'pricelist_ids': [(6, 0, [pricelist_id.id])],
+                # 'pricelist_id': [(6, 0, [pricelist_id.id])],
             })
         return odoo_website_id
 
@@ -963,7 +983,7 @@ class MagentoInstance(models.Model):
         """
         customer_data = {}
         main_sql = """select DISTINCT(rp.id) as partner_id from res_partner as rp
-                    inner join magento_res_partner_ept mp on mp.partner_id = rp.id
+                    inner join magento_res_partner mp on mp.partner_id = rp.id
                     where mp.magento_instance_id = %s""" % (record.id)
         view = self.env.ref('base.action_partner_form').sudo().read()[0]
         self._cr.execute(main_sql)

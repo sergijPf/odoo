@@ -114,12 +114,12 @@
                             <page name="other_info" string="Other Info">
                                 <group>
                                     <group cols="2">
-                                        <field name="last_order_import_date" />
+                                        <field name="last_order_import_date" readonly="1"/>
 <!--                                        <field name="last_product_import_date" />-->
                                     </group>
                                     <group cols="2">
                                         <lable for="last_product_category_import_date" class="oe_inline"/>
-                                        <field name="last_update_stock_time" class="oe_inline" />
+                                        <field name="last_update_stock_time" class="oe_inline" readonly="1" />
 <!--                                        <field name="auto_create_product" invisible="1"/>-->
                                     </group>
                                 </group>

@@ -309,8 +309,8 @@
                                 </div>
                                 <div class="col-12 col-lg-6 o_setting_box" attrs="{'invisible':[('catalog_price_scope', '!=', 'website')]}">
                                     <div class="o_setting_right_pane">
-                                        <label for="magento_website_pricelist_ids" string="Pricelist"/>
-                                        <field name="magento_website_pricelist_ids" widget="many2many_tags" class="oe_inline" attrs="{'required':[('magento_website_id','!=', False)]}"/>
+                                        <label for="magento_website_pricelist_id" string="Pricelist"/>
+                                        <field name="magento_website_pricelist_id" class="oe_inline" attrs="{'required':[('magento_website_id','!=', False)]}"/>
                                         <div class="text-muted" id="sale_coupon">
                                             Product price will be taken/set from this pricelist if Catalog Price Scope is website.
                                         </div>

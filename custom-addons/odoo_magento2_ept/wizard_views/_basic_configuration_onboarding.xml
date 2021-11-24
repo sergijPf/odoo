@@ -246,8 +246,8 @@
                     </div>
                     <div class="col-xs-12 col-md-6 o_setting_box o_onboard_setting_box" attrs="{'invisible': [('magento_website_id', '=', False)]}">
                         <div class="ml-2 pl-1">
-                            <label for="magento_website_pricelist_ids" class="o_onboard_label" string="Pricelist"/>
-                            <field name="magento_website_pricelist_ids"
+                            <label for="magento_website_pricelist_id" class="o_onboard_label" string="Pricelist"/>
+                            <field name="magento_website_pricelist_id"
                                    widget="many2many_tags"
                                    attrs="{'required':[('magento_website_id','!=',False)]}"
                                    options="{'no_create':True,'no_create_edit': True}"

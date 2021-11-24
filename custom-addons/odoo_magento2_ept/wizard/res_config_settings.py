@@ -106,7 +106,7 @@ class ResConfigSettings(models.TransientModel):
         default=False,
         help="If checked, Multi Warehouse used in Magento"
     )
-    magento_website_pricelist_ids = fields.Many2many(
+    magento_website_pricelist_id = fields.Many2one(
         'product.pricelist',
         string="Magento Pricelist",
         help="Product price will be taken/set from this pricelist if Catalog Price Scope is website"
@@ -175,10 +175,11 @@ class ResConfigSettings(models.TransientModel):
         else:
             self.magento_instance_id = False
 
-    @api.onchange('magento_website_pricelist_ids')
-    def onchange_magento_website_pricelist_ids(self):
-        if self.magento_website_id:
-            self.magento_website_id.write({'pricelist_ids': [(6, 0, self.magento_website_pricelist_ids.ids)]})
+    # @api.onchange('magento_website_pricelist_id')
+    # def onchange_magento_website_pricelist_id(self):
+    #     if self.magento_website_id:
+    #         self.magento_website_id.pricelist_id = self.magento_website_pricelist_id.id
+
 
     @api.onchange('magento_website_id')
     def onchange_magento_website_id(self):
@@ -186,10 +187,10 @@ class ResConfigSettings(models.TransientModel):
         set some Magento configurations based on changed Magento instance.
         """
         magento_website_id = self.magento_website_id
-        self.magento_storeview_id = self.magento_website_warehouse_id = self.magento_website_pricelist_ids = False
+        self.magento_storeview_id = self.magento_website_warehouse_id = self.magento_website_pricelist_id = False
         if magento_website_id:
-            if magento_website_id.pricelist_ids.ids and self.catalog_price_scope == 'website':
-                self.magento_website_pricelist_ids = magento_website_id.pricelist_ids.ids
+            if magento_website_id.pricelist_id.id and self.catalog_price_scope == 'website':
+                self.magento_website_pricelist_id = magento_website_id.pricelist_id.id
             if magento_website_id.warehouse_id:
                 self.magento_website_warehouse_id = magento_website_id.warehouse_id.id
             self.tax_calculation_method = magento_website_id.tax_calculation_method
@@ -213,7 +214,13 @@ class ResConfigSettings(models.TransientModel):
         Save all selected Magento Instance configurations
         """
         magento_instance_id = self.magento_instance_id
+        website_pricelist = self.magento_website_pricelist_id
+        if website_pricelist and website_pricelist != self.magento_website_id.pricelist_id:
+            self.magento_website_id.pricelist_id = website_pricelist.id
+            print(website_pricelist, self.magento_website_id.pricelist_id)
+
         res = super(ResConfigSettings, self).execute()
+
         if magento_instance_id:
             self.write_instance_vals(magento_instance_id)
         if self.magento_website_id:

@@ -7,17 +7,17 @@ Describes product import export process.
 # import csv
 # from csv import DictWriter
 # from io import StringIO
+import re
 from datetime import datetime, timedelta
-from odoo.exceptions import ValidationError, Warning
+from odoo.exceptions import Warning, UserError
 from odoo import fields, models, api, _
-from odoo.exceptions import UserError
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 MAGENTO_ORDER_DATA_QUEUE_EPT = 'magento.order.data.queue.ept'
 IR_ACTION_ACT_WINDOW = 'ir.actions.act_window'
 IR_MODEL_DATA = 'ir.model.data'
 VIEW_MODE = 'tree,form'
-COMPLETED_STATE = "[('state', '!=', 'completed' )]"
+COMPLETED_STATE = "[('state', '!=', 'completed')]"
 # IMPORT_MAGENTO_PRODUCT_QUEUE = 'sync.import.magento.product.queue'
 MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
 
@@ -29,8 +29,8 @@ class MagentoImportExportEpt(models.TransientModel):
     _name = 'magento.import.export.ept'
     _description = 'Magento Import Export Ept'
 
-    magento_instance_ids = fields.Many2many('magento.instance', string="Instances",
-                                            help="This field relocates Magento Instance")
+    magento_instance_ids = fields.Many2many('magento.instance', string="Magento Instances")
+    magento_website_id = fields.Many2one('magento.website', string="Magento Website")
     operations = fields.Selection([
         ('import_customer', 'Import Customer'),
         ('import_sale_order', 'Import Sale Order'),
@@ -43,7 +43,6 @@ class MagentoImportExportEpt(models.TransientModel):
         ('export_invoice_information', 'Export Invoice Information'),
         ('export_product_stock', 'Export Product Stock')
     ], string='Import/ Export Operations', help='Import/ Export Operations')
-
     start_date = fields.Datetime(string="From Date", help="From date.")
     end_date = fields.Datetime("To Date", help="To date.")
     import_specific_sale_order = fields.Char(
@@ -51,6 +50,10 @@ class MagentoImportExportEpt(models.TransientModel):
         help="You can import Magento Order by giving order number here,Ex.000000021 \n "
              "If multiple orders are there give order number comma (,) separated "
     )
+    export_method = fields.Selection([
+        ("direct", "Export in Magento Layer")
+        # ("direct", "Export in Magento Layer"), ("csv", "Export in CSV file")
+    ], default="direct")
     # import_specific_product = fields.Char(
     #     string='Product Reference',
     #     help="You can import Magento product by giving product sku here, Ex.24-MB04 \n "
@@ -61,10 +64,7 @@ class MagentoImportExportEpt(models.TransientModel):
     #     string="Import Shipped Orders?",
     #     help="If checked, Shipped orders will be imported"
     # )
-    export_method = fields.Selection([
-        ("direct", "Export in Magento Layer")
-        # ("direct", "Export in Magento Layer"), ("csv", "Export in CSV file")
-    ], default="direct")
+
     # do_not_update_existing_product = fields.Boolean(
     #     string="Do not update existing Products?",
     #     help="If checked and Product(s) found in odoo/magento layer, then not update the Product(s)"
@@ -97,7 +97,8 @@ class MagentoImportExportEpt(models.TransientModel):
             instances = magento_instance.search([])
         result = False
         if self.operations == 'import_customer':
-            self.import_customer_operation(instances)
+            # self.import_customer_operation(instances)
+            self.env['res.partner'].process_customer_creation_or_update(instances)
         # elif self.operations == 'map_products':
         #     self.map_product_operation(instances)
         elif self.operations == 'import_sale_order':
@@ -344,8 +345,8 @@ class MagentoImportExportEpt(models.TransientModel):
         This method is used to export products in Magento layer as per selection.
         If "direct" is selected, then it will direct export product into Magento layer.
         """
-        active_template_ids = self._context.get("active_ids", [])
-        selection = self.env["product.product"].browse(active_template_ids)
+        active_product_ids = self._context.get("active_ids", [])
+        selection = self.env["product.product"].browse(active_product_ids)
         odoo_products = selection.filtered(lambda product: product.type != "service")
         if not odoo_products:
             raise Warning(_("It seems like selected products are not Storable products."))
@@ -373,9 +374,9 @@ class MagentoImportExportEpt(models.TransientModel):
             product_dict.update({'instance_id': instance.id})
             for odoo_prod in odoo_products:
                 product_dict.update({'odoo_product_id': odoo_prod})
-                magento_sku_missing, conf_missing = self.create_or_update_magento_product_variant(product_dict,
-                                                                                                  magento_sku_missing,
-                                                                                                  conf_missing)
+                magento_sku_missing, conf_missing = self.create_or_update_magento_product_variant(
+                    product_dict, magento_sku_missing, conf_missing
+                )
         if magento_sku_missing:
             # self._cr.commit()
             raise UserError(_('Missing Internal References For %s', str(list(magento_sku_missing.values()))))
@@ -453,3 +454,111 @@ class MagentoImportExportEpt(models.TransientModel):
 
         }
         return magento_product_vals
+
+    def prepare_customers_for_export_to_magento(self):
+        active_ids = self._context.get("active_ids", [])
+        selection = self.env["res.partner"].browse(active_ids)
+        filt_customers = selection.filtered(lambda c: c.customer_rank == 1 and c.type == 'contact')
+
+        if not filt_customers:
+            raise UserError(_("It seems selected partners are not Customers or have different Address type than 'contact'"))
+
+        failed_to_add = self.add_customers_to_magento_layer(filt_customers)
+
+        if failed_to_add:
+            raise UserError(_("Following Contacts missed or have incorrect email addresses and "
+                              "were not added to magento layer: %s") % str(failed_to_add))
+        else:
+            return {
+                'effect': {
+                    'fadeout': 'slow',
+                    'message': " 'Export in Magento Layer' Process Completed Successfully! {}".format(""),
+                    'img_url': '/web/static/src/img/smile.svg',
+                    'type': 'rainbow_man',
+                }
+            }
+
+    def add_customers_to_magento_layer(self, odoo_customers):
+        failed_to_add = []
+
+        for instance in self.magento_instance_ids:
+            website = self.magento_website_id
+            if website.magento_instance_id.id != instance.id:
+                continue
+            for customer in odoo_customers:
+                if not self.check_email(customer.email):
+                    failed_to_add.append(customer.name)
+                    continue
+                elif not customer.magento_res_partner_ids or \
+                        instance not in customer.magento_res_partner_ids.mapped('magento_instance_id'):
+                    magento_customer = self.create_magento_customer_in_layer(customer, instance, website)
+                else:
+                    magento_customer = customer.magento_res_partner_ids.filtered(
+                        lambda i: i.magento_instance_id.id == instance.id)
+
+                # proceed with child partners, (contact - create new, invoice/delivery - create and link address),
+                # valid only for one iteration (doesn't use hierarchy)
+                for child in customer.child_ids:
+                    # if child.type == 'contact':
+                    #     if not self.check_email(child.email):
+                    #         failed_to_add.append(child.name)
+                    #         continue
+                    #
+                    #     magento_partner = self.env['magento.res.partner'].search([
+                    #         ('email', '=', child.email), ('magento_instance_id', '=', instance.id)
+                    #     ])
+                    #     if not magento_partner:
+                    #         self.create_magento_customer_in_layer(child, instance, website)
+                    #     elif website.id != magento_partner.magento_website_id.id:
+                    #         magento_partner.write({
+                    #             'magento_website_id': website.id
+                    #         })
+                    if child.type == 'invoice':
+                        self.create_and_link_customer_address(child, magento_customer, 'invoice')
+                    elif child.type == 'delivery':
+                        self.create_and_link_customer_address(child, magento_customer, 'delivery')
+
+        return failed_to_add
+
+    def create_magento_customer_in_layer(self, customer, instance, website):
+        magento_partner_obj = self.env['magento.res.partner']
+        res =  magento_partner_obj.create({
+            'partner_id': customer.id,
+            'magento_instance_id': instance.id,
+            'magento_website_id': website.id,
+            'status': 'to_export'
+        })
+
+        if res:
+            customer.is_magento_customer = True
+        return res
+
+    def create_and_link_customer_address(self, odoo_partner, magento_customer, type):
+        customer_address_obj = self.env['magento.customer.addresses']
+        if odoo_partner.id in magento_customer.customer_address_ids.mapped('odoo_partner_id').ids:
+            return
+
+        if type == 'invoice':
+            _type = 'billing'
+        elif type == 'delivery':
+            _type = 'shipping'
+        else:
+            return
+
+        # create address in magento layer
+        address_id = customer_address_obj.create({
+            'address_type': _type,
+            'customer_id': magento_customer.id,
+            'odoo_partner_id': odoo_partner.id
+        })
+
+        magento_customer.write({
+            'customer_address_ids': [(4, address_id.id)]
+        })
+
+    @staticmethod
+    def check_email(email):
+        regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        if email and (re.fullmatch(regex, email)):
+            return True
+        return False

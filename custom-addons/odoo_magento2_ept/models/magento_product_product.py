@@ -15,7 +15,7 @@ PRODUCT_PRODUCT = 'product.product'
 # STOCK_INVENTORY = 'stock.inventory'
 COMMON_LOG_LINES_EPT = 'common.log.lines.ept'
 MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
-MAX_SIZE_FOR_IMAGES = 2500000 # should be aligned with MYSQL - max_allowed_size (currently 4M), !!! NOTE 4M is converted size and constant value is before convert
+MAX_SIZE_FOR_IMAGES = 2500000 # should be aligned with MYSQL - max_allowed_size (currently 4M), !!! NOTE 4M is converted size and constant value is before convertion
 PRODUCTS_THRESHOLD = 200
 IMG_SIZE = 'image_1024'
 
@@ -28,11 +28,8 @@ class MagentoProductProduct(models.Model):
     _description = 'Magento Product'
     _rec_name = 'magento_product_name'
 
-    magento_instance_id = fields.Many2one(
-        'magento.instance',
-        'Magento Instance',
-        help="This field relocates magento instance"
-    )
+    magento_instance_id = fields.Many2one('magento.instance','Magento Instance',
+                                          help="This field relocates magento instance")
     magento_product_id = fields.Char(string="Magento Product Id")
     # magento_tmpl_id = fields.Many2one(
     #     MAGENTO_PRODUCT_TEMPLATE,
@@ -40,19 +37,9 @@ class MagentoProductProduct(models.Model):
     #     help="Product Template related to current Product Variant in Odoo",
     #     ondelete="cascade"
     # )
-    odoo_product_id = fields.Many2one(
-        PRODUCT_PRODUCT,
-        string='Odoo Product Variant',
-        required=True,
-        ondelete='restrict',
-        copy=False
-    )
-    magento_website_ids = fields.Many2many(
-        'magento.website',
-        string='Magento Product Websites',
-        readonly=False,
-        domain="[('magento_instance_id','=',magento_instance_id)]"
-    )
+    odoo_product_id = fields.Many2one(PRODUCT_PRODUCT, 'Odoo Product Variant', required=True, ondelete='restrict', copy=False)
+    magento_website_ids = fields.Many2many('magento.website', string='Magento Product Websites', readonly=False,
+                                           domain="[('magento_instance_id','=',magento_instance_id)]")
     # product_type = fields.Selection([
     #     ('simple', 'Simple Product'),
     #     ('configurable', 'Configurable Product'),
@@ -92,11 +79,11 @@ class MagentoProductProduct(models.Model):
     image_1920 = fields.Image(related="odoo_product_id.image_1920")
     product_template_attribute_value_ids = fields.Many2many(related='odoo_product_id.product_template_attribute_value_ids')
     # qty_available = fields.Float(related='odoo_product_id.qty_available')
-    lst_price = fields.Float(related='odoo_product_id.lst_price')
-    standard_price = fields.Float(related='odoo_product_id.standard_price')
+    # lst_price = fields.Float(related='odoo_product_id.lst_price')
+    # standard_price = fields.Float(related='odoo_product_id.standard_price')
     currency_id = fields.Many2one(related='odoo_product_id.currency_id')
-    valuation = fields.Selection(related='odoo_product_id.product_tmpl_id.valuation')
-    cost_method = fields.Selection(related='odoo_product_id.product_tmpl_id.cost_method')
+    # valuation = fields.Selection(related='odoo_product_id.product_tmpl_id.valuation')
+    # cost_method = fields.Selection(related='odoo_product_id.product_tmpl_id.cost_method')
     company_id = fields.Many2one(related='odoo_product_id.company_id')
     uom_id = fields.Many2one(related='odoo_product_id.uom_id')
     # total_magento_variants = fields.Integer(related='magento_tmpl_id.total_magento_variants')
@@ -105,6 +92,7 @@ class MagentoProductProduct(models.Model):
     # added by SPf
     magento_conf_product = fields.Many2one('magento.configurable.product', string='Magento Configurable Product')
     magento_conf_prod_sku = fields.Char(string='Magento Config.Product SKU', related='magento_conf_product.magento_sku')
+    inventory_category_id = fields.Many2one(string='Odoo product category', related='odoo_product_id.categ_id')
     x_magento_name = fields.Char(string='Product Name for Magento', related='odoo_product_id.x_magento_name')
     category_ids = fields.Many2many("magento.product.category", string="Product Categories",
                                     help="Magento Product Categories", domain="[('instance_id','=',magento_instance_id)]")
@@ -118,7 +106,8 @@ class MagentoProductProduct(models.Model):
         ('log_error', 'Error to Export'),
         ('update_needed', 'Need to Update'),
         ('deleted', 'Deleted in Magento')
-    ], string='Export Status', help='The status of Product Variant Export to Magento ', default='not_exported')
+    ], string='Export Status',
+        help='The status of Product Variant Export to Magento ', default='not_exported')
     # update_date = fields.Datetime(string="Simple Product Update Date")
     force_update = fields.Boolean(string="To force run Simple Product Export", default=False)
 
@@ -2311,7 +2300,7 @@ class MagentoProductProduct(models.Model):
                 {'website_ids': website_ids})
 
     def process_storeview_data_export(self, magento_instance, product, ml_products, prod_sku, data, attr_sets, is_config):
-        # product_price = 0
+        product_price = 0
         text = ''
         magento_storeviews = [(w, w.store_view_ids) for w in magento_instance.magento_website_ids]
 
@@ -2327,7 +2316,7 @@ class MagentoProductProduct(models.Model):
                 data['product']['name'] = str(product.with_context(lang=lang_code).odoo_prod_category.name).upper()
                 data['product']['custom_attributes'] = self.add_conf_product_attributes(product, attr_sets, lang_code)
             else:
-                # valid for simple products
+                # valid for simple products only
                 data["product"]["name"] = product.with_context(lang=lang_code).odoo_product_id.name
 
                 # find description attribute to add translations for each storeview
@@ -2337,29 +2326,25 @@ class MagentoProductProduct(models.Model):
                 if descr_attr:
                     descr_attr["value"] = product.with_context(lang=lang_code).odoo_product_id.website_description
 
-                # if magento_instance.catalog_price_scope == 'website':
-                #     if not len(view[0].pricelist_ids):
-                #         text += "There are no pricelist(s) defined for '%s' website.\n" % view[0].name
-                #     else:
-                #         product_price = 0
-                #         for pricelist in view[0].pricelist_ids:
-                #             if view[0].magento_base_currency.id != pricelist.currency_id.id:
-                #                 text += "Pricelist '%s' currency is different than Magento base currency " \
-                #                         "for '%s' website.\n" % (pricelist.name, view[0].name)
-                #                 break
-                #             price_and_rule = pricelist.get_product_price_rule(product.odoo_product_id, 1.0, False)
-                #             product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
-                #             if product_price:
-                #                 break
-                #
-                # if product_price:
-                #     data["product"]["price"] = product_price
-                # else:
-                #     data["product"]["price"] = data["product"]["status"] = 0
-                #     if not text:
-                #         text += "There are no or '0' price defined for product in '%s' " \
-                #                 "website price-lists.\n" % (view[0].name)
+                # apply product prices for each website
+                if magento_instance.catalog_price_scope == 'website':
+                    if not len(view[0].pricelist_id):
+                        text += "There are no pricelist defined for '%s' website.\n" % view[0].name
+                    else:
+                        if view[0].magento_base_currency.id != view[0].pricelist_id.currency_id.id:
+                            text += "Pricelist '%s' currency is different than Magento base currency " \
+                                    "for '%s' website.\n" % (view[0].pricelist_id.name, view[0].name)
+                            break
+                        price_and_rule = view[0].pricelist_id.get_product_price_rule(product.odoo_product_id, 1.0, False)
+                        product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
 
+                if product_price:
+                    data["product"]["price"] = product_price
+                else:
+                    data["product"]["price"] = data["product"]["status"] = 0
+                    if not text:
+                        text += "There are no or '0' price defined for product in '%s' " \
+                                "website price-lists.\n" % (view[0].name)
             try:
                 api_url = '/%s/V1/products/%s' % (view[1].magento_storeview_code, prod_sku)
                 req(magento_instance, api_url, 'PUT', data)
@@ -2374,25 +2359,26 @@ class MagentoProductProduct(models.Model):
     def process_simple_prod_storeview_data_export_in_bulk(self, magento_instance, odoo_products, data, ml_products):
         magento_storeviews = [(w, w.store_view_ids) for w in magento_instance.magento_website_ids]
 
-        # if magento_instance.catalog_price_scope == 'global':
-        #     if not len(magento_instance.pricelist_id):
-        #         text = "There are no pricelist(s) defined for '%s' instance.\n" % magento_instance.name
-        #         for product in data:
-        #             ml_products[product['sku']]['log_message'] += text
-        #         return
+        if magento_instance.catalog_price_scope == 'global':
+            if not len(magento_instance.pricelist_id):
+                text = "There are no pricelist(s) defined for '%s' instance.\n" % magento_instance.name
+                for product in data:
+                    ml_products[product['sku']]['log_message'] += text
+                return
 
         for view in magento_storeviews:
             data_lst = []
             lang_code = view[1].lang_id.code
             for prod in data:
-                # product_price = 0
+                product_price = 0
                 sku = prod['product']['sku']
-                product = odoo_products.search([('magento_sku', '=', sku)], limit=1)
+                product = odoo_products.search([('magento_sku', '=', sku),
+                                                ('magento_instance_id', '=', magento_instance.id)], limit=1)
                 prod = {
                     'product': {
                         'name': product.with_context(lang=lang_code).odoo_product_id.name,
                         'sku': sku,
-                        # 'price': 0,
+                        'price': 0,
                         'custom_attributes': prod['product']["custom_attributes"].copy()
                     }
                 }
@@ -2404,32 +2390,30 @@ class MagentoProductProduct(models.Model):
                     descr_attr["value"] = product.with_context(lang=lang_code).odoo_product_id.website_description
 
                 # product price
-                # if magento_instance.catalog_price_scope == 'global':
-                #     product_price = magento_instance.pricelist_id.get_product_price(product.odoo_product_id, 1.0, False)
-                # elif magento_instance.catalog_price_scope == 'website':
-                #     if not len(view[0].pricelist_ids):
-                #         text = "There are no pricelist(s) defined for '%s' website.\n" % view[0].name
-                #         ml_products[sku]['log_message'] += text
-                #     else:
-                #         for pricelist in view[0].pricelist_ids:
-                #             if view[0].magento_base_currency.id != pricelist.currency_id.id:
-                #                 text = "Pricelist '%s' currency is different than Magento base currency " \
-                #                         "for '%s' website.\n" % (pricelist.name, view[0].name)
-                #                 ml_products[sku]['log_message'] += text
-                #                 break
-                #             price_and_rule = pricelist.get_product_price_rule(product.odoo_product_id, 1.0, False)
-                #             product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
-                #             if product_price:
-                #                 break
-                # if product_price:
-                #     prod["product"]["price"] = product_price
-                # else:
-                #     prod["product"]["price"] = 0
-                #     prod["product"].update({"status": 0})
-                #     if not ml_products[sku]['log_message']:
-                #         text = "There are no or '0' price defined for product in '%s' " \
-                #                 "website price-lists.\n" % (view[0].name)
-                #         ml_products[sku]['log_message'] += text
+                if magento_instance.catalog_price_scope == 'global':
+                    product_price = magento_instance.pricelist_id.get_product_price(product.odoo_product_id, 1.0, False)
+                elif magento_instance.catalog_price_scope == 'website':
+                    if not len(view[0].pricelist_id):
+                        text = "There are no pricelist defined for '%s' website.\n" % view[0].name
+                        ml_products[sku]['log_message'] += text
+                    else:
+                        if view[0].magento_base_currency.id != view[0].pricelist_id.currency_id.id:
+                            text = "Pricelist '%s' currency is different than Magento base currency " \
+                                    "for '%s' website.\n" % (view[0].pricelist_id.name, view[0].name)
+                            ml_products[sku]['log_message'] += text
+                            break
+                        price_and_rule = view[0].pricelist_id.get_product_price_rule(product.odoo_product_id, 1.0, False)
+                        product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
+
+                if product_price:
+                    prod["product"]["price"] = product_price
+                else:
+                    prod["product"]["price"] = 0
+                    prod["product"].update({"status": 0})
+                    if not ml_products[sku]['log_message']:
+                        text = "There are no or '0' price defined for product in '%s' " \
+                                "website price-lists.\n" % (view[0].name)
+                        ml_products[sku]['log_message'] += text
 
                 data_lst.append(prod)
 
@@ -2521,7 +2505,6 @@ class MagentoProductProduct(models.Model):
                 "attribute_set_id":  attr_sets[prod_attr_set]['id'],
                 "price": 0,#product.lst_price,
                 # "status": 0,#initially disabled
-                "visibility": 4,
                 "type_id": "simple",
                 "weight": product.odoo_product_id.weight,
                 "custom_attributes": custom_attributes,
@@ -2532,7 +2515,7 @@ class MagentoProductProduct(models.Model):
             }
         }
         if method == 'POST':
-            data["product"].update({"sku": product.magento_sku, "status": 0})
+            data["product"].update({"sku": product.magento_sku, "status": 0, "visibility": 4})
 
         try:
             api_url = '/all/V1/products' if method == 'POST' else '/all/V1/products/%s' % product.magento_sku
@@ -2630,15 +2613,13 @@ class MagentoProductProduct(models.Model):
                     categ_list = [(cat.id, cat.category_id) for cat in prod.magento_conf_product.category_ids]
                 ml_simp_products[prod.magento_sku]['product_categ'] = [c[0] for c in categ_list]
 
-                data.append({
+                p = {
                     "product": {
                         "sku": prod.magento_sku,
                         "name": prod.magento_product_name,
                         # prod.x_magento_name if prod.x_magento_name else prod.magento_product_name,
                         "attribute_set_id": attr_set_id,
                         "price": 0, #prod.lst_price,
-                        "status": 0,  # disabled
-                        "visibility": 4,  # Catalog, Search
                         "type_id": "simple",
                         "weight": prod.odoo_product_id.weight,
                         "extension_attributes": {
@@ -2648,7 +2629,10 @@ class MagentoProductProduct(models.Model):
                         },
                         "custom_attributes": custom_attributes
                     }
-                })
+                }
+                if method == 'POST':
+                    p["product"].update({"status": 0, "visibility": 4})
+                data.append(p)
 
         if not data:
             return False

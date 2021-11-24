@@ -11,8 +11,8 @@
     'maintainer': 'White Label',
 
     # Dependencies
-    # 'depends': ['common_connector_library'],
-    'depends': ['common_connector_library', 'smartino_common'],
+    'depends': ['common_connector_library'],
+    # 'depends': ['common_connector_library', 'smartino_common'],
     # Views
     'data': [
         'security/security.xml',
@@ -35,7 +35,8 @@
         # 'views/magento_product_template_view.xml',
         # 'views/magento_product_image_view.xml',
         'wizard_views/magento_queue_process_wizard_view.xml',
-        'views/res_partner_view.xml',
+        # 'views/res_partner_view.xml',
+        'views/magento_res_partner_view.xml',
         'views/sale_order_view.xml',
         'views/sale_order_cancel_view.xml',
         'views/magento_order_data_queue_ept.xml',
@@ -63,6 +64,7 @@
         'views/product_product_view.xml',
         'views/product_public_category_view.xml',
         'views/config_product_attribute_view.xml',
+        'views/magento_customer_groups_view.xml',
         'wizard_views/magento_instance_configuration_wizard.xml',
         # 'wizard_views/basic_configuration_onboarding.xml',
         # 'wizard_views/financial_status_onboarding_view.xml',
@@ -72,6 +74,7 @@
         'wizard_views/product_public_category_update_view.xml',
         'wizard_views/magento_product_categories_configuration_view.xml',
         'wizard_views/config_product_attributes_update_view.xml',
+        'wizard_views/magento_customer_group_update_view.xml',
         'data/ecommerce_data.xml',
         'security/ir.model.access.csv',
         'data/update_magento_partner.xml'
