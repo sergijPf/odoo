@@ -562,114 +562,64 @@ class ResPartner(models.Model):
 
 # SPf
 
-    def get_customer_from_magento(self, magento_instance, customer_page_count=1):
-        filters = {
-            'from_date': datetime.today() - timedelta(days=500),
-            'to_date': datetime.now(),
-            'website_id': 1
-        }
+    # def get_customer_from_magento(self, magento_instance, customer_page_count=1):
+    #     filters = {
+    #         'from_date': datetime.today() - timedelta(days=500),
+    #         'to_date': datetime.now(),
+    #         'website_id': 1
+    #     }
+    #
+    #     search_criteria = self.create_search_criteria_for_import_partner(filters, customer_page_count)
+    #     que_str = Php.http_build_query(search_criteria)
+    #     try:
+    #         que_str = 'searchCriteria[filterGroups][2][filters][0][field]=website_id' \
+    #                   '&searchCriteria[filterGroups][2][filters][0][condition_type]=in' \
+    #                   '&searchCriteria[filterGroups][2][filters][0][value]=1'
+    #
+    #         api_url = '/V1/customers/search?%s' % que_str
+    #         print(api_url)
+    #         response = req(magento_instance, api_url)
+    #         print(response)
+    #
+    #     except Exception as error:
+    #         raise UserError("Error while requesting import customer : %s" % error)
+    #     return response
+    #
+    # @staticmethod
+    # def create_search_criteria_for_import_partner(customer_filters, customer_current_page):
+    #     """
+    #     Based on customer filters it will create a search criteria for import partner.
+    #     :param customer_filters: Dictionary of filters
+    #     :param customer_current_page: Define current page for import customer via API
+    #     :return: filters
+    #     """
+    #     filters = {}
+    #     if customer_filters.get('from_date') is not None:
+    #         from_date = customer_filters.get('from_date')
+    #         filters.setdefault('updated_at', {})
+    #         filters['updated_at']['from'] = from_date.strftime(MAGENTO_DATETIME_FORMAT)
+    #     if customer_filters.get('to_date'):
+    #         to_date = customer_filters.get('to_date')
+    #         filters.setdefault('updated_at', {})
+    #         filters['updated_at']['to'] = to_date.strftime(MAGENTO_DATETIME_FORMAT)
+    #     filters.setdefault('website_id', {})
+    #     filters['website_id']['in'] = customer_filters.get('website_id')
+    #     filters = create_search_criteria(filters)
+    #     filters['searchCriteria']['pageSize'] = 200
+    #     filters['searchCriteria']['currentPage'] = customer_current_page
+    #     return filters
 
-        search_criteria = self.create_search_criteria_for_import_partner(filters, customer_page_count)
-        que_str = Php.http_build_query(search_criteria)
-        try:
-            que_str = 'searchCriteria[filterGroups][2][filters][0][field]=website_id' \
-                      '&searchCriteria[filterGroups][2][filters][0][condition_type]=in' \
-                      '&searchCriteria[filterGroups][2][filters][0][value]=1'
-
-            api_url = '/V1/customers/search?%s' % que_str
-            print(api_url)
-            response = req(magento_instance, api_url)
-            print(response)
-
-        except Exception as error:
-            raise UserError("Error while requesting import customer : %s" % error)
-        return response
-
-    @staticmethod
-    def create_search_criteria_for_import_partner(customer_filters, customer_current_page):
-        """
-        Based on customer filters it will create a search criteria for import partner.
-        :param customer_filters: Dictionary of filters
-        :param customer_current_page: Define current page for import customer via API
-        :return: filters
-        """
-        filters = {}
-        if customer_filters.get('from_date') is not None:
-            from_date = customer_filters.get('from_date')
-            filters.setdefault('updated_at', {})
-            filters['updated_at']['from'] = from_date.strftime(MAGENTO_DATETIME_FORMAT)
-        if customer_filters.get('to_date'):
-            to_date = customer_filters.get('to_date')
-            filters.setdefault('updated_at', {})
-            filters['updated_at']['to'] = to_date.strftime(MAGENTO_DATETIME_FORMAT)
-        filters.setdefault('website_id', {})
-        filters['website_id']['in'] = customer_filters.get('website_id')
-        filters = create_search_criteria(filters)
-        filters['searchCriteria']['pageSize'] = 200
-        filters['searchCriteria']['currentPage'] = customer_current_page
-        return filters
-
-    def process_customer_creation_or_update(self, magento_instance, customer_dict={}):
-        customer_dict = {
-            "website_id": 1, ### to add to stand.request
-            "customer_email": "serg@gm.com",
-            "customer_firstname": "sergio",
-            "customer_group_id": 1,
-            "customer_group_name": 'General',
-            "customer_id": 85,
-            "customer_is_guest": 0,
-            "customer_lastname": "pf",
-            "billing_address": {
-                "address_type": "billing addr.",
-                "city": "London",
-                "country_id": "GB",
-                "customer_address_id": 121,
-                "email": "serg@gm.com",
-                "entity_id": 342,
-                "firstname": "sergio",
-                "lastname": "pfaifer",
-                "parent_id": 171,
-                "postcode": '123456',
-                "street": [
-                    "lincoln str."
-                ],
-                "telephone": '456789'
-            },
-            "extension_attributes": {
-                "shipping_assignments": [
-                    {
-                        "shipping": {
-                            "address": {
-                                "address_type": "shipping addr.",
-                                "city": "Luxembourg",
-                                "country_id": "LU",
-                                "customer_address_id": 123,
-                                "email": "serg@gm.com",
-                                "entity_id": 341,
-                                "firstname": "serhio",
-                                "lastname": "pfai",
-                                "parent_id": 171,
-                                "postcode": "78000",
-                                "street": [
-                                    "www str 789"
-                                ],
-                                "telephone": '789456'
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-
-        website = self.env['magento.website'].search([
-            ('magento_instance_id', '=', magento_instance.id),
-            ('magento_website_id', '=', customer_dict.get("website_id"))
-        ])
+    def process_customer_creation_or_update(self, magento_instance, customer_dict, website):
+        # website = self.env['magento.website'].search([
+        #     ('magento_instance_id', '=', magento_instance.id),
+        #     ('magento_website_id', '=', customer_dict.get("website_id"))
+        # ])
         odoo_partner = self.get_odoo_customer(customer_dict, website)
-        magento_partner = self.env[MAGENTO_RES_PARTNER].get_magento_customer(magento_instance, customer_dict,
-                                                                             odoo_partner, website)
+        magento_partner = self.env[MAGENTO_RES_PARTNER].get_magento_customer(
+            magento_instance, customer_dict, odoo_partner, website
+        )
 
-        return magento_partner
+        return odoo_partner, magento_partner
 
     def get_odoo_customer(self, customer_dict, website):
         customer_email = customer_dict.get("customer_email")
@@ -684,7 +634,7 @@ class ResPartner(models.Model):
                 'email': customer_email,
                 'type': 'contact',
                 'name': customer_dict.get("customer_firstname") + ', ' + customer_dict.get("customer_lastname"),
-                'property_product_pricelist': [(4, website.pricelist_id.id)],
+                'property_product_pricelist': website.pricelist_id.id,
                 'is_magento_customer': True
             })
         else:

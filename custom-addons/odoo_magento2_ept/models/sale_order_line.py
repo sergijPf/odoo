@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # See LICENSE file for full copyright and licensing details.
 """For Odoo Magento2 Connector Module"""
+import json
 from odoo import models, fields, api
 # from datetime import datetime
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-import json
 
 class SaleOrderLine(models.Model):
     """
@@ -147,7 +147,7 @@ class SaleOrderLine(models.Model):
         magento_sale_order_line_ref = order_line_dict.get('parent_item_id') or order_line_dict.get('item_id')
         uom_id = False
         if odoo_product and odoo_product.uom_id.id:
-            uom_id = odoo_product and odoo_product.uom_id.id
+            uom_id = odoo_product.uom_id.id
         order_line_vals = {
             'order_id': magento_order.id,
             'product_id': odoo_product and odoo_product.id or False,
@@ -163,3 +163,31 @@ class SaleOrderLine(models.Model):
             'magento_sale_order_line_ref': magento_sale_order_line_ref
         })
         return order_line_vals
+
+
+    # added by SPf
+    def magento_create_sale_order_line_adj(self, magento_instance, sales_order, magento_order):
+        so_lines_list = []
+        magento_product = self.env['magento.product.product']
+        magento_order_lines = sales_order.get('items')
+        store_id = sales_order.get('store_id')
+        store_view = magento_instance.magento_website_ids.store_view_ids.filtered(
+            lambda x: x.magento_storeview_id == str(store_id)
+        )
+        tax_calculation_method = store_view and store_view.magento_website_id.tax_calculation_method
+
+        for item in magento_order_lines:
+            if item.get('product_type') != 'simple':
+                continue
+            product_sku = item.get('sku')
+            item_price = self.calculate_order_item_price(tax_calculation_method, item)
+            magento_product = magento_product.search([
+                ('magento_sku', '=', product_sku),
+                ('magento_instance_id', '=', magento_instance.id)
+            ], limit=1)
+            sale_order_line = self.create_sale_order_line_vals(item, item_price, magento_product.odoo_product_id,
+                                                               magento_order)
+            order_line = self.create(sale_order_line)
+            so_lines_list.append(order_line)
+
+        return so_lines_list

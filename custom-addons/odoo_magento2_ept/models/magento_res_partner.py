@@ -42,14 +42,16 @@ class MagentoResPartner(models.Model):
         if magento_customer:
             # check magento customer group
             if str(magento_customer.customer_group_id.id) != str(customer_group_id):
-                group_id = self.customer_group_id.get_customer_group(magento_instance, customer_group_id, customer_group_name)
+                group_id = self.customer_group_id.get_customer_group(
+                    magento_instance, customer_group_id, customer_group_name
+                )
                 magento_customer.write({
                     "customer_group_id": group_id.id
                 })
             # check customer billing address(magento layer) / invoice address(odoo) exist
             if not len(magento_customer.customer_address_ids.filtered(
-                    lambda x: x.magento_customer_address_id == str(billing_address.get('entity_id')) and x.address_type == 'billing'
-            )):
+                    lambda x: x.magento_customer_address_id == str(billing_address.get('entity_id')) and
+                              x.address_type == 'billing')):
                  magento_customer.customer_address_ids.create_and_link_customer_address(
                     billing_address, magento_customer, odoo_partner, 'billing'
                 )
@@ -57,8 +59,8 @@ class MagentoResPartner(models.Model):
             for address in delivery_addresses:
                 addr = address.get('shipping', {}).get('address', {})
                 if not len(magento_customer.customer_address_ids.filtered(
-                        lambda x: x.magento_customer_address_id == str(addr.get('entity_id')) and x.address_type == 'shipping'
-                )):
+                        lambda x: x.magento_customer_address_id == str(addr.get('entity_id')) and
+                                  x.address_type == 'shipping')):
                     magento_customer.customer_address_ids.create_and_link_customer_address(
                         addr, magento_customer, odoo_partner, 'shipping'
                     )
@@ -82,6 +84,8 @@ class MagentoResPartner(models.Model):
                 magento_customer.customer_address_ids.create_and_link_customer_address(
                     addr, magento_customer, odoo_partner, 'shipping'
                 )
+
+        return magento_customer
 
     def export_to_magento(self):
         active_ids = self._context.get("active_ids", [])

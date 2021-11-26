@@ -3,6 +3,7 @@
 Describes methods for webhooks to create order, invoice, product and customer.
 """
 import base64
+import json
 from odoo import http
 from odoo.http import request
 from odoo.addons.web.controllers.main import serialize_exception, content_disposition
@@ -12,6 +13,7 @@ class Binary(http.Controller):
     """
     Describes methods for webhooks to create order, invoice, product and customer.
     """
+
     @http.route('/web/binary/download_document', type='http', auth="public")
     @serialize_exception
     def download_document(self, model, id, filename=None):
@@ -37,20 +39,33 @@ class Binary(http.Controller):
                 ])
         return return_val
 
-    @http.route('/web_magento_place_order', csrf=False, auth="public", type="http")
-    def place_order(self, **kwargs):
+    @http.route('/web_magento_place_order', csrf=False, auth="public", type="json")
+    def place_order(self):
         """
-        This method will create new order data queue
+        This method will create new order in Odoo
         :param kwargs: arguments received from API
         :return: True
         """
-        order_id = kwargs.get('order_id', False)
-        magento_url = kwargs.get('url', False)
+        data = json.loads(request.httprequest.data)
+        magento_url = data.get('url', False)
         magento_instance = request.env['magento.instance'].sudo().search([
-            ('magento_url', '=', magento_url.rstrip('/'))
+            ('magento_url', '=', magento_url.rstrip('/') if magento_url else False)
         ])
-        request.env['magento.order.data.queue.ept'].sudo().import_specific_order(magento_instance, [order_id])
-        return 'true'
+
+        if not magento_instance or not data.get('items'):
+            return 'false'
+
+        # print(data)
+
+        res = request.env['sale.order'].sudo().process_sales_order_creation(magento_instance, data)
+        # order_id = kwargs.get('order_id', False)
+        # magento_url = kwargs.get('url', False)
+        # magento_instance = request.env['magento.instance'].sudo().search([
+        #     ('magento_url', '=', magento_url.rstrip('/'))
+        # ])
+        # request.env['magento.order.data.queue.ept'].sudo().import_specific_order(magento_instance, [order_id])
+
+        return 'true' if res else 'false'
 
     @http.route('/web_magento_order_cancel', csrf=False, auth="public", type="http")
     def cancel_order(self, **kwargs):
