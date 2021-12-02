@@ -3,7 +3,7 @@
 """
 Describes methods for account move
 """
-from odoo import models, fields, api, _
+from odoo import models, fields, _
 from odoo.exceptions import UserError
 from .api_request import req
 ACCOUNT_MOVE = 'account.move'
@@ -42,8 +42,8 @@ class AccountInvoice(models.Model):
         This method is used to export invoices into Magento.
         :param magento_instance: Instance of Magento.
         """
-        common_log_book_obj = self.env['common.log.book.ept']
-        common_log_lines_obj = self.env['common.log.lines.ept']
+        # common_log_book_obj = self.env['common.log.book.ept']
+        # common_log_lines_obj = self.env['common.log.lines.ept']
         invoices = self.search([
             ('is_magento_invoice', '=', True),
             ('is_exported_to_magento', '=', False),
@@ -51,41 +51,41 @@ class AccountInvoice(models.Model):
             ('state', 'in', ['posted']),
             ('max_no_of_attempts', '<=', 3)
         ])
-        model_id = common_log_lines_obj.get_model_id(ACCOUNT_MOVE)
-        log_book_id = common_log_book_obj.create({
-            'type': 'export',
-            'module': 'magento_ept',
-            'model_id': model_id,
-            'res_id': self.id,
-            'magento_instance_id': magento_instance.id
-        })
+        # model_id = common_log_lines_obj.get_model_id(ACCOUNT_MOVE)
+        # log_book_id = common_log_book_obj.create({
+        #     'type': 'export',
+        #     'module': 'magento_ept',
+        #     'model_id': model_id,
+        #     'res_id': self.id,
+        #     'magento_instance_id': magento_instance.id
+        # })
         for invoice in invoices:
             if (invoice.magento_payment_method_id.create_invoice_on == 'in_payment_paid' and invoice.payment_state in ['in_payment', 'paid']) or \
                     (invoice.magento_payment_method_id.create_invoice_on == 'open' and invoice.payment_state not in ['in_payment', 'paid']):
-                self.call_export_invoice_api(invoice, log_book_id)
-        if not log_book_id.log_lines:
-            log_book_id.sudo().unlink()
+                self.call_export_invoice_api(invoice, '')
+        # if not log_book_id.log_lines:
+        #     log_book_id.sudo().unlink()
 
     def export_invoice_in_magento(self):
         """
         Export specific invoice in Magento through API
         """
         self.ensure_one()
-        common_log_book_obj = self.env['common.log.book.ept']
-        common_log_lines_obj = self.env['common.log.lines.ept']
-        instance = self.magento_instance_id
-        model_id = common_log_lines_obj.get_model_id(ACCOUNT_MOVE)
-        log_book_id = common_log_book_obj.create({
-            'type': 'export',
-            'module': 'magento_ept',
-            'model_id': model_id,
-            'res_id': self.id,
-            'magento_instance_id': instance.id
-        })
+        # common_log_book_obj = self.env['common.log.book.ept']
+        # common_log_lines_obj = self.env['common.log.lines.ept']
+        # instance = self.magento_instance_id
+        # model_id = common_log_lines_obj.get_model_id(ACCOUNT_MOVE)
+        # log_book_id = common_log_book_obj.create({
+        #     'type': 'export',
+        #     'module': 'magento_ept',
+        #     'model_id': model_id,
+        #     'res_id': self.id,
+        #     'magento_instance_id': instance.id
+        # })
         if (self.magento_payment_method_id.create_invoice_on == 'in_payment_paid' and self.payment_state in ['in_payment', 'paid']) or \
                 (self.magento_payment_method_id.create_invoice_on == 'open' and self.payment_state not in ['in_payment', 'paid']):
             invoice = self
-            self.call_export_invoice_api(invoice, log_book_id)
+            self.call_export_invoice_api(invoice, '')
         else:
             #Raise the UserError while the respected Payment method
             #configuration for Create Invoice on Magento
@@ -96,8 +96,8 @@ class AccountInvoice(models.Model):
                             "Please check the Configuration and try it again" % (self.magento_payment_method_id.create_invoice_on,
                                                                                  self.magento_payment_method_id.payment_method_name,
                                                                                  self.state))
-        if not log_book_id.log_lines:
-            log_book_id.sudo().unlink()
+        # if not log_book_id.log_lines:
+        #     log_book_id.sudo().unlink()
 
     @staticmethod
     def call_export_invoice_api(invoice, log_book_id):

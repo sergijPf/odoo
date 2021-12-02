@@ -8,16 +8,16 @@ Describes product import export process.
 # from csv import DictWriter
 # from io import StringIO
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from odoo.exceptions import Warning, UserError
-from odoo import fields, models, api, _
+from odoo import fields, models, _
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-MAGENTO_ORDER_DATA_QUEUE_EPT = 'magento.order.data.queue.ept'
+# MAGENTO_ORDER_DATA_QUEUE_EPT = 'magento.order.data.queue.ept'
 IR_ACTION_ACT_WINDOW = 'ir.actions.act_window'
 IR_MODEL_DATA = 'ir.model.data'
 VIEW_MODE = 'tree,form'
-COMPLETED_STATE = "[('state', '!=', 'completed')]"
+# COMPLETED_STATE = "[('state', '!=', 'completed')]"
 # IMPORT_MAGENTO_PRODUCT_QUEUE = 'sync.import.magento.product.queue'
 MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
 
@@ -32,9 +32,9 @@ class MagentoImportExportEpt(models.TransientModel):
     magento_instance_ids = fields.Many2many('magento.instance', string="Magento Instances")
     magento_website_id = fields.Many2one('magento.website', string="Magento Website")
     operations = fields.Selection([
-        ('import_customer', 'Import Customer'),
-        ('import_sale_order', 'Import Sale Order'),
-        ('import_specific_order', 'Import Specific Order'),
+        # ('import_customer', 'Import Customer'),
+        # ('import_sale_order', 'Import Sale Order'),
+        # ('import_specific_order', 'Import Specific Order'),
         # ('import_products', 'Import Products'),
         # ('map_products', 'Map Products'),
         # ('import_specific_product', 'Import Specific Product'),
@@ -45,11 +45,11 @@ class MagentoImportExportEpt(models.TransientModel):
     ], string='Import/ Export Operations', help='Import/ Export Operations')
     start_date = fields.Datetime(string="From Date", help="From date.")
     end_date = fields.Datetime("To Date", help="To date.")
-    import_specific_sale_order = fields.Char(
-        string="Sale Order Reference",
-        help="You can import Magento Order by giving order number here,Ex.000000021 \n "
-             "If multiple orders are there give order number comma (,) separated "
-    )
+    # import_specific_sale_order = fields.Char(
+    #     string="Sale Order Reference",
+    #     help="You can import Magento Order by giving order number here,Ex.000000021 \n "
+    #          "If multiple orders are there give order number comma (,) separated "
+    # )
     export_method = fields.Selection([
         ("direct", "Export in Magento Layer")
         # ("direct", "Export in Magento Layer"), ("csv", "Export in CSV file")
@@ -70,18 +70,18 @@ class MagentoImportExportEpt(models.TransientModel):
     #     help="If checked and Product(s) found in odoo/magento layer, then not update the Product(s)"
     # )
 
-    @api.onchange('operations')
-    def on_change_operation(self):
-        """
-        Set end date when change operations
-        """
-        # if self.operations in ["import_products", "import_sale_order", "import_customer"]:
-        if self.operations in ["import_sale_order", "import_customer"]:
-            self.start_date = datetime.today() - timedelta(days=10)
-            self.end_date = datetime.now()
-        else:
-            self.start_date = None
-            self.end_date = None
+    # @api.onchange('operations')
+    # def on_change_operation(self):
+    #     """
+    #     Set end date when change operations
+    #     """
+    #     # if self.operations in ["import_products", "import_sale_order", "import_customer"]:
+    #     if self.operations in ["import_sale_order", "import_customer"]:
+    #         self.start_date = datetime.today() - timedelta(days=10)
+    #         self.end_date = datetime.now()
+    #     else:
+    #         self.start_date = None
+    #         self.end_date = None
 
     def execute(self):
         """
@@ -96,22 +96,22 @@ class MagentoImportExportEpt(models.TransientModel):
         else:
             instances = magento_instance.search([])
         result = False
-        if self.operations == 'import_customer':
-            # self.import_customer_operation(instances)
-            self.env['res.partner'].process_customer_creation_or_update(instances)
+        # if self.operations == 'import_customer':
+        #     # self.import_customer_operation(instances)
+        #     self.env['res.partner'].process_customer_creation_or_update(instances)
         # elif self.operations == 'map_products':
         #     self.map_product_operation(instances)
-        elif self.operations == 'import_sale_order':
-            result = self.import_sale_order_operation(instances)
-        elif self.operations == 'import_specific_order':
-            result = self.import_specific_sale_order_operation(instances)
+        # elif self.operations == 'import_sale_order':
+        #     result = self.import_sale_order_operation(instances)
+        # elif self.operations == 'import_specific_order':
+        #     result = self.import_specific_sale_order_operation(instances)
         # elif self.operations == 'import_products':
         #     result = self.import_products_operation(instances)
         # elif self.operations == 'import_specific_product':
         #     result = self.import_specific_product_operation(instances)
         # elif self.operations == 'import_product_stock':
         #     result = self.import_product_stock_operation(instances)
-        elif self.operations == 'export_shipment_information':
+        if self.operations == 'export_shipment_information':
             picking.export_shipment_to_magento(instances)
         elif self.operations == 'export_invoice_information':
             account_move.export_invoice_to_magento(instances)
@@ -139,76 +139,76 @@ class MagentoImportExportEpt(models.TransientModel):
     #     for instance in instances:
     #         self.import_magento_csv(instance.id)
 
-    def import_customer_operation(self, instances):
-        """
-        Create queue of imported customers.
-        :param instances: Magento instances
-        """
-        customer_data_queue_obj = self.env['magento.customer.data.queue.ept']
-        kwargs = {'start_date': self.start_date, 'end_date': self.end_date}
-        for instance in instances:
-            kwargs.update({'magento_instance': instance})
-            customer_data_queue_obj.magento_create_customer_data_queues(**kwargs)
+    # def import_customer_operation(self, instances):
+    #     """
+    #     Create queue of imported customers.
+    #     :param instances: Magento instances
+    #     """
+    #     customer_data_queue_obj = self.env['magento.customer.data.queue.ept']
+    #     kwargs = {'start_date': self.start_date, 'end_date': self.end_date}
+    #     for instance in instances:
+    #         kwargs.update({'magento_instance': instance})
+    #         customer_data_queue_obj.magento_create_customer_data_queues(**kwargs)
 
-    def import_sale_order_operation(self, instances):
-        """
-        Create queue of imported sale orders
-        :param instances: Magento Instances
-        :return:
-        """
-        magento_order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT]
-        from_date = datetime.strftime(self.start_date, MAGENTO_DATETIME_FORMAT) if self.start_date else {}
-        to_date = datetime.strftime(self.end_date, MAGENTO_DATETIME_FORMAT)
-        for instance in instances:
-            order_queue_data = magento_order_data_queue_obj.magento_create_order_data_queues(instance, from_date,
-                                                                                             to_date, True)
-        result = self.return_order_queue_form_or_tree_view(order_queue_data)
-        return result
+    # def import_sale_order_operation(self, instances):
+    #     """
+    #     Create queue of imported sale orders
+    #     :param instances: Magento Instances
+    #     :return:
+    #     """
+    #     # magento_order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT]
+    #     from_date = datetime.strftime(self.start_date, MAGENTO_DATETIME_FORMAT) if self.start_date else {}
+    #     to_date = datetime.strftime(self.end_date, MAGENTO_DATETIME_FORMAT)
+    #     for instance in instances:
+    #         order_queue_data = magento_order_data_queue_obj.magento_create_order_data_queues(instance, from_date,
+    #                                                                                          to_date, True)
+    #     result = self.return_order_queue_form_or_tree_view(order_queue_data)
+    #     return result
 
-    def import_specific_sale_order_operation(self, instances):
-        """
-        Create queue of imported specific order.
-        :param instances: Magento Instances
-        :return:
-        """
-        if not self.import_specific_sale_order:
-            raise Warning(_("Please enter Magento sale order Reference for performing this operation."))
-        magento_order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT]
-        sale_order_list = self.import_specific_sale_order.split(',')
-        for instance in instances:
-            order_queue_data = magento_order_data_queue_obj.import_specific_order(instance, sale_order_list)
-        result = self.return_order_queue_form_or_tree_view(order_queue_data)
-        return result
+    # def import_specific_sale_order_operation(self, instances):
+    #     """
+    #     Create queue of imported specific order.
+    #     :param instances: Magento Instances
+    #     :return:
+    #     """
+    #     if not self.import_specific_sale_order:
+    #         raise Warning(_("Please enter Magento sale order Reference for performing this operation."))
+    #     magento_order_data_queue_obj = self.env[MAGENTO_ORDER_DATA_QUEUE_EPT]
+    #     sale_order_list = self.import_specific_sale_order.split(',')
+    #     for instance in instances:
+    #         order_queue_data = magento_order_data_queue_obj.import_specific_order(instance, sale_order_list)
+    #     result = self.return_order_queue_form_or_tree_view(order_queue_data)
+    #     return result
 
-    def return_order_queue_form_or_tree_view(self, order_queue_data):
-        """
-        it's return the tree view or form view based on the total_order_queues.
-        :param order_queue_data: {'order_queue': magento.order.data.queue.ept(X,), 'count': X, 'total_order_queues': X}
-        :return: view with domain
-        """
-        result = {
-            'name': _('Magento Order Data Queue'),
-            'res_model': MAGENTO_ORDER_DATA_QUEUE_EPT,
-            'type': IR_ACTION_ACT_WINDOW,
-        }
-        if order_queue_data.get('total_order_queues') == 1:
-            view_ref = self.env[IR_MODEL_DATA].get_object_reference(
-                'odoo_magento2_ept', 'view_magento_order_data_queue_ept_form'
-            )
-            view_id = view_ref[1] if view_ref else False
-            result.update({
-                'views': [(view_id, 'form')],
-                'view_mode': 'form',
-                'view_id': view_id,
-                'res_id': order_queue_data.get('order_queue').id,
-                'target': 'current'
-            })
-        else:
-            result.update({
-                'view_mode': VIEW_MODE,
-                'domain': COMPLETED_STATE
-            })
-        return result
+    # def return_order_queue_form_or_tree_view(self, order_queue_data):
+    #     """
+    #     it's return the tree view or form view based on the total_order_queues.
+    #     :param order_queue_data: {'order_queue': magento.order.data.queue.ept(X,), 'count': X, 'total_order_queues': X}
+    #     :return: view with domain
+    #     """
+    #     result = {
+    #         'name': _('Magento Order Data Queue'),
+    #         'res_model': MAGENTO_ORDER_DATA_QUEUE_EPT,
+    #         'type': IR_ACTION_ACT_WINDOW,
+    #     }
+    #     if order_queue_data.get('total_order_queues') == 1:
+    #         view_ref = self.env[IR_MODEL_DATA].get_object_reference(
+    #             'odoo_magento2_ept', 'view_magento_order_data_queue_ept_form'
+    #         )
+    #         view_id = view_ref[1] if view_ref else False
+    #         result.update({
+    #             'views': [(view_id, 'form')],
+    #             'view_mode': 'form',
+    #             'view_id': view_id,
+    #             'res_id': order_queue_data.get('order_queue').id,
+    #             'target': 'current'
+    #         })
+    #     else:
+    #         result.update({
+    #             'view_mode': VIEW_MODE,
+    #             'domain': COMPLETED_STATE
+    #         })
+    #     return result
 
     # def import_products_operation(self, instances):
     #     """

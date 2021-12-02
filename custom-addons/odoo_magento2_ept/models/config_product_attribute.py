@@ -2,12 +2,13 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
-from odoo.exceptions import UserError
+# from odoo.exceptions import UserError
 from datetime import datetime
 
 
 class ConfigProductAttribute(models.Model):
     _name = "config.product.attribute"
+    _description = 'Magento Configurable Product Attributes'
     _order = 'name, id'
     _rec_name = 'name'
 
@@ -31,6 +32,7 @@ class ConfigProductAttribute(models.Model):
 
 class ConfigProductAttributeGroup(models.Model):
     _name = "config.product.attribute.group"
+    _description = 'Groups for Magento Configurable Product Attributes'
     _rec_name = 'name'
 
     name = fields.Char(string="Attributes Category", help="Attribute name must match Attribute code in Magento",

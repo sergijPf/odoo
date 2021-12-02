@@ -44,12 +44,12 @@ class MagentoStoreview(models.Model):
         required=False,
         help="This field relocates magento instance"
     )
-    import_orders_from_date = fields.Datetime(
-        string='Import sale orders from date',
-        help='Do not consider non-imported sale orders before this date. '
-             'Leave empty to import all sale orders',
-    )
-    base_media_url = fields.Char(string='Base Media URL', help="URL for Image store at Magento.")
+    # import_orders_from_date = fields.Datetime(
+    #     string='Import sale orders from date',
+    #     help='Do not consider non-imported sale orders before this date. '
+    #          'Leave empty to import all sale orders',
+    # )
+    # base_media_url = fields.Char(string='Base Media URL', help="URL for Image store at Magento.")
     active = fields.Boolean(string="Status", default=True)
     sale_prefix = fields.Char(
         string="Sale Order Prefix",

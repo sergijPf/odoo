@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # See LICENSE file for full copyright and licensing details.
 from odoo import models, api
-from odoo.exceptions import UserError
+# from odoo.exceptions import UserError
 # from datetime import datetime
 
 
@@ -87,7 +87,6 @@ class ProductPricelistItem(models.Model):
                         domain.append(('inventory_category_id', '=', vals.get('categ_id')))
 
                     self.env['magento.product.product'].search(domain).write({"force_update": True})
-                    print(self.env['magento.product.product'].search(domain))
                 else:
                     if applied == '1_product':
                         product = self.env['product.product'].search([('product_tmpl_id', '=', vals.get('product_tmpl_id'))])
@@ -99,9 +98,6 @@ class ProductPricelistItem(models.Model):
                         lambda x: x.magento_instance_id.id == instance.id
                     ).write({"force_update": True})
 
-                    print(self.env['magento.product.product'].browse(product.magento_product_ids.ids).filtered(
-                        lambda x: x.magento_instance_id.id == instance.id
-                    ))
         return res
 
     def write(self, vals):

@@ -66,7 +66,7 @@ class MagentoWebsite(models.Model):
             # exported = 'All'
             # product_data = record.get_total_products(record, exported)
             # Customer count website vise query
-            customer_data = record.get_customers(record)
+            # customer_data = record.get_customers(record)
             # Order count website vise query
             order_data = record.get_total_orders(record)
             # Order shipped website vise count query
@@ -82,7 +82,7 @@ class MagentoWebsite(models.Model):
                 "total_sales": total_sales,
                 "is_sample_data": False,
                 "order_data": order_data,
-                "customer_data": customer_data,
+                # "customer_data": customer_data,
                 # "product_date": product_data,
                 "sort_on": self._context.get('sort'),
                 "order_shipped": order_shipped,
@@ -161,26 +161,26 @@ class MagentoWebsite(models.Model):
     #     product_data.update({'product_count': total_count, 'product_action': action})
     #     return product_data
 
-    def get_customers(self, record):
-        """
-        Use: To get the list of customers with Magento instance for current Magento instance
-        :return: total number of customer ids and action for customers
-        """
-        customer_data = {}
-        main_sql = """select DISTINCT(rp.id) as partner_id from res_partner as rp
-                        inner join magento_res_partner mp on mp.partner_id = rp.id
-                        where mp.magento_website_id = %s and
-                        mp.magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
-        view = self.env.ref('base.action_partner_form').sudo().read()[0]
-        self._cr.execute(main_sql)
-        result = self._cr.dictfetchall()
-        magento_customer_ids = []
-        if result:
-            for data in result:
-                magento_customer_ids.append(data.get('partner_id'))
-        action = record.prepare_action(view, [('id', 'in', magento_customer_ids)])
-        customer_data.update({'customer_count': len(magento_customer_ids), 'customer_action': action})
-        return customer_data
+    # def get_customers(self, record):
+    #     """
+    #     Use: To get the list of customers with Magento instance for current Magento instance
+    #     :return: total number of customer ids and action for customers
+    #     """
+    #     customer_data = {}
+    #     main_sql = """select DISTINCT(rp.id) as partner_id from res_partner as rp
+    #                     inner join magento_res_partner mp on mp.partner_id = rp.id
+    #                     where mp.magento_website_id = %s and
+    #                     mp.magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
+    #     view = self.env.ref('base.action_partner_form').sudo().read()[0]
+    #     self._cr.execute(main_sql)
+    #     result = self._cr.dictfetchall()
+    #     magento_customer_ids = []
+    #     if result:
+    #         for data in result:
+    #             magento_customer_ids.append(data.get('partner_id'))
+    #     action = record.prepare_action(view, [('id', 'in', magento_customer_ids)])
+    #     customer_data.update({'customer_count': len(magento_customer_ids), 'customer_action': action})
+    #     return customer_data
 
     def get_total_orders(self, record, state=False):
         """
@@ -472,9 +472,10 @@ class MagentoWebsite(models.Model):
         Use: To prepare Magento logs action
         :return: Magento logs action details
         """
-        website = self.browse(record_id)
-        view = self.env.ref('odoo_magento2_ept.action_common_log_book_ept_magento').sudo().read()[0]
-        return self.prepare_action(view, [('magento_instance_id', '=', website.magento_instance_id.id)])
+        return {}
+        # website = self.browse(record_id)
+        # view = self.env.ref('odoo_magento2_ept.action_common_log_book_ept_magento').sudo().read()[0]
+        # return self.prepare_action(view, [('magento_instance_id', '=', website.magento_instance_id.id)])
 
     @api.model
     def open_report(self, record_id):

@@ -15,20 +15,20 @@ class DeliveryCarrier(models.Model):
 
     magento_carrier = fields.Many2one(
         'magento.delivery.carrier',
-        help="This field relocates Magento Delivery Carrier",
-        domain=[('magento_instance_id', '!=', False), ('magento_instance_id.active', '=', True)]
+        help="This field relocates Magento Delivery Carrier"
     )
-    magento_carrier_code = fields.Char(
-        compute='_compute_carrier_code',
-        string='Base Carrier Code',
-        help="Magento Carrier Code"
-    )
-
-    def _compute_carrier_code(self):
-        for carrier in self:
-            self.magento_carrier_code = False
-            if carrier.magento_carrier.carrier_code:
-                self.magento_carrier_code = carrier.magento_carrier.carrier_code
+    magento_carrier_code = fields.Char(related='magento_carrier.carrier_code', string='Base Carrier Code')
+    # magento_carrier_code = fields.Char(
+    #     compute='_compute_carrier_code',
+    #     string='Base Carrier Code',
+    #     help="Magento Carrier Code"
+    # )
+    #
+    # def _compute_carrier_code(self):
+    #     for carrier in self:
+    #         self.magento_carrier_code = False
+    #         if carrier.magento_carrier.carrier_code:
+    #             self.magento_carrier_code = carrier.magento_carrier.carrier_code
 
     @api.constrains('magento_carrier')
     def _check_magento_carrier_id(self):

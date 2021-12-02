@@ -92,7 +92,7 @@
     </record>
 
     <record id="action_show_log_messages_of_exported_products" model="ir.actions.act_window">
-        <field name="name">Exported Product Logs</field>
+        <field name="name">Exported Product Error Logs</field>
         <field name="res_model">magento.product.log.book</field>
         <field name="view_mode">tree,form</field>
         <field name="view_id" ref="view_magento_exported_products_log_book_tree"/>
@@ -114,10 +114,10 @@
         </field>
     </record>
 
-    <menuitem id="odoo_magento2_ept.sync_import_magento_product_queue_ept_menu"
+    <menuitem id="magento_product_log_menu"
               sequence="2"
               name="Products"
-              parent="odoo_magento2_ept.magento_data_queue_ept_menu"
+              parent="odoo_magento2_ept.menu_magento_log"
               action="action_show_log_messages_of_exported_products"/>
 
 </odoo>

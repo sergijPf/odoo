@@ -7,6 +7,7 @@ from odoo import fields, models
 
 class ProductPublicCategoryUpdate(models.TransientModel):
     _name = "product.public.category.update"
+    _description = "Update Product Public Categories for Odoo Products"
 
     category_id = fields.Many2one('product.public.category', string="Assigned Product Category",
                                   domain="[('is_magento_config','=',True)]")

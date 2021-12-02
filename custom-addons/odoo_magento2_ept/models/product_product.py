@@ -4,7 +4,7 @@
 Describes fields mapping to Magento products
 """
 # import re
-from odoo import fields, models, api
+from odoo import fields, models
 # from odoo.exceptions import UserError
 MAGENTO_PRODUCT = 'magento.product.product'
 

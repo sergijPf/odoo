@@ -3,7 +3,7 @@
 """
 Describes configuration for Magento Instance.
 """
-from odoo import models, fields, api, _
+from odoo import models, fields, _
 from odoo.exceptions import UserError
 
 
@@ -24,7 +24,7 @@ class ResConfigMagentoInstance(models.TransientModel):
     magento_url = fields.Char(string='Magento URLs', required=True, help="URL of Magento")
     access_token = fields.Char(
         string="Magento Access Token",
-        help="Set Access token: Magento=>System=>Integrations"
+        help="Set Access token: Magento >> System >> Integrations"
     )
     company_id = fields.Many2one(
         'res.company',

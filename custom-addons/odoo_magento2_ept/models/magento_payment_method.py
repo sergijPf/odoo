@@ -41,9 +41,9 @@ class MagentoPaymentMethod(models.Model):
                                                "when it is In-Payment/Paid in odoo?\n"
                                                "If it's blank then invoice will not exported in Magento for this Payment Method.")
 
-    days_before_cancel = fields.Integer(string='Import Past Orders Of X Days', default=30,
-                                        help="After 'n' days, if the 'Import Rule' is not fulfilled, the import of the "
-                                             "sales order will be canceled.")
+    # days_before_cancel = fields.Integer(string='Import Past Orders Of X Days', default=30,
+    #                                     help="After 'n' days, if the 'Import Rule' is not fulfilled, the import of the "
+    #                                          "sales order will be canceled.")
     import_rule = fields.Selection([
         ('always', 'Always'),
         ('never', 'Never'),

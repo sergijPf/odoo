@@ -44,6 +44,7 @@
             <field name="model">magento.customer.groups</field>
             <field name="arch" type="xml">
                 <search string="Magento Customer Groups">
+                    <field name="magento_instance_id" readonly="1"/>
                     <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
                     <group expand="0" string="Group By">
                         <filter name="Instance" string="Magento Instance" context="{'group_by' : 'magento_instance_id'}"/>

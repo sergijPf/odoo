@@ -5,6 +5,7 @@ from odoo import fields, models
 
 class MagentoCustomerGroupUpdate(models.TransientModel):
     _name = "magento.customer.group.update"
+    _description = "Update Customer Group for Magento Customers"
 
     magento_instance_id = fields.Many2one('magento.instance', 'Magento Instance')
     customer_group_id = fields.Many2one('magento.customer.groups', 'Customer group')

@@ -5,7 +5,7 @@ Describes fields and methods for Magento configurable products
 """
 
 # from datetime import datetime
-from odoo import fields, models, api, _
+from odoo import fields, models, api
 from odoo.exceptions import UserError
 from .api_request import req
 

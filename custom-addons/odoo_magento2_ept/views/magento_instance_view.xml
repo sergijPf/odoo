@@ -96,29 +96,29 @@
                             </group>
                         </group>
                         <notebook>
-                            <page name="allowed_users" string="Allowed Users" >
-                                <group>
-                                    <field name="user_ids"
-                                           widget="many2many_tags"
-                                           options="{'no_create': True}"/>
-                                </group>
-                            </page>
-                            <page name="active_users" string="Users">
-                                <field name="active_user_ids">
-                                    <tree create="false" editable="bottom">
-                                        <field name="user_id" readonly="1"/>
-                                        <field name="magento_import_order_page_count"/>
-                                    </tree>
-                                </field>
-                            </page>
+<!--                            <page name="allowed_users" string="Allowed Users" >-->
+<!--                                <group>-->
+<!--                                    <field name="user_ids"-->
+<!--                                           widget="many2many_tags"-->
+<!--                                           options="{'no_create': True}"/>-->
+<!--                                </group>-->
+<!--                            </page>-->
+<!--                            <page name="active_users" string="Users">-->
+<!--                                <field name="active_user_ids">-->
+<!--                                    <tree create="false" editable="bottom">-->
+<!--                                        <field name="user_id" readonly="1"/>-->
+<!--&lt;!&ndash;                                        <field name="magento_import_order_page_count"/>&ndash;&gt;-->
+<!--                                    </tree>-->
+<!--                                </field>-->
+<!--                            </page>-->
                             <page name="other_info" string="Other Info">
                                 <group>
+<!--                                    <group cols="2">-->
+<!--                                        <field name="last_order_import_date" readonly="1"/>-->
+<!--&lt;!&ndash;                                        <field name="last_product_import_date" />&ndash;&gt;-->
+<!--                                    </group>-->
                                     <group cols="2">
-                                        <field name="last_order_import_date" readonly="1"/>
-<!--                                        <field name="last_product_import_date" />-->
-                                    </group>
-                                    <group cols="2">
-                                        <lable for="last_product_category_import_date" class="oe_inline"/>
+                                        <lable for="last_update_stock_time" class="oe_inline"/>
                                         <field name="last_update_stock_time" class="oe_inline" readonly="1" />
 <!--                                        <field name="auto_create_product" invisible="1"/>-->
                                     </group>

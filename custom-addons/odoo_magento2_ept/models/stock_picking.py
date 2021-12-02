@@ -3,7 +3,7 @@
 """
 Describes methods for Export shipment information.
 """
-from odoo import models, fields, api, _
+from odoo import models, fields, _
 from odoo.exceptions import UserError
 from .api_request import req
 STOCK_PICKING = 'stock.picking'
@@ -94,23 +94,23 @@ class StockPicking(models.Model):
                 record.magento_website_id = False
                 record.storeview_id = False
 
-    def create_job_log_book(self, instance):
-        """
-        create job record
-        :param instance: magento instance
-        :return: job
-        """
-        common_log_book_obj = self.env['common.log.book.ept']
-        common_log_lines_obj = self.env['common.log.lines.ept']
-        model_id = common_log_lines_obj.get_model_id(STOCK_PICKING)
-        job = common_log_book_obj.create({
-            'type': 'import',
-            'module': 'magento_ept',
-            'model_id': model_id,
-            'res_id': self.id,
-            'magento_instance_id': instance
-        })
-        return job
+    # def create_job_log_book(self, instance):
+    #     """
+    #     create job record
+    #     :param instance: magento instance
+    #     :return: job
+    #     """
+    #     common_log_book_obj = self.env['common.log.book.ept']
+    #     common_log_lines_obj = self.env['common.log.lines.ept']
+    #     model_id = common_log_lines_obj.get_model_id(STOCK_PICKING)
+    #     job = common_log_book_obj.create({
+    #         'type': 'import',
+    #         'module': 'magento_ept',
+    #         'model_id': model_id,
+    #         'res_id': self.id,
+    #         'magento_instance_id': instance
+    #     })
+    #     return job
 
     def export_ship_in_magento(self, picking, job):
         """
@@ -177,7 +177,7 @@ class StockPicking(models.Model):
             ('location_dest_id', '=', self.env.ref('stock.stock_location_customers').id),
             ('max_no_of_attempts', '<=', 3)
         ])
-        job = self.create_job_log_book(magento_instance.id)
+        # job = self.create_job_log_book(magento_instance.id)
         module_obj = self.env['ir.module.module']
         purchase_module = module_obj.sudo().search([('name', '=', 'purchase'),
                                                ('state', '=', 'installed')])
@@ -189,9 +189,9 @@ class StockPicking(models.Model):
                 # if installed then picking is purchase's picking
                 # and is_export_dropship_picking set  as False then skip that picking to export in Magento
                 continue
-            job = self.export_ship_in_magento(picking, job)
-        if not job.log_lines:
-            job.sudo().unlink()
+            job = self.export_ship_in_magento(picking, '')
+        # if not job.log_lines:
+        #     job.sudo().unlink()
 
     @staticmethod
     def add_tracking_number(picking):
@@ -229,7 +229,7 @@ class StockPicking(models.Model):
         Allow Single picking to export from the picking form view
         :return:
         """
-        job = self.create_job_log_book(self.magento_instance_id.id)
-        job = self.export_ship_in_magento(self, job)
-        if not job.log_lines:
-            job.sudo().unlink()
+        # job = self.create_job_log_book(self.magento_instance_id.id)
+        job = self.export_ship_in_magento(self, '')
+        # if not job.log_lines:
+        #     job.sudo().unlink()

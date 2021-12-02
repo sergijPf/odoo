@@ -2,7 +2,7 @@
 # See LICENSE file for full copyright and licensing details.
 {
     'name': 'Common Connector Library customized',
-    'version': '10.0',
+    'version': '10.1',
     'category': 'Sales',
     'author': 'Emipro Technologies Pvt. Ltd. customized by White Label',
     # 'website': 'http://www.emiprotechnologies.com',
@@ -13,7 +13,7 @@
              'data/ir_sequence.xml',
              'data/ir_cron.xml',
              'view/stock_quant_package_view.xml',
-             'view/common_log_book_view.xml',
+             # 'view/common_log_book_view.xml',
              'view/account_fiscal_position.xml',
              # 'view/common_product_brand_view.xml',
              # 'view/common_product_image_ept.xml',
@@ -21,7 +21,7 @@
              'view/sale_order_view.xml',
              'view/sale_workflow_process_view.xml',
              'data/automatic_workflow_data.xml',
-             'view/common_log_lines_ept.xml',
+             # 'view/common_log_lines_ept.xml',
              'view/assets.xml',
     ],
     'qweb': [

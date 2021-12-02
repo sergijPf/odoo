@@ -104,47 +104,47 @@
                             </div>
                         </div>
                     </group>
-                    <div class="o_horizontal_separator o_onboard_header font-weight-bold">
-<!--                         invisible="context.get('is_calling_from_magento_onboarding_panel', False) and not context.get('is_instance_exists', False)">-->
-                        Orders
-                    </div>
+<!--                    <div class="o_horizontal_separator o_onboard_header font-weight-bold">-->
+<!--&lt;!&ndash;                         invisible="context.get('is_calling_from_magento_onboarding_panel', False) and not context.get('is_instance_exists', False)">&ndash;&gt;-->
+<!--                        Orders-->
+<!--                    </div>-->
                     <group>
 <!--                    <group invisible="context.get('is_calling_from_magento_onboarding_panel', False) and not context.get('is_instance_exists', False)">-->
-                        <div class="o_setting_left_pane">
-                            <div class="row mt16 o_settings_container o_onboard_padding">
-                                <div class="ol-12 o_setting_box o_onboard_setting_box">
-                                    <div class="o_setting_left_pane">
-                                        <field name="auto_import_sale_orders" widget="boolean_toggle" class="o_onboard_boolean_toggle"/>
-                                    </div>
-                                    <div class="o_setting_right_pane">
-                                        <span>
-                                            <h6>
-                                                <label for="auto_import_sale_orders" string="Auto Import Order ?"/>
-                                            </h6>
-                                        </span>
-                                        <div class="text-muted">
-                                            If Ticked, System will import Order from magento.
-                                        </div>
-                                        <br/>
-                                        <div class="o_onboard_cron_settings"
-                                         attrs="{'invisible': [('auto_import_sale_orders', '=', False)]}">
-                                            <field name="auto_import_sale_orders_interval_number"
-                                                   placeholder="Interval Number"
-                                                   attrs="{'required': [('auto_import_sale_orders', '=', True),('magento_instance_id','!=',False)]}" class="o_onboard_cron_box"/>
-                                            <field name="auto_import_sale_orders_interval_type"
-                                                   placeholder="Interval Type"
-                                                   attrs="{'required': [('auto_import_sale_orders', '=', True),('magento_instance_id','!=',False)]}" class="o_onboard_cron_type"/>
-                                            <field name="auto_import_sale_orders_next_execution"
-                                                   placeholder="Next Execution Date"
-                                                   attrs="{'required': [('auto_import_sale_orders', '=', True),('magento_instance_id','!=',False)]}" class="o_onboard_cron_execution"/>
-                                            <field name="auto_import_sale_order_user_id"
-                                                   placeholder="Responsible User"
-                                                   attrs="{'required': [('auto_import_sale_orders', '=', True),('magento_instance_id','!=',False)]}" class="o_onboard_cron_user"/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<!--                        <div class="o_setting_left_pane">-->
+<!--                            <div class="row mt16 o_settings_container o_onboard_padding">-->
+<!--                                <div class="ol-12 o_setting_box o_onboard_setting_box">-->
+<!--                                    <div class="o_setting_left_pane">-->
+<!--                                        <field name="auto_import_sale_orders" widget="boolean_toggle" class="o_onboard_boolean_toggle"/>-->
+<!--                                    </div>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <span>-->
+<!--                                            <h6>-->
+<!--                                                <label for="auto_import_sale_orders" string="Auto Import Order ?"/>-->
+<!--                                            </h6>-->
+<!--                                        </span>-->
+<!--                                        <div class="text-muted">-->
+<!--                                            If Ticked, System will import Order from magento.-->
+<!--                                        </div>-->
+<!--                                        <br/>-->
+<!--                                        <div class="o_onboard_cron_settings"-->
+<!--                                         attrs="{'invisible': [('auto_import_sale_orders', '=', False)]}">-->
+<!--                                            <field name="auto_import_sale_orders_interval_number"-->
+<!--                                                   placeholder="Interval Number"-->
+<!--                                                   attrs="{'required': [('auto_import_sale_orders', '=', True),('magento_instance_id','!=',False)]}" class="o_onboard_cron_box"/>-->
+<!--                                            <field name="auto_import_sale_orders_interval_type"-->
+<!--                                                   placeholder="Interval Type"-->
+<!--                                                   attrs="{'required': [('auto_import_sale_orders', '=', True),('magento_instance_id','!=',False)]}" class="o_onboard_cron_type"/>-->
+<!--                                            <field name="auto_import_sale_orders_next_execution"-->
+<!--                                                   placeholder="Next Execution Date"-->
+<!--                                                   attrs="{'required': [('auto_import_sale_orders', '=', True),('magento_instance_id','!=',False)]}" class="o_onboard_cron_execution"/>-->
+<!--                                            <field name="auto_import_sale_order_user_id"-->
+<!--                                                   placeholder="Responsible User"-->
+<!--                                                   attrs="{'required': [('auto_import_sale_orders', '=', True),('magento_instance_id','!=',False)]}" class="o_onboard_cron_user"/>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <div class="o_setting_left_pane">
                             <div class="row mt16 o_settings_container o_onboard_padding">
                                 <div class="ol-12 o_setting_box o_onboard_setting_box">
@@ -180,6 +180,8 @@
                                 </div>
                             </div>
                         </div>
+                    </group>
+                    <group>
                         <div class="o_setting_right_pane">
                             <div class="row mt16 o_settings_container o_onboard_padding">
                                 <div class="ol-12 o_setting_box o_onboard_setting_box">

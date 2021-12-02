@@ -19,24 +19,24 @@
                     <group>
                         <field name="operations" required="1"/>
                     </group>
-                    <group>
-                        <field name="import_specific_sale_order"
-                               attrs="{'invisible' : [('operations','!=','import_specific_order')], 'required':[('operations','==','import_specific_order')]}"/>
-                    </group>
-                    <group>
-                        <group string="Select Date Range For Import" class="w-100"
-                               attrs="{'invisible':[('operations','not in',['import_customer','import_sale_order'])]}">
-<!--                               attrs="{'invisible':[('operations','not in',['import_products','import_customer','import_sale_order'])]}">-->
-                            <label for="start_date" string="Date"/>
-                            <div class="d-inline-block">
-                                <field name="start_date" widget="daterange"
-                                       options="{'related_end_date': 'end_date'}" class="oe_inline"/>
-                                To
-                                <field name="end_date" widget="daterange"
-                                       options="{'related_start_date': 'start_date'}" class="oe_inline"/>
-                            </div>
-                        </group>
-                    </group>
+<!--                    <group>-->
+<!--                        <field name="import_specific_sale_order"-->
+<!--                               attrs="{'invisible' : [('operations','!=','import_specific_order')], 'required':[('operations','==','import_specific_order')]}"/>-->
+<!--                    </group>-->
+<!--                    <group>-->
+<!--                        <group string="Select Date Range For Import" class="w-100"-->
+<!--                               attrs="{'invisible':[('operations','not in',['import_customer','import_sale_order'])]}">-->
+<!--&lt;!&ndash;                               attrs="{'invisible':[('operations','not in',['import_products','import_customer','import_sale_order'])]}">&ndash;&gt;-->
+<!--                            <label for="start_date" string="Date"/>-->
+<!--                            <div class="d-inline-block">-->
+<!--                                <field name="start_date" widget="daterange"-->
+<!--                                       options="{'related_end_date': 'end_date'}" class="oe_inline"/>-->
+<!--                                To-->
+<!--                                <field name="end_date" widget="daterange"-->
+<!--                                       options="{'related_start_date': 'start_date'}" class="oe_inline"/>-->
+<!--                            </div>-->
+<!--                        </group>-->
+<!--                    </group>-->
                     <footer>
                         <button name="execute" string="Execute" type="object"
                                 class="oe_highlight"/>

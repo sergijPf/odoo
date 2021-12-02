@@ -8,6 +8,7 @@ from odoo import models, fields, api, _
 
 class MagentoProductCategory(models.Model):
     _name = "magento.product.category"
+    _description = "Magento Product Categories"
     _rec_name = 'name'
 
     @api.depends('name', 'magento_parent_id.complete_category_name')

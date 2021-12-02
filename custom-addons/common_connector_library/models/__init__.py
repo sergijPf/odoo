@@ -11,14 +11,14 @@ from . import stock_picking
 from . import product_pricelist
 # from . import product_attribute
 # from . import product_attribute_value
-from . import common_log_book_ept
-from . import common_log_lines_ept
+# from . import common_log_book_ept
+# from . import common_log_lines_ept
 from . import account_fiscal_position
 # from . import common_product_image_ept
 # from . import common_product_brand_ept
 # from . import product_template
 from . import vendor_stock_ept
-from . import account_move
-from . import ir_cron
-from . import data_queue_mixin_ept
-from . import account_bank_statement_line
+# from . import account_move
+# from . import ir_cron
+# from . import data_queue_mixin_ept
+# from . import account_bank_statement_line

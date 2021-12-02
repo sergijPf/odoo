@@ -6,6 +6,7 @@ from odoo import fields, models
 
 class MagentoProductCategoryUpdate(models.TransientModel):
     _name = "magento.product.category.update"
+    _description = "Update Product Category in Magento Layer"
 
     magento_instance_id = fields.Many2one('magento.instance', 'Magento Instance', help="This field relocates magento instance")
     product_categ = fields.Many2many('magento.product.category', string="Product Categories",

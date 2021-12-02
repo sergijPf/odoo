@@ -6,8 +6,9 @@ Describes fields and methods for Magento Cron Configuration
 from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
 RES_USERS = 'res.users'
-IMPORT_SALE_ORDER_CRON = 'odoo_magento2_ept.ir_cron_import_sale_orders_instance_id_%d'
+# IMPORT_SALE_ORDER_CRON = 'odoo_magento2_ept.ir_cron_import_sale_orders_instance_id_%d'
 EXPORT_PRODUCT_STOCK_CRON = 'odoo_magento2_ept.ir_cron_export_product_stock_qty_instance_id_%d'
 EXPORT_SHIPMENT_ORDER_STATUS_CRON = 'odoo_magento2_ept.ir_cron_export_shipment_order_status_instance_id_%d'
 EXPORT_INVOICE_CRON = 'odoo_magento2_ept.ir_cron_export_invoice_instance_id_%d'
@@ -72,31 +73,31 @@ class MagentoCronConfiguration(models.TransientModel):
     # )
 
     # Auto import sale orders
-    auto_import_sale_orders = fields.Boolean(
-        string='Auto import sale orders?',
-        help="Automatic Import Sale Orders"
-    )
-    auto_import_sale_orders_interval_number = fields.Integer(
-        string='Auto Import sale orders Interval Number',
-        help="Import sale order every x interval.",
-        default=1
-    )
-    auto_import_sale_orders_interval_type = fields.Selection([
-        ('minutes', 'Minutes'),
-        ('hours', 'Hours'),
-        ('days', 'Days'),
-        ('weeks', 'Weeks'),
-        ('months', 'Months')
-    ], string='Auto Import Sale Order Interval Unit', help='Auto Import Sale Order Interval Unit')
-    auto_import_sale_orders_next_execution = fields.Datetime(
-        string='Auto Next Sale Execution',
-        help='Next execution time for import sale order'
-    )
-    auto_import_sale_order_user_id = fields.Many2one(
-        RES_USERS,
-        string='Auto Import Sale Order User',
-        help="Responsible User for import sale order"
-    )
+    # auto_import_sale_orders = fields.Boolean(
+    #     string='Auto import sale orders?',
+    #     help="Automatic Import Sale Orders"
+    # )
+    # auto_import_sale_orders_interval_number = fields.Integer(
+    #     string='Auto Import sale orders Interval Number',
+    #     help="Import sale order every x interval.",
+    #     default=1
+    # )
+    # auto_import_sale_orders_interval_type = fields.Selection([
+    #     ('minutes', 'Minutes'),
+    #     ('hours', 'Hours'),
+    #     ('days', 'Days'),
+    #     ('weeks', 'Weeks'),
+    #     ('months', 'Months')
+    # ], string='Auto Import Sale Order Interval Unit', help='Auto Import Sale Order Interval Unit')
+    # auto_import_sale_orders_next_execution = fields.Datetime(
+    #     string='Auto Next Sale Execution',
+    #     help='Next execution time for import sale order'
+    # )
+    # auto_import_sale_order_user_id = fields.Many2one(
+    #     RES_USERS,
+    #     string='Auto Import Sale Order User',
+    #     help="Responsible User for import sale order"
+    # )
 
     # Auto Export Product Stock
     auto_export_product_stock = fields.Boolean(
@@ -190,34 +191,34 @@ class MagentoCronConfiguration(models.TransientModel):
         :return:
         """
         magento_instance = self.magento_instance_id
-        self.magento_import_sale_order_cron_field(magento_instance)
+        # self.magento_import_sale_order_cron_field(magento_instance)
         self.export_product_stock_cron_field(magento_instance)
         self.export_shipment_order_cron_field(magento_instance)
         self.export_invoice_cron_field(magento_instance)
         # self.import_magento_product_cron_field(magento_instance)
 
-    def magento_import_sale_order_cron_field(self, instance):
-        """
-        This method is used to set import sale order cron
-        :param instance:  Instance of Magento
-        :return:
-        """
-        try:
-            magento_import_order_cron_exist = instance and self.env.ref(
-                IMPORT_SALE_ORDER_CRON % instance.id
-            )
-        except Exception:
-            magento_import_order_cron_exist = False
-        if magento_import_order_cron_exist:
-            interval_number = magento_import_order_cron_exist.interval_number or False
-            interval_type = magento_import_order_cron_exist.interval_type or False
-            nextcall = magento_import_order_cron_exist.nextcall or False
-            user_id = magento_import_order_cron_exist.user_id.id or False
-            self.auto_import_sale_orders = magento_import_order_cron_exist.active or False
-            self.auto_import_sale_orders_interval_number = interval_number
-            self.auto_import_sale_orders_interval_type = interval_type
-            self.auto_import_sale_orders_next_execution = nextcall
-            self.auto_import_sale_order_user_id = user_id
+    # def magento_import_sale_order_cron_field(self, instance):
+    #     """
+    #     This method is used to set import sale order cron
+    #     :param instance:  Instance of Magento
+    #     :return:
+    #     """
+    #     try:
+    #         magento_import_order_cron_exist = instance and self.env.ref(
+    #             IMPORT_SALE_ORDER_CRON % instance.id
+    #         )
+    #     except Exception:
+    #         magento_import_order_cron_exist = False
+    #     if magento_import_order_cron_exist:
+    #         interval_number = magento_import_order_cron_exist.interval_number or False
+    #         interval_type = magento_import_order_cron_exist.interval_type or False
+    #         nextcall = magento_import_order_cron_exist.nextcall or False
+    #         user_id = magento_import_order_cron_exist.user_id.id or False
+    #         self.auto_import_sale_orders = magento_import_order_cron_exist.active or False
+    #         self.auto_import_sale_orders_interval_number = interval_number
+    #         self.auto_import_sale_orders_interval_type = interval_type
+    #         self.auto_import_sale_orders_next_execution = nextcall
+    #         self.auto_import_sale_order_user_id = user_id
 
     def export_product_stock_cron_field(self, instance):
         """
@@ -316,17 +317,17 @@ class MagentoCronConfiguration(models.TransientModel):
         # ir_action_obj = self.env["ir.actions.actions"]
         magento_instance = self.magento_instance_id
         vals = {}
-        self.auto_import_sale_order(magento_instance)
+        # self.auto_import_sale_order(magento_instance)
         self.auto_export_product_stock_qty(magento_instance)
         self.auto_export_shipment_order_status_cron(magento_instance)
         self.auto_export_invoice_cron(magento_instance)
         # self.auto_import_magento_product_cron(magento_instance)
-        vals['auto_import_sale_orders'] = self.auto_import_sale_orders or False
+        # vals['auto_import_sale_orders'] = self.auto_import_sale_orders or False
         vals['auto_export_product_stock'] = self.auto_export_product_stock or False
         vals['auto_export_shipment_order_status'] = self.auto_export_shipment_order_status or False
         vals['auto_export_invoice'] = self.auto_export_invoice or False
         # vals['auto_import_product'] = self.auto_import_product or False
-        self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(magento_instance)
+        # self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(magento_instance)
         magento_instance.write(vals)
         # # Below code is used for only onboarding panel purpose.
         # if self._context.get('is_calling_from_magento_onboarding_panel', False):
@@ -336,55 +337,55 @@ class MagentoCronConfiguration(models.TransientModel):
         #     return action
         return True
 
-    def auto_import_sale_order(self, magento_instance):
-        """
-        This method is used to create import sale order cron
-        :param magento_instance:  Instance of Magento
-        :return:
-        """
-        if self.auto_import_sale_orders:
-            cron_exist = self.env.ref(
-                IMPORT_SALE_ORDER_CRON % magento_instance.id,
-                raise_if_not_found=False
-            )
-            auto_import_sale_order_user_id = self.auto_import_sale_order_user_id
-            vals = {
-                "active": True,
-                "interval_number": self.auto_import_sale_orders_interval_number,
-                "interval_type": self.auto_import_sale_orders_interval_type,
-                "nextcall": self.auto_import_sale_orders_next_execution,
-                "code": "model._scheduler_import_sale_orders({'magento_instance_id' : %d})" % magento_instance.id,
-                "user_id": auto_import_sale_order_user_id and auto_import_sale_order_user_id.id,
-                "magento_instance_id": magento_instance.id
-            }
-
-            if cron_exist:
-                cron_exist.write(vals)
-            else:
-                import_sale_orders_cron = self.env.ref(
-                    'odoo_magento2_ept.ir_cron_import_sale_orders',
-                    raise_if_not_found=False
-                )
-                if not import_sale_orders_cron:
-                    raise UserError(_(CRON_ERROR_MSG))
-                name = MAGENTO_STR + magento_instance.name + ' : Import Sale Orders'
-                vals.update({'name': name})
-                new_cron = import_sale_orders_cron.copy(default=vals)
-                self.env[IR_MODEL_DATA].create({
-                    'module': 'odoo_magento2_ept',
-                    'name': 'ir_cron_import_sale_orders_instance_id_%d' % magento_instance.id,
-                    'model': IR_CRON,
-                    'res_id': new_cron.id,
-                    'noupdate': True
-                })
-        else:
-            cron_exist = self.env.ref(
-                IMPORT_SALE_ORDER_CRON % magento_instance.id,
-                raise_if_not_found=False
-            )
-            if cron_exist:
-                cron_exist.write({'active': False})
-        return True
+    # def auto_import_sale_order(self, magento_instance):
+    #     """
+    #     This method is used to create import sale order cron
+    #     :param magento_instance:  Instance of Magento
+    #     :return:
+    #     """
+    #     if self.auto_import_sale_orders:
+    #         cron_exist = self.env.ref(
+    #             IMPORT_SALE_ORDER_CRON % magento_instance.id,
+    #             raise_if_not_found=False
+    #         )
+    #         auto_import_sale_order_user_id = self.auto_import_sale_order_user_id
+    #         vals = {
+    #             "active": True,
+    #             "interval_number": self.auto_import_sale_orders_interval_number,
+    #             "interval_type": self.auto_import_sale_orders_interval_type,
+    #             "nextcall": self.auto_import_sale_orders_next_execution,
+    #             "code": "model._scheduler_import_sale_orders({'magento_instance_id' : %d})" % magento_instance.id,
+    #             "user_id": auto_import_sale_order_user_id and auto_import_sale_order_user_id.id,
+    #             "magento_instance_id": magento_instance.id
+    #         }
+    #
+    #         if cron_exist:
+    #             cron_exist.write(vals)
+    #         else:
+    #             import_sale_orders_cron = self.env.ref(
+    #                 'odoo_magento2_ept.ir_cron_import_sale_orders',
+    #                 raise_if_not_found=False
+    #             )
+    #             if not import_sale_orders_cron:
+    #                 raise UserError(_(CRON_ERROR_MSG))
+    #             name = MAGENTO_STR + magento_instance.name + ' : Import Sale Orders'
+    #             vals.update({'name': name})
+    #             new_cron = import_sale_orders_cron.copy(default=vals)
+    #             self.env[IR_MODEL_DATA].create({
+    #                 'module': 'odoo_magento2_ept',
+    #                 'name': 'ir_cron_import_sale_orders_instance_id_%d' % magento_instance.id,
+    #                 'model': IR_CRON,
+    #                 'res_id': new_cron.id,
+    #                 'noupdate': True
+    #             })
+    #     else:
+    #         cron_exist = self.env.ref(
+    #             IMPORT_SALE_ORDER_CRON % magento_instance.id,
+    #             raise_if_not_found=False
+    #         )
+    #         if cron_exist:
+    #             cron_exist.write({'active': False})
+    #     return True
 
     def auto_export_product_stock_qty(self, magento_instance):
         """

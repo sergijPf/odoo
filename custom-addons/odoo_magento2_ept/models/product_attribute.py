@@ -1,5 +1,5 @@
 from odoo import fields, models
-from datetime import datetime
+# from datetime import datetime
 
 class ProductAttribute(models.Model):
     _inherit = "product.attribute"

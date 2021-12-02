@@ -32,7 +32,7 @@ class MagentoInventoryLocations(models.Model):
         'stock.location',
         string="Locations",
         help='If you have product stock in various Locations that you need to export to Magento, \n'
-             ' then configure current odoo Loactions here for the current stock location. \n'
+             ' then configure current odoo Locations here for the current stock location. \n'
              'It will compute the stock quantities from those Locations \n'
              'and export them to the current source location in the Magento.'
     )

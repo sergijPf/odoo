@@ -13,7 +13,7 @@
                             <group>
                                 <field name="magento_website_id" readonly="1"/>
                                 <field name="magento_storeview_id" readonly="1"/>
-                                <field name="base_media_url" readonly="1"/>
+<!--                                <field name="base_media_url" readonly="1"/>-->
                                 <field name="sort_order" invisible="1" readonly="1"/>
                             </group>
                             <group>

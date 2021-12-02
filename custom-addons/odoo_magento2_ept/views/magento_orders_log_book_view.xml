@@ -1,0 +1,85 @@
+<?xml version="1.0" ?>
+<odoo>
+     <record id="view_imported_magento_orders_log_book_filter" model="ir.ui.view">
+        <field name="name">Magento Orders Log Book Search</field>
+        <field name="model">magento.orders.log.book</field>
+        <field name="arch" type="xml">
+            <search string="Imported Orders Log Book">
+                <field name="magento_instance_id"/>
+                <field name="magento_website_id"/>
+                <group expand="1" string="Group By">
+                    <filter string="Instances" name="group_by_instance"
+                            context="{'group_by': 'magento_instance_id'}"/>
+                    <filter string="Websites" name="group_by_websites"
+                            context="{'group_by': 'magento_website_id'}"/>
+                </group>
+                <filter name="archive" string="Archived" domain="[('active','=',False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_magento_imported_orders_log_book_tree" model="ir.ui.view">
+        <field name="name">Magento Orders Log Book Tree</field>
+        <field name="model">magento.orders.log.book</field>
+        <field name="arch" type="xml">
+            <tree create="0" delete="0">
+                <field name="magento_instance_id"/>
+                <field name="magento_website_id"/>
+                <field name="magento_order_ref"/>
+                <field name="log_message"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_magento_imported_orders_log_book_form" model="ir.ui.view">
+        <field name="name">Magento Orders Log Book Form</field>
+        <field name="model">magento.orders.log.book</field>
+        <field name="arch" type="xml">
+            <form create="0" delete="0" edit="0">
+                <sheet>
+                    <group>
+                        <field name="magento_instance_id"/>
+                        <field name="magento_website_id"/>
+                        <field name="magento_order_ref"/>
+                    </group>
+                    <notebook>
+                        <page name="log" string="Log Message(s)">
+                            <tree create="false" editable="bottom">
+                                <field name="log_message"/>
+                            </tree>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_show_log_messages_of_imported_orders" model="ir.actions.act_window">
+        <field name="name">Imported Order Error Logs</field>
+        <field name="res_model">magento.orders.log.book</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_magento_imported_orders_log_book_tree"/>
+        <field name="search_view_id" ref="view_imported_magento_orders_log_book_filter"/>
+        <field name="help" type="html">
+            <div class="oe_empty_magento_instance">
+                <br/>
+                <br/>
+                <br/>
+                <p>
+                    <b>There is No Data yet...</b>
+                </p>
+            </div>
+        </field>
+    </record>
+
+    <menuitem id="menu_magento_log" parent="menu_magento_root"
+                  name="Logs" sequence="9" />
+
+    <menuitem id="magento_orders_log_menu"
+              sequence="1"
+              name="Orders"
+              parent="odoo_magento2_ept.menu_magento_log"
+              action="action_show_log_messages_of_imported_orders"/>
+
+</odoo>

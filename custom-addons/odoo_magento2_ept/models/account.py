@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """For Odoo Magento2 Connector Module"""
-from odoo import models, api
+from odoo import models
 
 
 class AccountTaxCode(models.Model):

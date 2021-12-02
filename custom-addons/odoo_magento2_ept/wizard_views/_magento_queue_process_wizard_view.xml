@@ -72,15 +72,15 @@
             </field>
         </record>
 
-        <record id="action_wizard_magento_import_order" model="ir.actions.act_window">
-            <field name="name">Process Queue Manually</field>
-            <field name="res_model">magento.queue.process.ept</field>
-            <field name="view_mode">form</field>
-            <field name="view_id" ref="view_queue_process_action" />
-            <field name="binding_model_id" ref="model_magento_order_data_queue_ept" />
-            <field name="target">new</field>
-            <field name="context">{'queue_process':'process_order_queue_manually'}</field>
-        </record>
+<!--        <record id="action_wizard_magento_import_order" model="ir.actions.act_window">-->
+<!--            <field name="name">Process Queue Manually</field>-->
+<!--            <field name="res_model">magento.queue.process.ept</field>-->
+<!--            <field name="view_mode">form</field>-->
+<!--            <field name="view_id" ref="view_queue_process_action" />-->
+<!--            <field name="binding_model_id" ref="model_magento_order_data_queue_ept" />-->
+<!--            <field name="target">new</field>-->
+<!--            <field name="context">{'queue_process':'process_order_queue_manually'}</field>-->
+<!--        </record>-->
 
 <!--        <record id="action_wizard_magento_import_product" model="ir.actions.act_window">-->
 <!--            <field name="name">Process Queue Manually</field>-->
@@ -91,43 +91,43 @@
 <!--            <field name="context">{'queue_process':'process_product_queue_manually'}</field>-->
 <!--        </record>-->
 
-        <record id="action_wizard_magento_import_customer" model="ir.actions.act_window">
-            <field name="name">Process Queue Manually</field>
-            <field name="res_model">magento.queue.process.ept</field>
-            <field name="view_mode">form</field>
-            <field name="view_id" ref="view_queue_process_action" />
-            <field name="target">new</field>
-            <field name="context">{'queue_process':'process_customer_queue_manually'}</field>
-        </record>
+<!--        <record id="action_wizard_magento_import_customer" model="ir.actions.act_window">-->
+<!--            <field name="name">Process Queue Manually</field>-->
+<!--            <field name="res_model">magento.queue.process.ept</field>-->
+<!--            <field name="view_mode">form</field>-->
+<!--            <field name="view_id" ref="view_queue_process_action" />-->
+<!--            <field name="target">new</field>-->
+<!--            <field name="context">{'queue_process':'process_customer_queue_manually'}</field>-->
+<!--        </record>-->
 
         <!--This action for manully cancel or done order queue-->
-        <record id="action_wizard_set_to_completed_order_queue" model="ir.actions.act_window">
-            <field name="name">Set To Completed</field>
-            <field name="res_model">magento.queue.process.ept</field>
-            <field name="view_mode">form</field>
-            <field name="view_id" ref="view_set_to_completed_queue_process_action" />
-            <field name="target">new</field>
-            <field name="context">{'queue_process':'set_to_completed_order_queue'}</field>
-        </record>
+<!--        <record id="action_wizard_set_to_completed_order_queue" model="ir.actions.act_window">-->
+<!--            <field name="name">Set To Completed</field>-->
+<!--            <field name="res_model">magento.queue.process.ept</field>-->
+<!--            <field name="view_mode">form</field>-->
+<!--            <field name="view_id" ref="view_set_to_completed_queue_process_action" />-->
+<!--            <field name="target">new</field>-->
+<!--            <field name="context">{'queue_process':'set_to_completed_order_queue'}</field>-->
+<!--        </record>-->
 
         <!--This action for manully cancel or done product queue-->
-        <record id="action_wizard_set_to_completed_product_queue" model="ir.actions.act_window">
-            <field name="name">Set To Completed</field>
-            <field name="res_model">magento.queue.process.ept</field>
-            <field name="view_id" ref="view_set_to_completed_queue_process_action" />
-            <field name="target">new</field>
-            <field name="context">{'queue_process':'set_to_completed_product_queue'}</field>
-        </record>
+<!--        <record id="action_wizard_set_to_completed_product_queue" model="ir.actions.act_window">-->
+<!--            <field name="name">Set To Completed</field>-->
+<!--            <field name="res_model">magento.queue.process.ept</field>-->
+<!--            <field name="view_id" ref="view_set_to_completed_queue_process_action" />-->
+<!--            <field name="target">new</field>-->
+<!--            <field name="context">{'queue_process':'set_to_completed_product_queue'}</field>-->
+<!--        </record>-->
 
         <!--This action for manully cancel or done customer queue-->
-        <record id="action_wizard_set_to_completed_customer_queue" model="ir.actions.act_window">
-            <field name="name">Set To Completed</field>
-            <field name="res_model">magento.queue.process.ept</field>
-            <field name="view_mode">form</field>
-            <field name="view_id" ref="view_set_to_completed_queue_process_action" />
-            <field name="target">new</field>
-            <field name="context">{'queue_process':'set_to_completed_customer_queue'}</field>
-        </record>
+<!--        <record id="action_wizard_set_to_completed_customer_queue" model="ir.actions.act_window">-->
+<!--            <field name="name">Set To Completed</field>-->
+<!--            <field name="res_model">magento.queue.process.ept</field>-->
+<!--            <field name="view_mode">form</field>-->
+<!--            <field name="view_id" ref="view_set_to_completed_queue_process_action" />-->
+<!--            <field name="target">new</field>-->
+<!--            <field name="context">{'queue_process':'set_to_completed_customer_queue'}</field>-->
+<!--        </record>-->
 
         <!--Below view used to display, how many records are inactive while instance inactive-->
         <record id="view_inactive_magento_instance" model="ir.ui.view">

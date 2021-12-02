@@ -114,16 +114,16 @@
                                class="mr-2 o_doc_link o_onboard_doc_link"/>
                         </div>
                     </div>
-                    <div class="col-xs-12 col-md-6 o_setting_box o_onboard_setting_box">
-                        <div class="ml-2 pl-1">
-                            <label for="import_order_after_date" class="o_onboard_label"/>
-                            <field name="import_order_after_date"
-                                   class="o_light_label w-50 o_onboard_input"/>
-                            <a href="javascript:void(0)"
-                               title="Connector only imports those orders which have created after a given date"
-                               class="ml-2 o_doc_link o_onboard_doc_link"/>
-                        </div>
-                    </div>
+<!--                    <div class="col-xs-12 col-md-6 o_setting_box o_onboard_setting_box">-->
+<!--                        <div class="ml-2 pl-1">-->
+<!--                            <label for="import_order_after_date" class="o_onboard_label"/>-->
+<!--                            <field name="import_order_after_date"-->
+<!--                                   class="o_light_label w-50 o_onboard_input"/>-->
+<!--                            <a href="javascript:void(0)"-->
+<!--                               title="Connector only imports those orders which have created after a given date"-->
+<!--                               class="ml-2 o_doc_link o_onboard_doc_link"/>-->
+<!--                        </div>-->
+<!--                    </div>-->
                 </div>
                 <div class="o_horizontal_separator font-weight-bold o_onboard_header"
                      attrs="{'invisible': [('magento_instance_id', '=', False)]}">Inventory

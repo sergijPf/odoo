@@ -43,7 +43,6 @@ class Binary(http.Controller):
     def place_order(self):
         """
         This method will create new order in Odoo
-        :param kwargs: arguments received from API
         :return: True
         """
         data = json.loads(request.httprequest.data)
@@ -54,16 +53,8 @@ class Binary(http.Controller):
 
         if not magento_instance or not data.get('items'):
             return 'false'
-
         # print(data)
-
         res = request.env['sale.order'].sudo().process_sales_order_creation(magento_instance, data)
-        # order_id = kwargs.get('order_id', False)
-        # magento_url = kwargs.get('url', False)
-        # magento_instance = request.env['magento.instance'].sudo().search([
-        #     ('magento_url', '=', magento_url.rstrip('/'))
-        # ])
-        # request.env['magento.order.data.queue.ept'].sudo().import_specific_order(magento_instance, [order_id])
 
         return 'true' if res else 'false'
 

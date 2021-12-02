@@ -22,8 +22,8 @@ class MagentoResPartner(models.Model):
     magento_website_id = fields.Many2one("magento.website", string="Magento Website *")
     customer_group_id = fields.Many2one("magento.customer.groups", string="Customer groups")
     customer_group_name = fields.Char(related="customer_group_id.group_name", string="Customer group *", store=True)
-    customer_address_ids = fields.One2many("magento.customer.addresses", 'customer_id', string="Magento Customer Addresses",
-                                           ondelete='cascade')
+    customer_address_ids = fields.One2many("magento.customer.addresses", 'customer_id',
+                                           string="Magento Customer Addresses")
     status = fields.Selection([
         ('imported', 'Imported'),
         ('to_export', 'To be Exported'),
@@ -279,7 +279,7 @@ class MagentoCustomerGroups(models.Model):
         if not group_id:
             group_id = self.create({
                 'group_id': customer_group_id,
-                'group_name': customer_group_name,  ### to add to stand.request
+                'group_name': customer_group_name,
                 'magento_instance_id': magento_instance.id
             })
 

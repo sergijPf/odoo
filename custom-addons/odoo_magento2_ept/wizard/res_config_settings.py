@@ -56,7 +56,7 @@ class ResConfigSettings(models.TransientModel):
     catalog_price_scope = fields.Selection([
         ('global', 'Global'),
         ('website', 'Website')
-    ], string="Magento Catalog Price Scope", help="Scope of Price in Magento", default='global')
+    ], string="Magento Catalog Price Scope", help="Scope of Price in Magento", default='website')
     pricelist_id = fields.Many2one('product.pricelist', string="Pricelist",
                                    help="Product price will be taken/set from this pricelist if Catalog Price Scope is global")
     # allow_import_image_of_products = fields.Boolean(
@@ -133,8 +133,8 @@ class ResConfigSettings(models.TransientModel):
                                            'View Dashboard Based on',
                                            config_parameter='odoo_magento2_ept.dashboard_view_type',
                                            default='instance_level')
-    import_order_after_date = fields.Datetime(
-        help="Connector only imports those orders which have created after a given date.")
+    # import_order_after_date = fields.Datetime(
+    #     help="Connector only imports those orders which have created after a given date.")
     tax_calculation_method = fields.Selection([
         ('excluding_tax', 'Excluding Tax'), ('including_tax', 'Including Tax')],
         string="Tax Calculation Method into Magento Website", default="including_tax",
@@ -169,7 +169,7 @@ class ResConfigSettings(models.TransientModel):
                 'invoice_done_notify_customer': magento_instance_id.invoice_done_notify_customer,
                 'import_magento_order_status_ids': magento_instance_id.import_magento_order_status_ids.ids,
                 # 'import_product_category': magento_instance_id.import_product_category if magento_instance_id.import_product_category else False,
-                'import_order_after_date': magento_instance_id.import_order_after_date or False,
+                # 'import_order_after_date': magento_instance_id.import_order_after_date or False,
                 # 'is_export_dropship_picking': magento_instance_id.is_export_dropship_picking if magento_instance_id.is_export_dropship_picking else False
             })
         else:
@@ -217,7 +217,6 @@ class ResConfigSettings(models.TransientModel):
         website_pricelist = self.magento_website_pricelist_id
         if website_pricelist and website_pricelist != self.magento_website_id.pricelist_id:
             self.magento_website_id.pricelist_id = website_pricelist.id
-            print(website_pricelist, self.magento_website_id.pricelist_id)
 
         res = super(ResConfigSettings, self).execute()
 
@@ -257,7 +256,7 @@ class ResConfigSettings(models.TransientModel):
             'import_magento_order_status_ids': [(6, 0, self.import_magento_order_status_ids.ids)],
             'is_multi_warehouse_in_magento': self.is_multi_warehouse_in_magento if self.is_multi_warehouse_in_magento else False,
             # 'import_product_category': self.import_product_category if self.import_product_category else "",
-            'import_order_after_date': self.import_order_after_date if self.import_order_after_date else "",
+            # 'import_order_after_date': self.import_order_after_date if self.import_order_after_date else "",
             # 'is_export_dropship_picking': self.is_export_dropship_picking if self.is_export_dropship_picking else ""
         })
         magento_instance_id.write(values)

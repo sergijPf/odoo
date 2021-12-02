@@ -48,19 +48,19 @@
         <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>
     </record>
 
-    <record model="ir.rule" id="magento_order_data_queue_ept_instance_rule">
-        <field name="name">Magento Order Data Queue by Instance</field>
-        <field name="model_id" ref="model_magento_order_data_queue_ept"/>
-        <field name="groups" eval="[(4, ref('odoo_magento2_ept.group_magento_user_ept'))]"/>
-        <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>
-    </record>
+<!--    <record model="ir.rule" id="magento_order_data_queue_ept_instance_rule">-->
+<!--        <field name="name">Magento Order Data Queue by Instance</field>-->
+<!--        <field name="model_id" ref="model_magento_order_data_queue_ept"/>-->
+<!--        <field name="groups" eval="[(4, ref('odoo_magento2_ept.group_magento_user_ept'))]"/>-->
+<!--        <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>-->
+<!--    </record>-->
 
-     <record model="ir.rule" id="magento_order_data_queue_line_ept_instance_rule">
-        <field name="name">Magento Order Data Queue Line by Instance</field>
-        <field name="model_id" ref="model_magento_order_data_queue_line_ept"/>
-        <field name="groups" eval="[(4, ref('group_magento_user_ept'))]"/>
-         <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>
-    </record>
+<!--     <record model="ir.rule" id="magento_order_data_queue_line_ept_instance_rule">-->
+<!--        <field name="name">Magento Order Data Queue Line by Instance</field>-->
+<!--        <field name="model_id" ref="model_magento_order_data_queue_line_ept"/>-->
+<!--        <field name="groups" eval="[(4, ref('group_magento_user_ept'))]"/>-->
+<!--         <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>-->
+<!--    </record>-->
 
     <record model="ir.rule" id="magento_product_log_book_instance_rule">
         <field name="name">Magento Product Log Book by Instance</field>
@@ -104,19 +104,19 @@
         <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>
     </record>
 
-     <record model="ir.rule" id="magento_customer_data_queue_ept_instance_rule">
-        <field name="name">Magento Customer Data Queue by Instance</field>
-        <field name="model_id" ref="model_magento_customer_data_queue_ept"/>
-        <field name="groups" eval="[(4, ref('group_magento_user_ept'))]"/>
-         <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>
-    </record>
+<!--     <record model="ir.rule" id="magento_customer_data_queue_ept_instance_rule">-->
+<!--        <field name="name">Magento Customer Data Queue by Instance</field>-->
+<!--        <field name="model_id" ref="model_magento_customer_data_queue_ept"/>-->
+<!--        <field name="groups" eval="[(4, ref('group_magento_user_ept'))]"/>-->
+<!--         <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>-->
+<!--    </record>-->
 
-    <record model="ir.rule" id="magento_customer_data_queue_line_ept_instance_rule">
-        <field name="name">Magento Customer Data Queue Line by Instance</field>
-        <field name="model_id" ref="model_magento_customer_data_queue_line_ept"/>
-        <field name="groups" eval="[(4, ref('group_magento_user_ept'))]"/>
-        <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>
-    </record>
+<!--    <record model="ir.rule" id="magento_customer_data_queue_line_ept_instance_rule">-->
+<!--        <field name="name">Magento Customer Data Queue Line by Instance</field>-->
+<!--        <field name="model_id" ref="model_magento_customer_data_queue_line_ept"/>-->
+<!--        <field name="groups" eval="[(4, ref('group_magento_user_ept'))]"/>-->
+<!--        <field name="domain_force">['|',(1 if user.has_group('odoo_magento2_ept.group_magento_manager_ept') else 0,'=',1),('magento_instance_id.user_ids', 'in', user.id)]</field>-->
+<!--    </record>-->
 
     <record model="ir.rule" id="magento_import_export_ept_instance_rule">
         <field name="name">Magento Import Export by Instance Rule</field>

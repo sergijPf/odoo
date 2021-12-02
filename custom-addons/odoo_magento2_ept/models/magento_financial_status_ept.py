@@ -14,8 +14,8 @@ class MagentoFinancialStatusEpt(models.Model):
 
     financial_status = fields.Selection([('not_paid', 'Pending Orders'),
                                          ('processing_paid', 'Processing orders with Invoice'),
-                                         ('processing_unpaid', 'Processing orders with Shipping'),
-                                         ('paid', 'Completed orders'),
+                                         # ('processing_unpaid', 'Processing orders with Shipping'),
+                                         # ('paid', 'Completed orders'),
                                          ], default="not_paid")
     auto_workflow_id = fields.Many2one("sale.workflow.process.ept", "Auto Workflow", ondelete="restrict")
     payment_method_id = fields.Many2one("magento.payment.method", "Payment Gateway", ondelete="restrict")

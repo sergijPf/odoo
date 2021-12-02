@@ -13,7 +13,7 @@ from ..python_library.php import Php
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 PRODUCT_PRODUCT = 'product.product'
 # STOCK_INVENTORY = 'stock.inventory'
-COMMON_LOG_LINES_EPT = 'common.log.lines.ept'
+# COMMON_LOG_LINES_EPT = 'common.log.lines.ept'
 MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
 MAX_SIZE_FOR_IMAGES = 2500000 # should be aligned with MYSQL - max_allowed_size (currently 4M), !!! NOTE 4M is converted size and constant value is before convertion
 PRODUCTS_THRESHOLD = 200
@@ -1020,10 +1020,10 @@ class MagentoProductProduct(models.Model):
         """
         stock_data = []
         consumable_products = []
-        model_id = self.env[COMMON_LOG_LINES_EPT].get_model_id(MAGENTO_PRODUCT_PRODUCT)
-        job = self.env['common.log.book.ept'].create({
-            'name': 'Export Product Stock', 'type': 'export', 'module': 'magento_ept',
-            'model_id': model_id, 'res_id': self.id, 'magento_instance_id': instance.id})
+        # model_id = self.env[COMMON_LOG_LINES_EPT].get_model_id(MAGENTO_PRODUCT_PRODUCT)
+        # job = self.env['common.log.book.ept'].create({
+        #     'name': 'Export Product Stock', 'type': 'export', 'module': 'magento_ept',
+        #     'model_id': model_id, 'res_id': self.id, 'magento_instance_id': instance.id})
         # export_product_stock = self.get_export_product_stock(instance, instance.warehouse_ids)
         export_product_stock = self.get_export_product_stock(instance, instance.location_ids)
         if export_product_stock:
@@ -1036,13 +1036,13 @@ class MagentoProductProduct(models.Model):
                     else:
                         product_stock_dict = {'sku': exp_product.magento_sku, 'qty': stock, 'is_in_stock': 1}
                         stock_data.append(product_stock_dict)
-        self.create_export_product_process_log(consumable_products, job)
+        self.create_export_product_process_log(consumable_products, '')
         if stock_data:
             data = {'skuData': stock_data}
             api_url = "/V1/product/updatestock"
-            job = self.call_export_product_stock_api(instance, api_url, data, job, 'PUT')
-        if not job.log_lines:
-            job.sudo().unlink()
+            job = self.call_export_product_stock_api(instance, api_url, data, '', 'PUT')
+        # if not job.log_lines:
+        #     job.sudo().unlink()
 
     def export_product_stock_to_multiple_locations(self, instance, magento_locations):
         """
@@ -1055,10 +1055,10 @@ class MagentoProductProduct(models.Model):
         """
         stock_data = []
         consumable_products = []
-        model_id = self.env[COMMON_LOG_LINES_EPT].get_model_id(MAGENTO_PRODUCT_PRODUCT)
-        job = self.env['common.log.book.ept'].create({
-            'name': 'Export Product Stock', 'type': 'export', 'module': 'magento_ept',
-            'model_id': model_id, 'res_id': self.id, 'magento_instance_id': instance.id})
+        # model_id = self.env[COMMON_LOG_LINES_EPT].get_model_id(MAGENTO_PRODUCT_PRODUCT)
+        # job = self.env['common.log.book.ept'].create({
+        #     'name': 'Export Product Stock', 'type': 'export', 'module': 'magento_ept',
+        #     'model_id': model_id, 'res_id': self.id, 'magento_instance_id': instance.id})
         for magento_location in magento_locations:
             export_stock_locations = magento_location.mapped('export_stock_warehouse_ids')
             if export_stock_locations and export_stock_locations.ids:
@@ -1069,13 +1069,13 @@ class MagentoProductProduct(models.Model):
                             product_id, instance, stock, consumable_products, stock_data, magento_location)
             else:
                 raise UserError(_("Please Choose Export product stock location for %s", magento_location.name))
-        self.create_export_product_process_log(consumable_products, job)
+        self.create_export_product_process_log(consumable_products, '')
         if stock_data:
             data = {'sourceItems': stock_data}
             api_url = "/V1/inventory/source-items"
-            job = self.call_export_product_stock_api(instance, api_url, data, job, 'POST')
-        if not job.log_lines:
-            job.sudo().unlink()
+            job = self.call_export_product_stock_api(instance, api_url, data, '', 'POST')
+        # if not job.log_lines:
+        #     job.sudo().unlink()
         return True
 
     def prepare_export_product_stock_dict(self, product_id, instance, stock, consumable_products, stock_data, magento_location):
@@ -2141,7 +2141,7 @@ class MagentoProductProduct(models.Model):
                     "name": str(conf_product.magento_product_name).upper(),
                     "attribute_set_id": attr_sets[conf_product.magento_attr_set]['id'],
                     "status": 0,  # initially disabled
-                    "visibility": 4,  # Catalog, Search
+                    "visibility": 1,  # Not visible indiv.
                     "type_id": "configurable",
                     "custom_attributes": custom_attributes,
                     "extension_attributes": {
@@ -2235,7 +2235,7 @@ class MagentoProductProduct(models.Model):
             data['product'].update({
                 "sku": prod_sku,
                 "status": 0,  # Initially disabled
-                "visibility": 4,  # Catalog, Search
+                "visibility": 1,  # Not visible individ.
             })
 
         # if not True - means assign attributes were changed and will unlink all related simple products
