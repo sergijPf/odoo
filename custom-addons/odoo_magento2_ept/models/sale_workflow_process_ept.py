@@ -7,7 +7,5 @@ from odoo import models, fields
 class SaleWorkflowProcessEpt(models.Model):
     _inherit = "sale.workflow.process.ept"
 
-    magento_order_type = fields.Many2one(
-        'import.magento.order.status',
-        string='Magento Order Status',
-        help="Select order status for that you want to create auto workflow.")
+    magento_order_type = fields.Many2one('import.magento.order.status', 'Magento Order Status',
+                                         help="Select order status for that you want to create auto workflow.")

@@ -202,9 +202,12 @@
         <field name="code">records.process_products_export_to_magento()</field>
     </record>
 
-    <menuitem id="menu_magento_products_parent" name="Catalog" parent="odoo_magento2_ept.menu_magento_root" sequence="3"/>
+    <menuitem id="menu_magento_catalog_parent" name="Catalog" parent="odoo_magento2_ept.menu_magento_root" sequence="3"/>
 
-    <menuitem id="menu_item_magento_product_variants_ept" name="Simple Products"
-        parent="odoo_magento2_ept.menu_magento_products_parent" sequence="3"
+    <menuitem id="menu_product_details" name="Products"
+            sequence="2" parent="odoo_magento2_ept.menu_magento_catalog_parent"/>
+
+    <menuitem id="menu_item_magento_product_variants" name="Simple Products"
+        parent="odoo_magento2_ept.menu_product_details" sequence="4"
         action="magento_product_normal_action_sell_ept"/>
 </odoo>

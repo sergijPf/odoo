@@ -996,30 +996,30 @@ class MagentoProductProduct(models.Model):
     #             })]
     #         })
 
-    @staticmethod
-    def create_export_product_process_log(consumable_products, log_book_id):
-        """
-        Generate process log for export product stock with consumable product.
-        :param consumable_products: dictionary of consumable products
-        :param log_book_id: common log book object
-        """
-        if consumable_products:
-            message = "The following products have not been exported due to " \
-                      "product type is other than 'Storable.'\n %s" % str(list(set(consumable_products)))
-            log_book_id.write({
-                'log_lines': [(0, 0, {
-                    'message': message
-                })]
-            })
+    # @staticmethod
+    # def create_export_product_process_log(consumable_products, log_book_id):
+    #     """
+    #     Generate process log for export product stock with consumable product.
+    #     :param consumable_products: dictionary of consumable products
+    #     :param log_book_id: common log book object
+    #     """
+    #     if consumable_products:
+    #         message = "The following products have not been exported due to " \
+    #                   "product type is other than 'Storable.'\n %s" % str(list(set(consumable_products)))
+    #         log_book_id.write({
+    #             'log_lines': [(0, 0, {
+    #                 'message': message
+    #             })]
+    #         })
 
     def export_products_stock_to_magento(self, instance):
         """
-        This method is used to export multiple product stock from odoo to magento.
+        This method is used to export multiple product stock from odoo to magento
         :param instance: Instance of Magento
         :return:
         """
         stock_data = []
-        consumable_products = []
+        # consumable_products = []
         # model_id = self.env[COMMON_LOG_LINES_EPT].get_model_id(MAGENTO_PRODUCT_PRODUCT)
         # job = self.env['common.log.book.ept'].create({
         #     'name': 'Export Product Stock', 'type': 'export', 'module': 'magento_ept',
@@ -1031,30 +1031,27 @@ class MagentoProductProduct(models.Model):
                 exp_product = self.search([('odoo_product_id', '=', product_id),
                                            ('magento_instance_id', '=', instance.id)], limit=1)
                 if exp_product and stock >= 0.0:
-                    if exp_product.odoo_product_id.type != 'product':
-                        consumable_products.append(exp_product.odoo_product_id.default_code)
-                    else:
+                    if exp_product.odoo_product_id.type == 'product':
+                    #     consumable_products.append(exp_product.odoo_product_id.default_code)
+                    # else:
                         product_stock_dict = {'sku': exp_product.magento_sku, 'qty': stock, 'is_in_stock': 1}
                         stock_data.append(product_stock_dict)
-        self.create_export_product_process_log(consumable_products, '')
+        # self.create_export_product_process_log(consumable_products, '')
         if stock_data:
             data = {'skuData': stock_data}
             api_url = "/V1/product/updatestock"
-            job = self.call_export_product_stock_api(instance, api_url, data, '', 'PUT')
-        # if not job.log_lines:
-        #     job.sudo().unlink()
+            self.call_export_product_stock_api(instance, api_url, data, 'PUT')
 
     def export_product_stock_to_multiple_locations(self, instance, magento_locations):
         """
-        This method is used to export product stock to magento,
-        when Multi inventory sources is available.
-        It will create a product inventory.
+        This method is used to export product stock to magento, when Multi inventory sources is available.
+        It will create a product inventory
         :param instance: Instance of Magento
         :param magento_locations: Magento products object
         :return: True
         """
         stock_data = []
-        consumable_products = []
+        # consumable_products = []
         # model_id = self.env[COMMON_LOG_LINES_EPT].get_model_id(MAGENTO_PRODUCT_PRODUCT)
         # job = self.env['common.log.book.ept'].create({
         #     'name': 'Export Product Stock', 'type': 'export', 'module': 'magento_ept',
@@ -1066,25 +1063,21 @@ class MagentoProductProduct(models.Model):
                 if export_product_stock:
                     for product_id, stock in export_product_stock.items():
                         stock_data = self.prepare_export_product_stock_dict(
-                            product_id, instance, stock, consumable_products, stock_data, magento_location)
+                            product_id, instance, stock, stock_data, magento_location)
             else:
                 raise UserError(_("Please Choose Export product stock location for %s", magento_location.name))
-        self.create_export_product_process_log(consumable_products, '')
+        # self.create_export_product_process_log(consumable_products, '')
         if stock_data:
             data = {'sourceItems': stock_data}
             api_url = "/V1/inventory/source-items"
-            job = self.call_export_product_stock_api(instance, api_url, data, '', 'POST')
-        # if not job.log_lines:
-        #     job.sudo().unlink()
-        return True
+            self.call_export_product_stock_api(instance, api_url, data, 'POST')
 
-    def prepare_export_product_stock_dict(self, product_id, instance, stock, consumable_products, stock_data, magento_location):
+    def prepare_export_product_stock_dict(self, product_id, instance, stock, stock_data, magento_location):
         """
         Prepare Export Product Stock Dictionary
         :param product_id: Odoo product id
         :param instance: Magneto instance
         :param stock: stock of product
-        :param consumable_products: dictionary for consumable products
         :param stock_data: dictionary for export product stock
         :param magento_location: magento inventory location object
         :return: dictionary for export product stock
@@ -1093,17 +1086,20 @@ class MagentoProductProduct(models.Model):
             ('odoo_product_id', '=', product_id), ('magento_instance_id', '=', instance.id)
         ], limit=1)
         if exp_product and stock >= 0.0:
-            if exp_product.odoo_product_id.type != 'product':
-                consumable_products.append(exp_product.odoo_product_id.default_code)
-            else:
-                stock_data.append({'sku': exp_product.magento_sku,
-                                   'source_code': magento_location.magento_location_code,
-                                   'quantity': stock, 'status': 1})
+            if exp_product.odoo_product_id.type == 'product':
+            #     consumable_products.append(exp_product.odoo_product_id.default_code)
+            # else:
+                stock_data.append({
+                    'sku': exp_product.magento_sku,
+                    'source_code': magento_location.magento_location_code,
+                    'quantity': stock,
+                    'status': 1
+                })
         return stock_data
 
     def get_export_product_stock(self, instance, export_stock_locations):
         """
-        Get export product stock dictionary with stock.
+        Get export product stock dictionary with stock
         :param instance: Magento instance object
         :param export_stock_locations: Stock location object
         :return: Export product stock dictionary.
@@ -1112,19 +1108,19 @@ class MagentoProductProduct(models.Model):
         instance_export_date = instance.last_update_stock_time
         if not instance_export_date:
             instance_export_date = datetime.today() - timedelta(days=365)
-        product_ids = product_product_obj.get_products_based_on_movement_date_ept(instance_export_date, instance.company_id)
+        product_ids = product_product_obj.get_products_based_on_movement_date(instance_export_date,
+                                                                              instance.company_id)
         export_product_stock = self.get_magento_product_stock(instance, product_ids, product_product_obj,
-                                                                  export_stock_locations)
+                                                              export_stock_locations)
         return export_product_stock
 
-    @staticmethod
-    def call_export_product_stock_api(instance, api_url, data, job, method_type):
+    # @staticmethod
+    def call_export_product_stock_api(self, instance, api_url, data, method_type):
         """
-        Call export product stock API for single or multi tracking inventory.
+        Call export product stock API for single or multi tracking inventory
         :param instance: Magento instance object
         :param api_url: API Call URL
-        :param data: Dictionary to be passed.
-        :param job: Common log book object
+        :param data: Dictionary to be passed
         :param method_type: Api Request Method type (PUT/POST)
         :return: common log book object
         """
@@ -1132,31 +1128,38 @@ class MagentoProductProduct(models.Model):
             responses = req(instance, api_url, method_type, data)
         except Exception as error:
             raise UserError(_("Error while Export product stock " + str(error)))
+        print(responses)
         if responses:
+            stock_log_book = self.env['magento.stock.log.book'].search([('magento_instance_id', '=', instance.id)])
+            # archive all previous records
+            # if stock_log_book:
+            #     stock_log_book.write({'active': False})
+
             for response in responses:
                 if isinstance(response, dict):
                     message = response.get('message')
                 else:
                     message = responses.get(response)
-                job.write({'log_lines': [(0, 0, {'message': message})]})
-        return job
+                # log error
+                if response.get('code', False) != '200':
+                    stock_log_book.create({'magento_instance_id': instance.id, 'log_message': message})
 
     @staticmethod
     def get_magento_product_stock(instance, product_ids, prod_obj, locations):
         """
-        This Method relocates check type of stock.
-        :param instance: This arguments relocates instance of magento.
-        :param product_ids: This arguments product listing id of odoo.
-        :param prod_obj: This argument relocates product object of common connector.
-        :param locations:This arguments relocates warehouse of magento.
-        :return: This Method return product listing stock.
+        This Method relocates check type of stock
+        :param instance: This arguments relocates instance of magento
+        :param product_ids: This arguments product listing id of odoo
+        :param prod_obj: This argument relocates product object of common connector
+        :param locations:This arguments relocates warehouse of magento
+        :return: This Method return product listing stock
         """
         product_listing_stock = False
         if product_ids:
             if instance.magento_stock_field == 'free_qty':
-                product_listing_stock = prod_obj.get_free_qty_ept(locations, product_ids)
+                product_listing_stock = prod_obj.get_free_qty(locations, product_ids)
             elif instance.magento_stock_field == 'virtual_available':
-                product_listing_stock = prod_obj.get_forecasted_qty_ept(locations, product_ids)
+                product_listing_stock = prod_obj.get_forecasted_qty(locations, product_ids)
         return product_listing_stock
 
     # added by SPf
@@ -2132,7 +2135,7 @@ class MagentoProductProduct(models.Model):
         lang_code = self.env['res.lang']._lang_get(self.env.user.lang).code
         for prod in new_conf_products:
             conf_product = ml_conf_products[prod]['conf_object']
-            categ_list = [cat.category_id for cat in conf_product.category_ids]
+            # categ_list = [cat.category_id for cat in conf_product.category_ids]
             custom_attributes = self.add_conf_product_attributes(conf_product, attr_sets, lang_code)
 
             data.append({
@@ -2140,12 +2143,12 @@ class MagentoProductProduct(models.Model):
                     "sku": prod,
                     "name": str(conf_product.magento_product_name).upper(),
                     "attribute_set_id": attr_sets[conf_product.magento_attr_set]['id'],
-                    "status": 0,  # initially disabled
-                    "visibility": 1,  # Not visible indiv.
+                    "status": 1,  # initially disabled
+                    "visibility": 2,  # Catalog.
                     "type_id": "configurable",
                     "custom_attributes": custom_attributes,
                     "extension_attributes": {
-                        "category_links": [{"position": 0, "category_id": cat_id} for cat_id in categ_list]
+                        # "category_links": [{"position": 0, "category_id": cat_id} for cat_id in categ_list]
                     }
                 }
             })
@@ -2215,7 +2218,7 @@ class MagentoProductProduct(models.Model):
         :return: Magento Product or empty dict
         """
         conf_product = ml_conf_products[prod_sku]['conf_object']
-        categ_list = [cat.category_id for cat in conf_product.category_ids]
+        # categ_list = [cat.category_id for cat in conf_product.category_ids]
         lang_code = self.env['res.lang']._lang_get(self.env.user.lang).code
         custom_attributes = self.add_conf_product_attributes(conf_product, attr_sets, lang_code)
 
@@ -2226,7 +2229,7 @@ class MagentoProductProduct(models.Model):
                 "type_id": "configurable",
                 "custom_attributes": custom_attributes,
                 "extension_attributes": {
-                    "category_links": [{"position": 0, "category_id": cat_id} for cat_id in categ_list]
+                    # "category_links": [{"position": 0, "category_id": cat_id} for cat_id in categ_list]
                 }
             }
         }
@@ -2234,11 +2237,11 @@ class MagentoProductProduct(models.Model):
         if method == 'POST':
             data['product'].update({
                 "sku": prod_sku,
-                "status": 0,  # Initially disabled
-                "visibility": 1,  # Not visible individ.
+                "status": 1,  # Enabled
+                "visibility": 2,  # Catalog
             })
 
-        # if not True - means assign attributes were changed and will unlink all related simple products
+        # here if not True - means assign attributes were changed and will unlink all related simple products
         if not check_assign_attr:
             data['product']["extension_attributes"].update({"configurable_product_links": []})
 
@@ -2251,7 +2254,6 @@ class MagentoProductProduct(models.Model):
             return {}
 
         if response.get('sku'):
-            # self.process_storeview_translations_export(magento_instance, conf_product, ml_conf_products, prod_sku, True)
             if method == "POST":
                 self.process_product_websites_export(magento_instance, ml_conf_products, prod_sku, response)
 
@@ -2515,7 +2517,7 @@ class MagentoProductProduct(models.Model):
             }
         }
         if method == 'POST':
-            data["product"].update({"sku": product.magento_sku, "status": 0, "visibility": 4})
+            data["product"].update({"sku": product.magento_sku, "status": 1, "visibility": 4})
 
         try:
             api_url = '/all/V1/products' if method == 'POST' else '/all/V1/products/%s' % product.magento_sku
@@ -2631,7 +2633,7 @@ class MagentoProductProduct(models.Model):
                     }
                 }
                 if method == 'POST':
-                    p["product"].update({"status": 0, "visibility": 4})
+                    p["product"].update({"status": 1, "visibility": 4})
                 data.append(p)
 
         if not data:
@@ -2640,7 +2642,8 @@ class MagentoProductProduct(models.Model):
             api_url = '/all/async/bulk/V1/products'
             response = req(magento_instance, api_url, method, data)
         except Exception:
-            text = "Error while asynchronously Simple Products %s in Magento.\n" % 'creation' if method == 'POST' else "update"
+            text = "Error while asynchronously Simple Products %s in Magento.\n" % (
+                'creation' if method == 'POST' else "update")
             for prod in export_prod_list:
                 ml_simp_products[prod]['log_message'] += text
             return False

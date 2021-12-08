@@ -760,8 +760,8 @@ class SaleOrder(models.Model):
 
     def _prepare_invoice(self):
         """
-        This method is used for set necessary value(is_magento_invoice,
-        is_exported_to_magento,magento_instance_id) in invoice.
+        This method is used for set necessary value(is_exported_to_magento, magento_instance_id)
+         to the invoice.
         :return:
         """
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
@@ -770,7 +770,7 @@ class SaleOrder(models.Model):
         if self.magento_instance_id:
             invoice_vals.update({
                 'magento_instance_id': self.magento_instance_id.id,
-                'is_magento_invoice': True,
+                # 'is_magento_invoice': True,
                 'is_exported_to_magento': False
             })
         return invoice_vals
@@ -794,14 +794,14 @@ class SaleOrder(models.Model):
 
         if message:
             return message
-        else:
-            if (sales_order.get('status') == 'processing' and
-                sales_order.get('extension_attributes').get('is_invoice')) and self.invoice_ids:
-                # Here the magento order is complete state or
-                # processing state with invoice so invoice is already created
-                # So Make the Export invoice as true to hide Export invoice button from invoice.
-                self.invoice_ids.write({'is_exported_to_magento': True})
-                return ''
+        # else:
+        #     if (sales_order.get('status') == 'processing' and
+        #         sales_order.get('payment').get('amount_paid')) and self.invoice_ids:
+        #         # Here the magento order is complete state or
+        #         # processing state with invoice so invoice is already created
+        #         # So Make the Export invoice as true to hide Export invoice button from invoice.
+        #         self.invoice_ids.write({'is_exported_to_magento': True})
+        return ''
 
 
     @staticmethod
@@ -917,10 +917,13 @@ class SaleOrder(models.Model):
             else:
                 return True
         else:
-            magento_order = self.create(order_values)
+            try:
+                magento_order = self.create(order_values)
+            except Exception as e:
+                message = e
 
         if not magento_order:
-            message = "Error while creating sales order in Magento."
+            message = "Error while creating sales order in Magento: " + str(message)
             self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
             return False
 
@@ -931,7 +934,7 @@ class SaleOrder(models.Model):
 
         message = magento_order.process_sale_order_workflow_based_on_status(sales_order)
         if message:
-            message += "Error to process order: "
+            message = "Error to process order: " + str(message)
             self.log_order_import_error(log_errors, order_ref, magento_instance, website, message, True)
             return False
 
@@ -994,11 +997,14 @@ class SaleOrder(models.Model):
             )
             if not delivery_carrier:
                 product = self.env.ref('odoo_magento2_ept.product_product_shipping')
-                self.env["delivery.carrier"].create({
-                    'name': magento_carrier.carrier_label,
-                    'product_id': product.id,
-                    'magento_carrier': magento_carrier.id
-                })
+                try:
+                    self.env["delivery.carrier"].create({
+                        'name': magento_carrier.carrier_label,
+                        'product_id': product.id,
+                        'magento_carrier': magento_carrier.id
+                    })
+                except Exception as err:
+                    message = "Error while creating new delivery carrier: " + str(err)
 
         return message
 
@@ -1035,9 +1041,9 @@ class SaleOrder(models.Model):
 
         return message
 
-    def check_pricelist_for_order(self, order_response, website):
+    def check_pricelist_for_order(self, sales_order, website):
         message = ""
-        order_currency = order_response.get('order_currency_code')
+        order_currency = sales_order.get('order_currency_code')
 
         if website.pricelist_id:
             if order_currency != website.pricelist_id.currency_id.name:
@@ -1096,7 +1102,7 @@ class SaleOrder(models.Model):
             'client_order_ref': sales_order.get('increment_id')
         }
 
-        order_values = self.create_sales_order_vals_ept(order_vals)
+        order_values = self.create_sales_order_vals(order_vals)
 
         # payment_additional_info = sales_order.get('extension_attributes').get('payment_additional_info') or False
         # transaction_id = False
@@ -1134,10 +1140,10 @@ class SaleOrder(models.Model):
             else:
                 return self.create_discount_order_line_adj(sales_order, magento_order)
 
-    def search_order_financial_status_adj(self, magento_instance, order_response, payment_option):
-        is_invoice = order_response.get('payment').get('amount_paid') or False
+    def search_order_financial_status_adj(self, magento_instance, sales_order, payment_option):
+        is_invoiced = sales_order.get('payment').get('amount_paid') or False
         financial_status_code, financial_status_name = self.get_magento_financial_status_adj(
-            order_response.get('status'), is_invoice
+            sales_order.get('status'), is_invoiced
         )
         workflow_config = self.env['magento.financial.status.ept'].search(
             [('magento_instance_id', '=', magento_instance.id),
@@ -1147,12 +1153,12 @@ class SaleOrder(models.Model):
         return workflow_config, financial_status_name
 
     @staticmethod
-    def get_magento_financial_status_adj(order_status, is_invoice):
+    def get_magento_financial_status_adj(order_status, is_invoiced):
         financial_status_code = financial_status_name = ''
         if order_status == "pending":
             financial_status_code = 'not_paid'
             financial_status_name = 'Pending Orders'
-        elif order_status == "processing" and is_invoice:
+        elif order_status == "processing" and is_invoiced:
             financial_status_code = 'processing_paid'
             financial_status_name = 'Processing orders with Invoice'
         return financial_status_code, financial_status_name
@@ -1191,8 +1197,13 @@ class SaleOrder(models.Model):
                 shipping_line.update({
                     'tax_id': [(6, 0, tax_id.ids)]
                 })
-            if not sale_order_line_obj.create(shipping_line):
-                return 'Error creating shipping order line'
+            try:
+                line = sale_order_line_obj.create(shipping_line)
+            except Exception as e:
+                return 'Error creating shipping order line: ' + str(e)
+
+            if not line:
+                return "Error creating shipping order line."
 
         return ''
 
@@ -1226,7 +1237,12 @@ class SaleOrder(models.Model):
                 discount_line.update({
                     'tax_id': [(6, 0, tax_id.ids)]
                 })
-            if not sale_order_line_obj.create(discount_line):
+            try:
+                line = sale_order_line_obj.create(discount_line)
+            except Exception as e:
+                return 'Error creating discount order line:' + str(e)
+
+            if not line:
                 return 'Error creating discount order line'
 
         return ''

@@ -80,10 +80,10 @@ def call_without_ssl_verify_request(method, api_url, headers, params, data):
 
 def create_filter(field, value, condition_type='eq'):
     """
-    Create dictionary for filter.
-    :param field: Field to be filter
-    :param value: Value to be filter
-    :param condition_type: condition type to be filter
+    Create dictionary for filter
+    :param field: Field to be filtered
+    :param value: Value to be filtered
+    :param condition_type: condition type to be filtered
     :return: Dictionary for filter
     """
     filter_dict = {'field': field}

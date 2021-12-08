@@ -6,7 +6,7 @@ from . import sale_order
 from . import sale_order_line
 from . import product_product
 # from . import stock_inventory
-from . import stock_quant_package
+# from . import stock_quant_package
 from . import stock_picking
 from . import product_pricelist
 # from . import product_attribute

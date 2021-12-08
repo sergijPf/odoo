@@ -60,15 +60,8 @@ class MagentoConfigurableProduct(models.Model):
                          'unique(magento_sku,magento_instance_id)',
                          "Magento Configurable Product SKU must be unique within Magento instance")]
 
-    # @api.model
-    # def create(self, vals):
-    #     product = super(MagentoConfigurableProduct, self).create(vals)
-    #     product.update_date = product.create_date
-    #     return product
-
     def write(self, vals):
         if 'magento_attr_set' in vals or 'category_ids' in vals:
-            # vals.update({'update_date': datetime.now()})
             vals.update({'force_update': True})
 
         # archive/unarchive related simple products

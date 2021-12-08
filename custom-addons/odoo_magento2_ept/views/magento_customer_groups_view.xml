@@ -70,7 +70,10 @@
             </field>
         </record>
 
+         <menuitem id="menu_customer_details" name="Customer"
+            sequence="5" parent="odoo_magento2_ept.menu_magento_catalog_parent"/>
+
         <menuitem id="menu_item_magento_customer_groups" name="Customer Groups"
-            parent="odoo_magento2_ept.menu_magento_products_parent" sequence="5"
+            parent="odoo_magento2_ept.menu_customer_details" sequence="6"
             action="magento_customer_groups_action"/>
 </odoo>

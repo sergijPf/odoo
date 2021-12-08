@@ -1,6 +1,7 @@
-from odoo import fields, models
-# from datetime import datetime
+# -*- coding: utf-8 -*-
 
+from odoo import fields, models
+0
 class ProductAttribute(models.Model):
     _inherit = "product.attribute"
 
@@ -21,6 +22,5 @@ class ProductAttribute(models.Model):
                     prod_ids.append(p.id)
             if prod_ids:
                 magento_products = magento_products.browse(prod_ids)
-                # magento_products.write({'update_date': datetime.now()})
                 magento_products.write({'force_update': True})
         return res

@@ -19,10 +19,10 @@ class MagentoFinancialStatusEpt(models.Model):
                                          ], default="not_paid")
     auto_workflow_id = fields.Many2one("sale.workflow.process.ept", "Auto Workflow", ondelete="restrict")
     payment_method_id = fields.Many2one("magento.payment.method", "Payment Gateway", ondelete="restrict")
-    payment_term_id = fields.Many2one(
-        'account.payment.term', string='Payment Term', default=_default_payment_term, ondelete="restrict")
-    magento_instance_id = fields.Many2one(
-        "magento.instance", string="Instance", ondelete="cascade", help="This field relocates magento instance")
+    payment_term_id = fields.Many2one('account.payment.term', string='Payment Term', default=_default_payment_term,
+                                      ondelete="restrict")
+    magento_instance_id = fields.Many2one("magento.instance", string="Instance", ondelete="cascade",
+                                          help="This field relocates magento instance")
     active = fields.Boolean("Active Financial Status", default=True)
 
     _sql_constraints = [('_magento_workflow_unique_constraint',
@@ -31,7 +31,7 @@ class MagentoFinancialStatusEpt(models.Model):
 
     def create_financial_status(self, magento_instance, financial_status):
         """
-        Creates Financial Status for the payment methods of the Instance.
+        Creates Financial Status for the payment methods of the Instance
         :param magento_instance: Magento Instance
         :param financial_status: Financial Status can be pending, processing_paid, processing_unpaid or paid.
         :return: True

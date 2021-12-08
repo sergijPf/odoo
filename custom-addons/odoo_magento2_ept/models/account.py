@@ -11,7 +11,6 @@ class AccountTaxCode(models.Model):
         """
         This method,base on rate it find tax in odoo.
         @return : Tax_ids
-        @author: Haresh Mori on dated 10-Dec-2018
         """
         tax_ids = self.with_context(active_test=False).search(
             [('price_include', '=', is_tax_included),

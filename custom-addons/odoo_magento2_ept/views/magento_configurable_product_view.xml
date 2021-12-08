@@ -157,6 +157,6 @@
 <!--    </record>-->
 
     <menuitem id="menu_item_magento_configurable_product" name="Configurable Products"
-        parent="odoo_magento2_ept.menu_magento_products_parent" sequence="2"
+        parent="odoo_magento2_ept.menu_product_details" sequence="3"
         action="magento_configurable_product_action"/>
 </odoo>

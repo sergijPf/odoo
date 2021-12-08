@@ -12,8 +12,6 @@ class SaleOrder(models.Model):
     def _compute_stock_move(self):
         """
         Find all stock moves associated with the order.
-        @author: Keyur Kanani
-        Migration done by twinkalc August 2020
         """
         self.moves_count = self.env["stock.move"].search_count([("picking_id", "=", False),
                                                                 ("sale_line_id", "in", self.order_line.ids)])
@@ -40,7 +38,7 @@ class SaleOrder(models.Model):
         fiscal_position = self.get_fiscal_position_by_warehouse()
         self.fiscal_position_id = fiscal_position
 
-    def create_sales_order_vals_ept(self, vals):
+    def create_sales_order_vals(self, vals):
         """
         Pass Dictionary
         vals = {'company_id':company_id,'partner_id':partner_id,
@@ -53,7 +51,6 @@ class SaleOrder(models.Model):
         'carrier_id':carrier_id,'invoice_shipping_on_delivery':invoice_shipping_on_delivery}
         required data in vals :- partner_id,partner_invoice_id,partner_shipping_id,company_id,warehouse_id,
         picking_policy,date_order
-        Migration done by twinkalc August 2020
         """
         sale_order = self.env['sale.order']
         order_vals = {
@@ -116,8 +113,6 @@ class SaleOrder(models.Model):
     def action_view_stock_move_ept(self):
         """
         List all stock moves which is associated with the Order.
-        @author: Keyur Kanani
-        Migration done by twinkalc August 2020
         """
         stock_move_obj = self.env['stock.move']
         move_ids = stock_move_obj.search([('picking_id', '=', False), ('sale_line_id', 'in', self.order_line.ids)]).ids
@@ -132,8 +127,7 @@ class SaleOrder(models.Model):
 
     def _prepare_invoice(self):
         """
-        This method would let the invoice date will be the same as the order date and also set the sale journal.
-        Migration done by twinkalc August 2020
+        This method would set the sale journal.
         """
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
         if self.auto_workflow_process_id:
@@ -142,15 +136,12 @@ class SaleOrder(models.Model):
             #     invoice_vals.update({"date": self.date_order.date(), "invoice_date": fields.Date.context_today(self)})
         return invoice_vals
 
-    def validate_order_ept(self):
+    def validate_sales_order(self):
         """
         This function validate sales order and write date_order same as previous date because Odoo changes date_order
         to current date in action confirm process.
-        @author: Dipesh Tanna
-        Migration done by twinkalc August 2020
         Added invalidate_cache line to resolve the issue of PO line description while product route has dropship and
-        multi language active in Odoo.T-07778 Added line by Haresh Mori @Emipro Technologies Pvt. Ltd on date 19 July
-        2021
+        multi languages active in Odoo.
         """
         self.ensure_one()
         date_order = self.date_order
@@ -159,7 +150,7 @@ class SaleOrder(models.Model):
         self.write({'date_order': date_order})
         return True
 
-    def process_orders_and_invoices_ept(self):
+    def process_orders_and_invoices(self):
         """
         This method will confirm sale orders, create and paid related invoices.
         """
@@ -169,23 +160,22 @@ class SaleOrder(models.Model):
             if order.invoice_status and order.invoice_status == 'invoiced':
                 continue
             if work_flow_process_record.validate_order:
-                order.validate_order_ept()
+                order.validate_sales_order()
 
             order_lines = order.mapped('order_line').filtered(lambda l: l.product_id.invoice_policy == 'order')
-            if not order_lines.filtered(lambda l: l.product_id.type == 'product') and len(
-                order.order_line) != len(order_lines.filtered(lambda l: l.product_id.type in ['service','consu'])):
+            if not order_lines.filtered(lambda l: l.product_id.type == 'product') and len(order.order_line) != len(
+                    order_lines.filtered(lambda l: l.product_id.type in ['service','consu'])):
                 continue
 
-            order.validate_and_paid_invoices_ept(work_flow_process_record)
+            order.validate_invoice(work_flow_process_record)
         return True
 
-    def validate_and_paid_invoices_ept(self, work_flow_process_record):
+    def validate_invoice(self, work_flow_process_record):
         """
         This method will create invoices, validate it and register payment it, according to the configuration in
-        workflow sets in quotation.
+        workflow sets in quotation
         :param work_flow_process_record:
         :return: It will return boolean.
-        Migration done by twinkalc August 2020
         """
         self.ensure_one()
         if work_flow_process_record.create_invoice:
@@ -206,22 +196,24 @@ class SaleOrder(models.Model):
             #             _logger.info(message)
             #         return True
             invoices = self._create_invoices()
-            self.validate_invoice_ept(invoices)
+            # validate invoice
+            for invoice in invoices:
+                invoice.action_post()
+
+            # self.validate_invoice_ept(invoices)
             # if work_flow_process_record.register_payment:
             #     self.paid_invoice_ept(invoices)
         return True
 
-    def validate_invoice_ept(self, invoices):
-        """
-        Added by Udit
-        This method will validate and paid invoices.
-        @param invoices: Recordset of Invoice.
-        Migration done by twinkalc August 2020
-        """
-        self.ensure_one()
-        for invoice in invoices:
-            invoice.action_post()
-        return True
+    # def validate_invoice_ept(self, invoices):
+    #     """
+    #     This method will validate and paid invoices.
+    #     @param invoices: Recordset of Invoice.
+    #     """
+    #     self.ensure_one()
+    #     for invoice in invoices:
+    #         invoice.action_post()
+    #     return True
 
     # def paid_invoice_ept(self, invoices):
     #     """

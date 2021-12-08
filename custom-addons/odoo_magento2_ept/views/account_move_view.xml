@@ -30,24 +30,24 @@
             <field name="inherit_id" ref="account.view_move_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//header/button[5]" position="after">
-                    <button name="export_invoice_in_magento" string="Export Invoice In Magento"
+                    <button name="export_single_invoice_to_magento" string="Export Invoice To Magento"
                             type="object" class="oe_highlight"
-                            attrs="{'invisible':['|','|','|','|',
+                            attrs="{'invisible':['|','|','|',
                             ('payment_state','not in',['in_payment', 'paid']),
                             ('move_type','!=','out_invoice'),
                             ('is_exported_to_magento','=',True),
-                            ('magento_instance_id','=',False),
-                            ('max_no_of_attempts','&gt;',3)]}"/>
+                            ('magento_instance_id','=',False)]}"/>
+<!--                            ('max_no_of_attempts','&gt;',3)]}"-->
                 </xpath>
                 <xpath expr="//page[@name='other_info']/group/group[@name='accounting_info_group']" position="after">
                     <group string="Magento" name="magento_info_group">
                         <field name="magento_instance_id" readonly="1"/>
                         <field name="magento_invoice_id"/>
-                        <field name="is_magento_invoice"/>
+<!--                        <field name="is_magento_invoice"/>-->
                         <field name="magento_payment_method_id"/>
-                        <field name="is_exported_to_magento"/>
-                        <field name="max_no_of_attempts" invisible="1"/>
-                        <field name="magento_message" attrs="{'invisible':[('magento_message', '=', False)]}"/>
+                        <field name="is_exported_to_magento" readonly="1"/>
+<!--                        <field name="max_no_of_attempts" invisible="1"/>-->
+<!--                        <field name="magento_message" attrs="{'invisible':[('magento_message', '=', False)]}"/>-->
                     </group>
                 </xpath>
             </field>

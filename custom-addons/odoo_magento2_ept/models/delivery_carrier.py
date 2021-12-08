@@ -13,10 +13,7 @@ class DeliveryCarrier(models.Model):
     """
     _inherit = "delivery.carrier"
 
-    magento_carrier = fields.Many2one(
-        'magento.delivery.carrier',
-        help="This field relocates Magento Delivery Carrier"
-    )
+    magento_carrier = fields.Many2one('magento.delivery.carrier', help="This field relocates Magento Delivery Carrier")
     magento_carrier_code = fields.Char(related='magento_carrier.carrier_code', string='Base Carrier Code')
     # magento_carrier_code = fields.Char(
     #     compute='_compute_carrier_code',

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # See LICENSE file for full copyright and licensing details.
-from odoo import models
+from odoo import models, fields
 
 
 class StockPicking(models.Model):
@@ -8,7 +8,6 @@ class StockPicking(models.Model):
 
     def _action_done(self):
         """
-        Added comment by Udit
         create and paid invoice on the basis of auto invoice work flow
         when invoicing policy is 'delivery'.
         """
@@ -23,16 +22,22 @@ class StockPicking(models.Model):
 
             if work_flow_process_record and delivery_lines and work_flow_process_record.create_invoice and \
                     picking.picking_type_id.code == 'outgoing':
-                order.validate_and_paid_invoices_ept(work_flow_process_record)
+                order.validate_invoice(work_flow_process_record)
         return result
 
     def send_to_shipper(self):
         """
         usage: If auto_processed_orders_ept = True passed in Context then we can not call send shipment from carrier
         This change is used in case of Import Shipped Orders for all connectors.
-        @author: Keyur Kanani
         """
         context = dict(self._context)
         if context.get('auto_processed_orders_ept', False):
             return True
         return super(StockPicking, self).send_to_shipper()
+
+
+
+class StockQuantPackage(models.Model):
+    _inherit = 'stock.quant.package'
+
+    tracking_no = fields.Char("Additional Reference", help="This field is used for storing the tracking number.")

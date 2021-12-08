@@ -10,24 +10,24 @@
             <field name="arch" type="xml">
                 <xpath expr="//div[hasclass('settings')]" position="inside">
                     <div class="app_settings_block" data-string="Magento" data-key="odoo_magento2_ept" groups="odoo_magento2_ept.group_magento_manager_ept">
-                        <div name="description_config">
-                        <h2 style="font-size:25px;background-color:#e9ecef;">
-                            Magento Dashboard Configuration
-                        </h2>
-                        <div class="row mt16 o_settings_container">
-                            <div class="col-xs-12 col-md-6 o_setting_box">
-                                <div>
-                                    <div>
-                                        <label for="dashboard_view_type"/>
-                                        <field name="dashboard_view_type" widget="selection" class="oe_inline" required="1" />
-                                        <div class="text-muted" id="sale_coupon">
-                                            Dashboard Will Display Data Based On Dashboard Type.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<!--                        <div name="description_config">-->
+<!--                        <h2 style="font-size:25px;background-color:#e9ecef;">-->
+<!--                            Magento Dashboard Configuration-->
+<!--                        </h2>-->
+<!--                        <div class="row mt16 o_settings_container">-->
+<!--                            <div class="col-xs-12 col-md-6 o_setting_box">-->
+<!--                                <div>-->
+<!--                                    <div>-->
+<!--                                        <label for="dashboard_view_type"/>-->
+<!--                                        <field name="dashboard_view_type" widget="selection" class="oe_inline" required="1" />-->
+<!--                                        <div class="text-muted" id="sale_coupon">-->
+<!--                                            Dashboard Will Display Data Based On Dashboard Type.-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
 <!--                        <div name="description_config">-->
 <!--                            <h2 style="font-size:25px;background-color:#e9ecef;">-->
 <!--                                Odoo Product Configuration-->

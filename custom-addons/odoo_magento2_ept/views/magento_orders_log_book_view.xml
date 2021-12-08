@@ -22,7 +22,9 @@
         <field name="name">Magento Orders Log Book Tree</field>
         <field name="model">magento.orders.log.book</field>
         <field name="arch" type="xml">
-            <tree create="0" delete="0">
+            <tree create="0" delete="0"  decoration-danger="active and not processing_error">
+                <field name="processing_error" invisible="1"/>
+                <field name="active" invisible="1"/>
                 <field name="magento_instance_id"/>
                 <field name="magento_website_id"/>
                 <field name="magento_order_ref"/>
@@ -39,6 +41,7 @@
             <form create="0" delete="0" edit="0">
                 <sheet>
                     <group>
+                        <field name="sale_order_id"/>
                         <field name="magento_instance_id"/>
                         <field name="magento_website_id"/>
                         <field name="magento_order_ref"/>
@@ -76,10 +79,13 @@
     <menuitem id="menu_magento_log" parent="menu_magento_root"
                   name="Logs" sequence="9" />
 
+    <menuitem id="menu_order_log_details" name="Orders info"
+            sequence="5" parent="odoo_magento2_ept.menu_magento_log"/>
+
     <menuitem id="magento_orders_log_menu"
-              sequence="1"
+              sequence="6"
               name="Orders"
-              parent="odoo_magento2_ept.menu_magento_log"
+              parent="odoo_magento2_ept.menu_order_log_details"
               action="action_show_log_messages_of_imported_orders"/>
 
 </odoo>

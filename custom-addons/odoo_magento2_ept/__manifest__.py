@@ -7,12 +7,11 @@
                'as per Smartino specifications',
     # Author
     'author': 'Emipro Technologies Pvt. Ltd. Customized by White Label',
-    # 'website': 'http://www.emiprotechnologies.com/',
     'maintainer': 'White Label',
 
     # Dependencies
-    # 'depends': ['common_connector_library'],
-    'depends': ['common_connector_library', 'smartino_common'],
+    'depends': ['common_connector_library'],
+    # 'depends': ['common_connector_library', 'smartino_common'],
     # Views
     'data': [
         'security/security.xml',
@@ -59,6 +58,7 @@
         # 'views/magento_product_attribute_view.xml',
         # 'views/product_category_view.xml',
         'views/magento_product_log_book_view.xml',
+        'views/magento_stock_log_book_view.xml',
         'views/magento_configurable_product_view.xml',
         'views/product_attribute_view.xml',
         'views/product_product_view.xml',
@@ -66,6 +66,8 @@
         'views/config_product_attribute_view.xml',
         'views/magento_customer_groups_view.xml',
         'views/magento_orders_log_book_view.xml',
+        'views/magento_invoices_log_book_view.xml',
+        'views/magento_shipments_log_book_view.xml',
         'wizard_views/magento_instance_configuration_wizard.xml',
         # 'wizard_views/basic_configuration_onboarding.xml',
         # 'wizard_views/financial_status_onboarding_view.xml',

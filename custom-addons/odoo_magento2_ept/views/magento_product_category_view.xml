@@ -57,7 +57,7 @@
             </field>
         </record>
 
-        <record id="magento_product_category_action_ept" model="ir.actions.act_window">
+        <record id="magento_product_category_action" model="ir.actions.act_window">
                 <field name="name">Product Category</field>
                 <field name="type">ir.actions.act_window</field>
                 <field name="res_model">magento.product.category</field>
@@ -72,7 +72,7 @@
             </field>
         </record>
 
-        <menuitem id="menu_item_magento_product_category_ept" name="Product Categories"
-            parent="odoo_magento2_ept.menu_magento_products_parent" sequence="4"
-            action="magento_product_category_action_ept"/>
+        <menuitem id="menu_item_magento_product_category" name="Product Categories"
+            parent="odoo_magento2_ept.menu_magento_catalog_parent" sequence="1"
+            action="magento_product_category_action"/>
 </odoo>

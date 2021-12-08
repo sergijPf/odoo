@@ -12,7 +12,6 @@ class MagentoResPartner(models.Model):
     _description = "Magento Res Partner"
 
     magento_customer_id = fields.Char(string="Magento Customer", help="Magento Customer Id")
-    # address_id = fields.Char(string="Address", help="Address Id") # to remove
     partner_id = fields.Many2one("res.partner", "Customer", ondelete='cascade')
     name = fields.Char(related="partner_id.name", string="Name *")
     phone = fields.Char(related="partner_id.phone", string="Phone")
@@ -67,14 +66,17 @@ class MagentoResPartner(models.Model):
         else:
             group_id = self.customer_group_id.get_customer_group(magento_instance, customer_group_id, customer_group_name)
 
-            magento_customer = self.create({
-                'magento_customer_id': customer_id,
-                "customer_group_id": group_id.id,
-                'partner_id': odoo_partner.id,
-                'magento_instance_id': magento_instance.id,
-                'status': 'imported',
-                'magento_website_id':  website.id
-            })
+            try:
+                magento_customer = self.create({
+                    'magento_customer_id': customer_id,
+                    "customer_group_id": group_id.id,
+                    'partner_id': odoo_partner.id,
+                    'magento_instance_id': magento_instance.id,
+                    'status': 'imported',
+                    'magento_website_id':  website.id
+                })
+            except Exception:
+                return
 
             magento_customer.customer_address_ids.create_and_link_customer_address(
                 billing_address, magento_customer, odoo_partner, 'billing'

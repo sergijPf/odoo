@@ -19,34 +19,15 @@ class MagentoProductCategory(models.Model):
             else:
                 category.complete_category_name = category.name
 
-    instance_id = fields.Many2one(
-        'magento.instance',
-        'Magento Instance',
-        ondelete="cascade",
-        help="This field relocates magento instance"
-    )
-    category_id = fields.Char(
-        string="Magento ID",
-        help="Magento ID"
-    )
-    magento_parent_id = fields.Many2one(
-        'magento.product.category',
-        'Parent Category',
-        help="Magento Parent Category",
-        ondelete='cascade'
-    )
+    instance_id = fields.Many2one('magento.instance', 'Magento Instance', ondelete="cascade")
+    category_id = fields.Char(string="Magento ID")
+    magento_parent_id = fields.Many2one('magento.product.category', 'Parent Category', ondelete='cascade')
     magento_child_ids = fields.One2many(comodel_name='magento.product.category', inverse_name='magento_parent_id',
                                         string='Child Categories')
-    is_active = fields.Boolean(
-        string='Is Active in Magento?',
-        help="Enable the category in Magento by default Yes (uncheck to disable).",
-        default=True
-    )
-    complete_category_name = fields.Char(
-        string="Full Category Name",
-        help="Complete Category Path(Name)",
-        compute="_compute_complete_name"
-    )
+    is_active = fields.Boolean(string='Is Active in Magento?', default=True,
+                               help="Enable the category in Magento by default Yes (uncheck to disable).")
+    complete_category_name = fields.Char("Full Category Name", help="Complete Category Path(Name)",
+                                         compute="_compute_complete_name")
     active = fields.Boolean(string="Status", default=True)
     product_public_categ = fields.Many2one('product.public.category', string="Product Public Category")
     name = fields.Char("Name", related="product_public_categ.name")

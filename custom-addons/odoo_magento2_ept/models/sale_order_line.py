@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # See LICENSE file for full copyright and licensing details.
 """For Odoo Magento2 Connector Module"""
-import json
+# import json
 from odoo import models, fields
 # from datetime import datetime
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -120,7 +120,7 @@ class SaleOrderLine(models.Model):
     @staticmethod
     def calculate_order_item_price(tax_calculation_method, item):
         """
-        Calculate order item price based on tax calculation method configurations.
+        Calculate order item price based on tax calculation method configurations
         :param tax_calculation_method: Tax calculation method (Including/ Excluding)
         :param item: order item received from Magento
         :return: order item price
@@ -181,7 +181,12 @@ class SaleOrderLine(models.Model):
             ], limit=1)
             sale_order_line = self.create_sale_order_line_vals(item, item_price, magento_product.odoo_product_id,
                                                                magento_order)
-            if not self.create(sale_order_line):
+            try:
+                line = self.create(sale_order_line)
+            except Exception:
+                return False
+
+            if not line:
                 return False
 
         return True

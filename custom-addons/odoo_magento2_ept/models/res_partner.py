@@ -21,10 +21,10 @@ class ResPartner(models.Model):
 
     is_magento_customer = fields.Boolean(string="Is Magento Customer?",
                                          help="Used for identified that the customer is imported from Magento store.")
-    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance') # to remove
-    magento_website_id = fields.Many2one("magento.website", string="Magento Website", help="Magento Website") # to remove
-    magento_customer_id = fields.Char(string="Magento Customer", help="Magento Customer Id") # to remove
-    address_id = fields.Char(string="Address", help="Address Id") # to remove
+    # magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance') # to remove
+    # magento_website_id = fields.Many2one("magento.website", string="Magento Website", help="Magento Website") # to remove
+    # magento_customer_id = fields.Char(string="Magento Customer", help="Magento Customer Id") # to remove
+    # address_id = fields.Char(string="Address", help="Address Id") # to remove
     magento_res_partner_ids = fields.One2many("magento.res.partner", "partner_id", string='Magento Customers')
 
     # @api.model
@@ -639,13 +639,16 @@ class ResPartner(models.Model):
             if not odoo_partner.is_magento_customer:
                 odoo_partner.write({'is_magento_customer': True})
         else:
-            odoo_partner = self.create({
-                'email': customer_email,
-                'type': 'contact',
-                'name': customer_dict.get("customer_firstname") + ', ' + customer_dict.get("customer_lastname"),
-                'property_product_pricelist': website.pricelist_id.id,
-                'is_magento_customer': True
-            })
+            try:
+                odoo_partner = self.create({
+                    'email': customer_email,
+                    'type': 'contact',
+                    'name': customer_dict.get("customer_firstname") + ', ' + customer_dict.get("customer_lastname"),
+                    'property_product_pricelist': website.pricelist_id.id,
+                    'is_magento_customer': True
+                })
+            except Exception as e:
+                return
 
         return odoo_partner
 

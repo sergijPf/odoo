@@ -4,7 +4,7 @@
 Describes methods for Magento Instance
 """
 from calendar import monthrange
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from odoo import models, fields, api, _
 from .api_request import req
 from odoo.exceptions import UserError
@@ -40,7 +40,7 @@ class MagentoInstance(models.Model):
     @api.model
     def _default_order_status(self):
         """
-        Get default status for importing magento order.
+        Get default status for importing magento order
         :return:
         """
         order_status = self.env.ref('odoo_magento2_ept.pending')
@@ -63,7 +63,6 @@ class MagentoInstance(models.Model):
     #                 order_after_date = datetime.now() - timedelta(30)
     #             instance.write({"import_order_after_date": order_after_date})
     #     return order_after_date
-
 
     name = fields.Char("Instance Name", required=True)
     magento_version = fields.Selection([
@@ -180,18 +179,18 @@ class MagentoInstance(models.Model):
     #                             help="Users who have access to this magento instance",
     #                             domain=[('groups_id.full_name', '=', 'Magento / User')])
 
-    def check_dashboard_view(self):
-        """
-        It will display dashboard based on configuration either by instance wise or website wise.
-        :return:
-        """
-        view_type = self.env["ir.config_parameter"].sudo().get_param("odoo_magento2_ept.dashboard_view_type")
-        if view_type == 'instance_level':
-            view = self.env.ref('odoo_magento2_ept.action_magento_dashboard_instance').sudo().read()[0]
-        else:
-            view = self.env.ref('odoo_magento2_ept.action_magento_dashboard_website').sudo().read()[0]
-        action = self.prepare_action(view, [])
-        return action
+    # def check_dashboard_view(self):
+    #     """
+    #     It will display dashboard based on configuration either by instance wise or website wise.
+    #     :return:
+    #     """
+    #     view_type = self.env["ir.config_parameter"].sudo().get_param("odoo_magento2_ept.dashboard_view_type")
+    #     if view_type == 'instance_level':
+    #         view = self.env.ref('odoo_magento2_ept.action_magento_dashboard_instance').sudo().read()[0]
+    #     else:
+    #         view = self.env.ref('odoo_magento2_ept.action_magento_dashboard_website').sudo().read()[0]
+    #     action = self.prepare_action(view, [])
+    #     return action
 
     def _compute_get_scheduler_list(self):
         seller_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
@@ -817,7 +816,7 @@ class MagentoInstance(models.Model):
     @api.model
     def _scheduler_update_order_status(self, args=None):
         """
-        This method is used to export shipment to Magento via cron job.
+        This method is used to export shipment to Magento via cron job
         :param args: arguments to export invoice
         :return:
         """
@@ -828,12 +827,12 @@ class MagentoInstance(models.Model):
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
             instance = magento_instance.browse(magento_instance_id)
-            stock_picking.export_shipment_to_magento(instance)
+            stock_picking.export_shipments_to_magento(instance)
 
     @api.model
     def _scheduler_export_invoice(self, args=None):
         """
-        This method is used to export invoices to Magento via cron job.
+        This method is used to export invoices to Magento via cron job
         :param args: arguments to export invoice
         :return:
         """
@@ -844,7 +843,7 @@ class MagentoInstance(models.Model):
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
             instance = magento_instance.browse(magento_instance_id)
-            account_move.export_invoice_to_magento(instance)
+            account_move.export_invoices_to_magento(instance)
 
     def write(self, vals):
         """
@@ -1200,7 +1199,7 @@ class MagentoInstance(models.Model):
             """ % (self.id, state)
         self._cr.execute(invoice_query)
         result = self._cr.dictfetchall()
-        view = self.env.ref('odoo_magento2_ept.action_magento_stock_picking_tree_ept').sudo().read()[0]
+        view = self.env.ref('odoo_magento2_ept.action_magento_stock_picking_tree').sudo().read()[0]
         if result:
             for data in result:
                 picking_ids.append(data.get('id'))

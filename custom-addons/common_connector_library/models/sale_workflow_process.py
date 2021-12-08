@@ -11,7 +11,6 @@ class SaleWorkflowProcess(models.Model):
     def _default_journal(self):
         """
         It will return sales journal of company passed in context or user's company.
-        Migration done by twinkalc August 2020.
         """
         account_journal_obj = self.env['account.journal']
         company_id = self._context.get('company_id', self.env.company.id)
@@ -28,7 +27,7 @@ class SaleWorkflowProcess(models.Model):
     #                                             help="if it is checked then, the account journal entry will be "
     #                                                  "generated based on Order date and if unchecked then, "
     #                                                  "the account journal entry will be generated based on Invoice Date")
-    journal_id = fields.Many2one('account.journal', string='Payment Journal', domain=[('type', 'in', ['cash', 'bank'])])
+    # journal_id = fields.Many2one('account.journal', string='Payment Journal', domain=[('type', 'in', ['cash', 'bank'])])
     sale_journal_id = fields.Many2one('account.journal', string='Sales Journal', default=_default_journal,
                                       domain=[('type', '=', 'sale')])
     picking_policy = fields.Selection([('direct', 'Deliver each product when available'),
@@ -66,7 +65,7 @@ class SaleWorkflowProcess(models.Model):
     def auto_workflow_process(self, auto_workflow_process_id=False, order_ids=[]):
         """
         This method will find draft sale orders which are not having invoices yet, confirmed it and done the payment
-        according to the auto invoice workflow configured in sale order.
+        according to the auto invoice workflow configured in sale order
         :param auto_workflow_process_id: auto workflow process id
         :param order_ids: ids of sale orders
         """
@@ -84,7 +83,7 @@ class SaleWorkflowProcess(models.Model):
             orders = sale_order_obj.search([('auto_workflow_process_id', 'in', work_flow_process_records.ids),
                                             ('id', 'in', order_ids)])
         try:
-            orders.process_orders_and_invoices_ept()
+            orders.process_orders_and_invoices()
         except Exception as err:
             return err
 

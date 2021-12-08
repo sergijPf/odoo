@@ -9,10 +9,11 @@ from odoo import models, fields, api
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    allow_search_fiscal_based_on_origin_warehouse = fields.Boolean("Search fiscal based on origin warehouse?",
-                                                                   default=False,
-                                                                   help="Search fiscal position based on origin"
-                                                                        "warehouse")
+    allow_search_fiscal_based_on_origin_warehouse = fields.Boolean(
+        "Search fiscal based on origin warehouse?",
+        default=False,
+        help="Search fiscal position based on origin warehouse"
+    )
 
     @api.model
     def create(self, vals):
@@ -20,7 +21,6 @@ class ResPartner(models.Model):
         Inherited for calling onchange method.
         We got issue of not setting the gst_treatment field automatically of Indian accounting and same field is
         required and readonly in Sale order.
-        @author: Maulik Barad on Date 17-Sep-2020.
         """
         partner = super(ResPartner, self).create(vals)
         partner._onchange_country_id()

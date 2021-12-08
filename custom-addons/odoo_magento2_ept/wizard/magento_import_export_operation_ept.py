@@ -112,9 +112,9 @@ class MagentoImportExportEpt(models.TransientModel):
         # elif self.operations == 'import_product_stock':
         #     result = self.import_product_stock_operation(instances)
         if self.operations == 'export_shipment_information':
-            picking.export_shipment_to_magento(instances)
+            picking.export_shipments_to_magento(instances)
         elif self.operations == 'export_invoice_information':
-            account_move.export_invoice_to_magento(instances)
+            account_move.export_invoices_to_magento(instances)
         elif self.operations == 'export_product_stock':
             self.export_product_stock_operation(instances)
         if not result:
@@ -325,7 +325,7 @@ class MagentoImportExportEpt(models.TransientModel):
 
     def export_product_stock_operation(self, instances):
         """
-        Export product stock from Odoo to Magento.
+        Export product stock from Odoo to Magento
         :param instances: Magento Instances
         :return:
         """

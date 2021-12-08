@@ -45,11 +45,10 @@ class MagentoWebsite(models.Model):
     # website_display_currency = fields.Many2one(RES_CURRENCY, readonly=True,
     #                                            help="Display currency of the magento website.")
     tax_calculation_method = fields.Selection([
-        ('excluding_tax', 'Excluding Tax'), ('including_tax', 'Including Tax')],
-        string="Tax Calculation Method into Magento Website", default="excluding_tax",
-        help="This indicates whether product prices received from Magento is included tax or not,"
-             " when import sale order from Magento"
-    )
+        ('excluding_tax', 'Excluding Tax'),
+        ('including_tax', 'Including Tax')
+    ], "Tax Calculation Method", help="This indicates whether product prices received from Magento is included tax or "
+                                      "not, when import sale order from Magento", default="excluding_tax")
 
     def _compute_kanban_magento_order_data(self):
         if not self._context.get('sort'):
@@ -392,7 +391,7 @@ class MagentoWebsite(models.Model):
         """ % (self.magento_instance_id.id, self.id, state)
         self._cr.execute(magento_picking_query)
         result = self._cr.dictfetchall()
-        view = self.env.ref('odoo_magento2_ept.action_magento_stock_picking_tree_ept').sudo().read()[0]
+        view = self.env.ref('odoo_magento2_ept.action_magento_stock_picking_tree').sudo().read()[0]
         if result:
             for data in result:
                 magento_picking_ids.append(data.get('id'))

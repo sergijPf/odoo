@@ -17,7 +17,6 @@ class ProductProduct(models.Model):
         This Method sets is_drop_ship_product field.
         If dropship rule get this field _compute_is_drop_ship_product write boolean(True) and visible Vendor stock
         notebook page.
-        Migration done by twinkalc August 2020
         """
         customer_locations = self.env['stock.location'].search([('usage', '=', 'customer')])
         route_ids = self.route_ids | self.categ_id.route_ids
@@ -92,14 +91,12 @@ class ProductProduct(models.Model):
     #             return quantity
     #     return actual_stock
 
-    def get_products_based_on_movement_date_ept(self, from_datetime, company=False):
+    def get_products_based_on_movement_date(self, from_datetime, company=False):
         """
-        This method is give the product list from selected date.
-        @author: Krushnasinh Jadeja
+        This method is give the product list from selected date
         :param from_datetime:from this date it gets the product move list
         :param company:Record of Company.
         :return:Product List
-        Migration done by twinkalc August 2020
         """
         # Check MRP module is installed or not
         result = []
@@ -134,7 +131,6 @@ class ProductProduct(models.Model):
         @param warehouse: Record of Warehouse
         @param product_list: Ids of Product.
         @return: Ids of locations and products in string.
-        @author: Maulik Barad on Date 21-Oct-2020.
         """
         # locations = self.env['stock.location'].search([('location_id', 'child_of', warehouse.lot_stock_id.ids)])
         if not len(locations):
@@ -150,7 +146,6 @@ class ProductProduct(models.Model):
         This method checks if any product is BoM, then get stock for them.
         @param product_ids: Ids of Product.
         @return: Ids of BoM products.
-        @author: Maulik Barad on Date 21-Oct-2020.
         """
         bom_product_ids = []
         module_obj = self.env['ir.module.module']
@@ -172,7 +167,6 @@ class ProductProduct(models.Model):
         @param location_ids:Ids of Locations.
         @param simple_product_list_ids: Ids of products which are not BoM.
         @return: Prepared query in string.
-        @author: Maulik Barad on Date 21-Oct-2020.
         """
         query = """select pp.id as product_id,
                 COALESCE(sum(sq.quantity)-sum(sq.reserved_quantity),0) as stock
@@ -187,7 +181,6 @@ class ProductProduct(models.Model):
         @param location_ids:Ids of Locations.
         @param simple_product_list_ids: Ids of products which are not BoM.
         @return: Prepared query in string.
-        @author: Maulik Barad on Date 21-Oct-2020.
         """
         query = ("""select product_id,sum(stock) as stock from (select pp.id as product_id,
                 COALESCE(sum(sq.quantity)-sum(sq.reserved_quantity),0) as stock
@@ -201,14 +194,12 @@ class ProductProduct(models.Model):
                  simple_product_list_ids, location_ids))
         return query
 
-    def get_free_qty_ept(self, locations, product_list):
+    def get_free_qty(self, locations, product_list):
         """
-        This method returns On hand quantity based on warehouse and product list.
-        @author:Krushnasinh Jadeja
+        This method returns On hand quantity based on warehouse and product list
         :param warehouse: warehouse object
         :param product_list: list of product_ids (Not browsable record)
         :return: Dictionary as product_id : on_hand_qty
-        Migration done by twinkalc August 2020
         """
         qty_on_hand = {}
         location_ids, product_ids = self.prepare_location_and_product_ids(locations, product_list)
@@ -229,14 +220,12 @@ class ProductProduct(models.Model):
                 qty_on_hand.update({i.get('product_id'):i.get('stock')})
         return qty_on_hand
 
-    def get_forecasted_qty_ept(self, locations, product_list):
+    def get_forecasted_qty(self, locations, product_list):
         """
         This method is return forecasted quantity based on warehouse and product list
-        @author:Krushnasinh Jadeja
         :param warehouse:warehouse object
         :param product_list:list of product_ids (Not browsable records)
         :return: Forecasted Quantity
-        Migration done by twinkalc August 2020
         """
         forcasted_qty = {}
         location_ids, product_ids = self.prepare_location_and_product_ids(locations, product_list)

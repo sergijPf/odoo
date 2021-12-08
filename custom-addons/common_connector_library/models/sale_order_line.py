@@ -11,7 +11,6 @@ class SaleOrderLine(models.Model):
         vals = {'order_id':order_id, 'product_id':product_id, 'company_id':company_id, 'description':product_name,
         'order_qty':qty, 'price_unit':price, 'discount':discount}
         Required data in dictionary :- order_id, name, product_id.
-        Migration done by twinkalc August 2020
         """
         sale_order_line = self.env['sale.order.line']
         order_line = {

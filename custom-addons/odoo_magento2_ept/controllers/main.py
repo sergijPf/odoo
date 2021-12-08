@@ -45,6 +45,9 @@ class Binary(http.Controller):
         This method will create new order in Odoo
         :return: True
         """
+
+        print(request.db)
+
         data = json.loads(request.httprequest.data)
         magento_url = data.get('url', False)
         magento_instance = request.env['magento.instance'].sudo().search([
@@ -53,7 +56,7 @@ class Binary(http.Controller):
 
         if not magento_instance or not data.get('items'):
             return 'false'
-        # print(data)
+        print(data)
         res = request.env['sale.order'].sudo().process_sales_order_creation(magento_instance, data)
 
         return 'true' if res else 'false'

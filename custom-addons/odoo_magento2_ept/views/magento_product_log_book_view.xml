@@ -114,10 +114,13 @@
         </field>
     </record>
 
+    <menuitem id="menu_products_log_details" name="Products info"
+            sequence="1" parent="odoo_magento2_ept.menu_magento_log"/>
+
     <menuitem id="magento_product_log_menu"
               sequence="2"
               name="Products"
-              parent="odoo_magento2_ept.menu_magento_log"
+              parent="odoo_magento2_ept.menu_products_log_details"
               action="action_show_log_messages_of_exported_products"/>
 
 </odoo>

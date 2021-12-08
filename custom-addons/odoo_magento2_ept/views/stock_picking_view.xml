@@ -7,24 +7,23 @@
             <field name="arch" type="xml">
                 <xpath expr="//header/button[5]" position="after">
                     <field name="is_shipment_exportable" invisible="1"/>
-                    <button name="export_shipment_in_magento" string="Export Shipment In Magento"
+                    <button name="export_single_shipment_to_magento" string="Export Shipment to Magento"
                             type="object" class="oe_highlight"
-                            attrs="{'invisible' : ['|','|','|','|',
+                            attrs="{'invisible': ['|','|','|',
                             ('magento_instance_id','=',False),
                             ('state','!=','done'),
                             ('is_exported_to_magento','=',True),
-                            ('is_shipment_exportable','=',False),
-                            ('max_no_of_attempts','&gt;',3)]}"
-                    />
+                            ('is_shipment_exportable','=',False)]}"/>
+<!--                            ('max_no_of_attempts','&gt;',3)]}"-->
                 </xpath>
-                <xpath expr="//notebook[last()]" position="inside" attrs="{'invisible' : [('is_magento_picking','=',False)]}">
-                    <page name="magento_info" string="Magento Info">
+                <xpath expr="//notebook[last()]" position="inside">
+                    <page name="magento_info" string="Magento Info" attrs="{'invisible' : [('is_magento_picking','!=',True)]}">
                         <group>
                             <field name="magento_instance_id" readonly="1"/>
                             <field name="magento_shipping_id"/>
                             <field name="is_exported_to_magento"/>
-                            <field name="max_no_of_attempts" invisible="1"/>
-                            <field name="magento_message" attrs="{'invisible':[('magento_message', '=', False)]}"/>
+<!--                            <field name="max_no_of_attempts" invisible="1"/>-->
+<!--                            <field name="magento_message" attrs="{'invisible':[('magento_message', '=', False)]}"/>-->
                         </group>
                     </page>
                 </xpath>
@@ -50,7 +49,7 @@
         </record>
 
         <!-- Inherited Search View Section -->
-        <record id="magento_view_stock_picking_filter_ept" model="ir.ui.view">
+        <record id="magento_view_stock_picking_filter" model="ir.ui.view">
             <field name="name">stock.picking.search</field>
             <field name="model">stock.picking</field>
             <field name="inherit_id" ref="stock.view_picking_internal_search"/>
@@ -62,13 +61,13 @@
         </record>
 
         <!-- dashboard -->
-        <record id="action_magento_stock_picking_tree_ept" model="ir.actions.act_window">
+        <record id="action_magento_stock_picking_tree" model="ir.actions.act_window">
             <field name="name">Delivery Orders</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_mode">tree,form</field>
             <field name="view_id" ref="magento_view_stock_picking_tree"/>
-            <field name="search_view_id" ref="magento_view_stock_picking_filter_ept"/>
+            <field name="search_view_id" ref="magento_view_stock_picking_filter"/>
             <field name="domain">[('is_magento_picking','=','True'),('magento_instance_id','!=',False)]</field>
             <field name="help" type="html">
                 <div>
@@ -88,7 +87,7 @@
             </field>
         </record>
 
-        <record id="action_magento_picking_view_partially_available_ept" model="ir.actions.act_window">
+        <record id="action_magento_picking_view_partially_available" model="ir.actions.act_window">
             <field name="name">Delivery Orders</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
@@ -99,7 +98,7 @@
             <field name="search_view_id" ref="stock.view_picking_internal_search" />
         </record>
 
-        <record id="action_magento_picking_view_assigned_ept" model="ir.actions.act_window">
+        <record id="action_magento_picking_view_assigned" model="ir.actions.act_window">
             <field name="name">Delivery Orders</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
@@ -110,7 +109,7 @@
             <field name="search_view_id" ref="stock.view_picking_internal_search" />
         </record>
 
-        <record id="action_magento_picking_view_done_ept" model="ir.actions.act_window">
+        <record id="action_magento_picking_view_done" model="ir.actions.act_window">
             <field name="name">Delivery Orders</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
@@ -124,7 +123,7 @@
         <menuitem id="menu_transfer_details_parent" name="Delivery"
             sequence="4" parent="odoo_magento2_ept.menu_magento_sales_and_customer"/>
 
-        <menuitem id="menu_magento_delivery_order_ept" name="Shipments"
+        <menuitem id="menu_magento_delivery_order" name="Shipments"
             parent="menu_transfer_details_parent" sequence="1"
-            action="action_magento_stock_picking_tree_ept" />
+            action="action_magento_stock_picking_tree" />
 </odoo>
