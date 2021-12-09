@@ -21,8 +21,6 @@ class MagentoPaymentMethod(models.Model):
         Returns Default Company Id
         :return: Default company id
         """
-        # The method _company_default_get is deprecated
-        # return self.env['res.company']._company_default_get('magento.payment.method')
         return self.env.company
 
     magento_instance_id = fields.Many2one('magento.instance', 'Instance', ondelete="cascade",
@@ -41,9 +39,6 @@ class MagentoPaymentMethod(models.Model):
                                                "when it is In-Payment/Paid in odoo?\n"
                                                "If it's blank then invoice will not exported in Magento for this Payment Method.")
 
-    # days_before_cancel = fields.Integer(string='Import Past Orders Of X Days', default=30,
-    #                                     help="After 'n' days, if the 'Import Rule' is not fulfilled, the import of the "
-    #                                          "sales order will be canceled.")
     import_rule = fields.Selection([
         ('always', 'Always'),
         ('never', 'Never'),

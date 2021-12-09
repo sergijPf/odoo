@@ -37,7 +37,6 @@
             <field name="implied_ids" eval="[(4, ref('odoo_magento2_ept.group_magento_user_ept'))]"/>
         </record>
 
-
         <!-- Multi - Company Rules -->
         <record model="ir.rule" id="magento_instance_comp_rule">
             <field name="name">Magento Instance multi-company</field>

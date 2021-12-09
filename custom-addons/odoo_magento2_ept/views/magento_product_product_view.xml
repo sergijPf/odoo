@@ -96,22 +96,6 @@
                                         <field name="magento_export_date" readonly="1"/>
                                     </group>
                                  </group>
-<!--                                <group name="group_standard_price" string="Pricing">-->
-<!--&lt;!&ndash;                                        <field name="total_magento_variants" invisible="1"/>&ndash;&gt;-->
-<!--&lt;!&ndash;                                        <field name="lst_price" readonly="1" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'readonly': [('total_magento_variants', '&gt;', 1)]}" modifiers="{'readonly': [['total_magento_variants', '&gt;', 1]]}"/>&ndash;&gt;-->
-<!--&lt;!&ndash;                                    <field name="valuation" invisible="1" readonly="1" modifiers="{'invisible': true, 'readonly': true}"/>&ndash;&gt;-->
-<!--&lt;!&ndash;                                    <field name="cost_method" invisible="1" readonly="1" modifiers="{'invisible': true, 'readonly': true}"/>&ndash;&gt;-->
-<!--                                    <label for="standard_price"/>-->
-<!--                                    <div name="standard_price_uom">-->
-<!--&lt;!&ndash;                                        <field name="standard_price" readonly="1" attrs="{'readonly':['&amp;', ('valuation','=','real_time'), ('cost_method', 'in', ['standard', 'average'])]}" class="oe_inline" widget="monetary" options="{'currency_field': 'currency_id'}" modifiers="{'readonly': ['&amp;', ['valuation', '=', 'real_time'], ['cost_method', 'in', ['standard', 'average']]]}"/>&ndash;&gt;-->
-<!--                                    </div>-->
-<!--                                    <button string="Set standard price" type="action" name="311" class="oe_link oe_read_only" colspan="2" invisible="1" modifiers="{'invisible': true}"/>-->
-<!--                                    <button string="Set standard price" type="action" name="311" class="oe_link oe_read_only" colspan="2" invisible="1" modifiers="{'invisible': true}"/>-->
-<!--                                    <field name="company_id" options="{'no_create': True}" can_create="true" can_write="true" invisible="1" modifiers="{'invisible': true}"/>-->
-<!--                                    <field name="uom_id" options="{'no_create': True}" on_change="1" can_create="true" can_write="true" invisible="1" modifiers="{'invisible': true, 'required': true}"/>-->
-<!--                                    <field name="uom_po_id" options="{'no_create': True}" on_change="1" can_create="true" can_write="true" invisible="1" modifiers="{'invisible': true, 'required': true}"/>-->
-<!--                                    <field name="currency_id" invisible="1" can_create="true" can_write="true" modifiers="{'invisible': true, 'readonly': true}"/>-->
-<!--                                </group>-->
                             </page>
                         </notebook>
                     </sheet>
@@ -139,8 +123,6 @@
                     <field name="magento_product_name"/>
                     <field name="product_template_attribute_value_ids" widget="many2many_tags" readonly="1"
                            optional="show" can_create="false" can_write="false" modifiers="{'readonly':true}"/>
-<!--                    <field name="qty_available"/>-->
-                    <!--                        <field name="product_type"/>-->
                     <field name="magento_status" widget="badge" optional="show" on_change="1"
                            decoration-success="magento_status == 'in_magento'"
                            decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
@@ -149,7 +131,6 @@
                            decoration-danger="magento_status == 'log_error'"
                            modifiers="{'readonly':true}"
                     />
-                    <!--                        <field name="sync_product_with_magento"/>-->
                 </tree>
             </field>
         </record>
@@ -176,7 +157,6 @@
                 <field name="magento_product_name" />
                 <field name="magento_conf_product"/>
                 <field name="magento_product_id" />
-                <!--                    <field name="magento_instance_id"/>-->
                 <filter string="Not in Magento" name="not_in_magento"
                         domain="[('magento_status', '!=', 'in_magento')]"/>
                 <separator/>

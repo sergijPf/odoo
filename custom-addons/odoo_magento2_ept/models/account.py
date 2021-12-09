@@ -9,8 +9,8 @@ class AccountTaxCode(models.Model):
 
     def get_tax_from_rate(self, rate, is_tax_included=False):
         """
-        This method,base on rate it find tax in odoo.
-        @return : Tax_ids
+        This method base on tax rate it'll find in Odoo
+        :return: Tax_ids
         """
         tax_ids = self.with_context(active_test=False).search(
             [('price_include', '=', is_tax_included),

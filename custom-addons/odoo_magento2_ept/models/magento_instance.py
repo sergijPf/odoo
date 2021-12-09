@@ -32,10 +32,6 @@ class MagentoInstance(models.Model):
     _name = MAGENTO_INSTANCE
     _description = 'Magento Instance'
 
-    # @api.model
-    # def _default_set_import_product_category(self):
-    #     return self.env.ref('product.product_category_all').id \
-    #         if self.env.ref('product.product_category_all') else False
 
     @api.model
     def _default_order_status(self):
@@ -46,24 +42,6 @@ class MagentoInstance(models.Model):
         order_status = self.env.ref('odoo_magento2_ept.pending')
         return [(6, 0, [order_status.id])] if order_status else False
 
-    # @api.model
-    # def set_magento_import_after_date(self):
-    #     """ It is used to set after order date which has already created an instance.
-    #     """
-    #     sale_order_obj = self.env["sale.order"]
-    #     instances = self.search([])
-    #     order_after_date = datetime.now() - timedelta(30)
-    #     for instance in instances:
-    #         if not instance.import_order_after_date:
-    #             order = sale_order_obj.search([('magento_instance_id', '=', instance.id)], order='date_order asc',
-    #                                           limit=1) or False
-    #             if order:
-    #                 order_after_date = order.date_order
-    #             else:
-    #                 order_after_date = datetime.now() - timedelta(30)
-    #             instance.write({"import_order_after_date": order_after_date})
-    #     return order_after_date
-
     name = fields.Char("Instance Name", required=True)
     magento_version = fields.Selection([
         ('2.1', '2.1.*'),
@@ -72,9 +50,6 @@ class MagentoInstance(models.Model):
         ('2.4', '2.4.*')
     ], string="Magento Versions", required=True, help="Version of Magento Instance")
     magento_url = fields.Char(string='Magento URLs', required=False, help="URL of Magento")
-    # warehouse_ids = fields.Many2many('stock.warehouse', string="Warehouses", required=True,
-    #                                  help='Warehouses used to compute the stock quantities. If Warehouses is not '
-    #                                       'selected then it is taken from Website')
     location_ids = fields.Many2many('stock.location', string="Locations", required=True,
                                      help='Locations used to compute the stock quantities. If Location is not '
                                           'selected then it is taken from Website')
@@ -94,103 +69,25 @@ class MagentoInstance(models.Model):
     pricelist_id = fields.Many2one(PRODUCT_PRICELIST, string="Pricelist",
                                    help="Product Price is set in selected Pricelist")
     access_token = fields.Char(string="Magento Access Token", help="Magento Access Token")
-    # auto_create_product = fields.Boolean(
-    #     string="Auto Create Magento Product",
-    #     default=False,
-    #     help="Checked True, if you want to create new product in Odoo if not found. "
-    #          "\nIf not checked, Job will be failed while import order or product.."
-    # )
-    # allow_import_image_of_products = fields.Boolean(
-    #     "Import Images of Products",
-    #     default=False,
-    #     help="Import product images along with product from Magento while import product?"
-    # )
-    # last_product_import_date = fields.Datetime(
-    #     string='Last Import Products date',
-    #     help="Last Import Products date"
-    # )
-    # last_order_import_date = fields.Datetime(string="Last Orders import date", help="Last Orders import date")
     last_update_stock_time = fields.Datetime(string="Last Update Product Stock Time", help="Last Update Stock Time")
-    # Import Product Stock
-    # is_import_product_stock = fields.Boolean(
-    #     'Is Import Magento Product Stock?',
-    #     default=False,
-    #     help="Import Product Stock from Magento to Odoo"
-    # )
-    # import_stock_warehouse = fields.Many2one(
-    #     'stock.warehouse',
-    #     string="Import Product Stock Warehouse",
-    #     help="Warehouse for import stock from Magento to Odoo"
-    # )
     company_id = fields.Many2one('res.company', string='Magento Company', help="Magento Company")
     invoice_done_notify_customer = fields.Boolean(string="Invoices Done Notify customer", default=False,
                                                   help="while export invoice send email")
     is_multi_warehouse_in_magento = fields.Boolean(string="Is Multi Warehouse in Magento?", default=False,
                                                    help="If checked, Multi Warehouse used in Magento")
-    # Require field for cron
-    # auto_import_sale_orders = fields.Boolean("Auto Import Sale Orders?", default=False,
-    #                                          help="This Field relocate auto import sale orders.")
-    # auto_import_product = fields.Boolean(
-    #     string='Auto import product?',
-    #     help="Auto Automatic Import Product"
-    # )
     auto_export_product_stock = fields.Boolean(string='Auto Export Product Stock?', help="Automatic Export Product Stock")
     auto_export_invoice = fields.Boolean(string='Auto Export Invoice?', help="Auto Automatic Export Invoice")
     auto_export_shipment_order_status = fields.Boolean(string='Auto Export Shipment Information?',
                                                        help="Automatic Export Shipment Information")
     payment_method_ids = fields.One2many("magento.payment.method", "magento_instance_id", help="Payment Methods for Magento")
     shipping_method_ids = fields.One2many("magento.delivery.carrier", "magento_instance_id", help="Shipping Methods for Magento")
-    import_magento_order_status_ids = fields.Many2many(
-        'import.magento.order.status',
-        'magento_instance_order_status_rel',
-        'magento_instance_id', 'order_status_id',
-        "Import Order Status",
-        default=_default_order_status,
-        help="Select order status in which you want to import the orders from Magento to Odoo.")
-    # magento_import_customer_current_page = fields.Integer(
-    #     string="Magento Import Customer Current Pages",
-    #     default=1,
-    #     help="It will fetch customers from Magento of given page.")
-    # magento_import_order_page_count = fields.Integer(
-    #     string="Magento Import order Page Count",
-    #     default=1,
-    #     help="It will fetch order of Magento from given page numbers.")
-    # magento_import_product_page_count = fields.Integer(
-    #     string="Magento Import Products Page Count",
-    #     default=1,
-    #     help="It will fetch products of Magento from given page numbers.")
-    # import_product_category = fields.Many2one(
-    #     'product.category',
-    #     string="Import Product Categories",
-    #     default=_default_set_import_product_category,
-    #     help="While importing a product, "
-    #          "the selected category will set in that product."
-    # )
-    # is_instance_create_from_onboarding_panel = fields.Boolean(default=False)
-    # is_onboarding_configurations_done = fields.Boolean(default=False)
-    # import_order_after_date = fields.Datetime(help="Connector only imports those orders which have created after a "
-    #                                                "given date.", default=set_magento_import_after_date)
+    import_magento_order_status_ids = fields.Many2many('import.magento.order.status', 'magento_instance_order_status_rel',
+                                                       'magento_instance_id', 'order_status_id', "Import Order Status",
+                                                       default=_default_order_status,
+                                                       help="Select order status in which you want to import the orders"
+                                                            " from Magento to Odoo.")
     magento_verify_ssl = fields.Boolean(string="Verify SSL", default=False,
                                         help="Check this if your Magento site is using SSL certificate")
-    # active_user_ids = fields.One2many("magento.api.request.page", "magento_instance_id", string='Active Users',
-    #                                   help='Active Users')
-    #added by SPf
-    # user_ids = fields.Many2many('res.users', string="Allowed magento users",
-    #                             help="Users who have access to this magento instance",
-    #                             domain=[('groups_id.full_name', '=', 'Magento / User')])
-
-    # def check_dashboard_view(self):
-    #     """
-    #     It will display dashboard based on configuration either by instance wise or website wise.
-    #     :return:
-    #     """
-    #     view_type = self.env["ir.config_parameter"].sudo().get_param("odoo_magento2_ept.dashboard_view_type")
-    #     if view_type == 'instance_level':
-    #         view = self.env.ref('odoo_magento2_ept.action_magento_dashboard_instance').sudo().read()[0]
-    #     else:
-    #         view = self.env.ref('odoo_magento2_ept.action_magento_dashboard_website').sudo().read()[0]
-    #     action = self.prepare_action(view, [])
-    #     return action
 
     def _compute_get_scheduler_list(self):
         seller_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
@@ -206,8 +103,6 @@ class MagentoInstance(models.Model):
     def list_of_delivery_method(self):
         """
         This method is for list all delivery method
-        Task : 173954 - Add delivery method new screen
-        Develop by Hardik Dhankecha
         :return:
         """
         tree_view = self.env.ref('odoo_magento2_ept.magento_delivery_carrier_tree_view').id
@@ -242,10 +137,9 @@ class MagentoInstance(models.Model):
 
     def get_magento_cron_execution_time(self, cron_name):
         """
-        This method is used to get the interval time of the cron.
-        @param cron_name: External ID of the Cron.
-        @return: Interval time in seconds.
-        @author: Maulik Barad on Date 25-Nov-2020.
+        This method is used to get the interval time of the cron
+        :param cron_name: External ID of the Cron.
+        :return: Interval time in seconds.
         """
         process_queue_cron = self.env.ref(cron_name, False)
         if not process_queue_cron:
@@ -310,48 +204,24 @@ class MagentoInstance(models.Model):
         domain = [("magento_instance_id", "=", self.id)]
         attribute_instance_domain = [("instance_id", "=", self.id)]
         magento_product_obj = self.env["magento.product.product"]
-        magento_financial_status_obj = self.env["magento.financial.status.ept"]
+        magento_financial_status_obj = self.env["magento.financial.status"]
         magento_payment_method_obj = self.env["magento.payment.method"]
         magento_inventory_location_obj = self.env["magento.inventory.locations"]
         magento_product_category_obj = self.env['magento.product.category']
-        # magento_attribute_set_obj = self.env['magento.attribute.set']
-        # magento_attribute_group_obj = self.env['magento.attribute.group']
-        # magento_product_attribute_obj = self.env['magento.product.attribute']
-        # magento_product_attribute_option_obj = self.env['magento.attribute.option']
-        # magento_tax_class_obj = self.env['magento.tax.class']
         magento_website_obj = self.env[MAGENTO_WEBSITE]
         magento_storeview_obj = self.env[MAGENTO_STOREVIEW]
-        # data_queue_mixin_obj = self.env['data.queue.mixin.ept']
         ir_cron_obj = self.env["ir.cron"]
         if self.active:
             activate = {"active": False}
             auto_crons = ir_cron_obj.search([("name", "ilike", self.name), ("active", "=", True)])
             if auto_crons:
                 auto_crons.write(activate)
-            # data_queue_mixin_obj.delete_data_queue_ept(is_delete_queue=True)
             magento_website_obj.search(domain).write(activate)
             magento_storeview_obj.search(domain).write(activate)
             magento_inventory_location_obj.search(domain).write(activate)
             magento_financial_status_obj.search(domain).write(activate)
             magento_payment_method_obj.search(domain).write(activate)
-            # magento_tax_class_obj.search(domain).write(activate)
             magento_product_category_obj.search(attribute_instance_domain).write(activate)
-            # magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
-            # magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
-            # magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
-            # magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
-            # company = self.company_id
-            # company.write({
-            #     'magento_instance_onboarding_state': 'not_done',
-            #     'magento_basic_configuration_onboarding_state': 'not_done',
-            #     'magento_financial_status_onboarding_state': 'not_done',
-            #     'magento_cron_configuration_onboarding_state': 'not_done',
-            #     'is_create_magento_more_instance': False
-            # })
-            # magento_order_counts = self.active_user_ids
-            # for magento_order_count in magento_order_counts:
-            #     magento_order_count.write({'magento_import_order_page_count': 1})
-            # self.write({'is_onboarding_configurations_done': True})
         else:
             activate = {"active": True}
             domain.append(("active", "=", False))
@@ -360,34 +230,11 @@ class MagentoInstance(models.Model):
             magento_inventory_location_obj.search(domain).write(activate)
             magento_financial_status_obj.search(domain).write(activate)
             magento_payment_method_obj.search(domain).write(activate)
-            # magento_tax_class_obj.search(domain).write(activate)
             magento_product_category_obj.search(attribute_instance_domain).write(activate)
-            # magento_attribute_set_obj.search(attribute_instance_domain).write(activate)
-            # magento_attribute_group_obj.search(attribute_instance_domain).write(activate)
-            # magento_product_attribute_obj.search(attribute_instance_domain).write(activate)
-            # magento_product_attribute_option_obj.search(attribute_instance_domain).write(activate)
             self.synchronize_metadata()
         self.write(activate)
         magento_product_obj.search(domain).write(activate)
-
         return True
-
-    # def unlink(self):
-    #     """
-    #     Unlink onboarding panel flags when instance is unlink.
-    #     :return:
-    #     """
-    #     company = self.company_id
-    #     company.write({
-    #         'magento_instance_onboarding_state': 'not_done',
-    #         'magento_basic_configuration_onboarding_state': 'not_done',
-    #         'magento_financial_status_onboarding_state': 'not_done',
-    #         'magento_cron_configuration_onboarding_state': 'not_done',
-    #         'is_create_magento_more_instance': False
-    #     })
-    #     self.write({'is_onboarding_configurations_done': True})
-    #     res = super(MagentoInstance, self).unlink()
-    #     return res
 
     def cron_configuration_action(self):
         """
@@ -448,11 +295,7 @@ class MagentoInstance(models.Model):
             record.import_payment_method()
             record.import_delivery_method()
             record.import_magento_inventory_locations()
-            self.env['magento.financial.status.ept'].create_financial_status(record, 'not_paid')
-            # self.env['magento.api.request.page'].update_magento_order_page_count_users_vise(record)
-            # record.get_category()
-            # record.import_tax_class()
-            # self.env['magento.attribute.set'].import_magento_product_attribute_set(record)
+            self.env['magento.financial.status'].create_financial_status(record, 'not_paid')
 
     def sync_customer_groups(self):
         api_url = "/V1/customerGroups/search?searchCriteria[pageSize]=200&searchCriteria[currentPage]=1"
@@ -506,8 +349,7 @@ class MagentoInstance(models.Model):
                     self.env[MAGENTO_WEBSITE].create({
                         'name': data.get('name'),
                         'magento_website_id': magento_website_id,
-                        'magento_instance_id': self.id,
-                        # 'warehouse_id': self.warehouse_ids.id
+                        'magento_instance_id': self.id
                     })
 
     def search_magento_website_id(self, magento_website_id):
@@ -556,13 +398,11 @@ class MagentoInstance(models.Model):
                         'magento_website_id': odoo_website_id.id,
                         'magento_storeview_id': magento_storeview_id,
                         'magento_instance_id': self.id,
-                        # 'base_media_url': storeview_data.get('base_media_url'),
                         'lang_id': language.id,
                         'magento_storeview_code': storeview_data.get('code')
                     })
                 else:
                     storeview.write({
-                        # 'base_media_url': storeview_data.get('base_media_url'),
                         'magento_storeview_code': storeview_data.get('code')
                     })
 
@@ -589,12 +429,11 @@ class MagentoInstance(models.Model):
 
     def update_pricelist_in_website(self, storeview_data):
         """
-        If Website is found, then update price list based on store currency.
-        :param storeview_data: Store view response received from Magento.
+        If Website is found, then update price list based on store currency
+        :param storeview_data: Store view response received from Magento
         :return: Magento website object
         """
         website_obj = self.env[MAGENTO_WEBSITE]
-        # pricelist_obj = self.env[PRODUCT_PRICELIST]
         currency_obj = self.env['res.currency']
         odoo_website_id = website_obj.search([
             ('magento_website_id', '=', storeview_data.get('website_id')),
@@ -602,20 +441,13 @@ class MagentoInstance(models.Model):
         ], limit=1)
         if odoo_website_id:
             currency_id = currency_obj.with_context(active_test=False).search([
-                ('name', '=', storeview_data.get('base_currency_code'))], limit=1)
+                ('name', '=', storeview_data.get('default_display_currency_code'))], limit=1)
             if currency_id and not currency_id.active:
                 currency_id.write({'active': True})
             elif not currency_id:
                 currency_id = self.env.user.currency_id
-            # price_list_name = self.name + ' ' + 'PriceList - ' + odoo_website_id.name
-            # pricelist_id = pricelist_obj.with_context(active_test=False).search([
-            #     ('name', '=', price_list_name), ('currency_id', '=', currency_id.id)
-            # ], limit=1)
-            # if not pricelist_id:
-            #     pricelist_id = pricelist_obj.create({'name': price_list_name, 'currency_id': currency_id.id})
             odoo_website_id.write({
-                'magento_base_currency' : currency_id,
-                # 'pricelist_id': [(6, 0, [pricelist_id.id])],
+                'magento_base_currency' : currency_id
             })
         return odoo_website_id
 
@@ -690,28 +522,6 @@ class MagentoInstance(models.Model):
                     else:
                         magento_location.write({'active': inventory_location.get('enabled')})
 
-    # def import_tax_class(self):
-    #     """
-    #     This method used for import Tax Classes.
-    #     """
-    #     tax_class_obj = self.env['magento.tax.class']
-    #     url = '/V1/taxClasses/search?searchCriteria[page_size]=50&searchCriteria[currentPage]=1'
-    #     tax_class_req = req(self, url)
-    #     all_tax_class = tax_class_req.get('items')
-    #     for tax_class in all_tax_class:
-    #         tax_class_id = tax_class.get('class_id')
-    #         new_tax_class = tax_class_obj.search([
-    #             ('magento_tax_class_id', '=', tax_class_id),
-    #             ('magento_instance_id', '=', self.id)
-    #         ])
-    #         if not new_tax_class:
-    #             tax_class_obj.create({
-    #                 'magento_tax_class_id': tax_class.get('class_id'),
-    #                 'magento_tax_class_name': tax_class.get('class_name'),
-    #                 'magento_tax_class_type': tax_class.get('class_type'),
-    #                 'magento_instance_id': self.id
-    #             })
-
     @api.model
     def import_currency(self):
         """
@@ -721,79 +531,18 @@ class MagentoInstance(models.Model):
         url = '/V1/directory/currency'
         magento_currency = req(self, url)
         currency_obj = self.env['res.currency']
-        magento_base_currency = magento_currency.get('base_currency_code')
-        # pricelist_obj = self.env[PRODUCT_PRICELIST]
+        magento_base_currency = magento_currency.get('default_display_currency_code')
         for active_currency in magento_currency.get('exchange_rates'):
             domain = [('name', '=', active_currency.get('currency_to'))]
             currency_id = currency_obj.with_context(active_test=False).search(domain, limit=1)
             if not currency_id.active:
                 currency_id.write({'active': True})
-            # price_list = pricelist_obj.with_context(active_test=False).search([('currency_id', '=', currency_id.id)])
-            # if price_list:
-            #     price_list = price_list[0]
-            # elif not price_list or price_list.currency_id != currency_id:
-            #     price_list = pricelist_obj.create({
-            #         'name': self.name + " Pricelist - " + active_currency.get('currency_to'),
-            #         'currency_id': currency_id.id,
-            #         'discount_policy': 'with_discount',
-            #         'company_id': self.company_id.id,
-            #     })
-            # if magento_base_currency == active_currency.get('currency_to') and not self.pricelist_id:
-            #     self.write({'pricelist_id': price_list.id})
         return magento_base_currency
-
-    # @api.model
-    # def _scheduler_import_sale_orders(self, args=None):
-    #     """
-    #     This method is used to import sale order from Magento via cron job.
-    #     :param args: arguments to import sale orders
-    #     :return:
-    #     """
-    #     if args is None:
-    #         args = {}
-    #     magento_order_data_queue_obj = self.env['magento.order.data.queue.ept']
-    #     magento_instance = self.env[MAGENTO_INSTANCE]
-    #     magento_instance_id = args.get('magento_instance_id')
-    #     if magento_instance_id:
-    #         instance = magento_instance.browse(magento_instance_id)
-    #         last_order_import_date = instance.last_order_import_date
-    #         if not last_order_import_date:
-    #             last_order_import_date = ''
-    #         from_date = last_order_import_date
-    #         to_date = datetime.now()
-    #         magento_order_data_queue_obj.magento_create_order_data_queues(instance, from_date, to_date)
-    #         instance.last_order_import_date = datetime.now()
-
-    # @api.model
-    # def _scheduler_import_product(self, args=None):
-    #     """
-    #     This method is used to import product from Magento via cron job.
-    #     :param args: arguments to import products
-    #     :return:
-    #     """
-    #     if args is None:
-    #         args = {}
-    #     magento_import_product_queue_obj = self.env['sync.import.magento.product.queue']
-    #     magento_instance = self.env[MAGENTO_INSTANCE]
-    #     magento_instance_id = args.get('magento_instance_id')
-    #     if magento_instance_id:
-    #         instance = magento_instance.browse(magento_instance_id)
-    #         last_product_import_date = instance.last_product_import_date
-    #         if not last_product_import_date:
-    #             last_product_import_date = ''
-    #         from_date = last_product_import_date
-    #         to_date = datetime.now()
-    #         magento_import_product_queue_obj.create_sync_import_product_queues(
-    #             instance,
-    #             from_date,
-    #             to_date
-    #         )
-    #         instance.last_product_import_date = datetime.now()
 
     @api.model
     def _scheduler_update_product_stock_qty(self, args=None):
         """
-        This method is used to export product stock quantity to Magento via cron job.
+        This method is used to export product stock quantity to Magento via cron job
         :param args: arguments to export product stock quantity.
         :return:
         """
@@ -856,27 +605,10 @@ class MagentoInstance(models.Model):
         res = super(MagentoInstance, self).write(vals)
         return res
 
-    # def search_magento_instance(self):
-    #     """
-    #     Search Magento Instance for on-boarding panel.
-    #     :return: magento.instance object
-    #     """
-    #     company = self.env.company or self.env.user.company_id
-    #     instance = self.search([('is_instance_create_from_onboarding_panel', '=', True),
-    #                             ('is_onboarding_configurations_done', '=', False),
-    #                             ('company_id', '=', company.id)], limit=1, order='id desc')
-    #     if not instance:
-    #         instance = self.search([('company_id', '=', company.id), ('is_onboarding_configurations_done', '=', False)],
-    #                                limit=1, order='id desc')
-    #         instance.write({'is_instance_create_from_onboarding_panel': True})
-    #     return instance
-
     # Add new dashboard view
-
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
     magento_order_data = fields.Text(compute="_compute_kanban_magento_order_data")
-    # website_display_currency = fields.Many2one("res.currency", readonly=True, help="Display currency of the magento website.")
 
     def _compute_kanban_magento_order_data(self):
         if not self._context.get('sort'):
@@ -938,62 +670,6 @@ class MagentoInstance(models.Model):
         if 'tree' in action['views'][0]:
             action['views'][0] = (action['view_id'], 'list')
         return action
-
-    # def get_total_products(self, record, exported, product_type=False):
-    #     """
-    #     Use: To get the list of products exported from Magento instance
-    #     Here if exported = True, then only get those record which having sync_product_with_magento= true
-    #     if exported = False, then only get those record which having sync_product_with_magento= false
-    #     if exported = All, then get all those records which having sync_product_with_magento = true and false
-    #     :param record: magento website object
-    #     :param exported: exported is one of the "True" or "False" or "All"
-    #     :return: total number of Magento products ids and action for products
-    #     """
-    #     product_data = {}
-    #     main_sql = """select count(id) as total_count from magento_product_template where
-    #     magento_product_template.magento_instance_id = %s""" % (record.id)
-    #     domain = []
-    #     if exported != 'All' and exported:
-    #         main_sql = main_sql + " and magento_product_template.sync_product_with_magento = True"
-    #         domain.append(('sync_product_with_magento', '=', True))
-    #     elif not exported:
-    #         main_sql = main_sql + " and magento_product_template.sync_product_with_magento = False"
-    #         domain.append(('sync_product_with_magento', '=', False))
-    #     elif exported == 'All':
-    #         domain.append(('sync_product_with_magento', 'in', (False, True)))
-    #
-    #     if product_type:
-    #         domain.append(('product_type', '=', product_type))
-    #     self._cr.execute(main_sql)
-    #     result = self._cr.dictfetchall()
-    #     total_count = 0
-    #     if result:
-    #         total_count = result[0].get('total_count')
-    #     view = self.env.ref('odoo_magento2_ept.action_magento_product_exported_ept').sudo().read()[0]
-    #     domain.append(('magento_instance_id', '=', record.id))
-    #     action = record.prepare_action(view, domain)
-    #     product_data.update({'product_count': total_count, 'product_action': action})
-    #     return product_data
-
-    # def get_customers(self, record):
-    #     """
-    #     Use: To get the list of customers with Magento instance for current Magento instance
-    #     :return: total number of customer ids and action for customers
-    #     """
-    #     customer_data = {}
-    #     main_sql = """select DISTINCT(rp.id) as partner_id from res_partner as rp
-    #                 inner join magento_res_partner mp on mp.partner_id = rp.id
-    #                 where mp.magento_instance_id = %s""" % (record.id)
-    #     view = self.env.ref('base.action_partner_form').sudo().read()[0]
-    #     self._cr.execute(main_sql)
-    #     result = self._cr.dictfetchall()
-    #     magento_customer_ids = []
-    #     if result:
-    #         for data in result:
-    #             magento_customer_ids.append(data.get('partner_id'))
-    #     action = record.prepare_action(view, [('id', 'in', magento_customer_ids)])
-    #     customer_data.update({'customer_count': len(magento_customer_ids), 'customer_action': action})
-    #     return customer_data
 
     def get_total_orders(self, record, state=False):
         """
@@ -1106,35 +782,6 @@ class MagentoInstance(models.Model):
         action = record.prepare_action(view, [('id', 'in', order_ids)])
         order_data.update({'order_count': len(order_ids), 'order_action': action})
         return order_data
-
-    # def magento_product_exported_ept(self):
-    #     """
-    #     get exported as true product action
-    #     :return:
-    #     """
-    #     exported = True
-    #     product_data = self.get_total_products(self, exported)
-    #     return product_data.get('product_action')
-
-    # def action_magento_simple_product_type(self):
-    #     """
-    #     get magento simple product type
-    #     :return:
-    #     """
-    #     product_type = "simple"
-    #     exported = "All"
-    #     product_data = self.get_total_products(self, exported, product_type)
-    #     return product_data.get('product_action')
-
-    # def action_magento_configurable_product_type(self):
-    #     """
-    #     get magento configurable product type
-    #     :return:
-    #     """
-    #     product_type = "configurable"
-    #     exported = "All"
-    #     product_data = self.get_total_products(self, exported, product_type)
-    #     return product_data.get('product_action')
 
     def magento_action_sales_quotations_ept(self):
         """
@@ -1271,16 +918,6 @@ class MagentoInstance(models.Model):
         action = self.prepare_action(view, [])
         action.update({'context': {'default_magento_instance_id': record_id}})
         return action
-
-    @api.model
-    def open_logs(self, record_id):
-        """
-        Use: To prepare Magento logs action
-        :return: Magento logs action details
-        """
-        return {}
-        # view = self.env.ref('odoo_magento2_ept.action_common_log_book_ept_magento').sudo().read()[0]
-        # return self.prepare_action(view, [('magento_instance_id', '=', record_id)])
 
     @api.model
     def open_report(self, record_id):

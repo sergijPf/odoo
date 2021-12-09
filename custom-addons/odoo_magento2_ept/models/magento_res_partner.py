@@ -229,9 +229,9 @@ class MagentoCustomerAddresses(models.Model):
 
     def get_country(self, country_name_or_code):
         """
-            Usage : Search Country by name or code if not found then use =ilike operator for ignore case sensitive
-            search and set limit 1 because it may possible to find multiple emails due to =ilike operator
-            :param country_name_or_code: Country Name or Country Code, Type: Char
+        Usage : Search Country by name or code if not found then use =ilike operator for ignore 'case sensitive'
+        search and set limit 1 because it may be possible to find multiple emails due to =ilike operator
+        :param country_name_or_code: Country Name or Country Code, Type: Char
         """
         country = self.env['res.country'].search(['|', ('code', '=', country_name_or_code),
                                                   ('name', '=ilike', country_name_or_code)], limit=1)
@@ -240,7 +240,7 @@ class MagentoCustomerAddresses(models.Model):
     @staticmethod
     def get_street_and_street2(streets):
         """
-        Find Street and street2 from customer address.
+        Find Street and street2 from customer address
         :param streets: Customer address street
         :return: dictionary of street and street2
         """

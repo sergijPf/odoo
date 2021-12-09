@@ -9,9 +9,5 @@
             <field name="name">Processing</field>
             <field name="status">processing</field>
         </record>
-<!--        <record model="import.magento.order.status" id="complete">-->
-<!--            <field name="name">Completed</field>-->
-<!--            <field name="status">complete</field>-->
-<!--        </record>-->
     </data>
 </odoo>

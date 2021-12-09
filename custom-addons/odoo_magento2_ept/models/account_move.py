@@ -20,7 +20,7 @@ class AccountInvoice(models.Model):
 
     def export_invoices_to_magento(self, magento_instance):
         """
-        This method is used to export invoices to Magento by automatic cron-job or calling related action
+        This method is used to export invoices to Magento by automatic cron-job or by calling an action
         :param magento_instance: Instance of Magento.
         """
         invoices = self.search([

@@ -8,7 +8,6 @@
                 <field name="magento_sku"/>
                 <field name="magento_product_name"/>
                 <field name="magento_conf_product"/>
-<!--                <field name="prod_categ_name"/>-->
                 <field name="magento_log_message"/>
                 <field name="magento_log_message_conf"/>
                 <filter string="Product error" name="prod_log" domain="[('magento_log_message', '!=', '')]"/>
@@ -19,8 +18,6 @@
                 <group expand="1" string="Group By">
                     <filter string="Instances" name="group_by_instance"
                             context="{'group_by': 'magento_instance_id'}"/>
-<!--                    <filter string="Product Category" name="group_by_product_category"-->
-<!--                            context="{'group_by': 'prod_categ_name'}"/>-->
                     <filter string="Magento Status" name="group_by_status"
                             context="{'group_by': 'magento_status'}"/>
                     <filter string="Product Category" name="group_by_product_category"
@@ -40,7 +37,6 @@
                 <field name="magento_instance_id"/>
                 <field name="magento_sku" string="Product SKU"/>
                 <field name="magento_log_message"/>
-<!--                <field name="prod_categ_name"/>-->
                 <field name="magento_log_message_conf"/>
                 <field name="magento_status"
                        decoration-success="magento_status == 'in_magento'"
@@ -72,10 +68,6 @@
                             <field name="magento_product_id"/>
                             <field name="magento_status"/>
                             <field name="magento_export_date" string="Current Product Last Export Date" readonly="1"/>
-                        </group>
-                        <group>
-<!--                            <field name="prod_categ_name"/>-->
-<!--                            <field name="magento_export_date_conf" string="Product Category Last Export Date" readonly="1"/>-->
                         </group>
                     </group>
                     <notebook>

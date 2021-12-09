@@ -5,6 +5,17 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
+                <field name="fiscal_position_id" options="{'no_create': True}" position="after">
+                    <field name="auto_workflow_process_id"/>
+                </field>
+                <xpath expr="//button[@name='action_view_invoice']" position="before">
+                    <button type="object" name="action_view_stock_move_ept" class="oe_stat_button"
+                            icon="fa-truck"
+                            attrs="{'invisible': [('moves_count', '=', 0)]}"
+                            groups="base.group_user">
+                        <field name="moves_count" widget="statinfo" string="Stock Move"/>
+                    </button>
+                </xpath>
                 <xpath expr="//notebook[last()]" position="inside">
                     <page name="automation_information" string="Magento Information" attrs="{'invisible' : [('magento_instance_id','=',False)]}">
                         <group>

@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record id="ir_attachment_emipro_api_change_module" model="ir.attachment">
-            <field name="name">emipro_magento_api_change.zip</field>
-            <field name="datas" type="base64" file="odoo_magento2_ept/data/emipro_magento_api_change.zip"/>
-            <field name="res_model">res.config.magento.instance</field>
-            <field name="public">True</field>
-        </record>
         <record id="view_res_config_magento_instance" model="ir.ui.view">
             <field name="name">Configure Instance</field>
             <field name="model">res.config.magento.instance</field>
@@ -50,19 +44,6 @@
                                                 <li>
                                                     Magento =&gt; Configurations =&gt; Settings
                                                 </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-inline-block w-100">
-                                    <div class="row">
-                                        <div class="col-11 p-0">
-                                            <ul>
-                                                <li>
-                                                    You will need to install the Magento API module on your Magento store to test the connector.
-                                                    To download the module, please click on below link.
-                                                </li>
-                                                <button string="Download Emipro Magento API Module" name="download_magento_api_module" type="object"/>
                                             </ul>
                                         </div>
                                     </div>

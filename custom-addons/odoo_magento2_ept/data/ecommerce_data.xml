@@ -5,7 +5,6 @@
             <field name="parent_id" ref="product.product_category_all"/>
             <field name="name">Magento Technical</field>
         </record>
-
         <record id="magento_product_product_discount" model="product.product">
             <field name="default_code">MAGENTO DISCOUNT</field>
             <field name="list_price">0.0</field>

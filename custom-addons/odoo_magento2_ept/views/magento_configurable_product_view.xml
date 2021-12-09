@@ -6,20 +6,10 @@
             <field name="arch" type="xml">
                 <form string="Product" name="product_form" create="false" delete="1">
                     <header>
-<!--                        <button name="process_manually"-->
-<!--                                string="Process Export Manually"-->
-<!--                                type="object" class="btn-primary"-->
-<!--                                attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
-<!--                        <button name="export_status_check"-->
-<!--                                context="{'status_check': True, 'single': True}"-->
-<!--                                string="Check Export Status"-->
-<!--                                type="object"-->
-<!--                                class="btn btn-info"/>-->
                     </header>
                     <sheet>
                         <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
                         <field name="active" invisible="True" />
-<!--                        <field name="active_product" class="oe_inline" invisible='1'/>-->
                         <div class="oe_button_box" name="button_box">
                             <button class="oe_stat_button"
                                     name="toggle_active" icon="fa-lock"
@@ -38,7 +28,6 @@
                                     Delete in Magento
                                 </span>
                             </button>
-<!--                            <button string="Odoo Product" type="object" name="view_odoo_product"  class="oe_stat_button" icon="fa-chain" />-->
                         </div>
                         <widget name="web_ribbon" text="In Magento" attrs="{'invisible': [('magento_status', '!=', 'in_magento')]}"/>
                         <widget name="web_ribbon" title="Deleted" bg_color="bg-danger" attrs="{'invisible': [('magento_status', '!=', 'deleted')]}"/>
@@ -48,9 +37,6 @@
                             <h1>
                                 <field name="magento_product_name" readonly="1"/>
                             </h1>
-<!--                            <h3>-->
-<!--                                <field name="x_magento_name" placeholder="Name for Magento" modifiers="{}" id="x_magento_name"/>-->
-<!--                            </h3>-->
                             <field name="mag_assign_attributes"
                                    widget="many2many_tags"
                                    readonly="1"
@@ -87,13 +73,6 @@
             <field name="model">magento.configurable.product</field>
             <field name="arch" type="xml">
                 <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku">
-<!--                    <header>-->
-<!--                        <button name="export_status_check"-->
-<!--                                context="{'status_check': True}"-->
-<!--                                string="Check Export Status"-->
-<!--                                type="object"-->
-<!--                                class="btn btn-info ml-3"/>-->
-<!--                    </header>-->
                     <field name="magento_instance_id"/>
                     <field name="magento_product_id" string="Magento Product ID"/>
                     <field name="magento_website_ids" widget="many2many_tags"/>
@@ -132,7 +111,6 @@
                 <field name="magento_sku" />
                 <field name="magento_product_name" />
                 <field name="magento_product_id" />
-                <!--                    <field name="magento_instance_id"/>-->
                 <filter string="Not in Magento" name="not_in_magento"
                         domain="[('magento_status', '!=', 'in_magento')]"/>
                 <separator/>
@@ -146,15 +124,6 @@
             </search>
         </field>
     </record>
-
-<!--    <record id="action_magento_product_export_prepare" model="ir.actions.server">-->
-<!--        <field name="name">Export To Magento</field>-->
-<!--        <field name="model_id" ref="model_magento_configurable_product"/>-->
-<!--        <field name="binding_model_id" ref="model_magento_product_product"/>-->
-<!--        <field name="binding_view_types">list,form</field>-->
-<!--        <field name="state">code</field>-->
-<!--        <field name="code">records.process_products_export_to_magento()</field>-->
-<!--    </record>-->
 
     <menuitem id="menu_item_magento_configurable_product" name="Configurable Products"
         parent="odoo_magento2_ept.menu_product_details" sequence="3"

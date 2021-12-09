@@ -50,7 +50,6 @@ class MagentoConfigurableProduct(models.Model):
                                              string="Configurable Attribute(s)")
     magento_export_date = fields.Datetime(string="Last Export Date",
                                           help="Configurable Product last Export Date to Magento")
-    # update_date = fields.Datetime(string="Configurable Product Update Date")
     force_update = fields.Boolean(string="To force run of Configurable Product Export", default=False)
     product_variant_ids = fields.One2many('magento.product.product', 'magento_conf_product', 'Magento Products',
                                           required=True, context={'active_test': False})

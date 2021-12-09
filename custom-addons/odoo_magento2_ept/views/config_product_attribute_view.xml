@@ -21,8 +21,8 @@
         <field name="model">config.product.attribute</field>
         <field name="arch" type="xml">
             <tree string="Config.Product Attributes">
-<!--                    <field name="complete_category_name"/>-->
                 <field name="color" widget="color_picker"/>
+                <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="attribute_value"/>
             </tree>
@@ -39,6 +39,7 @@
                         <field name="categ_group_id"/>
                         <field name="name"/>
                         <field name="color" widget="color_picker"/>
+                        <field name="sequence"/>
                         <field name="attribute_value"/>
                     </group>
                 </sheet>
@@ -52,7 +53,6 @@
         <field name="arch" type="xml">
             <search string="Config.Product Attribute search view">
                 <field name="categ_group_id"/>
-<!--                    <filter name="archived" string="Archived" domain="[('active','=',False)]"/>-->
                 <group expand="0" string="Group By">
                     <filter name="Attribute Category" string="Attribute Category" context="{'group_by' : 'categ_group_id'}"/>
                 </group>
@@ -65,16 +65,9 @@
             <field name="res_model">config.product.attribute</field>
             <field name="view_mode">tree,form</field>
             <field name="view_id" ref="view_config_product_attribute_tree"/>
-            <field name="context">
-                {'group_by': ['categ_group_id']}
-            </field>
-<!--                <field name="help" type="html">-->
-<!--&lt;!&ndash;                <p>&ndash;&gt;-->
-<!--&lt;!&ndash;                    You can't create Product Category directly from Here. Please assign root product category from settings&ndash;&gt;-->
-<!--&lt;!&ndash;                    <i class="fa fa-angle-double-right" /> instance <i class="fa fa-angle-double-right" />&ndash;&gt;-->
-<!--&lt;!&ndash;                    select instance <i class="fa fa-angle-double-right" /> Product Categories&ndash;&gt;-->
-<!--&lt;!&ndash;                </p>&ndash;&gt;-->
-<!--                </field>-->
+<!--            <field name="context">-->
+<!--                {'group_by': ['categ_group_id']}-->
+<!--            </field>-->
     </record>
 
     <menuitem id="menu_item_config_product_attribute" name="Config.Product Attributes"

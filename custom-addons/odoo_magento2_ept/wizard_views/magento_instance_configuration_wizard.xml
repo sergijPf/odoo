@@ -38,7 +38,6 @@
                     </group>
                 </group>
                 <group class="o_onboard_padding">
-                    <!-- invisible="context.get('is_calling_from_magento_onboarding_panel', False) == False"-->
                     <p colspan="2" class="alert alert-warning" role="alert">
                         <div style="color:#ff0000; font-size:15px;">
                             <b>Important Note:</b>
@@ -48,29 +47,13 @@
                                 <div class="col-11 p-0">
                                     <ul>
                                         <li>
-                                            After creating the instance, please make sure you
-                                            complete all
-                                            the other
-                                            necessary configurations such as
-                                            Warehouse, Pricelist etc. from
+                                            After creating the instance, please make sure you complete all
+                                            the other necessary configurations such as Warehouse, Pricelist etc. from
                                             the Magento setting screen.
                                         </li>
                                         <li>
                                             Magento =&gt; Configurations =&gt; Settings
                                         </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-inline-block w-100">
-                            <div class="row">
-                                <div class="col-11 p-0">
-                                    <ul>
-                                        <li>
-                                            You will need to install the Magento API module on your Magento store to test the connector.
-                                            To download the module, please click on below link.
-                                        </li>
-                                        <button string="Download Emipro Magento API Module" name="download_magento_api_module" type="object"/>
                                     </ul>
                                 </div>
                             </div>

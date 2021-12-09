@@ -51,7 +51,6 @@
                     <group expand="0" string="Group By">
                         <filter name = "Instance" string="Magento Instance" context="{'group_by' : 'instance_id'}"/>
                         <filter name = "Magento Parent Category" string="Magento Parent" context="{'group_by' : 'magento_parent_id'}"/>
-<!--                        <filter name = "Magento Active Category" string="Magento Active Category" context="{'group_by' : 'is_active'}"/>-->
                     </group>
                 </search>
             </field>

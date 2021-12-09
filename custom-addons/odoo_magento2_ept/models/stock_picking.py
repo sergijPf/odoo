@@ -26,8 +26,7 @@ class StockPicking(models.Model):
     is_exported_to_magento = fields.Boolean(string="Exported to Magento?", help="If checked, Picking is exported to Magento")
     magento_instance_id = fields.Many2one('magento.instance', 'Instance')
     magento_shipping_id = fields.Char(string="Magento Shipping Ids", help="Magento Shipping Ids")
-    # max_no_of_attempts = fields.Integer(string='Max NO. of attempts', default=0)
-    # magento_message = fields.Char(string="Picking Message")
+
 
     def _shipment_exportable(self):
         """
@@ -37,15 +36,10 @@ class StockPicking(models.Model):
         module_obj = self.env['ir.module.module']
         purchase_module = module_obj.sudo().search([('name', '=', 'purchase'),
                                                     ('state', '=', 'installed')])
-        # if (self.location_dest_id.id == self.env.ref('stock.stock_location_customers').id) \
-        #         and \
-        #         (purchase_module and self.purchase_id and
-        #          self.sale_id.magento_instance_id.is_export_dropship_picking)\
-        #         or (not purchase_module and self.sale_id):
-            # check purchase module is installed or not and it it's installed then
-            # picking is purchase's picking & is_export_dropship_picking is True
-            # or
-            # purchase is not installed and that picking is SO's picking
+        # check purchase module is installed or not and it it's installed then
+        # picking is purchase's picking & is_export_dropship_picking is True
+        # or
+        # purchase is not installed and that picking is SO's picking
         if (self.location_dest_id.id == self.env.ref('stock.stock_location_customers').id) and \
                 ((purchase_module and not self.purchase_id and self.sale_id) or (not purchase_module and self.sale_id)):
             self.is_shipment_exportable = True
@@ -66,24 +60,6 @@ class StockPicking(models.Model):
             else:
                 record.magento_website_id = False
                 record.storeview_id = False
-
-    # def create_job_log_book(self, instance):
-    #     """
-    #     create job record
-    #     :param instance: magento instance
-    #     :return: job
-    #     """
-    #     common_log_book_obj = self.env['common.log.book.ept']
-    #     common_log_lines_obj = self.env['common.log.lines.ept']
-    #     model_id = common_log_lines_obj.get_model_id(STOCK_PICKING)
-    #     job = common_log_book_obj.create({
-    #         'type': 'import',
-    #         'module': 'magento_ept',
-    #         'model_id': model_id,
-    #         'res_id': self.id,
-    #         'magento_instance_id': instance
-    #     })
-    #     return job
 
     def export_shipments_to_magento(self, magento_instance):
         """
@@ -208,12 +184,38 @@ class StockPicking(models.Model):
 
         return tracking_numbers, ''
 
-    # def export_shipment_in_magento(self):
-    #     """
-    #     Allow Single picking to export from the picking form view
-    #     :return:
-    #     """
-    #     # job = self.create_job_log_book(self.magento_instance_id.id)
-    #     job = self.export_ship_to_magento(self, '')
-    #     # if not job.log_lines:
-    #     #     job.sudo().unlink()
+    def _action_done(self):
+        """
+        create and paid invoice on the basis of auto invoice work flow
+        when invoicing policy is 'delivery'.
+        """
+        result = super(StockPicking, self)._action_done()
+        for picking in self:
+            if picking.sale_id.invoice_status == 'invoiced':
+                continue
+
+            order = picking.sale_id
+            work_flow_process_record = order and order.auto_workflow_process_id
+            delivery_lines = picking.move_line_ids.filtered(lambda l: l.product_id.invoice_policy == 'delivery')
+
+            if work_flow_process_record and delivery_lines and work_flow_process_record.create_invoice and \
+                    picking.picking_type_id.code == 'outgoing':
+                order.validate_invoice(work_flow_process_record)
+        return result
+
+    def send_to_shipper(self):
+        """
+        usage: If auto_processed_orders_ept = True passed in Context then we can not call send shipment from carrier
+        This change is used in case of Import Shipped Orders for all connectors.
+        """
+        context = dict(self._context)
+        if context.get('auto_processed_orders_ept', False):
+            return True
+        return super(StockPicking, self).send_to_shipper()
+
+
+class StockQuantPackage(models.Model):
+    _inherit = 'stock.quant.package'
+
+    tracking_no = fields.Char("Additional Reference", help="This field is used for storing the tracking number.")
+

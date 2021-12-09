@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-<!--        <record id="ir_attachment_import_transfer_product" model="ir.attachment">-->
-<!--            <field name="name">magento_product_export.csv</field>-->
-<!--            <field name="datas" type="base64" file="odoo_magento2_ept/data/magento_product_export.csv"/>-->
-<!--            <field name="res_model">magento.import.export.ept</field>-->
-<!--            <field name="public">True</field>-->
-<!--        </record>-->
         <record id="view_magento_import_export_operation" model="ir.ui.view">
             <field name="name">Magento Operation</field>
-            <field name="model">magento.import.export.ept</field>
+            <field name="model">magento.import.export</field>
             <field name="arch" type="xml">
                 <form>
                     <group>
@@ -19,24 +13,6 @@
                     <group>
                         <field name="operations" required="1"/>
                     </group>
-<!--                    <group>-->
-<!--                        <field name="import_specific_sale_order"-->
-<!--                               attrs="{'invisible' : [('operations','!=','import_specific_order')], 'required':[('operations','==','import_specific_order')]}"/>-->
-<!--                    </group>-->
-<!--                    <group>-->
-<!--                        <group string="Select Date Range For Import" class="w-100"-->
-<!--                               attrs="{'invisible':[('operations','not in',['import_customer','import_sale_order'])]}">-->
-<!--&lt;!&ndash;                               attrs="{'invisible':[('operations','not in',['import_products','import_customer','import_sale_order'])]}">&ndash;&gt;-->
-<!--                            <label for="start_date" string="Date"/>-->
-<!--                            <div class="d-inline-block">-->
-<!--                                <field name="start_date" widget="daterange"-->
-<!--                                       options="{'related_end_date': 'end_date'}" class="oe_inline"/>-->
-<!--                                To-->
-<!--                                <field name="end_date" widget="daterange"-->
-<!--                                       options="{'related_start_date': 'start_date'}" class="oe_inline"/>-->
-<!--                            </div>-->
-<!--                        </group>-->
-<!--                    </group>-->
                     <footer>
                         <button name="execute" string="Execute" type="object"
                                 class="oe_highlight"/>
@@ -49,14 +25,14 @@
         <record id="action_wizard_magento_import_export_operation" model="ir.actions.act_window">
             <field name="name">Magento Operation</field>
             <field name="type">ir.actions.act_window</field>
-            <field name="res_model">magento.import.export.ept</field>
+            <field name="res_model">magento.import.export</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
         </record>
 
         <record id="view_magento_process_import_export_from_more_ept" model="ir.ui.view">
             <field name="name">Process Import/Export</field>
-            <field name="model">magento.import.export.ept</field>
+            <field name="model">magento.import.export</field>
             <field name="priority">100</field>
             <field name="arch" type="xml">
                 <form string="Import/Export">
@@ -89,7 +65,7 @@
 
         <record id="action_wizard_magento_product_for_prepare" model="ir.actions.act_window">
             <field name="name">Magento - Export Products</field>
-            <field name="res_model">magento.import.export.ept</field>
+            <field name="res_model">magento.import.export</field>
             <field name="binding_model_id" ref="product.model_product_product"/>
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_magento_process_import_export_from_more_ept"/>
@@ -98,7 +74,7 @@
 
         <record id="view_process_magento_customers_export" model="ir.ui.view">
             <field name="name">Process Customer Export</field>
-            <field name="model">magento.import.export.ept</field>
+            <field name="model">magento.import.export</field>
             <field name="arch" type="xml">
                 <form string="Export to Magento Layer">
                     <group>
@@ -121,7 +97,6 @@
                                     All selected customers will be added to Magento Layer and
                                     afterwards they will be exported to Magento.
                                 </b>
-
                             </p>
                         </div>
                     </group>
@@ -135,7 +110,7 @@
         </record>
         <record id="action_wizard_magento_customers_export" model="ir.actions.act_window">
             <field name="name">Magento - Export Customers</field>
-            <field name="res_model">magento.import.export.ept</field>
+            <field name="res_model">magento.import.export</field>
             <field name="binding_model_id" ref="base.model_res_partner"/>
             <field name="view_mode">tree,form</field>
             <field name="view_id" ref="view_process_magento_customers_export"/>
@@ -148,7 +123,7 @@
                 model="ir.actions.act_window">
             <field name="name">Magento Operations</field>
             <field name="type">ir.actions.act_window</field>
-            <field name="res_model">magento.import.export.ept</field>
+            <field name="res_model">magento.import.export</field>
             <field name="view_mode">form</field>
             <field name="view_id" ref="odoo_magento2_ept.view_magento_import_export_operation"/>
             <field name="target">new</field>

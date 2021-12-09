@@ -23,27 +23,18 @@ class MagentoWebsite(models.Model):
                                           help="This field relocates magento instance")
     catalog_price_scope = fields.Selection(related="magento_instance_id.catalog_price_scope", store=True, readonly=True)
     magento_website_id = fields.Char(string="Magento Website Id", help="Website Id in Magento")
-    # import_partners_from_date = fields.Datetime(
-    #     string='Last partner import date',
-    #     help='Date when partner last imported'
-    # )
     pricelist_id = fields.Many2one('product.pricelist', string="Pricelist",
                                    help="Product Price is set in selected Pricelist if Catalog Price Scope is Website")
-    # pricelist_id = fields.Many2one('product.pricelist', string="Pricelist",
-    #                                help="Product Price is set in selected Pricelist if Catalog Price Scope is Website")
     store_view_ids = fields.One2many("magento.storeview", "magento_website_id", string='Magento Store Views',
                                      help='This relocates Magento Store Views')
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse',
                                    help='Warehouse to be used to deliver an order from this website.')
     company_id = fields.Many2one('res.company', related='magento_instance_id.company_id', string='Company',
                                  readonly=True, help="Magento Company")
-    # currency_id = fields.Many2one(RES_CURRENCY, related='pricelist_id.currency_id', readonly=True, help="Currency")
     magento_base_currency = fields.Many2one(RES_CURRENCY, readonly=True, help="Magento Website Base Currency")
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
     magento_order_data = fields.Text(compute="_compute_kanban_magento_order_data")
-    # website_display_currency = fields.Many2one(RES_CURRENCY, readonly=True,
-    #                                            help="Display currency of the magento website.")
     tax_calculation_method = fields.Selection([
         ('excluding_tax', 'Excluding Tax'),
         ('including_tax', 'Including Tax')
@@ -118,68 +109,6 @@ class MagentoWebsite(models.Model):
         if 'tree' in action_dic['views'][0]:
             action_dic['views'][0] = (action_dic['view_id'], 'list')
         return action_dic
-
-    # def get_total_products(self, record, exported, product_type=False):
-    #     """
-    #     Use: To get the list of products exported from Magento website
-    #     Here if exported = True, then only get those record which having sync_product_with_magento= true
-    #     if exported = False, then only get those record which having sync_product_with_magento= false
-    #     if exported = All, then get all those records which having sync_product_with_magento = true and false
-    #     :param product_type: magento product type
-    #     :param record: magento website object
-    #     :param exported: exported is one of the "True" or "False" or "All"
-    #     :return: total number of Magento products ids and action for products
-    #     """
-    #     product_data = {}
-    #     main_sql = """select count(id) as total_count from magento_product_template
-    #     inner join magento_product_template_magento_website_rel on
-    #     magento_product_template_magento_website_rel.magento_product_template_id = magento_product_template.id
-    #     where magento_product_template_magento_website_rel.magento_website_id = %s and
-    #     magento_product_template.magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
-    #     product_domain = []
-    #     if exported != 'All' and exported:
-    #         main_sql = main_sql + " and magento_product_template.sync_product_with_magento = True"
-    #         product_domain.append(('sync_product_with_magento', '=', True))
-    #     elif not exported:
-    #         main_sql = main_sql + " and magento_product_template.sync_product_with_magento = False"
-    #         product_domain.append(('sync_product_with_magento', '=', False))
-    #     elif exported == 'All':
-    #         product_domain.append(('sync_product_with_magento', 'in', (False, True)))
-    #
-    #     if product_type:
-    #         product_domain.append(('product_type', '=', product_type))
-    #     self._cr.execute(main_sql)
-    #     result = self._cr.dictfetchall()
-    #     total_count = 0
-    #     if result:
-    #         total_count = result[0].get('total_count')
-    #     view = self.env.ref('odoo_magento2_ept.action_magento_product_exported_ept').sudo().read()[0]
-    #     product_domain.append(('magento_instance_id', '=', record.magento_instance_id.id))
-    #     product_domain.append(('magento_website_ids', '=', record.name))
-    #     action = record.prepare_action(view, product_domain)
-    #     product_data.update({'product_count': total_count, 'product_action': action})
-    #     return product_data
-
-    # def get_customers(self, record):
-    #     """
-    #     Use: To get the list of customers with Magento instance for current Magento instance
-    #     :return: total number of customer ids and action for customers
-    #     """
-    #     customer_data = {}
-    #     main_sql = """select DISTINCT(rp.id) as partner_id from res_partner as rp
-    #                     inner join magento_res_partner mp on mp.partner_id = rp.id
-    #                     where mp.magento_website_id = %s and
-    #                     mp.magento_instance_id = %s""" % (record.id, record.magento_instance_id.id)
-    #     view = self.env.ref('base.action_partner_form').sudo().read()[0]
-    #     self._cr.execute(main_sql)
-    #     result = self._cr.dictfetchall()
-    #     magento_customer_ids = []
-    #     if result:
-    #         for data in result:
-    #             magento_customer_ids.append(data.get('partner_id'))
-    #     action = record.prepare_action(view, [('id', 'in', magento_customer_ids)])
-    #     customer_data.update({'customer_count': len(magento_customer_ids), 'customer_action': action})
-    #     return customer_data
 
     def get_total_orders(self, record, state=False):
         """
@@ -296,35 +225,6 @@ class MagentoWebsite(models.Model):
         shipped_order_action = record.prepare_action(view, [('id', 'in', order_ids)])
         order_data.update({'order_count': len(order_ids), 'order_action': shipped_order_action})
         return order_data
-
-    # def magento_product_exported_ept(self):
-    #     """
-    #     get exported as true product action
-    #     :return:
-    #     """
-    #     exported = True
-    #     exported_product_data = self.get_total_products(self, exported)
-    #     return exported_product_data.get('product_action')
-
-    # def action_magento_simple_product_type(self):
-    #     """
-    #     get magento simple product type
-    #     :return:
-    #     """
-    #     product_type = "simple"
-    #     exported = "All"
-    #     simple_product_data = self.get_total_products(self, exported, product_type)
-    #     return simple_product_data.get('product_action')
-
-    # def action_magento_configurable_product_type(self):
-    #     """
-    #     get magento configurable product type
-    #     :return:
-    #     """
-    #     product_type = "configurable"
-    #     exported = "All"
-    #     configurable_product_data = self.get_total_products(self, exported, product_type)
-    #     return configurable_product_data.get('product_action')
 
     def magento_action_sales_quotations_ept(self):
         """
@@ -466,17 +366,6 @@ class MagentoWebsite(models.Model):
         return action
 
     @api.model
-    def open_logs(self, record_id):
-        """
-        Use: To prepare Magento logs action
-        :return: Magento logs action details
-        """
-        return {}
-        # website = self.browse(record_id)
-        # view = self.env.ref('odoo_magento2_ept.action_common_log_book_ept_magento').sudo().read()[0]
-        # return self.prepare_action(view, [('magento_instance_id', '=', website.magento_instance_id.id)])
-
-    @api.model
     def open_report(self, record_id):
         """
         Use: To prepare Magento report action
@@ -585,7 +474,7 @@ class MagentoWebsite(models.Model):
 
     def get_compare_data(self, record):
         """
-        :param record: Magento instance
+        :param: record: Magento instance
         :return: Comparison ratio of orders (weekly,monthly and yearly based on selection)
         """
         data_type = False

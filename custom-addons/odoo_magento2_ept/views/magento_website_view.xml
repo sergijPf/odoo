@@ -37,7 +37,6 @@
                                 <field name="catalog_price_scope" invisible="1" />
                                 <field name="pricelist_id" readonly="1"
                                        attrs="{'invisible':[('catalog_price_scope', '=', 'global')]}"/>
-<!--                                <field name="currency_id" readonly="1" invisible="1" />-->
                             </group>
                         </group>
                     </sheet>
@@ -52,7 +51,6 @@
                 <tree string="Magento Website" create="false" delete="false">
                     <field name="name" />
                     <field name="magento_instance_id" />
-<!--                    <field name="pricelist_id" />-->
                     <field name="sort_order" />
                 </tree>
             </field>

@@ -36,18 +36,12 @@ class MagentoInventoryLocations(models.Model):
              'It will compute the stock quantities from those Locations \n'
              'and export them to the current source location in the Magento.'
     )
-    # import_stock_warehouse = fields.Many2one(
-    #     'stock.warehouse',
-    #     string="Import Product Stock Warehouse",
-    #     help="Warehouse for import stock from Magento to Odoo"
-    # )
     active = fields.Boolean(string="Status", default=True)
 
     @api.constrains('export_stock_warehouse_ids')
     def _check_locations_warehouse_ids(self):
-        """ Do not save or update location if warehouse already set in different location with same instance.
-        :return:
-        @param : self
+        """
+        Do not save or update location if warehouse already set in different location with same instance.
         """
         location_instance = self.magento_instance_id
         location_warehouse = self.export_stock_warehouse_ids

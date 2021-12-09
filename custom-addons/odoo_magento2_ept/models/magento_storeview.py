@@ -24,12 +24,6 @@ class MagentoStoreview(models.Model):
     magento_instance_id = fields.Many2one('magento.instance', related='magento_website_id.magento_instance_id',
                                           ondelete="cascade", string='Magento Instance', store=True, readonly=True,
                                           required=False)
-    # import_orders_from_date = fields.Datetime(
-    #     string='Import sale orders from date',
-    #     help='Do not consider non-imported sale orders before this date. '
-    #          'Leave empty to import all sale orders',
-    # )
-    # base_media_url = fields.Char(string='Base Media URL', help="URL for Image store at Magento.")
     active = fields.Boolean(string="Status", default=True)
     sale_prefix = fields.Char("Sale Order Prefix", help="A prefix put before the name of imported sales orders.\n "
                                                         "For example, if the prefix is 'mag-', the sales order"

@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
-# from datetime import datetime
+
 
 class MagentoProductCategoryUpdate(models.TransientModel):
     _name = "magento.product.category.update"
@@ -18,7 +18,6 @@ class MagentoProductCategoryUpdate(models.TransientModel):
         if products_to_update:
             update_data = {
                 'category_ids': [(6, 0, [c.id for c in self.product_categ])],
-                # 'update_date': datetime.now()
                 'force_update': True
             }
             products_to_update.write(update_data)
