@@ -78,6 +78,8 @@ class SaleOrder(models.Model):
     auto_workflow_process_id = fields.Many2one("sale.workflow.process.ept", string="Workflow Process", copy=False)
     moves_count = fields.Integer(compute="_compute_stock_move", string="Stock Move", store=False,
                                  help="Stock Move Count for Orders without Picking.")
+    is_canceled_in_magento = fields.Boolean(string="Canceled in Magento", default=False,
+                                            help="Checked, if order was canceled in Magento")
 
     _sql_constraints = [('_magento_sale_order_unique_constraint',
                          'unique(magento_order_id,magento_instance_id,magento_order_reference)',
@@ -243,48 +245,39 @@ class SaleOrder(models.Model):
 
         return True
 
-    def _cancel_order_exportable(self):
-        """
-        this method will check order is cancel in odoo or not, and invoice is exported or not.
-        And shipment done in magento or not
-        :return:
-        """
-        if (self.invoice_ids and True in self.invoice_ids.mapped('is_exported_to_magento')) or \
-                (self.picking_ids and self.picking_ids.filtered(
-                    lambda x: x.state == 'done' and x.is_exported_to_magento).ids):
-            self.is_cancel_order_exportable = True
-        else:
-            self.is_cancel_order_exportable = False
-
-    is_cancel_order_exportable = fields.Boolean(string="Is Invoice exportable", compute='_cancel_order_exportable',
-                                                store=False)
-
     def cancel_order_from_magento_by_webhook(self):
         """
-        this method will call while sale order cancel from webhook
+        This method will be called while sale order cancellation from Magento
         """
         try:
             super(SaleOrder, self).action_cancel()
+            self.is_canceled_in_magento = True
         except Exception as error:
-            raise UserError("Error cancel the order via Magento admin: " +  str(error))
+            order_ref = self.magento_order_reference
+            instance = self.magento_instance_id
+            log_errors = self.env['magento.orders.log.book'].search([
+                ('magento_instance_id', '=', instance.id),
+                ('magento_order_ref', '=', order_ref)
+            ])
+            message = "Error to cancel the order via Magento admin: " +  str(error)
+            self.log_order_import_error(log_errors, order_ref, instance, self.magento_website_id, message)
+            return False
 
         return True
 
     def cancel_order_in_magento(self):
         """
         This method use for cancel order in magento.
-        @return: result
         """
-        result = super(SaleOrder, self).action_cancel()
         magento_order_id = self.magento_order_id
         if magento_order_id:
-            magento_instance = self.magento_instance_id
             try:
                 api_url = '/V1/orders/%s/cancel' % magento_order_id
-                result = req(magento_instance, api_url, 'POST')
+                res = req(self.magento_instance_id, api_url, 'POST')
+                if res is True:
+                    self.is_canceled_in_magento = True
             except Exception:
-                raise UserError("Error while requesting cancel order")
-        return result
+                raise UserError("Error while requesting order cancellation in Magento!")
 
     def _prepare_invoice(self):
         """
@@ -311,12 +304,7 @@ class SaleOrder(models.Model):
         Call sale order workflow based on magento order status
         """
         message = self.auto_workflow_process_id.auto_workflow_process(self.auto_workflow_process_id.id, [self.id])
-
-        if message:
-            return message
-
-        return ''
-
+        return message if message else ''
 
     @staticmethod
     def check_discount_has_tax_included_and_percent(sales_order):
@@ -356,7 +344,6 @@ class SaleOrder(models.Model):
                     if shipping_tax_dict:
                         tax_percent = shipping_tax_dict.get('percent')
         return is_tax_included, tax_percent
-
 
     def _carrier_name(self):
         """"
@@ -496,7 +483,6 @@ class SaleOrder(models.Model):
         order_reference = sales_order.get('increment_id')
         shipping = sales_order.get('extension_attributes').get('shipping_assignments')
         shipping_method = shipping[0].get('shipping').get('method') or False
-
         if not shipping_method:
             message = "Delivery method is not found in Order %s" % order_reference
         else:
@@ -513,7 +499,7 @@ class SaleOrder(models.Model):
                 product = self.env.ref('odoo_magento2_ept.product_product_shipping')
                 try:
                     self.env["delivery.carrier"].create({
-                        'name': magento_carrier.carrier_label,
+                        'name': magento_carrier.carrier_label or magento_carrier.magento_carrier_title,
                         'product_id': product.id,
                         'magento_carrier': magento_carrier.id
                     })

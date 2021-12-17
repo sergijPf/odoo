@@ -27,6 +27,7 @@ class MagentoDeliveryCarrier(models.Model):
     carrier_label = fields.Char(string="Label", help="Carrier Label")
     carrier_code = fields.Char(string="Code", help="Carrier Code")
     magento_carrier_title = fields.Char(string="Title", help="Carrier Title")
+    active = fields.Boolean(string="Status", default=True)
 
     _sql_constraints = [
         ('unique_magento_delivery_code', 'unique(magento_instance_id,carrier_code)',
@@ -41,6 +42,6 @@ class MagentoDeliveryCarrier(models.Model):
         result = []
         for delivery in self:
             instance_name = ' - ' + delivery.magento_instance_id.name if delivery.magento_instance_id else False
-            name = "[" + delivery.carrier_label + "]  " + delivery.carrier_code + instance_name if instance_name else delivery.carrier_code
+            name = "[" + str(delivery.carrier_label) + "]  " + str(delivery.carrier_code) + instance_name if instance_name else delivery.carrier_code
             result.append((delivery.id, name))
         return result

@@ -28,6 +28,7 @@ class MagentoImportExport(models.TransientModel):
     operations = fields.Selection([
         ('export_shipment_information', 'Export Shipment Information'),
         ('export_invoice_information', 'Export Invoice Information'),
+        ('export_product_prices', 'Export Product Prices'),
         ('export_product_stock', 'Export Product Stock')
     ], string='Import/ Export Operations', help='Import/ Export Operations')
     start_date = fields.Datetime(string="From Date", help="From date.")
@@ -43,47 +44,64 @@ class MagentoImportExport(models.TransientModel):
         magento_instance = self.env['magento.instance']
         account_move = self.env['account.move']
         picking = self.env['stock.picking']
+        magento_product_obj = self.env[MAGENTO_PRODUCT_PRODUCT]
         message = ''
         if self.magento_instance_ids:
             instances = self.magento_instance_ids
         else:
             instances = magento_instance.search([])
-        result = False
 
         if self.operations == 'export_shipment_information':
             picking.export_shipments_to_magento(instances)
         elif self.operations == 'export_invoice_information':
             account_move.export_invoices_to_magento(instances)
-        elif self.operations == 'export_product_stock':
-            self.export_product_stock_operation(instances)
-        if not result:
-            title = [vals for key, vals in self._fields['operations'].selection if key == self.operations]
-            return {
-                'effect': {
-                    'fadeout': 'slow',
-                    'message': " {} Process Completed Successfully! {}".format(title[0], message),
-                    'img_url': '/web/static/src/img/smile.svg',
-                    'type': 'rainbow_man',
+        elif self.operations == 'export_product_prices':
+            if not magento_product_obj.export_product_prices(instances):
+                return {
+                    'name': 'Product Prices Export Logs',
+                    'view_mode': 'tree,form',
+                    'res_model': 'magento.prices.log.book',
+                    'type': 'ir.actions.act_window'
                 }
-            }
-        return result
+        elif self.operations == 'export_product_stock':
+            if not self.export_product_stock_operation(instances, magento_product_obj):
+                return {
+                    'name': 'Product Stock Export Logs',
+                    'view_mode': 'tree,form',
+                    'res_model': 'magento.stock.log.book',
+                    'type': 'ir.actions.act_window'
+                }
 
-    def export_product_stock_operation(self, instances):
+        title = [vals for key, vals in self._fields['operations'].selection if key == self.operations]
+        return {
+            'effect': {
+                'fadeout': 'slow',
+                'message': " {} Process Completed Successfully! {}".format(title[0], message),
+                'img_url': '/web/static/src/img/smile.svg',
+                'type': 'rainbow_man',
+            }
+        }
+
+    def export_product_stock_operation(self, instances, magento_product_obj):
         """
         Export product stock from Odoo to Magento
         :param instances: Magento Instances
         :return:
         """
+        res = True
         magento_inventory_locations_obj = self.env['magento.inventory.locations']
-        magento_product_product = self.env[MAGENTO_PRODUCT_PRODUCT]
         for instance in instances:
             if instance.magento_version in ['2.1', '2.2'] or not instance.is_multi_warehouse_in_magento:
-                magento_product_product.export_products_stock_to_magento(instance)
+                if not magento_product_obj.export_products_stock_to_magento(instance):
+                    res = False
             else:
                 inventory_locations = magento_inventory_locations_obj.search([
                     ('magento_instance_id', '=', instance.id)])
-                magento_product_product.export_product_stock_to_multiple_locations(instance, inventory_locations)
+                if not magento_product_obj.export_product_stock_to_multiple_locations(instance, inventory_locations):
+                    res = False
             instance.last_update_stock_time = datetime.now()
+
+        return res
 
     def prepare_product_for_export_in_magento(self):
         """

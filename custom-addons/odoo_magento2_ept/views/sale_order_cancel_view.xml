@@ -6,10 +6,10 @@
             <field name="inherit_id" ref="sale.view_order_form" />
             <field name="arch" type="xml">
                 <xpath expr="//header" position="inside">
-                    <field name="is_cancel_order_exportable" invisible="1"/>
+                    <field name="is_canceled_in_magento" invisible="1"/>
                     <button name="cancel_order_in_magento" type="object" string="Cancel In Magento"
-                            attrs="{'invisible' : ['|','|', ('magento_instance_id','=',False),('state','!=','cancel'),
-                            ('is_cancel_order_exportable','=',True)]}"/>
+                            attrs="{'invisible' : ['|', '|', ('magento_instance_id','=',False), ('state','!=','cancel'),
+                                                                                    ('is_canceled_in_magento','=',True)]}"/>
                 </xpath>
             </field>
         </record>

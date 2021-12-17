@@ -24,8 +24,28 @@ class MagentoStockLogBook(models.Model):
     """
     _name = 'magento.stock.log.book'
     _description = 'Stock Export Log Book'
-    # _rec_name = 'magento_sku'
+    _rec_name = 'batch'
+    _order = "create_date desc"
 
     magento_instance_id = fields.Many2one('magento.instance', string="Magento Instance")
+    batch = fields.Char(string="Export batch")
     log_message = fields.Char(string="Stock Export Messages")
+    active = fields.Boolean("Active", default=True)
+
+
+class MagentoPricesLogBook(models.Model):
+    """
+    Describes fields and methods for Magento Product Prices Export
+    """
+    _name = 'magento.prices.log.book'
+    _description = 'Magento Product Prices Export Log Book'
+    _rec_name = 'magento_sku'
+    _order = "create_date desc"
+
+    magento_instance_id = fields.Many2one('magento.instance', string="Magento Instance")
+    magento_storeview_id = fields.Many2one('magento.storeview', string="Magento Storeview")
+    storeview_name = fields.Char(related='magento_storeview_id.name', string="Magento Storeview Name")
+    magento_sku = fields.Char("Magento sku")
+    log_message = fields.Char(string="Price Export Messages")
+    batch = fields.Char(string="Export batch")
     active = fields.Boolean("Active", default=True)

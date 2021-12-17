@@ -36,6 +36,7 @@
         'views/magento_product_category_view.xml',
         'views/magento_product_log_book_view.xml',
         'views/magento_stock_log_book_view.xml',
+        'views/magento_prices_log_book_view.xml',
         'views/magento_configurable_product_view.xml',
         'views/product_attribute_view.xml',
         'views/product_product_view.xml',

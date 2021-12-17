@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Describes methods for webhooks to create order, invoice, product and customer.
+Describes methods for webhooks to create/cancel sales orders
 """
 import json
 from odoo import http
@@ -12,15 +12,15 @@ class Binary(http.Controller):
     Describes methods for webhooks to create order, invoice, product and customer.
     """
     @http.route('/web_magento_place_order', csrf=False, auth="public", type="json")
-    def place_order(self, **kwargs):
+    def place_order(self):
         """
         This method will create new order in Odoo
-        :return: True
+        :return: True/False
         """
-        print(kwargs)
-        print(request.db)
-
         data = json.loads(request.httprequest.data)
+        # print(request.httprequest.remote_addr)
+        # print(request.httprequest.headers)
+        # print(data)
         magento_url = data.get('url', False)
         magento_instance = request.env['magento.instance'].sudo().search([
             ('magento_url', '=', magento_url.rstrip('/') if magento_url else False)
@@ -28,7 +28,6 @@ class Binary(http.Controller):
 
         if not magento_instance or not data.get('items'):
             return 'false'
-        print(data)
         res = request.env['sale.order'].sudo().process_sales_order_creation(magento_instance, data)
 
         return 'true' if res else 'false'
@@ -39,7 +38,7 @@ class Binary(http.Controller):
         Call method while cancel order from the Magento and
         Cancel order webhook is enabled from the magento configuration
         :param kwargs:
-        :return: True
+        :return: True/False
         """
         order_id = kwargs.get('order_id', False)
         magento_url = kwargs.get('url', False)
@@ -47,7 +46,7 @@ class Binary(http.Controller):
             ('magento_url', '=', magento_url.rstrip('/') if magento_url else False)
         ])
 
-        if not magento_instance:
+        if not magento_instance or not order_id:
             return 'false'
 
         sale_order = request.env['sale.order'].sudo().search([('magento_instance_id', '=', magento_instance.id),

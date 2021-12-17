@@ -32,3 +32,4 @@ from . import account_fiscal_position
 from . import sale_workflow_process
 from . import vendor_stock
 from . import product_pricelist
+from . import magento_async_bulk_logs

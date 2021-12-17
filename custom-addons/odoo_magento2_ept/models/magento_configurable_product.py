@@ -54,6 +54,7 @@ class MagentoConfigurableProduct(models.Model):
     product_variant_ids = fields.One2many('magento.product.product', 'magento_conf_product', 'Magento Products',
                                           required=True, context={'active_test': False})
     product_variant_count = fields.Integer('# Product Variants', compute='_compute_magento_product_variant_count')
+    bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs")
 
     _sql_constraints = [('_magento_conf_product_unique_constraint',
                          'unique(magento_sku,magento_instance_id)',

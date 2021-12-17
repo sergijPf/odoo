@@ -4,6 +4,7 @@
 Describes fields and methods for Magento products
 """
 import json
+import pytz
 from datetime import datetime, timedelta
 from odoo import fields, models, _
 from odoo.exceptions import UserError
@@ -62,6 +63,7 @@ class MagentoProductProduct(models.Model):
     ], string='Export Status',
         help='The status of Product Variant Export to Magento ', default='not_exported')
     force_update = fields.Boolean(string="To force run Simple Product Export", default=False)
+    bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs")
 
     _sql_constraints = [('_magento_product_unique_constraint',
                          'unique(magento_sku,magento_instance_id,magento_product_id)',
@@ -83,6 +85,7 @@ class MagentoProductProduct(models.Model):
             }
             return vals
 
+    # product's stock export section
     def export_products_stock_to_magento(self, instance):
         """
         This method is used to export multiple product stock from odoo to magento
@@ -102,7 +105,7 @@ class MagentoProductProduct(models.Model):
         if stock_data:
             data = {'skuData': stock_data}
             api_url = "/V1/product/updatestock"
-            self.call_export_product_stock_api(instance, api_url, data, 'PUT')
+            return self.call_export_product_stock_api(instance, api_url, data, 'PUT')
 
     def export_product_stock_to_multiple_locations(self, instance, magento_locations):
         """
@@ -126,7 +129,7 @@ class MagentoProductProduct(models.Model):
         if stock_data:
             data = {'sourceItems': stock_data}
             api_url = "/V1/inventory/source-items"
-            self.call_export_product_stock_api(instance, api_url, data, 'POST')
+            return self.call_export_product_stock_api(instance, api_url, data, 'POST')
 
     def prepare_export_product_stock_dict(self, product_id, instance, stock, stock_data, magento_location):
         """
@@ -175,27 +178,44 @@ class MagentoProductProduct(models.Model):
         :param api_url: API Call URL
         :param data: Dictionary to be passed
         :param method_type: Api Request Method type (PUT/POST)
-        :return: common log book object
+        :return:
         """
+        stock_log_book_obj = self.env['magento.stock.log.book']
+        is_error = False
+        tz = pytz.timezone('Europe/Warsaw')
+        batch_code = datetime.now(tz).strftime("%Y-%b-%d %H:%M:%S")
+        self.clean_old_log_records(instance, stock_log_book_obj)
+
         try:
             responses = req(instance, api_url, method_type, data)
         except Exception as error:
-            raise UserError(_("Error while Export product stock " + str(error)))
-        # print(responses)
-        if responses:
-            stock_log_book = self.env['magento.stock.log.book'].search([('magento_instance_id', '=', instance.id)])
-            # archive all previous records
-            # if stock_log_book:
-            #     stock_log_book.write({'active': False})
+            message = "Error while Export product stock " + str(error)
+            stock_log_book_obj.create({
+                'magento_instance_id': instance.id,
+                'batch': batch_code,
+                'log_message': message
+            })
+            return False
 
+        if responses:
             for response in responses:
-                if isinstance(response, dict):
-                    message = response.get('message')
-                else:
-                    message = responses.get(response)
-                # log error
                 if response.get('code', False) != '200':
-                    stock_log_book.create({'magento_instance_id': instance.id, 'log_message': message})
+                    is_error = True
+                    stock_log_book_obj.create({
+                        'magento_instance_id': instance.id,
+                        'batch': batch_code,
+                        'log_message': response.get('message', response)
+                    })
+
+        if is_error:
+            return False
+        else:
+            stock_log_book_obj.create({
+                'magento_instance_id': instance.id,
+                'batch': batch_code,
+                'log_message': "Successfully Exported"
+            })
+            return True
 
     @staticmethod
     def get_magento_product_stock(instance, product_ids, prod_obj, locations):
@@ -215,6 +235,7 @@ class MagentoProductProduct(models.Model):
                 product_listing_stock = prod_obj.get_forecasted_qty(locations, product_ids)
         return product_listing_stock
 
+    # products export section
     def process_products_export_to_magento(self, single=0, status_check=False):
         """
         The main method to process Products Export to Magento. The Product's Public Categories are treated as
@@ -891,15 +912,14 @@ class MagentoProductProduct(models.Model):
 
     def check_conf_product_attributes_and_options_exist_in_magento(self, ml_product_dict, attribute_sets):
         """
-        Check if Product's Attributes exist in Magento.
+        Check if Product's Attributes exist in Magento
         :param attribute_sets: Dictionary with defined Attributes and their options in Magento
         :param ml_product_dict: Dictionary contains metadata for selected Simple Products (Odoo products)
         :return: None
         """
         for prod in ml_product_dict:
             conf_prod = ml_product_dict[prod]['conf_object']
-            prod_attr_set = conf_prod.magento_attr_set
-            available_attributes = attribute_sets[prod_attr_set]['attributes']
+            available_attributes = attribute_sets[conf_prod.magento_attr_set]['attributes']
             prod_attributes = conf_prod.odoo_prod_category.attribute_ids
             # create list of unique groups of product attributes to be used as attributes in magento
             prod_attr_list = list({a.categ_group_id.name for a in prod_attributes if a.categ_group_id})
@@ -1124,23 +1144,13 @@ class MagentoProductProduct(models.Model):
                 return False
         return True
 
-    def check_conf_attributes_can_be_configurable(self, conf_prod_attributes, product_attributes_in_magento):
+    @staticmethod
+    def check_conf_attributes_can_be_configurable(conf_prod_attributes, product_attributes_in_magento):
         for attr_name in conf_prod_attributes:
             attr = next((a for a in product_attributes_in_magento if str(a['default_label']) == attr_name), {})
             if not attr['can_be_configurable']:
                 return False
         return True
-
-    def get_attribute_name_by_id(self, available_attributes, attr_id):
-        """
-        Get Attribute Name by it's Id
-        :param available_attributes: List with available in Magento Product Attributes
-        :param attr_id: Attribute's Id
-        :return: Attribute's Name or None
-        """
-        for attr in available_attributes:
-            if str(attr.get('attribute_id')) == str(attr_id):
-                return attr.get('default_label')
 
     def get_products_from_magento(self, magento_instance, ml_products_dict):
         """
@@ -1214,15 +1224,21 @@ class MagentoProductProduct(models.Model):
                        "Please check if rabbitmq works properly.\n"
                 ml_conf_products[prod]['log_message'] += text
             return
-        # api = '/V1/bulk/%s/status' % response.get('bulk_uuid')
-        if not response.get('errors'):
+
+        if not response.get('errors', True):
             product_websites = []
             prod_media = {}
             thumb_images = {}
+            log_id = self.bulk_log_ids.create({
+                'bulk_uuid': response.get("bulk_uuid"),
+                'topic': 'Product Export'
+            })
+
             for prod in new_conf_products:
                 conf_product = ml_conf_products[prod]['conf_object']
                 ml_conf_products[prod]['export_date_to_magento'] = datetime.now()
                 ml_conf_products[prod]['magento_status'] = 'in_process'
+                conf_product.write({'bulk_log_ids': [(6, 0, [log_id.id])]})
 
                 # prepare websites export
                 for site in magento_instance.magento_website_ids:
@@ -1247,8 +1263,16 @@ class MagentoProductProduct(models.Model):
                         thumb_images.update({prod: [(config_prod.id, '', config_prod.image_256)]})
 
             if product_websites:
-                self.process_product_website_data_export_in_bulk(magento_instance, product_websites, new_conf_products,
-                                                                 ml_conf_products)
+                res = self.process_product_website_data_export_in_bulk(magento_instance, product_websites,
+                                                                       new_conf_products, ml_conf_products)
+                if not res.get('errors', True):
+                    log_id = self.bulk_log_ids.create({
+                        'bulk_uuid': res.get("bulk_uuid"),
+                        'topic': 'Website info export'
+                    })
+                    for prod in new_conf_products:
+                        ml_conf_products[prod]['conf_object'].write({'bulk_log_ids': [(4, log_id.id)]})
+
             self.process_conf_prod_storeview_data_export_in_bulk(magento_instance, data, attr_sets, ml_conf_products)
 
             if prod_media:
@@ -1334,7 +1358,8 @@ class MagentoProductProduct(models.Model):
             return response
         return {}
 
-    def process_product_websites_export(self, magento_instance, ml_products, prod_sku, product, method="POST"):
+    @staticmethod
+    def process_product_websites_export(magento_instance, ml_products, prod_sku, product, method="POST"):
         # add all available Websites to Product in case of initial export
         website_ids = []
         data = {"productWebsiteLink": {"sku": prod_sku}}
@@ -1473,12 +1498,22 @@ class MagentoProductProduct(models.Model):
 
             try:
                 api_url = '/%s/async/bulk/V1/products' % view[1].magento_storeview_code
-                req(magento_instance, api_url, 'PUT', data_lst)
+                res = req(magento_instance, api_url, 'PUT', data_lst)
             except Exception:
                 for product in data:
                     text = "Error while exporting products data to '%s' store view.\n" % view[1].magento_storeview_code
                     ml_products[product['product']['sku']]['log_message'] += text
                 break
+
+            if not res.get('errors', True):
+                log_id = self.bulk_log_ids.create({
+                    'bulk_uuid': res.get("bulk_uuid"),
+                    'topic': 'Storeview-%s info export' % view[1].magento_storeview_code
+                })
+                prod_list = [p['product']['sku'] for p in data]
+                odoo_products.filtered(
+                    lambda x: x.magento_sku in prod_list and x.magento_instance_id == magento_instance
+                ).write({'bulk_log_ids': [(4, log_id.id)]})
 
     def process_conf_prod_storeview_data_export_in_bulk(self, magento_instance, data, attr_sets, ml_conf_products):
         magento_storeviews = [(w, w.store_view_ids) for w in magento_instance.magento_website_ids]
@@ -1500,12 +1535,21 @@ class MagentoProductProduct(models.Model):
 
             try:
                 api_url = '/%s/async/bulk/V1/products' % view[1].magento_storeview_code
-                req(magento_instance, api_url, 'PUT', data_lst)
+                res = req(magento_instance, api_url, 'PUT', data_lst)
             except Exception:
                 for product in data:
                     text = "Error while exporting products' data to '%s' store view.\n" % view[1].magento_storeview_code
                     ml_conf_products[product['product']['sku']]['log_message'] += text
                 break
+
+            if not res.get('errors', True):
+                log_id = self.bulk_log_ids.create({
+                    'bulk_uuid': res.get("bulk_uuid"),
+                    'topic': 'Storeview-%s info export' % view[1].magento_storeview_code
+                })
+                for product in data:
+                    sku = product['product']['sku']
+                    ml_conf_products[sku]['conf_object'].write({'bulk_log_ids': [(4, log_id.id)]})
 
     def export_single_simple_product_to_magento(self, magento_instance, product, ml_simp_products, attr_sets, method):
         """
@@ -1702,11 +1746,17 @@ class MagentoProductProduct(models.Model):
 
         if response.get('errors'):
             return False
+
+        log_id = self.bulk_log_ids.create({
+            'bulk_uuid': response.get("bulk_uuid"),
+            'topic': 'Product Export'
+        })
         for prod in odoo_products:
             if prod.magento_sku in export_prod_list:
                 img_update = False
                 ml_simp_products[prod.magento_sku]['export_date_to_magento'] = datetime.now()
                 ml_simp_products[prod.magento_sku]['magento_status'] = 'in_process'
+                prod.write({'bulk_log_ids': [(6, 0, [log_id.id])]})
 
                 # prepare products dict with websites and images info to be exported
                 if method == "POST":
@@ -1741,10 +1791,17 @@ class MagentoProductProduct(models.Model):
                             prod.magento_sku: [(prod.odoo_product_id.product_tmpl_id.id, '', prod.odoo_product_id.image_256)]
                         })
 
-        if method == "POST":
-            if product_websites:
-                self.process_product_website_data_export_in_bulk(magento_instance, product_websites,
-                                                                 export_prod_list, ml_simp_products)
+        if method == "POST" and product_websites:
+            res =self.process_product_website_data_export_in_bulk(magento_instance, product_websites,
+                                                                  export_prod_list, ml_simp_products)
+            if not res.get('errors', True):
+                log_id = self.bulk_log_ids.create({
+                    'bulk_uuid': res.get("bulk_uuid"),
+                    'topic': 'Website info export'
+                })
+                odoo_products.filtered(lambda x: x.magento_sku in export_prod_list).write({
+                    'bulk_log_ids': [(4, log_id.id)]
+                })
 
         self.process_simple_prod_storeview_data_export_in_bulk(magento_instance, odoo_products, data, ml_simp_products)
 
@@ -1756,14 +1813,17 @@ class MagentoProductProduct(models.Model):
             self.export_media_to_magento_in_bulk(magento_instance, thumb_images, ml_simp_products,
                                                  'product.template', True)
 
-    def process_product_website_data_export_in_bulk(self, magento_instance, product_websites, product_list, ml_products):
+    @staticmethod
+    def process_product_website_data_export_in_bulk(magento_instance, product_websites, product_list, ml_products):
         try:
             api_url = '/async/bulk/V1/products/bySku/websites'
-            req(magento_instance, api_url, 'POST', product_websites)
+            res = req(magento_instance, api_url, 'POST', product_websites)
         except Exception:
             text = "Error while assigning website(s) to product in Magento"
             for prod_sku in product_list:
                 ml_products[prod_sku]['log_message'] += text
+            return {}
+        return res
 
     def export_media_to_magento_in_bulk(self, magento_instance, products_media, ml_simp_products, res_model,
                                         is_thumbnail=False):
@@ -1776,7 +1836,6 @@ class MagentoProductProduct(models.Model):
         :param is_thumbnail: If Image has to be exported as thumbnail (Boolean)
         :return: None
         """
-
         files_size = 0
         images = []
         last_prod = list(products_media)[-1]
@@ -1961,6 +2020,14 @@ class MagentoProductProduct(models.Model):
 
             if response.get('errors', {}):
                 return False
+            else:
+                log_id = self.bulk_log_ids.create({
+                    'bulk_uuid': response.get("bulk_uuid"),
+                    'topic': 'Assign Product Attributes'
+                })
+                for prod in odoo_products:
+                    if prod.magento_sku in export_prod_list:
+                        prod.write({'bulk_log_ids': [(4, log_id.id)]})
 
     def link_simple_to_config_products_in_bulk(self, magento_instance, export_prod_list, odoo_products, ml_simp_products):
         """
@@ -1986,11 +2053,22 @@ class MagentoProductProduct(models.Model):
         if data:
             try:
                 api_url = '/async/bulk/V1/configurable-products/bySku/child'
-                req(magento_instance, api_url, 'POST', data)
+                res = req(magento_instance, api_url, 'POST', data)
             except Exception:
                 text = "Error while asynchronously linking Simple to Configurable Product in Magento.\n"
                 for prod in export_prod_list:
                     ml_simp_products[prod]['log_message'] += text
+            
+            if res.get("errors"):
+                return False
+            else:
+                log_id = self.bulk_log_ids.create({
+                    'bulk_uuid': res.get("bulk_uuid"),
+                    'topic': 'Link Simple to Configurable'
+                })
+                for prod in odoo_products:
+                    if prod.magento_sku in export_prod_list:
+                        prod.write({'bulk_log_ids': [(4, log_id.id)]})
 
     def check_products_set_of_attribute_values(self, ml_conf_products, conf_sku, simp_prod_attr,
                                                available_attributes, ml_simple_prod, magento_sku):
@@ -2158,6 +2236,88 @@ class MagentoProductProduct(models.Model):
         else:
             log_book.write(vals)
 
+    def export_product_prices(self, instances):
+        prices_log_obj = self.env['magento.prices.log.book']
+        is_error = False
+        tz = pytz.timezone('Europe/Warsaw')
+        batch_code = datetime.now(tz).strftime("%Y-%b-%d %H:%M:%S")
+
+        for instance in instances:
+            data = {"prices": []}
+            magento_storeviews = [(w, w.store_view_ids) for w in instance.magento_website_ids]
+            self.clean_old_log_records(instance, prices_log_obj)
+
+            if instance.catalog_price_scope == 'global':
+                if not len(instance.pricelist_id):
+                    raise UserError("There are no pricelist(s) defined for '%s' instance.\n" % instance.name)
+                else:
+                    for view in magento_storeviews:
+                        for product in self.search([
+                            ('magento_instance_id', '=', instance.id),
+                            ('magento_status', 'in', ['in_magento', 'need_to_link', 'update_needed'])
+                        ]):
+                            product_price = instance.pricelist_id.get_product_price(product.odoo_product_id, 1.0, False)
+                            if product_price:
+                                data["prices"].append({
+                                    "price": product_price,
+                                    "store_id": view[1].magento_storeview_id,
+                                    "sku": product.magento_sku
+                                })
+                            else:
+                                is_error = True
+                                text = "Product Price is not defined for %s instance and %s store view" % (
+                                    instance.name, view[1].name)
+                                self.create_price_export_log(instance, view[1], prices_log_obj, batch_code,
+                                                             product.magento_sku, text)
+            elif instance.catalog_price_scope == 'website':
+                for view in magento_storeviews:
+                    pricelist = view[0].pricelist_id
+                    if not len(pricelist):
+                        raise UserError("There are no pricelist defined for '%s' website.\n" % view[0].name)
+                    else:
+                        if view[0].magento_base_currency.id != pricelist.currency_id.id:
+                            text = "Pricelist '%s' currency is different than Magento base currency " \
+                                   "for '%s' website.\n" % (pricelist.name, view[0].name)
+                            raise UserError(text)
+
+                        for product in self.search([
+                            ('magento_instance_id', '=', instance.id),
+                            ('magento_status', 'in', ['in_magento', 'need_to_link', 'update_needed'])
+                        ]):
+                            price_and_rule = pricelist.get_product_price_rule(product.odoo_product_id, 1.0, False)
+                            # check if public price applied (rule = False), and not specific one from website's pricelist
+                            product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
+                            if product_price:
+                                data["prices"].append({
+                                    "price": product_price,
+                                    "store_id": view[1].magento_storeview_id,
+                                    "sku": product.magento_sku
+                                })
+                            else:
+                                is_error = True
+                                text = "Product Price is not defined for %s instance and %s store view" % (
+                                    instance.name, view[1].name)
+                                self.create_price_export_log(instance, view[1], prices_log_obj, batch_code,
+                                                             product.magento_sku, text)
+
+            # process export to magento
+            if data["prices"]:
+                try:
+                    api_url = '/V1/products/base-prices'
+                    res = req(instance, api_url, 'POST', data)
+                    if res:
+                        is_error = True
+                        text = self.format_error_log(res)
+                        self.create_price_export_log(instance, False, prices_log_obj, batch_code, "", text)
+                except Exception:
+                    text = "Error while exporting product prices to '%s' magento instance.\n" % instance.name
+                    raise UserError(text)
+
+            if not is_error:
+                self.create_price_export_log(instance, False, prices_log_obj, batch_code, "", "Successfully Exported")
+
+        return False if is_error else True
+
     def process_manually(self):
         """
         Process Product's Export (create/update) with regular Magento API process (without RabbitMQ)
@@ -2193,12 +2353,67 @@ class MagentoProductProduct(models.Model):
                 'magento_website_ids': [(5, 0, 0)]
             })
 
-    def to_html_listitem(self, attributes, lang_code):
+    @staticmethod
+    def get_attribute_name_by_id(available_attributes, attr_id):
+        """
+        Get Attribute Name by it's Id
+        :param available_attributes: List with available in Magento Product Attributes
+        :param attr_id: Attribute's Id
+        :return: Attribute's Name or None
+        """
+        for attr in available_attributes:
+            if str(attr.get('attribute_id')) == str(attr_id):
+                return attr.get('default_label')
+
+    @staticmethod
+    def to_html_listitem(attributes, lang_code):
         lst = '<ul>'
         for attr in attributes.sorted('sequence'):
             if attr['attribute_value']:
                lst += "<li>" + attr.with_context(lang=lang_code)['attribute_value'] + "</li>"
         return lst + "</ul>"
+
+    @staticmethod
+    def create_price_export_log(instance, view, prices_log_obj, batch_code, sku, text):
+        prices_log_obj.create({
+            "magento_instance_id": instance.id,
+            "magento_storeview_id": view.id if view else False,
+            "batch": batch_code,
+            "magento_sku": sku,
+            "log_message": text
+        })
+
+    @staticmethod
+    def clean_old_log_records(instance, log_book_obj):
+        # remove all records older than 30 days
+        log_book_rec = log_book_obj.with_context(active_test=False).search([
+            ('create_date', '<', datetime.today() - timedelta(days=30))
+        ])
+        if log_book_rec:
+            log_book_rec.sudo().unlink()
+
+        # archive all previous records older than 7 days
+        log_book_rec = log_book_rec.search([
+            ('magento_instance_id', '=', instance.id),
+            ('create_date', '<', datetime.today() - timedelta(days=7))
+        ])
+        if log_book_rec:
+            log_book_rec.write({'active': False})
+
+    @staticmethod
+    def format_error_log(result):
+        text = ""
+        for err in result:
+            cnt = 0
+            mess = str(err.get("message", ""))
+            param = err.get("parameters", [])
+            while (mess.find("%") >= 0):
+                ind = mess.find("%")
+                ind2 = mess.find(" ", ind) if mess.find(" ", ind) >= 0 else len(mess)
+                mess = mess.replace(mess[ind:ind2], param[cnt] if len(param) > cnt else "")
+                cnt += 1
+            text += mess + "\n"
+        return text
 
     @staticmethod
     def to_upper(val):

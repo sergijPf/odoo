@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-from odoo import models, api, _
 
 from odoo import fields, models, api
 from odoo.exceptions import UserError
-from .api_request import req
 
-class MagentoProicelists(models.Model):
+
+class MagentoPricelists(models.Model):
 
     _name = 'magento.pricelists'
     _description = 'Magento Pricelists for products to be exported to Magento.'

@@ -43,7 +43,7 @@
                                    modifiers="{}"/>
                         </div>
                         <notebook>
-                            <page string="Magento Details" name="magento_group">
+                            <page string="Magento Details" name="magento_details">
                                 <group>
                                     <group name="group_odoo" string="Odoo Ref.">
                                         <field name="odoo_prod_category" readonly="1"/>
@@ -61,6 +61,14 @@
                                         <field name="magento_export_date" attrs="{'invisible': [('do_not_create_flag', '=', True)]}" readonly="1" />
                                     </group>
                                 </group>
+                            </page>
+                            <page string="Export Log Details" name="magento_export_logs">
+                                <field name="bulk_log_ids" readonly="1">
+                                    <tree create="false" delete="false" edit="false">
+                                        <field name="topic"/>
+                                        <field name="bulk_uuid"/>
+                                    </tree>
+                                </field>
                             </page>
                         </notebook>
                     </sheet>
