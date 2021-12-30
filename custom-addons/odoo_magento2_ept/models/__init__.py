@@ -33,3 +33,7 @@ from . import sale_workflow_process
 from . import vendor_stock
 from . import product_pricelist
 from . import magento_async_bulk_logs
+from . import product_category
+from . import product_template
+from . import product_template_attribute_line
+from . import product_image

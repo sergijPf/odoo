@@ -6,9 +6,6 @@
             <field name="model">product.product</field>
             <field name="inherit_id" ref="product.product_normal_form_view"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='public_categ_ids']" position="after">
-                    <field name="config_product_id" options="{'no_create':True,'no_create_edit': True}"/>
-                </xpath>
                 <xpath expr="//notebook" position='inside'>
                     <page string="Vendor Stock"
                           attrs="{'invisible': [('is_drop_ship_product', '=',False)]}">
@@ -26,17 +23,19 @@
             </field>
         </record>
 
-        <record id="product_product_search_inherit_view" model="ir.ui.view">
-            <field name="name">product_product_search_inherit_view</field>
-            <field name="model">product.product</field>
-            <field name="inherit_id" ref="product.product_search_form_view"/>
+        <record id="view_product_image_form_inherited" model="ir.ui.view">
+            <field name="name">product.image.view.form.inherited</field>
+            <field name="model">product.image</field>
+            <field name="inherit_id" ref="website_sale.view_product_image_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//filter[@name='inactive']" position="after">
-                    <field name="magento_product_ids" invisible="1"/>
-                    <separator/>
-                    <filter name="magento_products" string="Has Magento Product" domain="[('magento_product_ids','!=',False)]"/>
+                <xpath expr="//field[@name='video_url']" position='after'>
+                    <label for="image_role" string="Image role in Magento" class="mt-3"
+                        groups="odoo_magento2_ept.group_magento_user_ept"/>
+                    <field name="image_role"
+                        groups="odoo_magento2_ept.group_magento_user_ept"/>
                 </xpath>
             </field>
         </record>
+
     </data>
 </odoo>

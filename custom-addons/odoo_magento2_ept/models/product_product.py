@@ -12,8 +12,11 @@ class ProductProduct(models.Model):
 
     vendor_ids = fields.One2many('vendor.stock', 'vendor_product_id', string="Vendor")
     is_drop_ship_product = fields.Boolean(store=False, compute="_compute_is_drop_ship_product")
-    config_product_id = fields.Many2one('product.public.category', string="Configurable Product",
-                                        domain="[('is_magento_config','=',True)]")
+    magento_product_count = fields.Integer(string='# Product Counts', compute='_compute_magento_product_count')
+    magento_product_ids = fields.One2many(MAGENTO_PRODUCT, 'odoo_product_id', string='Magento Products',
+                                          help='Magento Product Ids')
+    # config_product_id = fields.Many2one('product.public.category', string="Configurable Product",
+    #                                     domain="[('is_magento_config','=',True)]")
 
     @api.depends('route_ids')
     def _compute_is_drop_ship_product(self):
@@ -31,6 +34,16 @@ class ProductProduct(models.Model):
             self.is_drop_ship_product = True
         else:
             self.is_drop_ship_product = False
+
+    def _compute_magento_product_count(self):
+        """
+        calculate magento product count
+        :return:
+        """
+        magento_product_obj = self.env[MAGENTO_PRODUCT]
+        for product in self:
+            magento_products = magento_product_obj.search([('odoo_product_id', '=', product.id)])
+            product.magento_product_count = len(magento_products) if magento_products else 0
 
     def get_products_based_on_movement_date(self, from_datetime, company=False):
         """
@@ -188,20 +201,6 @@ class ProductProduct(models.Model):
                 forcasted_qty.update({i.get('product_id'):i.get('stock')})
         return forcasted_qty
 
-    def _compute_magento_product_count(self):
-        """
-        calculate magento product count
-        :return:
-        """
-        magento_product_obj = self.env[MAGENTO_PRODUCT]
-        for product in self:
-            magento_products = magento_product_obj.search([('odoo_product_id', '=', product.id)])
-            product.magento_product_count = len(magento_products) if magento_products else 0
-
-    magento_product_count = fields.Integer(string='# Product Counts', compute='_compute_magento_product_count')
-    magento_product_ids = fields.One2many(MAGENTO_PRODUCT, 'odoo_product_id', string='Magento Products',
-                                          help='Magento Product Ids')
-
     def view_magento_products(self):
         """
         This method is used to view Magento product.
@@ -231,28 +230,28 @@ class ProductProduct(models.Model):
 
         res = super(ProductProduct, self).write(vals)
 
-        if 'config_product_id' in vals:
-            # applicable only to products which are in Magento Layer already
-            magento_conf_product_obj = self.env['magento.configurable.product']
-            domain = [('magento_sku', '=', self.default_code)]
-
-            # check if product is in Magento Layer
-            magento_simp_prod = magento_product_product_obj.with_context(active_test=False).search(domain)
-
-            # check if config.product exists, create if not and re-link simple products
-            for prod in magento_simp_prod:
-                dmn = [('odoo_prod_category', '=', self.config_product_id.id),
-                       ('magento_instance_id', '=', prod.magento_instance_id.id)]
-                conf_prod = magento_conf_product_obj.with_context(active_test=False).search(dmn)
-                if not conf_prod:
-                    conf_prod = magento_conf_product_obj.create({
-                        'magento_instance_id': prod.magento_instance_id.id,
-                        'odoo_prod_category': self.config_product_id.id,
-                        'magento_sku': self.config_product_id.with_context(lang='en_US').name.replace(' ', '_').
-                            replace('%', '').replace('#', '').replace('/', '')
-                        # 'magento_sku': re.sub('[^a-zA-Z0-9 \n\.]', '', self.config_product_id.name),
-                        # 'magento_product_name': self.config_product_id.name
-                    })
-                prod.magento_conf_product = conf_prod.id
-
+        # if 'config_product_id' in vals:
+        #     # applicable only to products which are in Magento Layer already
+        #     magento_conf_product_obj = self.env['magento.configurable.product']
+        #     domain = [('magento_sku', '=', self.default_code)]
+        #
+        #     # check if product is in Magento Layer
+        #     magento_simp_prod = magento_product_product_obj.with_context(active_test=False).search(domain)
+        #
+        #     # check if config.product exists, create if not and re-link simple products
+        #     for prod in magento_simp_prod:
+        #         dmn = [('odoo_prod_category', '=', self.config_product_id.id),
+        #                ('magento_instance_id', '=', prod.magento_instance_id.id)]
+        #         conf_prod = magento_conf_product_obj.with_context(active_test=False).search(dmn)
+        #         if not conf_prod:
+        #             conf_prod = magento_conf_product_obj.create({
+        #                 'magento_instance_id': prod.magento_instance_id.id,
+        #                 'odoo_prod_category': self.config_product_id.id,
+        #                 'magento_sku': self.config_product_id.with_context(lang='en_US').name.replace(' ', '_').
+        #                     replace('%', '').replace('#', '').replace('/', '')
+        #                 # 'magento_sku': re.sub('[^a-zA-Z0-9 \n\.]', '', self.config_product_id.name),
+        #                 # 'magento_product_name': self.config_product_id.name
+        #             })
+        #         prod.magento_conf_product = conf_prod.id
+        #
         return res

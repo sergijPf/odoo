@@ -20,6 +20,9 @@
                 </xpath>
 
                 <xpath expr="//group[@name='x_magento_details']" position="inside">
+<!--                    <field name="main_conf_attr_id"-->
+<!--                           options="{'no_create':True, 'no_create_edit': True}"-->
+<!--                           attrs="{'invisible': ['|',('is_magento_config', '=', False), ('x_magento_no_create', '=', True)]}"/>-->
                     <field name="attribute_ids" widget="many2many_tags"
                            options="{'color_field': 'color', 'no_create':True, 'no_create_edit': True}"
                            attrs="{'invisible': ['|',('is_magento_config', '=', False), ('x_magento_no_create', '=', True)]}"/>

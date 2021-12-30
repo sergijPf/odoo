@@ -9,23 +9,24 @@ from odoo.exceptions import UserError
 class MagentoAsyncBulkLogs(models.Model):
     _name = 'magento.async.bulk.logs'
     _description = 'Logs of Async Export data to Magento'
+    _rec_name = 'bulk_uuid'
 
     bulk_uuid = fields.Char('Bulk ID')
-    magento_product_id = fields.Many2many('magento.product.product', string="Magento Product")
-    magento_conf_product_id = fields.Many2many('magento.configurable.product', string="Magento Conf.Product")
+    magento_product_ids = fields.Many2many('magento.product.product', string="Magento Product")
+    magento_conf_product_ids = fields.Many2many('magento.configurable.product', string="Magento Conf.Product")
     lod_details_ids = fields.One2many('magento.async.bulk.log.details', 'bulk_log_id', 'Log details')
     topic = fields.Char(string="Related topic")
     is_conf_prod = fields.Boolean("Is configurable product?", compute="_check_if_config_or_not")
 
     def _check_if_config_or_not(self):
         for record in self:
-            record.is_conf_prod = True if len(record.magento_conf_product_id) else False if len(record.magento_product_id) else None
+            record.is_conf_prod = True if len(record.magento_conf_product_ids) else False if len(record.magento_product_ids) else None
 
     def check_bulk_log_statuses(self):
         if not self.bulk_uuid:
             return
 
-        instance = self.magento_conf_product_id.magento_instance_id or self.magento_product_id.magento_instance_id
+        instance = self.magento_conf_product_ids.magento_instance_id or self.magento_product_ids.magento_instance_id
 
         try:
             api_url = '/V1/bulk/%s/detailed-status' % self.bulk_uuid

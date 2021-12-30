@@ -15,7 +15,7 @@ class MagentoProductLogBook(models.Model):
     magento_log_message_conf = fields.Char(string="Product Category Error Messages")
     magento_product_id = fields.Many2one('magento.product.product', 'Magento Product', auto_join=True,
                                          ondelete="cascade", required=True)
-    magento_conf_prod = fields.Many2one(related="magento_product_id.magento_conf_product")
+    magento_conf_prod_id = fields.Many2one(related="magento_product_id.magento_conf_product_id")
 
 
 class MagentoStockLogBook(models.Model):

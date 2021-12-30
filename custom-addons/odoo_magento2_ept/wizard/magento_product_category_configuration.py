@@ -8,7 +8,7 @@ from ..models.api_request import req
 
 class MagentoProductCategoryConfiguration(models.TransientModel):
     """
-    Describes fields and methods for Magento Cron Configuration
+    Describes fields and methods for Magento Product Category Configuration
     """
     _name = "magento.product.category.configuration"
     _description = "Magento Product Category Configuration"

@@ -26,22 +26,22 @@
         <field name="name">magento.product.product.form</field>
         <field name="model">magento.product.product</field>
         <field name="arch" type="xml">
-            <form string="Product" name="product_form" create="false" delete="true">
-                <header>
-                    <button name="process_manually"
-                            string="Process Export Manually"
-                            type="object" class="btn-primary"
-                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>
-                    <button name="status_check_of_export"
-                            context="{'status_check': True, 'single': True}"
-                            string="Check Export Status"
-                            type="object"
-                            class="btn btn-info"/>
-                </header>
+            <form string="Product" name="product_form" create="false" delete="true" edit="true">
+<!--                <header>-->
+<!--                    <button name="process_manually"-->
+<!--                            string="Process Export Manually"-->
+<!--                            type="object" class="btn-primary"-->
+<!--                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
+<!--                    <button name="status_check_of_export"-->
+<!--                            context="{'status_check': True, 'single': True}"-->
+<!--                            string="Check Export Status"-->
+<!--                            type="object"-->
+<!--                            class="btn btn-info"/>-->
+<!--                </header>-->
                 <sheet>
                     <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
                     <field name="active" invisible="True" />
-                    <field name="active_product" class="oe_inline" invisible='1'/>
+<!--                    <field name="active_product" class="oe_inline" invisible='1'/>-->
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button"
                                 name="toggle_active" icon="fa-lock"
@@ -64,27 +64,24 @@
                     </div>
                     <widget name="web_ribbon" text="In Magento" attrs="{'invisible': [('magento_status', '!=', 'in_magento')]}"/>
                     <widget name="web_ribbon" title="Deleted" bg_color="bg-danger" attrs="{'invisible': [('magento_status', '!=', 'deleted')]}"/>
-                    <field name="image_1920" widget="image" class="oe_avatar" />
+                    <field name="thumbnail_image" widget="image" class="oe_avatar" readonly="0"/>
                     <div class="oe_title">
                         <label class="oe_edit_only" for="magento_product_name"/>
                         <h1>
                             <field name="magento_product_name" placeholder="Product Name" readonly="1" modifiers="{'required': true}"/>
                         </h1>
                         <h3>
-                            <field name="x_magento_name" placeholder="Name for Magento" modifiers="{}" id="x_magento_name"/>
+                            <field name="x_magento_name" placeholder="Name for Magento" id="x_magento_name"/>
                         </h3>
-                        <field name="product_template_attribute_value_ids"
-                               widget="many2many_tags"
-                               readonly="1"
-                               modifiers="{}"/>
+                        <field name="attribute_value_ids" widget="many2many_tags" readonly="1"/>
                     </div>
                     <notebook>
                          <page string="Magento Details" name="magento_group">
                              <group>
                                 <group name="group_odoo" string="Odoo Ref.">
                                     <field name="odoo_product_id" readonly="1"/>
-                                    <field name="magento_conf_product" readonly="1"/>
-                                    <field name="magento_conf_prod_sku"/>
+                                    <field name="magento_conf_product_id" readonly="1"/>
+                                    <field name="magento_conf_prod_sku" readonly="1"/>
                                     <field name="magento_sku" readonly="1"/>
                                 </group>
                                  <group name="magento_info" string="Magento Info">
@@ -95,6 +92,10 @@
                                     <field name="magento_status" readonly="1"/>
                                     <field name="magento_export_date" readonly="1"/>
                                 </group>
+                                 <group string="Product Images" name="magento_product_images">
+                                     <field name="product_images" class="o_website_sale_image_list"
+                                            mode="kanban" nolabel="1" id="product_images"/>
+                                 </group>
                              </group>
                         </page>
                         <page string="Export Log Details" name="magento_export_logs">
@@ -115,22 +116,26 @@
         <field name="name">magento.product.product.tree</field>
         <field name="model">magento.product.product</field>
         <field name="arch" type="xml">
-            <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku">
-                <header>
-                    <button name="status_check_of_export"
-                            context="{'status_check': True}"
-                            string="Check Export Status"
-                            type="object"
-                            class="btn btn-info ml-3"/>
-                </header>
+            <tree string="Magento Product" create="false" delete="true" default_order="magento_instance_id,magento_sku">
+<!--                <header>-->
+<!--                    <button name="process_manually"-->
+<!--                            string="Process Export Manually"-->
+<!--                            type="object" class="btn-primary"-->
+<!--                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
+<!--                    <button name="status_check_of_export"-->
+<!--                            context="{'status_check': True, 'single': True}"-->
+<!--                            string="Check Export Status"-->
+<!--                            type="object"-->
+<!--                            class="btn btn-info"/>-->
+<!--                </header>-->
                 <field name="magento_product_id" string="Magento Product ID" invisible="1"/>
                 <field name="magento_instance_id"/>
                 <field name="magento_product_id"/>
                 <field name="magento_website_ids" widget="many2many_tags"/>
                 <field name="magento_sku"/>
                 <field name="magento_product_name"/>
-                <field name="product_template_attribute_value_ids" widget="many2many_tags" readonly="1"
-                       optional="show" can_create="false" can_write="false" modifiers="{'readonly':true}"/>
+                <field name="attribute_value_ids" widget="many2many_tags" readonly="1"
+                       optional="show" can_create="false" can_write="false"/>
                 <field name="magento_status" widget="badge" optional="show" on_change="1"
                        decoration-success="magento_status == 'in_magento'"
                        decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
@@ -163,7 +168,7 @@
             <search string="Magento product search view">
                 <field name="magento_sku" />
                 <field name="magento_product_name" />
-                <field name="magento_conf_product"/>
+                <field name="magento_conf_product_id"/>
                 <field name="magento_product_id" />
                 <filter string="Not in Magento" name="not_in_magento"
                         domain="[('magento_status', '!=', 'in_magento')]"/>
@@ -173,7 +178,7 @@
                     <filter string="Instances" name="group_by_instance"
                             context="{'group_by': 'magento_instance_id'}"/>
                     <filter string="Product Category" name="group_by_product_category"
-                            context="{'group_by': 'magento_conf_product'}"/>
+                            context="{'group_by': 'magento_conf_product_id'}"/>
                     <filter string="Magento Status" name="group_by_status"
                             context="{'group_by': 'magento_status'}"/>
                 </group>
@@ -181,14 +186,14 @@
         </field>
     </record>
 
-    <record id="action_magento_product_export_prepare" model="ir.actions.server">
-        <field name="name">Export To Magento</field>
-        <field name="model_id" ref="model_magento_product_product"/>
-        <field name="binding_model_id" ref="model_magento_product_product"/>
-        <field name="binding_view_types">list,form</field>
-        <field name="state">code</field>
-        <field name="code">records.process_products_export_to_magento()</field>
-    </record>
+<!--    <record id="action_magento_product_export_prepare" model="ir.actions.server">-->
+<!--        <field name="name">Export To Magento</field>-->
+<!--        <field name="model_id" ref="model_magento_product_product"/>-->
+<!--        <field name="binding_model_id" ref="model_magento_product_product"/>-->
+<!--        <field name="binding_view_types">list,form</field>-->
+<!--        <field name="state">code</field>-->
+<!--        <field name="code">records.process_products_export_to_magento()</field>-->
+<!--    </record>-->
 
 
 <!--    bulk log view-->
@@ -207,11 +212,11 @@
                     <group>
                         <field name="bulk_uuid"/>
                         <field name="topic"/>
-                        <field name="magento_conf_product_id" invisible="1"/>
+                        <field name="magento_conf_product_ids" invisible="1"/>
                         <field name="is_conf_prod" invisible="1"/>
                     </group>
                     <group>
-                        <field name="magento_product_id"
+                        <field name="magento_product_ids"
                                attrs="{'invisible': [('is_conf_prod', '=', True)]}">
                             <tree>
                                 <field name="magento_sku"/>
@@ -219,7 +224,7 @@
                             </tree>
                         </field>
 
-                        <field name="magento_conf_product_id"
+                        <field name="magento_conf_product_ids"
                                attrs="{'invisible': [('is_conf_prod', '!=', True)]}">
                             <tree>
                                 <field name="magento_sku"/>

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import fields, models
-0
+
 class ProductAttribute(models.Model):
     _inherit = "product.attribute"
 
@@ -15,12 +15,7 @@ class ProductAttribute(models.Model):
         if 'is_ignored_in_magento' in vals:
             attr_id = self.id
             magento_products = self.env['magento.product.product'].search([])
-            prod_ids = []
-            for p in magento_products:
-                if attr_id in p.product_template_attribute_value_ids.product_attribute_value_id.mapped(
-                        'attribute_id').mapped('id'):
-                    prod_ids.append(p.id)
-            if prod_ids:
-                magento_products = magento_products.browse(prod_ids)
-                magento_products.write({'force_update': True})
+            magento_products.filtered(lambda x: attr_id in x.attribute_value_ids.product_attribute_value_id.mapped(
+                        'attribute_id').mapped('id')).write({'force_update': True})
+
         return res

@@ -7,7 +7,7 @@
             <search string="Export Products Log Book">
                 <field name="magento_sku"/>
                 <field name="magento_product_name"/>
-                <field name="magento_conf_product"/>
+                <field name="magento_conf_product_id"/>
                 <field name="magento_log_message"/>
                 <field name="magento_log_message_conf"/>
                 <filter string="Product error" name="prod_log" domain="[('magento_log_message', '!=', '')]"/>
@@ -21,7 +21,7 @@
                     <filter string="Magento Status" name="group_by_status"
                             context="{'group_by': 'magento_status'}"/>
                     <filter string="Product Category" name="group_by_product_category"
-                            context="{'group_by': 'magento_conf_product'}"/>
+                            context="{'group_by': 'magento_conf_product_id'}"/>
                     <filter string="Product Error" name="group_by_error"
                             context="{'group_by': 'magento_log_message'}"/>
                 </group>
@@ -92,7 +92,7 @@
         <field name="context">
             {'group_by': ['magento_instance_id'],
             'search_default_error_to_export':1,
-            'form_view_ref' : 'view_magento_exported_products_log_book_form'}
+            'form_view_ref' : 'odoo_magento2_ept.view_magento_exported_products_log_book_form'}
         </field>
         <field name="help" type="html">
             <div class="oe_empty_magento_instance">
