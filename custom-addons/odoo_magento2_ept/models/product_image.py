@@ -12,32 +12,52 @@ class ProductImage(models.Model):
         ('small_image', "Small"),
         ('image', "Base"),
         ('thumbnail', "Thumbnail"),
-        ('swatch_image', "Swatch")
+        ('swatch_image', "Swatch (Variants only)")
     ], string="Image role")
 
-    @api.onchange('image_role')
-    def onchange_image_role_check(self):
-        product_tmpl_img_role = self.search([('product_tmpl_id', '=', self._origin.product_tmpl_id.id),
-                                             ('image_role', '=', self.image_role)])
-        if product_tmpl_img_role:
-            product_tmpl_img_role.image_role = None
-
-        product_vrnt_img_role = self.search([('product_variant_id', '=', self._origin.product_variant_id.id),
-                                             ('image_role', '=', self.image_role)])
-        if product_vrnt_img_role:
-            product_vrnt_img_role.image_role = None
-
-        if self._origin.product_tmpl_id and self.image_role == 'swatch_image':
-            self.image_role = None
-
     def write(self, vals):
-        res = super(ProductImage, self).write(vals)
-
         if 'image_role' in vals:
-            for rec in self:
-                if rec.product_tmpl_id and rec.product_tmpl_id.magento_conf_prod_ids:
-                    rec.product_tmpl_id.magento_conf_prod_ids.write({'force_update': True})
-                elif rec.product_variant_id and rec.product_variant_id.magento_product_ids:
-                    rec.product_variant_id.magento_product_ids.write({'force_update': True})
+            if self.product_tmpl_id:
+                if vals['image_role'] == 'swatch_image':
+                    vals['image_role'] = None
 
-        return res
+                if vals['image_role']:
+                    product_tmpl_img_role = self.search([('product_tmpl_id', '=', self.product_tmpl_id.id),
+                                                         ('image_role', '=', vals['image_role'])])
+                    if product_tmpl_img_role:
+                        product_tmpl_img_role.image_role = None
+
+                if self.product_tmpl_id.magento_conf_prod_ids:
+                    self.product_tmpl_id.magento_conf_prod_ids.write({'force_update': True})
+
+            elif self.product_variant_id:
+                if vals['image_role']:
+                    product_vrnt_img_role = self.search([('product_variant_id', '=', self.product_variant_id.id),
+                                                         ('image_role', '=', vals['image_role'])])
+                    if product_vrnt_img_role:
+                        product_vrnt_img_role.image_role = None
+
+                if self.product_variant_id.magento_product_ids:
+                    self.product_variant_id.magento_product_ids.write({'force_update': True})
+
+        return super(ProductImage, self).write(vals)
+
+    @api.model
+    def create(self, vals):
+        if vals.get('product_tmpl_id'):
+            if vals.get('image_role') == 'swatch_image':
+                vals['image_role'] = None
+
+            if vals.get('image_role'):
+                product_tmpl_img_role = self.search([('product_tmpl_id', '=', vals['product_tmpl_id']),
+                                                     ('image_role', '=', vals['image_role'])])
+                if product_tmpl_img_role:
+                    product_tmpl_img_role.image_role = None
+        elif vals.get('product_variant_id'):
+            if vals.get('image_role'):
+                product_vrnt_img_role = self.search([('product_variant_id', '=', vals['product_variant_id']),
+                                                     ('image_role', '=', vals['image_role'])])
+                if product_vrnt_img_role:
+                    product_vrnt_img_role.image_role = None
+
+        return super(ProductImage, self).create(vals)

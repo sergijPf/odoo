@@ -219,14 +219,17 @@ class ProductProduct(models.Model):
         This method will archive/unarchive Magento product based on Odoo Product
         :param vals: Dictionary of Values
         """
-        magento_product_product_obj = self.env[MAGENTO_PRODUCT]
-        if 'active' in vals:
-            for product in self:
-                magento_product = magento_product_product_obj.search([('odoo_product_id', '=', product.id)])
-                if vals.get('active'):
-                    magento_product = magento_product_product_obj.search(
-                        [('odoo_product_id', '=', product.id), ('active', '=', False)])
-                magento_product and magento_product.write({'active': vals.get('active')})
+        if 'product_variant_image_ids' in vals and self.magento_product_ids:
+            self.magento_product_ids.force_update = True
+
+        # magento_product_product_obj = self.env[MAGENTO_PRODUCT]
+        # if 'active' in vals:
+        #     for product in self:
+        #         magento_product = magento_product_product_obj.search([('odoo_product_id', '=', product.id)])
+        #         if vals.get('active'):
+        #             magento_product = magento_product_product_obj.search(
+        #                 [('odoo_product_id', '=', product.id), ('active', '=', False)])
+        #         magento_product and magento_product.write({'active': vals.get('active')})
 
         res = super(ProductProduct, self).write(vals)
 

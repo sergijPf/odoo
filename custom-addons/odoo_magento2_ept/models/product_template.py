@@ -33,6 +33,7 @@ class ProductTemplate(models.Model):
         #     if vals["main_conf_attr_id"] not in [a.id for a in self.x_magento_attr_ids]:
         #         raise UserError("Main config.attribute has to be one of Magento Configurable Attributes")
         #
+        print(vals)
         if 'website_description' in vals or 'product_template_image_ids' in vals or\
                 ('x_magento_no_create' in vals and self.magento_conf_prod_ids):
             self.magento_conf_prod_ids.force_update = True

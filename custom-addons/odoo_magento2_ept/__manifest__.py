@@ -7,8 +7,7 @@
 
     # Dependencies
     'depends': ['delivery', 'sale_stock', 'account', 'sale_management'],
-    # 'depends': ['common_connector_library'],
-    # 'depends': ['common_connector_library', 'smartino_common'],
+    # 'depends': ['smartino_common'],
     # Views
     'data': [
         'security/security.xml',
@@ -34,6 +33,7 @@
         'views/financial_status_view.xml',
         'views/magento_delivery_carrier.xml',
         'views/magento_product_category_view.xml',
+        'views/magento_orders_log_book_view.xml',
         'views/magento_product_log_book_view.xml',
         'views/magento_stock_log_book_view.xml',
         'views/magento_prices_log_book_view.xml',
@@ -43,7 +43,6 @@
         # 'views/product_public_category_view.xml',
         'views/config_product_attribute_view.xml',
         'views/magento_customer_groups_view.xml',
-        'views/magento_orders_log_book_view.xml',
         'views/magento_invoices_log_book_view.xml',
         'views/magento_shipments_log_book_view.xml',
         'views/account_fiscal_position.xml',
