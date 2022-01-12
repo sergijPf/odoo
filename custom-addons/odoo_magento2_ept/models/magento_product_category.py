@@ -24,8 +24,6 @@ class MagentoProductCategory(models.Model):
     magento_parent_id = fields.Many2one('magento.product.category', 'Parent Category', ondelete='cascade')
     magento_child_ids = fields.One2many(comodel_name='magento.product.category', inverse_name='magento_parent_id',
                                         string='Child Categories')
-    # is_active = fields.Boolean(string='Is Active in Magento?', default=True,
-    #                            help="Enable the category in Magento by default Yes (uncheck to disable).")
     complete_category_name = fields.Char("Full Category Name", help="Complete Category Path(Name)",
                                          compute="_compute_complete_name")
     active = fields.Boolean(string="Status", default=True)

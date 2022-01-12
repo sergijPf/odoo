@@ -27,21 +27,9 @@
         <field name="model">magento.product.product</field>
         <field name="arch" type="xml">
             <form string="Product" name="product_form" create="false" delete="true" edit="true">
-<!--                <header>-->
-<!--                    <button name="process_manually"-->
-<!--                            string="Process Export Manually"-->
-<!--                            type="object" class="btn-primary"-->
-<!--                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
-<!--                    <button name="status_check_of_export"-->
-<!--                            context="{'status_check': True, 'single': True}"-->
-<!--                            string="Check Export Status"-->
-<!--                            type="object"-->
-<!--                            class="btn btn-info"/>-->
-<!--                </header>-->
                 <sheet>
                     <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
                     <field name="active" invisible="True" />
-<!--                    <field name="active_product" class="oe_inline" invisible='1'/>-->
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button"
                                 name="toggle_active" icon="fa-lock"
@@ -117,17 +105,6 @@
         <field name="model">magento.product.product</field>
         <field name="arch" type="xml">
             <tree string="Magento Product" create="false" delete="true" default_order="magento_instance_id,magento_sku">
-<!--                <header>-->
-<!--                    <button name="process_manually"-->
-<!--                            string="Process Export Manually"-->
-<!--                            type="object" class="btn-primary"-->
-<!--                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
-<!--                    <button name="status_check_of_export"-->
-<!--                            context="{'status_check': True, 'single': True}"-->
-<!--                            string="Check Export Status"-->
-<!--                            type="object"-->
-<!--                            class="btn btn-info"/>-->
-<!--                </header>-->
                 <field name="magento_product_id" string="Magento Product ID" invisible="1"/>
                 <field name="magento_instance_id"/>
                 <field name="magento_product_id"/>

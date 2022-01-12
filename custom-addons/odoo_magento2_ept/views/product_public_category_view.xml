@@ -6,47 +6,12 @@
             <field name="model">product.public.category</field>
             <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
             <field name="arch" type="xml">
-<!--                <xpath expr="//field[@name='sequence']" position="after">-->
-<!--                    <field name="is_magento_config"/>-->
-<!--                </xpath>-->
-
-<!--                <xpath expr="//group[@name='x_magento_details']" position="attributes">-->
-<!--                    <attribute name="groups">odoo_magento2_ept.group_magento_user_ept</attribute>-->
-<!--                    <attribute name="attrs">{'invisible': [('is_magento_config', '=', False)]}</attribute>-->
-<!--                </xpath>-->
-
                 <xpath expr="//group[@name='x_magento_details']" position="replace">
                     <group name="x_magento_details" string="Magento Details">
                         <field name="no_create_in_magento" id="no_create_in_magento"/>
                     </group>
                 </xpath>
-
-<!--                <xpath expr="//group[@name='x_magento_details']" position="inside">-->
-<!--                    <field name="main_conf_attr_id"-->
-<!--                           options="{'no_create':True, 'no_create_edit': True}"-->
-<!--                           attrs="{'invisible': ['|',('is_magento_config', '=', False), ('x_magento_no_create', '=', True)]}"/>-->
-<!--                    <field name="attribute_ids" widget="many2many_tags"-->
-<!--                           options="{'color_field': 'color', 'no_create':True, 'no_create_edit': True}"-->
-<!--                           attrs="{'invisible': ['|',('is_magento_config', '=', False), ('x_magento_no_create', '=', True)]}"/>-->
-<!--                </xpath>-->
-
             </field>
         </record>
-
-<!--        <record id="product_public_category_search_view" model="ir.ui.view">-->
-<!--            <field name="name">product.public.category.search.view</field>-->
-<!--            <field name="model">product.public.category</field>-->
-<!--            <field name="arch" type="xml">-->
-<!--                <search string="Product Public Category search view">-->
-<!--                    <field name="is_magento_config"/>-->
-<!--                    <filter string="Is Magento Configurable" name="is_config_in_magento"-->
-<!--                            domain="[('is_magento_config', '=', True)]"/>-->
-<!--                    <group expand="1" string="Group By Top">-->
-<!--                        <filter string="By Top Parent" name="group_by_parent"-->
-<!--                                context="{'group_by': 'top_level_parent'}"/>-->
-<!--                </group>-->
-<!--                </search>-->
-<!--            </field>-->
-<!--        </record>-->
     </data>
 </odoo>

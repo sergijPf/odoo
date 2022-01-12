@@ -2,7 +2,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
-from datetime import datetime
 
 
 class ConfigProductAttribute(models.Model):
@@ -23,8 +22,6 @@ class ConfigProductAttribute(models.Model):
 
         # update config.products' "write_date"
         if 'attribute_value' in vals or 'sequence' in vals:
-            # prod_category = self.env["product.category"].search([])
-            # conf_products = self.env["product.public.category"].search([('is_magento_config', '=', True)])
             for categ in self.product_category_ids:
                 if self.id in [a.id for a in categ.x_attribute_ids]:
                     categ.product_template_ids.magento_conf_prod_ids.write({'force_update': True})

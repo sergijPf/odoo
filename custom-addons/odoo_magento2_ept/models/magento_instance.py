@@ -167,15 +167,6 @@ class MagentoInstance(models.Model):
         interval_in_seconds = _secondsConverter[interval_type](interval)
         return interval_in_seconds
 
-    # def toggle_active(self):
-    #     """
-    #     This method is overridden for archiving other properties, while archiving the instance from the Action menu.
-    #     """
-    #     context = dict(self._context)
-    #     context.update({'active_ids': self.ids})
-    #     action = self[0].with_context(context).magento_action_open_deactive_wizard() if self else False
-    #     return action
-
     def magento_action_open_deactive_wizard(self):
         """
         This method is used to open a wizard to display the information related to how many data active/inactive

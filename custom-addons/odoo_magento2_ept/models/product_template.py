@@ -9,16 +9,10 @@ class ProductTemplate(models.Model):
 
     is_magento_config = fields.Boolean(string='Is Magento Config.Product',
                                        help='Selected if current product is Configurable Product in Magento')
-    # x_magento_attr_ids = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
-    #                                       help='Attribute(s) assigned as configurable for config.product in Magento')
     x_magento_no_create = fields.Boolean(string="Don't create in Magento", default=False,
                                          help="If checked the Configurable Product won't be created on Magento side")
-    # x_magento_attr_set = fields.Char(string='Attribute Set', help='Magento Product Attribute Set',
-    #                                  default="Default")
-    # main_conf_attr_id = fields.Many2one('product.attribute', string="MAIN CONFIG. ATTRIBUTE",
-    #                                     help='Main Magento Configurable Attribute')
     magento_conf_prod_ids = fields.One2many('magento.configurable.product', 'odoo_prod_template',
-                                        string="Magento Configurable Products", context={'active_test': False})
+                                            string="Magento Configurable Products", context={'active_test': False})
 
     @api.onchange('is_magento_config')
     def onchange_magento_config_check(self):

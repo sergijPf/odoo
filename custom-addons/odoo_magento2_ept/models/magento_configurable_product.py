@@ -51,8 +51,6 @@ class MagentoConfigurableProduct(models.Model):
                                    default="Default")
     do_not_create_flag = fields.Boolean(related="odoo_prod_template.x_magento_no_create",
                                         string="Don't create Product in Magento")
-    # magento_assign_attrs = fields.Many2many(related="odoo_prod_template.x_magento_attr_ids",
-    #                                         string="Configurable Attribute(s)")
     x_magento_assign_attrs = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
                                               compute="_compute_config_attributes")
     x_magento_main_config_attr = fields.Many2one('product.attribute', string="Main Config.Attribute",
@@ -392,7 +390,6 @@ class MagentoConfigurableProduct(models.Model):
                 'conf_sku': s.magento_conf_prod_sku,
                 'log_message': '' if s.magento_conf_prod_sku else text,
                 'export_date_to_magento': s.magento_export_date,
-                # 'latest_update_date': max(s.odoo_product_id.write_date, s.odoo_product_id.product_tmpl_id.write_date, s.update_date),
                 'latest_update_date': max(s.odoo_product_id.write_date, s.odoo_product_id.product_tmpl_id.write_date),
                 'conf_attributes': s.get_product_conf_attributes_dict(),
                 'magento_status': s.magento_status,
@@ -681,7 +678,6 @@ class MagentoConfigurableProduct(models.Model):
             if not ml_conf_products[prod]['to_export'] or ml_conf_products[prod]['log_message']:
                 continue
             mag_attr_set = ml_conf_products[prod]['conf_object'].magento_attr_set
-            # prod_attr_set_id = attr_sets[mag_attr_set]['id']
             prod_attr_mag = attr_sets[mag_attr_set]['attributes']
             prod_conf_attr = ml_conf_products[prod]['config_attr']
 

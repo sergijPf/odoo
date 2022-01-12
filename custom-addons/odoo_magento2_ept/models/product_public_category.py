@@ -7,25 +7,9 @@ from .api_request import req
 class ProductPublicCategory(models.Model):
     _inherit = "product.public.category"
 
-    # is_magento_config = fields.Boolean(string='Is Magento Config.Product',
-    #                                    help='Selected if current category is Configurable Product in Magento') #remove
-    # top_level_parent = fields.Char(string="The Top Parent", compute='_compute_top_level_parent', store=True)
-    magento_prod_categ_ids = fields.One2many('magento.product.category', 'product_public_categ_id', string="Magento categories",
-                                         context={'active_test': False})
+    magento_prod_categ_ids = fields.One2many('magento.product.category', 'product_public_categ_id',
+                                             string="Magento categories", context={'active_test': False})
     no_create_in_magento = fields.Boolean(string="Do not create Category in Magento", default=False)
-
-    # magento_conf_prod_ids = fields.One2many('magento.configurable.product', 'odoo_prod_template',
-    #                                      string="Magento Configurable Products", context={'active_test': False}) #remove
-    # attribute_ids = fields.Many2many('config.product.attribute', string="Product's Page attributes",
-    #                                  help="Descriptive attributes for Product page") #remove
-
-    # @api.depends('name', 'parent_id', 'parent_id.top_level_parent')
-    # def _compute_top_level_parent(self):
-    #     for category in self:
-    #         if category.parent_id:
-    #             category.top_level_parent = category.parent_id.top_level_parent
-    #         else:
-    #             category.top_level_parent = category.name
 
     @api.onchange('parent_id')
     def onchange_parent(self):
@@ -51,7 +35,6 @@ class ProductPublicCategory(models.Model):
                 magento_product_categ_obj = self.env['magento.product.category']
                 # loop on each product category in Magento Layer of parent record if any
                 for categ in parent_rec.magento_prod_categ_ids:
-                    # self.create_new_category_in_magento_and_layer(categ_rec, categ.instance_id, categ)
                     self.create_product_category_in_magento_and_layer(
                         magento_product_categ_obj, categ_rec, categ.instance_id, categ.magento_category, categ)
         return res

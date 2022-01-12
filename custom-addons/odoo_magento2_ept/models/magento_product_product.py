@@ -11,9 +11,6 @@ from .api_request import req
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 PRODUCT_PRODUCT = 'product.product'
-MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
-MAX_SIZE_FOR_IMAGES = 2500000 # should be aligned with MYSQL - max_allowed_size (currently 4M), !!! NOTE 4M is converted size and constant value is before convertion
-PRODUCTS_THRESHOLD = 200
 IMG_SIZE = 'image_1024'
 
 
@@ -21,7 +18,7 @@ class MagentoProductProduct(models.Model):
     """
     Describes fields and methods for Magento products
     """
-    _name = MAGENTO_PRODUCT_PRODUCT
+    _name = 'magento.product.product'
     _description = 'Magento Product'
     _rec_name = 'magento_product_name'
 

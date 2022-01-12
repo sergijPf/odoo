@@ -16,14 +16,9 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
     def _get_magento_instance(self):
         return self.env.context.get('magento_instance_id', False)
 
-    magento_instance_id = fields.Many2one(
-        'magento.instance',
-        string='Magento Instance',
-        default=_get_magento_instance,
-        readonly=True
-    )
+    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', default=_get_magento_instance,
+                                          readonly=True)
     update_existed = fields.Boolean(string="To Update Existed")
-    # public_product_categ = fields.Many2one('product.public.category', string="Product's Root Category")
 
     def create_update_product_public_category_structure(self):
         prod_publ_categ_obj = self.env['product.public.category']

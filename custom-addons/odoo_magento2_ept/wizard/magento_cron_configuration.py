@@ -133,7 +133,6 @@ class MagentoCronConfiguration(models.TransientModel):
         :return:
         """
         magento_instance = self.magento_instance_id
-        # self.magento_import_sale_order_cron_field(magento_instance)
         self.export_product_stock_cron_field(magento_instance)
         self.export_shipment_order_cron_field(magento_instance)
         self.export_invoice_cron_field(magento_instance)

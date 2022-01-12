@@ -8,8 +8,8 @@
                 <xpath expr="//header" position="inside">
                     <field name="is_canceled_in_magento" invisible="1"/>
                     <button name="cancel_order_in_magento" type="object" string="Cancel In Magento"
-                            attrs="{'invisible' : ['|', '|', ('magento_instance_id','=',False), ('state','!=','cancel'),
-                                                                                    ('is_canceled_in_magento','=',True)]}"/>
+                            attrs="{'invisible' : ['|', '|', ('magento_instance_id','=',False),
+                             ('state','!=','cancel'), ('is_canceled_in_magento','=',True)]}"/>
                 </xpath>
             </field>
         </record>

@@ -9,9 +9,6 @@
                 <form string="Product Category Configuration">
                     <group>
                         <field name="update_existed"/>
-<!--                        <field name="public_product_categ"-->
-<!--                               attrs="{'invisible': [('update_existed', '=', True)], 'required': [('update_existed', '=', False)]}"-->
-<!--                               options="{'no_create':True,'no_create_edit': True}"/>-->
                     </group>
                     <group>
                         <div style="color:#000000">

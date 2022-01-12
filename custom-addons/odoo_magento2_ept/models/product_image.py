@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """For Odoo Magento2 Connector Module"""
 from odoo import models, fields, api
-from odoo.exceptions import UserError
 
 
 class ProductImage(models.Model):

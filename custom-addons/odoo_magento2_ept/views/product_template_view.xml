@@ -12,26 +12,6 @@
                            groups="odoo_magento2_ept.group_magento_user_ept"
                            attrs="{'invisible': [('is_magento_config', '!=', True)]}"/>
                 </xpath>
-<!--                <xpath expr="//page[@name='shop']" position='after'>-->
-<!--                    <page string="Magento"-->
-<!--                          groups="odoo_magento2_ept.group_magento_user_ept"-->
-<!--                          attrs="{'invisible': [('is_magento_config', '!=', True)]}">-->
-<!--                        <group>-->
-<!--                            <group>-->
-<!--                                <field name="x_magento_attr_set" id="x_magento_attr_set"/>-->
-<!--                                <field name="x_magento_no_create" id="x_magento_no_create"/>-->
-<!--                            </group>-->
-<!--&lt;!&ndash;                            <group>&ndash;&gt;-->
-<!--&lt;!&ndash;                                <field name="x_magento_attr_ids" id="x_magento_attr_ids" widget="many2many_tags"&ndash;&gt;-->
-<!--&lt;!&ndash;                                       attrs="{'invisible': [('x_magento_no_create', '=', True)]}"&ndash;&gt;-->
-<!--&lt;!&ndash;                                       options="{'no_create_edit': True}" can_create="true" can_write="true"/>&ndash;&gt;-->
-<!--&lt;!&ndash;                                <field name="main_conf_attr_id"&ndash;&gt;-->
-<!--&lt;!&ndash;                                       options="{'no_create':True, 'no_create_edit': True}"&ndash;&gt;-->
-<!--&lt;!&ndash;                                       attrs="{'invisible': [('x_magento_no_create', '=', True)]}"/>&ndash;&gt;-->
-<!--&lt;!&ndash;                            </group>&ndash;&gt;-->
-<!--                        </group>-->
-<!--                    </page>-->
-<!--                </xpath>-->
 
                 <xpath expr="//field[@name='attribute_line_ids']/tree/field[@name='value_ids']" position='after'>
                     <field name="is_magento_config" invisible="1"/>

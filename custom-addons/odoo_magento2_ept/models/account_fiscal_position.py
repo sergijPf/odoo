@@ -62,7 +62,7 @@ class AccountFiscalPosition(models.Model):
         domain_group = base_domain + [('country_group_id.country_ids', '=', country_id)]
         # Build domain to search records with exact matching criteria
         fpos = self.search(domain_country + state_domain + zip_domain, limit=1)
-        # return records that fit the most the criteria, and fallback on less specific fiscal positions if any can be found
+        # return records that fit most the criteria, and fallback on less specific fiscal positions if any can be found
         if not fpos and state_id:
             fpos = self.search(domain_country + null_state_dom + zip_domain, limit=1)
         if not fpos and zipcode:
