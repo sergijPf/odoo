@@ -46,7 +46,7 @@ class MagentoConfigurableProduct(models.Model):
     odoo_prod_template = fields.Many2one('product.template', string='Odoo Product Template')
     magento_product_name = fields.Char(string="Magento Configurable Product Name", related='odoo_prod_template.name')
     category_ids = fields.Many2many("magento.product.category", string="Product Categories", help="Magento Categories",
-                                    domain="[('instance_id','=',magento_instance_id)]")
+                                    compute="_compute_config_product_categories")
     magento_attr_set = fields.Char(string='Magento Product Attribute Set', help='Magento Attribute set',
                                    default="Default")
     do_not_create_flag = fields.Boolean(related="odoo_prod_template.x_magento_no_create",
@@ -81,8 +81,18 @@ class MagentoConfigurableProduct(models.Model):
             rec.x_magento_main_config_attr = rec.odoo_prod_template.attribute_line_ids.filtered(
                 lambda x: x.magento_config and x.main_conf_attr).attribute_id or False
 
+    @api.depends('odoo_prod_template.public_categ_ids')
+    def _compute_config_product_categories(self):
+        for rec in self:
+            if rec.odoo_prod_template.public_categ_ids and rec.odoo_prod_template.public_categ_ids.magento_prod_categ_ids:
+                rec.category_ids = rec.odoo_prod_template.public_categ_ids.magento_prod_categ_ids.filtered(
+                    lambda x: x.instance_id == rec.magento_instance_id
+                ).ids
+            else:
+                rec.category_ids = False
+
     def write(self, vals):
-        if 'magento_attr_set' in vals or 'category_ids' in vals:
+        if 'magento_attr_set' in vals:
             vals.update({'force_update': True})
 
         # archive/unarchive related simple products
@@ -600,9 +610,8 @@ class MagentoConfigurableProduct(models.Model):
         elif odoo_websites:
             values.update({'magento_website_ids': [(5, 0, 0)]})
 
-        # add product categories to Simple Products
-        if ml_products[prod_sku].get('product_categ'):
-            values.update({'category_ids': [(6, 0, ml_products[prod_sku]['product_categ'])]})
+        # if ml_products[prod_sku].get('product_categ'):
+        #     values.update({'category_ids': [(6, 0, ml_products[prod_sku]['product_categ'])]})
 
         if not status_check:
             if ml_products[prod_sku]['to_export']:
@@ -735,7 +744,7 @@ class MagentoConfigurableProduct(models.Model):
         :return: Magento Product or empty dict
         """
         conf_product = ml_conf_products[prod_sku]['conf_object']
-        categ_list = [cat.category_id for cat in conf_product.category_ids]
+        categ_list = [cat.magento_category for cat in conf_product.category_ids]
         lang_code = self.env['res.lang']._lang_get(self.env.user.lang).code
         custom_attributes = self.add_conf_product_attributes(conf_product, attr_sets, lang_code)
 
@@ -812,7 +821,7 @@ class MagentoConfigurableProduct(models.Model):
         lang_code = self.env['res.lang']._lang_get(self.env.user.lang).code
         for prod in new_conf_products:
             conf_product = ml_conf_products[prod]['conf_object']
-            categ_list = [cat.category_id for cat in conf_product.category_ids]
+            categ_list = [cat.magento_category for cat in conf_product.category_ids]
             custom_attributes = self.add_conf_product_attributes(conf_product, attr_sets, lang_code)
 
             data.append({
@@ -968,13 +977,6 @@ class MagentoConfigurableProduct(models.Model):
                 # valid for simple products only
                 data["product"]["name"] = product.with_context(lang=lang_code).odoo_product_id.name + ' ' +\
                                           ' '.join(product.attribute_value_ids.product_attribute_value_id.mapped('name'))
-
-                # find description attribute to add translations for each storeview
-                # descr_attr = next(
-                #     (a for a in data["product"]["custom_attributes"] if a.get('attribute_code') == 'description'), {}
-                # )
-                # if descr_attr:
-                #     descr_attr["value"] = product.with_context(lang=lang_code).odoo_product_id.website_description
 
                 # apply product prices for each website
                 if magento_instance.catalog_price_scope == 'website':

@@ -6,7 +6,7 @@
             <field name="arch" type="xml">
                 <tree string="Magento Product Category" create="false" delete="false">
                     <field name="complete_category_name"/>
-                    <field name="category_id"/>
+                    <field name="magento_category"/>
                     <field name="instance_id"/>
                 </tree>
             </field>
@@ -22,17 +22,17 @@
                             <group colspan="4">
                                 <group>
                                     <field name="instance_id" readonly="1"/>
-                                    <field name="category_id"/>
+                                    <field name="magento_category"/>
                                 </group>
                                 <group>
                                     <field name="magento_parent_id"/>
-                                    <field name="complete_category_name"/>
+<!--                                    <field name="complete_category_name"/>-->
                                 </group>
                                 <group>
                                     <field name="magento_child_ids" widget="many2many_tags"/>
                                 </group>
                                 <group>
-                                    <field name="product_public_categ"/>
+                                    <field name="product_public_categ_id"/>
                                 </group>
                             </group>
                         </group>

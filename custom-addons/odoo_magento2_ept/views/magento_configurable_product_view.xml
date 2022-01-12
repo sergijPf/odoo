@@ -25,7 +25,7 @@
             <form string="Product" name="product_form" create="false" delete="1">
                 <header>
                     <button name="process_manually"
-                            string="Process Export Manually"
+                            string="Process direct Export"
                             type="object" class="btn-primary"
                             attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>
                     <button name="status_check_of_export"
@@ -39,8 +39,7 @@
                     <field name="active" invisible="True" />
                     <div class="oe_button_box" name="button_box">
                         <button type="action" icon="fa-sitemap" class="oe_stat_button"
-                                name="%(odoo_magento2_ept.action_get_simple_products)d"
-                                attrs="{'invisible': [('product_variant_count', '&lt;=', 1)]}" options="{}">
+                                name="%(odoo_magento2_ept.action_get_simple_products)d">
                             <field string="Variants" name="product_variant_count" widget="statinfo" modifiers="{'readonly':true}" id="product_variant_count"/>
                         </button>
                         <button class="oe_stat_button"
@@ -89,7 +88,8 @@
                                     <field name="do_not_create_flag" invisible="1"/>
                                     <field name="magento_product_id" attrs="{'invisible': [('do_not_create_flag', '=', True)]}" readonly="1"/>
                                     <field name="magento_website_ids" attrs="{'invisible': [('do_not_create_flag', '=', True)]}" widget="many2many_tags" readonly="1"/>
-                                    <field name="category_ids" attrs="{'invisible': [('do_not_create_flag', '=', True)]}" widget="many2many_tags"/>
+                                    <field name="category_ids" attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                           readonly="1" widget="many2many_tags"/>
                                     <field name="magento_export_date" attrs="{'invisible': [('do_not_create_flag', '=', True)]}" readonly="1" />
                                 </group>
                                 <group string="Product Images" name="magento_product_images">
@@ -119,7 +119,7 @@
             <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku">
                 <header>
                     <button name="process_manually"
-                            string="Process Export Manually"
+                            string="Process direct Export "
                             type="object" class="btn-primary"
                             attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>
                     <button name="status_check_of_export"

@@ -1,7 +1,7 @@
 {
     # App information
     'name': "Smartino Magento2 connector",
-    'version': '14.0.2',
+    'version': '14.0.3',
     'category': 'Sales',
     'summary': 'Odoo - Magento2 Connector',
 
@@ -40,7 +40,7 @@
         'views/magento_configurable_product_view.xml',
         'views/product_attribute_view.xml',
         'views/product_product_view.xml',
-        # 'views/product_public_category_view.xml',
+        'views/product_public_category_view.xml',
         'views/config_product_attribute_view.xml',
         'views/magento_customer_groups_view.xml',
         'views/magento_invoices_log_book_view.xml',
@@ -51,7 +51,7 @@
         'views/product_template_view.xml',
         'views/product_category_view.xml',
         'wizard_views/magento_instance_configuration_wizard.xml',
-        'wizard_views/magento_product_category_update_view.xml',
+        # 'wizard_views/magento_product_category_update_view.xml',
         'wizard_views/magento_product_categories_configuration_view.xml',
         'wizard_views/config_product_attributes_update_view.xml',
         'wizard_views/magento_customer_group_update_view.xml',

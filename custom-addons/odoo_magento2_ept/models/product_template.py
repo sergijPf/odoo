@@ -28,14 +28,9 @@ class ProductTemplate(models.Model):
 
     def write(self, vals):
         res = super(ProductTemplate, self).write(vals)
-        #
-        # if 'main_conf_attr_id' in vals and vals["main_conf_attr_id"]:
-        #     if vals["main_conf_attr_id"] not in [a.id for a in self.x_magento_attr_ids]:
-        #         raise UserError("Main config.attribute has to be one of Magento Configurable Attributes")
-        #
-        print(vals)
-        if 'website_description' in vals or 'product_template_image_ids' in vals or\
-                ('x_magento_no_create' in vals and self.magento_conf_prod_ids):
+
+        if self.magento_conf_prod_ids and ('website_description' in vals or 'product_template_image_ids' in vals or\
+                'x_magento_no_create' in vals or 'public_categ_ids' in vals):
             self.magento_conf_prod_ids.force_update = True
 
         return res
@@ -43,9 +38,9 @@ class ProductTemplate(models.Model):
     def unlink(self):
         reject_configs = []
 
-        for config in self:
-            if config.is_magento_config and config.magento_conf_prod_ids:
-                reject_configs.append([c.magento_sku for c in config.magento_conf_prod_ids])
+        for prod in self:
+            if prod.is_magento_config and prod.magento_conf_prod_ids:
+                reject_configs.append([c.magento_sku for c in prod.magento_conf_prod_ids])
 
         if reject_configs:
             raise UserError("It's not allowed to delete these products as they were already added to Magento Layer "

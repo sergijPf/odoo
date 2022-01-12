@@ -18,9 +18,6 @@ class Binary(http.Controller):
         :return: True/False
         """
         data = json.loads(request.httprequest.data)
-        # print(request.httprequest.remote_addr)
-        # print(request.httprequest.headers)
-        # print(data)
         magento_url = data.get('url', False)
         magento_instance = request.env['magento.instance'].sudo().search([
             ('magento_url', '=', magento_url.rstrip('/') if magento_url else False)

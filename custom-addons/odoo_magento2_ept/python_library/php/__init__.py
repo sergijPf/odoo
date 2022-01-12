@@ -66,7 +66,6 @@ class Php(object):
         Example:
           from php import Php
           config = Php.parse_ini_file("config.ini")
-          print config["sectionName"]["keyName"]
         """
 
         ini = {}
