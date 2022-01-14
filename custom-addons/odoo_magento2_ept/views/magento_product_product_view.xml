@@ -81,8 +81,8 @@
                                     <field name="magento_export_date" readonly="1"/>
                                 </group>
                                  <group string="Product Images" name="magento_product_images">
-                                     <field name="product_images" class="o_website_sale_image_list"
-                                            mode="kanban" nolabel="1" id="product_images"/>
+                                     <field name="product_image_ids" class="o_website_sale_image_list"
+                                            mode="kanban" nolabel="1" id="product_image_ids"/>
                                  </group>
                              </group>
                         </page>

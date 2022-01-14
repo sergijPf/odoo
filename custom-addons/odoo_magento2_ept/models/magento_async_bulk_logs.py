@@ -2,8 +2,8 @@
 
 import json
 from odoo import fields, models
-from .api_request import req
 from odoo.exceptions import UserError
+from .api_request import req
 
 
 class MagentoAsyncBulkLogs(models.Model):

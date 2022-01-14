@@ -35,10 +35,9 @@ class MagentoPaymentMethod(models.Model):
     create_invoice_on = fields.Selection([
         ('open', 'Validate'),
         ('in_payment_paid', 'In-Payment/Paid')
-    ], string='Create Invoice on action', help="Should the invoice be created in Magento when it is validated or "
-                                               "when it is In-Payment/Paid in odoo?\n"
-                                               "If it's blank then invoice will not exported in Magento for this Payment Method.")
-
+    ], string='Create Invoice on action',
+        help="Should the invoice be created in Magento when it is validated or when it is In-Payment/Paid in odoo?\n"
+             "If it's blank then invoice will not exported in Magento for this Payment Method.")
     import_rule = fields.Selection([
         ('always', 'Always'),
         ('never', 'Never'),

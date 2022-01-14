@@ -6,6 +6,7 @@ Describes methods for Export shipment information.
 from odoo import models, fields, _
 from odoo.exceptions import UserError
 from .api_request import req
+
 STOCK_PICKING = 'stock.picking'
 
 

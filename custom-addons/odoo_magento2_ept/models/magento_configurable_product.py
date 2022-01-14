@@ -4,9 +4,9 @@
 Describes fields and methods for Magento configurable products
 """
 import json
+from datetime import datetime
 from odoo import fields, models, api
 from odoo.exceptions import UserError
-from datetime import datetime
 from .api_request import req, create_search_criteria
 from ..python_library.php import Php
 
@@ -39,22 +39,22 @@ class MagentoConfigurableProduct(models.Model):
         ('deleted', 'Deleted in Magento')
     ], string='Export Status', help='The status of Configurable Product Export to Magento ',
         default='not_exported')
-    image_1920 = fields.Image(related="odoo_prod_template.image_1920")
-    product_images = fields.One2many(related="odoo_prod_template.product_template_image_ids")
+    image_1920 = fields.Image(related="odoo_prod_template_id.image_1920")
+    product_image_ids = fields.One2many(related="odoo_prod_template_id.product_template_image_ids")
     magento_product_id = fields.Char(string="Magento Product Id")
     active = fields.Boolean("Active", default=True)
-    odoo_prod_template = fields.Many2one('product.template', string='Odoo Product Template')
-    magento_product_name = fields.Char(string="Magento Configurable Product Name", related='odoo_prod_template.name')
+    odoo_prod_template_id = fields.Many2one('product.template', string='Odoo Product Template')
+    magento_product_name = fields.Char(string="Magento Configurable Product Name", related='odoo_prod_template_id.name')
     category_ids = fields.Many2many("magento.product.category", string="Product Categories", help="Magento Categories",
                                     compute="_compute_config_product_categories")
     magento_attr_set = fields.Char(string='Magento Product Attribute Set', help='Magento Attribute set',
                                    default="Default")
-    do_not_create_flag = fields.Boolean(related="odoo_prod_template.x_magento_no_create",
+    do_not_create_flag = fields.Boolean(related="odoo_prod_template_id.x_magento_no_create",
                                         string="Don't create Product in Magento")
     x_magento_assign_attrs = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
                                               compute="_compute_config_attributes")
-    x_magento_main_config_attr = fields.Many2one('product.attribute', string="Main Config.Attribute",
-                                              compute="_compute_main_config_attribute")
+    x_magento_main_config_attr_id = fields.Many2one('product.attribute', string="Main Config.Attribute",
+                                                    compute="_compute_main_config_attribute")
     magento_export_date = fields.Datetime(string="Last Export Date",
                                           help="Configurable Product last Export Date to Magento")
     force_update = fields.Boolean(string="To force run of Configurable Product Export", default=False)
@@ -67,23 +67,23 @@ class MagentoConfigurableProduct(models.Model):
                          'unique(magento_sku,magento_instance_id)',
                          "Magento Configurable Product SKU must be unique within Magento instance")]
 
-    @api.depends('odoo_prod_template.attribute_line_ids')
+    @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_config_attributes(self):
         for rec in self:
-            rec.x_magento_assign_attrs = rec.odoo_prod_template.attribute_line_ids.filtered(
+            rec.x_magento_assign_attrs = rec.odoo_prod_template_id.attribute_line_ids.filtered(
                 lambda x: x.magento_config and not x.attribute_id.is_ignored_in_magento).attribute_id
 
-    @api.depends('odoo_prod_template.attribute_line_ids')
+    @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_main_config_attribute(self):
         for rec in self:
-            rec.x_magento_main_config_attr = rec.odoo_prod_template.attribute_line_ids.filtered(
+            rec.x_magento_main_config_attr_id = rec.odoo_prod_template_id.attribute_line_ids.filtered(
                 lambda x: x.magento_config and x.main_conf_attr).attribute_id or False
 
-    @api.depends('odoo_prod_template.public_categ_ids')
+    @api.depends('odoo_prod_template_id.public_categ_ids')
     def _compute_config_product_categories(self):
         for rec in self:
-            if rec.odoo_prod_template.public_categ_ids and rec.odoo_prod_template.public_categ_ids.magento_prod_categ_ids:
-                rec.category_ids = rec.odoo_prod_template.public_categ_ids.magento_prod_categ_ids.filtered(
+            if rec.odoo_prod_template_id.public_categ_ids and rec.odoo_prod_template_id.public_categ_ids.magento_prod_categ_ids:
+                rec.category_ids = rec.odoo_prod_template_id.public_categ_ids.magento_prod_categ_ids.filtered(
                     lambda x: x.instance_id == rec.magento_instance_id
                 ).ids
             else:
@@ -376,7 +376,7 @@ class MagentoConfigurableProduct(models.Model):
                 'log_message': '',
                 'force_update': c.magento_conf_product_id.force_update,
                 'export_date_to_magento': c.magento_conf_product_id.magento_export_date,
-                'to_export': False if c.magento_conf_product_id.odoo_prod_template.x_magento_no_create else True
+                'to_export': False if c.magento_conf_product_id.do_not_create_flag else True
             } for c in export_products
         }
 
@@ -393,7 +393,7 @@ class MagentoConfigurableProduct(models.Model):
                 'latest_update_date': max(s.odoo_product_id.write_date, s.odoo_product_id.product_tmpl_id.write_date),
                 'conf_attributes': s.get_product_conf_attributes_dict(),
                 'magento_status': s.magento_status,
-                'do_not_export_conf': s.magento_conf_product_id.odoo_prod_template.x_magento_no_create,
+                'do_not_export_conf': s.magento_conf_product_id.do_not_create_flag,
                 'product_categ': [],
                 'force_update': s.force_update,
                 'to_export': True
@@ -468,7 +468,7 @@ class MagentoConfigurableProduct(models.Model):
                 ml_conf_products[prod]['to_export'] = False
                 continue
 
-            if conf_obj.odoo_prod_template.x_magento_no_create:
+            if conf_obj.do_not_create_flag:
                 ml_conf_products[prod]['magento_status'] = 'no_need'
                 continue
 
@@ -498,7 +498,7 @@ class MagentoConfigurableProduct(models.Model):
                 if ml_conf_products[prod]['magento_type_id'] == 'configurable':
                     # check if product images need to be updated
                     magento_images = ml_conf_products[prod].get('media_gallery', [])
-                    if conf_obj.odoo_prod_template and (len(magento_images) != len(conf_obj.product_images)):
+                    if conf_obj.odoo_prod_template_id and (len(magento_images) != len(conf_obj.product_image_ids)):
                     # if prod_template and (len(magento_images) != (len(prod_template.product_template_image_ids) +
                     #                                              (1 if prod_template.image_256 else 0))):
                         ml_conf_products[prod]['magento_status'] = 'update_needed'
@@ -652,7 +652,7 @@ class MagentoConfigurableProduct(models.Model):
         for prod in ml_product_dict:
             conf_prod = ml_product_dict[prod]['conf_object']
             available_attributes = attribute_sets[conf_prod.magento_attr_set]['attributes']
-            prod_attributes = conf_prod.odoo_prod_template.categ_id.x_attribute_ids
+            prod_attributes = conf_prod.odoo_prod_template_id.categ_id.x_attribute_ids
             # create list of unique groups of product attributes to be used as attributes in magento
             prod_attr_list = list({a.categ_group_id.name for a in prod_attributes if a.categ_group_id})
 
@@ -719,13 +719,15 @@ class MagentoConfigurableProduct(models.Model):
         # if single - with regular API, else - via async request (RabbitMQ)
         if new_conf_products:
             if single:
-                res = self.export_single_conf_product_to_magento(instance, new_conf_products[0], ml_conf_products,
-                                                                 attr_sets)
+                res = self.export_single_conf_product_to_magento(
+                    instance, new_conf_products[0], ml_conf_products, attr_sets
+                )
                 if res:
                     self.update_conf_product_dict_with_magento_data(res, ml_conf_products)
             else:
-                self.export_new_conf_products_to_magento_in_bulk(instance, new_conf_products, ml_conf_products,
-                                                                 attr_sets)
+                self.export_new_conf_products_to_magento_in_bulk(
+                    instance, new_conf_products, ml_conf_products, attr_sets
+                )
 
     def export_single_conf_product_to_magento(self, magento_instance, prod_sku, ml_conf_products, attr_sets,
                                               check_assign_attr=True, method='POST'):
@@ -783,15 +785,15 @@ class MagentoConfigurableProduct(models.Model):
             self.process_storeview_data_export(magento_instance, conf_product, ml_conf_products, prod_sku, data,
                                                attr_sets, True)
 
-            if conf_product.odoo_prod_template:
+            if conf_product.odoo_prod_template_id:
                 trigger = False
                 if method == "PUT":
                     magento_images = ml_conf_products[prod_sku].get('media_gallery', [])
                     export_date_to_magento = ml_conf_products[prod_sku]['export_date_to_magento']
                     export_date_to_magento = export_date_to_magento or datetime.min
-                    if conf_product.odoo_prod_template.write_date > export_date_to_magento or \
-                            len(magento_images) != len(conf_product.product_images):
-                            # len(magento_images) != (len(conf_product.product_images) + (1 if conf_product.odoo_prod_template.image_256 else 0)):
+                    if conf_product.odoo_prod_template_id.write_date > export_date_to_magento or \
+                            len(magento_images) != len(conf_product.product_image_ids):
+                            # len(magento_images) != (len(conf_product.product_image_ids) + (1 if conf_product.odoo_prod_template_id.image_256 else 0)):
                         trigger = True
                         if len(magento_images):
                             self.remove_product_images_from_magento(magento_instance, ml_conf_products, prod_sku)
@@ -868,12 +870,12 @@ class MagentoConfigurableProduct(models.Model):
                     })
 
                 # prepare images export
-                if conf_product.odoo_prod_template:
+                if conf_product.odoo_prod_template_id:
                     # update product_media dict if product has images
-                    if len(conf_product.product_images):
+                    if len(conf_product.product_image_ids):
                         prod_media.update({
                             prod: [(img.id, img.name, getattr(img, IMG_SIZE), img.image_role)
-                                   for img in conf_product.product_images if img]
+                                   for img in conf_product.product_image_ids if img]
                         })
                     # update if product has thumbnail image
                     # if config_prod.image_256:
@@ -901,10 +903,11 @@ class MagentoConfigurableProduct(models.Model):
     def add_conf_product_attributes(self, conf_product, attr_sets, lang_code):
         custom_attributes = []
         available_attributes = attr_sets[conf_product.magento_attr_set]['attributes']
-        prod_attributes = conf_product.odoo_prod_template.categ_id.x_attribute_ids
+        prod_attributes = conf_product.odoo_prod_template_id.categ_id.x_attribute_ids
         prod_attr_list = list(
-            {(a.categ_group_id.name, a.categ_group_id.id) for a in prod_attributes if a.categ_group_id})
-        # add product's attributes
+            {(a.categ_group_id.name, a.categ_group_id.id) for a in prod_attributes if a.categ_group_id}
+        )
+        # add Product Page attributes
         for prod_attr in prod_attr_list:
             attr = next((a for a in available_attributes if a['default_label'] and
                          self.to_upper(prod_attr[0]) == a['default_label']), {})
@@ -916,20 +919,36 @@ class MagentoConfigurableProduct(models.Model):
                 })
 
         # add Product's Website Description
-        if conf_product.odoo_prod_template.website_description:
+        if conf_product.odoo_prod_template_id.website_description:
             custom_attributes.append({
                 "attribute_code": 'description',
-                "value": conf_product.with_context(lang=lang_code).odoo_prod_template.website_description
+                "value": conf_product.with_context(lang=lang_code).odoo_prod_template_id.website_description
             })
 
         # add main config attribute if any
-        if conf_product.x_magento_main_config_attr:
+        if conf_product.x_magento_main_config_attr_id:
             attr = next((a for a in available_attributes if a['default_label'] and
-                         self.to_upper(conf_product.x_magento_main_config_attr.name) == a['default_label']), {})
+                         self.to_upper(conf_product.x_magento_main_config_attr_id.name) == a['default_label']), {})
             custom_attributes.append({
                 "attribute_code": 'main_config_attribute',
                 "value": attr.get('attribute_code', False)
             })
+
+        # add attributes specific to conf.product
+        conf_prod_single_attrs = conf_product.odoo_prod_template_id.attribute_line_ids.filtered(
+                lambda x: not x.magento_config and not x.attribute_id.is_ignored_in_magento and len(x.value_ids) == 1
+        )
+        for attribute in conf_prod_single_attrs:
+            attr = next((a for a in available_attributes if a['default_label'] and
+                         self.to_upper(attribute.attribute_id.name) == a['default_label']), {})
+            if attr:
+                opt = next((o for o in attr['options'] if o.get('label') and
+                            self.to_upper(o['label']) == self.to_upper(attribute.value_ids.name)), {})
+                if opt:
+                    custom_attributes.append({
+                        "attribute_code": attr['attribute_code'],
+                        "value": opt['value']
+                    })
 
         return custom_attributes
 
@@ -967,7 +986,7 @@ class MagentoConfigurableProduct(models.Model):
         for view in magento_storeviews:
             lang_code = view[1].lang_id.code
             if is_config:
-                data['product']['name'] = str(product.with_context(lang=lang_code).odoo_prod_template.name).upper()
+                data['product']['name'] = str(product.with_context(lang=lang_code).odoo_prod_template_id.name).upper()
                 data['product']['custom_attributes'] = self.add_conf_product_attributes(product, attr_sets, lang_code)
             else:
                 # valid for simple products only
@@ -1040,10 +1059,10 @@ class MagentoConfigurableProduct(models.Model):
     def process_images_export_to_magento(self, magento_instance, ml_conf_products, magento_sku):
         # product images (Base)
         conf_prod = ml_conf_products[magento_sku]['conf_object']
-        if len(conf_prod.product_images):
+        if len(conf_prod.product_image_ids):
             prod_media = {
                 magento_sku: [(img.id, img.name, getattr(img, IMG_SIZE), img.image_role)
-                              for img in conf_prod.product_images if img]
+                              for img in conf_prod.product_image_ids if img]
             }
             self.export_media_to_magento(magento_instance, prod_media, ml_conf_products, 'product.image')
         # product images (Thumbnail)
@@ -1128,7 +1147,7 @@ class MagentoConfigurableProduct(models.Model):
                 conf_prod = ml_conf_products[sku]['conf_object']
                 prod = {
                     'product': {
-                        'name': str(conf_prod.with_context(lang=lang_code).odoo_prod_template.name).upper(),
+                        'name': str(conf_prod.with_context(lang=lang_code).odoo_prod_template_id.name).upper(),
                         'sku': sku,
                         'custom_attributes': self.add_conf_product_attributes(conf_prod, attr_sets, lang_code)
                     }

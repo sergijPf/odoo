@@ -194,12 +194,12 @@ class MagentoImportExport(models.TransientModel):
         conf_product_obj = self.env['magento.configurable.product']
         product = product_dict.get('odoo_product_id')
         domain = [('magento_instance_id', '=', product_dict.get('instance_id')),
-                  ('odoo_prod_template', '=', product.id)]
+                  ('odoo_prod_template_id', '=', product.id)]
         conf_product = conf_product_obj.with_context(active_test=False).search(domain)
         if not conf_product:
             values = {
                 'magento_instance_id': product_dict.get('instance_id'),
-                'odoo_prod_template': product.id,
+                'odoo_prod_template_id': product.id,
                 'magento_sku': product.with_context(lang='en_US').name.replace('  ',' ').replace('-','').replace(' ','_').
                     replace('%','').replace('#','').replace('/','')
             }

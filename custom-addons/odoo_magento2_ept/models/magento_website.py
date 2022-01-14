@@ -6,7 +6,6 @@ Describes Methods for Magento Website.
 import json
 from datetime import date
 from odoo import models, fields, api, _
-RES_CURRENCY = "res.currency"
 
 
 class MagentoWebsite(models.Model):
@@ -31,7 +30,7 @@ class MagentoWebsite(models.Model):
                                    help='Warehouse to be used to deliver an order from this website.')
     company_id = fields.Many2one('res.company', related='magento_instance_id.company_id', string='Company',
                                  readonly=True, help="Magento Company")
-    magento_base_currency = fields.Many2one(RES_CURRENCY, readonly=True, help="Magento Website Base Currency")
+    magento_base_currency = fields.Many2one('res.currency', readonly=True, help="Magento Website Base Currency")
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
     magento_order_data = fields.Text(compute="_compute_kanban_magento_order_data")

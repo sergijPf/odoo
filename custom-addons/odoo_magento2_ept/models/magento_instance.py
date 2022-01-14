@@ -3,13 +3,13 @@
 """
 Describes methods for Magento Instance
 """
+import json
 from calendar import monthrange
 from datetime import date, datetime
 from odoo import models, fields, api, _
-from .api_request import req
 from odoo.exceptions import UserError
 from odoo.tools import ustr
-import json
+from .api_request import req
 
 _secondsConverter = {
     'days': lambda interval: interval * 24 * 60 * 60,

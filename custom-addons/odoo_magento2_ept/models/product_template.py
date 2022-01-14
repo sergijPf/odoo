@@ -11,7 +11,7 @@ class ProductTemplate(models.Model):
                                        help='Selected if current product is Configurable Product in Magento')
     x_magento_no_create = fields.Boolean(string="Don't create in Magento", default=False,
                                          help="If checked the Configurable Product won't be created on Magento side")
-    magento_conf_prod_ids = fields.One2many('magento.configurable.product', 'odoo_prod_template',
+    magento_conf_prod_ids = fields.One2many('magento.configurable.product', 'odoo_prod_template_id',
                                             string="Magento Configurable Products", context={'active_test': False})
 
     @api.onchange('is_magento_config')

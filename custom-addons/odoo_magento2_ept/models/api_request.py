@@ -9,6 +9,7 @@ import logging
 import requests
 from odoo import _
 from odoo.exceptions import UserError
+
 _logger = logging.getLogger(__name__)
 
 

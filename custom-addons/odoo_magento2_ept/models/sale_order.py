@@ -169,8 +169,8 @@ class SaleOrder(models.Model):
         fiscal_position = self.fiscal_position_id
         warehouse = self.warehouse_id
 
-        if warehouse and self.partner_id:
-        # if warehouse and self.partner_id and self.partner_id.allow_search_fiscal_based_on_origin_warehouse:
+        # if warehouse and self.partner_id:
+        if warehouse and self.partner_id and self.partner_id.allow_search_fiscal_based_on_origin_warehouse:
             origin_country_id = warehouse.partner_id and warehouse.partner_id.country_id and \
                                 warehouse.partner_id.country_id.id or False
             origin_country_id = origin_country_id or (warehouse.company_id.partner_id.country_id

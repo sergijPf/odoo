@@ -9,12 +9,12 @@ from . import ir_cron
 from . import magento_payment_method
 from . import magento_product_product
 from . import product_product
+from . import sale_order
+from . import sale_order_line
 from . import res_partner
 from . import magento_inventory_locations
 from . import stock_picking
 from . import account_move
-from . import sale_order
-from . import sale_order_line
 from . import stock_move
 from . import import_magento_order_status
 from . import account

@@ -17,11 +17,8 @@ class ResPartner(models.Model):
     is_magento_customer = fields.Boolean(string="Is Magento Customer?",
                                          help="Used for identified that the customer is imported from Magento store.")
     magento_res_partner_ids = fields.One2many("magento.res.partner", "partner_id", string='Magento Customers')
-    # allow_search_fiscal_based_on_origin_warehouse = fields.Boolean(
-    #     "Search fiscal based on origin warehouse?",
-    #     default=False,
-    #     help="Search fiscal position based on origin warehouse"
-    # )
+    allow_search_fiscal_based_on_origin_warehouse = fields.Boolean("Search fiscal based on origin warehouse?",
+                                                                   default=False)
 
     @api.model
     def create(self, vals):

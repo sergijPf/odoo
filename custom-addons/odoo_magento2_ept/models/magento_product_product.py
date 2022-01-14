@@ -33,13 +33,12 @@ class MagentoProductProduct(models.Model):
     active = fields.Boolean("Active", default=True)
     image_1920 = fields.Image(related="odoo_product_id.image_1920")
     thumbnail_image = fields.Image(string='Product Image')
-    product_images = fields.One2many(related="odoo_product_id.product_variant_image_ids")
+    product_image_ids = fields.One2many(related="odoo_product_id.product_variant_image_ids")
     product_template_attribute_value_ids = fields.Many2many(related='odoo_product_id.product_template_attribute_value_ids')
     attribute_value_ids = fields.Many2many('product.template.attribute.value', compute="_compute_simpl_product_attributes")
     currency_id = fields.Many2one(related='odoo_product_id.currency_id')
     company_id = fields.Many2one(related='odoo_product_id.company_id')
     uom_id = fields.Many2one(related='odoo_product_id.uom_id')
-    uom_po_id = fields.Many2one(related='odoo_product_id.uom_po_id')
     magento_conf_product_id = fields.Many2one('magento.configurable.product', string='Magento Configurable Product')
     magento_conf_prod_sku = fields.Char(string='Magento Config.Product SKU', related='magento_conf_product_id.magento_sku')
     inventory_category_id = fields.Many2one(string='Odoo product category', related='odoo_product_id.categ_id')
@@ -69,7 +68,7 @@ class MagentoProductProduct(models.Model):
     def _compute_simpl_product_attributes(self):
         for rec in self:
             rec.attribute_value_ids = rec.product_template_attribute_value_ids
-            # avail_attrs = rec.magento_conf_product.odoo_prod_template.attribute_line_ids.filtered(
+            # avail_attrs = rec.magento_conf_product.odoo_prod_template_id.attribute_line_ids.filtered(
             #     lambda x: len(x.value_ids) > 1 and not x.attribute_id.is_ignored_in_magento).mapped('attribute_id').mapped('id')
             # rec.attribute_value_ids = rec.product_template_attribute_value_ids.filtered(
             #     lambda x: x.product_attribute_value_id.attribute_id.id in avail_attrs)
@@ -301,7 +300,7 @@ class MagentoProductProduct(models.Model):
                             # if (len(export_prod.odoo_product_id.product_variant_image_ids) +
                             #     (1 if export_prod.odoo_product_id.image_256 else 0)) !=\
                             #         len(ml_simp_products[prod].get('media_gallery', [])):
-                            if (len(export_prod.product_images)) != len(ml_simp_products[prod].get('media_gallery', [])):
+                            if (len(export_prod.product_image_ids)) != len(ml_simp_products[prod].get('media_gallery', [])):
                                 ml_simp_products[prod]['magento_status'] = 'update_needed'
                                 continue
                             if ml_simp_products[prod]['magento_status'] != 'in_magento':
@@ -816,10 +815,10 @@ class MagentoProductProduct(models.Model):
                     magento_instance, ml_simp_products, product.magento_sku
                 )
 
-            if len(product.product_images):
+            if len(product.product_image_ids):
                 prod_media = {
                     product.magento_sku: [
-                        (img.id, img.name, getattr(img, IMG_SIZE), img.image_role) for img in product.product_images if img
+                        (img.id, img.name, getattr(img, IMG_SIZE), img.image_role) for img in product.product_image_ids if img
                     ]
                 }
                 product.magento_conf_product_id.export_media_to_magento(
@@ -947,8 +946,8 @@ class MagentoProductProduct(models.Model):
                             },
                             "sku": prod.magento_sku
                         })
-                elif method == "PUT" and (len(prod.product_images)) != len(ml_simp_products[prod.magento_sku].get('media_gallery', [])):
-                # elif method == "PUT" and (len(prod.product_images) +
+                elif method == "PUT" and (len(prod.product_image_ids)) != len(ml_simp_products[prod.magento_sku].get('media_gallery', [])):
+                # elif method == "PUT" and (len(prod.product_image_ids) +
                 #                           (1 if prod.odoo_product_id.image_256 else 0)) != \
                 #         len(ml_simp_products[prod.magento_sku].get('media_gallery', [])):
                     for _id in ml_simp_products[prod.magento_sku]['media_gallery']:
@@ -958,10 +957,10 @@ class MagentoProductProduct(models.Model):
                         })
                     img_update = True
                 if method == 'POST' or img_update:
-                    if len(prod.product_images):
+                    if len(prod.product_image_ids):
                         prod_media.update({
                             prod.magento_sku: [(img.id, img.name, getattr(img, IMG_SIZE), img.image_role) for img in
-                                               prod.product_images if img]
+                                               prod.product_image_ids if img]
                         })
                     # if prod.odoo_product_id.image_256:
                     #     thumb_images.update({
