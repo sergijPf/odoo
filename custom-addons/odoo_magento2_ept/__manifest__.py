@@ -1,13 +1,13 @@
 {
     # App information
     'name': "Smartino Magento2 connector",
-    'version': '14.0.3',
+    'version': '14.0.4',
     'category': 'Sales',
     'summary': 'Odoo - Magento2 Connector',
 
     # Dependencies
     'depends': ['delivery', 'sale_stock', 'account', 'sale_management'],
-    # 'depends': ['smartino_common'],
+    # 'depends': ['delivery', 'sale_stock', 'account', 'sale_management', 'smartino_common'],
     # Views
     'data': [
         'security/security.xml',

@@ -26,13 +26,13 @@
                 <header>
                     <button name="process_manually"
                             string="Process Export directly"
-                            type="object" class="btn-primary"
+                            type="object" class="btn-primary ml-2"
                             attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>
                     <button name="status_check_of_export"
                             context="{'status_check': True, 'single': True}"
                             string="Check Export Status"
                             type="object"
-                            class="btn btn-info"/>
+                            class="btn btn-info ml-2"/>
                 </header>
                 <sheet>
                     <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
@@ -120,13 +120,13 @@
                 <header>
                     <button name="process_manually"
                             string="Process Export directly"
-                            type="object" class="btn-primary"
+                            type="object" class="btn-primary ml-2"
                             attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>
                     <button name="status_check_of_export"
                             context="{'status_check': True, 'single': False}"
                             string="Check Export Status"
                             type="object"
-                            class="btn btn-info"/>
+                            class="btn btn-info ml-2"/>
                 </header>
                 <field name="magento_instance_id"/>
                 <field name="magento_product_id" string="Magento Product ID"/>
