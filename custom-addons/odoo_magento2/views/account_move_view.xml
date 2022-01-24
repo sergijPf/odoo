@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="magento_invoice_tree_view_ept" model="ir.ui.view">
-            <field name="name">magento.account.invoice.tree.ept</field>
+    <record id="magento_invoice_tree_view" model="ir.ui.view">
+            <field name="name">magento.account.invoice.tree</field>
             <field name="model">account.move</field>
             <field name="priority">100</field>
             <field name="arch" type="xml">
@@ -61,13 +61,13 @@
             </field>
         </record>
 
-        <record id="action_magento_invoice_tree1_ept" model="ir.actions.act_window" >
+        <record id="action_magento_invoice_tree" model="ir.actions.act_window" >
             <field name="name">Customer Invoices</field>
             <field name="res_model">account.move</field>
             <field name="view_mode">tree,form</field>
             <field name="domain">[('move_type','=','out_invoice'),('magento_instance_id','!=',False)]</field>
             <field name="context">{'default_move_type':'out_invoice','move_type':'out_invoice', 'journal_type': 'sale'}</field>
-            <field name="view_id" ref="magento_invoice_tree_view_ept"/>
+            <field name="view_id" ref="magento_invoice_tree_view"/>
             <field name="search_view_id" ref="magento_view_account_invoice_filter" />
             <field name="help" type="html">
                 <div>
@@ -91,7 +91,7 @@
         <menuitem id="menu_invoice_details_parent" name="Invoices" sequence="3"
             parent="odoo_magento2.menu_magento_sales_and_customer"/>
 
-        <menuitem id="menu_magento_invoice_ept" name="Invoices"
+        <menuitem id="menu_magento_invoice" name="Invoices"
             parent="menu_invoice_details_parent" sequence="1"
-            action="action_magento_invoice_tree1_ept"/>
+            action="action_magento_invoice_tree"/>
 </odoo>

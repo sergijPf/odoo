@@ -206,11 +206,11 @@ class StockPicking(models.Model):
 
     def send_to_shipper(self):
         """
-        usage: If auto_processed_orders_ept = True passed in Context then we can not call send shipment from carrier
+        usage: If auto_processed_orders = True passed in Context then we can not call send shipment from carrier
         This change is used in case of Import Shipped Orders for all connectors.
         """
         context = dict(self._context)
-        if context.get('auto_processed_orders_ept', False):
+        if context.get('auto_processed_orders', False):
             return True
         return super(StockPicking, self).send_to_shipper()
 

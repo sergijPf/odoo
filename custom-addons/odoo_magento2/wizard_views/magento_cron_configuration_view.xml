@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <!--This is a common view for cron configuration wizard -->
-        <record id="magento_cron_configuration_ept_form_view"
+        <record id="magento_cron_configuration_form_view"
                 model="ir.ui.view">
             <field name="name">magento.cron.configuration</field>
             <field name="model">magento.cron.configuration</field>
@@ -148,7 +148,7 @@
             </field>
         </record>
 
-        <record id="action_magento_wizard_cron_configuration_ept" model="ir.actions.act_window">
+        <record id="action_magento_wizard_cron_configuration" model="ir.actions.act_window">
             <field name="name">Magento Scheduled Actions Configuration</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">magento.cron.configuration</field>

@@ -125,7 +125,7 @@
         </field>
     </record>
 
-    <record id="magento_product_normal_action_sell_ept" model="ir.actions.act_window">
+    <record id="magento_product_normal_action_sell" model="ir.actions.act_window">
         <field name="name">Simple Products</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">magento.product.product</field>
@@ -237,5 +237,5 @@
 
     <menuitem id="menu_item_magento_product_variants" name="Simple Products"
         parent="odoo_magento2.menu_product_details" sequence="4"
-        action="magento_product_normal_action_sell_ept"/>
+        action="magento_product_normal_action_sell"/>
 </odoo>

@@ -59,7 +59,7 @@
                 </form>
             </field>
         </record>
-        <record id="res_config_action_magento_instance_ept" model="ir.actions.act_window">
+        <record id="res_config_action_magento_instance" model="ir.actions.act_window">
             <field name="name">Magento Instance</field>
             <field name="res_model">res.config.magento.instance</field>
             <field name="view_mode">form</field>

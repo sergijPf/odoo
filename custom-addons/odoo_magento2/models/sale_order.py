@@ -75,7 +75,7 @@ class SaleOrder(models.Model):
                                         search="_search_magento_order_ids", copy=False)
     magento_carrier_name = fields.Char(compute="_carrier_name", string="Magento Carrier Name")
     magento_order_log_book_ids = fields.One2many('magento.orders.log.book', 'sale_order_id', "Log Error Messages")
-    auto_workflow_process_id = fields.Many2one("sale.workflow.process.ept", string="Workflow Process", copy=False)
+    auto_workflow_process_id = fields.Many2one("sale.workflow.process", string="Workflow Process", copy=False)
     moves_count = fields.Integer(compute="_compute_stock_move", string="Stock Move", store=False,
                                  help="Stock Move Count for Orders without Picking.")
     is_canceled_in_magento = fields.Boolean(string="Canceled in Magento", default=False,
@@ -181,7 +181,7 @@ class SaleOrder(models.Model):
 
         return fiscal_position
 
-    def action_view_stock_move_ept(self):
+    def action_view_stock_move(self):
         """
         List all stock moves which is associated with the Order.
         """

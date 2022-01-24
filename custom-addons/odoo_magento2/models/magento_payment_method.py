@@ -29,7 +29,7 @@ class MagentoPaymentMethod(models.Model):
     payment_method_name = fields.Char(string='Payments Method Name', help='Payment Method Name')
     payment_term_id = fields.Many2one('account.payment.term', string='Payment Term',
                                       help="Default payment term of a sale order using this method.")
-    magento_workflow_process_id = fields.Many2one('sale.workflow.process.ept', string='Automatic Workflow',
+    magento_workflow_process_id = fields.Many2one('sale.workflow.process', string='Automatic Workflow',
                                                   help="Workflow for Order")
     company_id = fields.Many2one('res.company', string='Company', default=_default_company_id, help="Magento Company Id.")
     create_invoice_on = fields.Selection([

@@ -163,7 +163,7 @@ class MagentoWebsite(models.Model):
         if results:
             for data in results:
                 magento_order_ids.append(data.get('id'))
-        view = self.env.ref('odoo_magento2.magento_action_sales_order_ept').sudo().read()[0]
+        view = self.env.ref('odoo_magento2.magento_action_sales_order').sudo().read()[0]
         order_action = record.prepare_action(view, [('id', 'in', magento_order_ids)])
         magento_order_data.update({'order_count': len(magento_order_ids), 'order_action': order_action})
         return magento_order_data
@@ -220,12 +220,12 @@ class MagentoWebsite(models.Model):
         if result:
             for data in result:
                 order_ids.append(data.get('id'))
-        view = self.env.ref('odoo_magento2.magento_action_sales_order_ept').sudo().read()[0]
+        view = self.env.ref('odoo_magento2.magento_action_sales_order').sudo().read()[0]
         shipped_order_action = record.prepare_action(view, [('id', 'in', order_ids)])
         order_data.update({'order_count': len(order_ids), 'order_action': shipped_order_action})
         return order_data
 
-    def magento_action_sales_quotations_ept(self):
+    def magento_action_sales_quotations(self):
         """
         get quotations action
         :return:
@@ -234,7 +234,7 @@ class MagentoWebsite(models.Model):
         order_quotation_data = self.get_total_orders(self, state)
         return order_quotation_data.get('order_action')
 
-    def magento_action_sales_order_ept(self):
+    def magento_action_sales_order(self):
         """
         get sales order action
         :return:
@@ -264,7 +264,7 @@ class MagentoWebsite(models.Model):
                         (self.id, self.magento_instance_id.id, state)
         self._cr.execute(magento_invoice_query)
         result = self._cr.dictfetchall()
-        view = self.env.ref('odoo_magento2.action_magento_invoice_tree1_ept').sudo().read()[0]
+        view = self.env.ref('odoo_magento2.action_magento_invoice_tree').sudo().read()[0]
         if result:
             for data in result:
                 magento_invoice_ids.append(data.get('id'))
@@ -316,16 +316,16 @@ class MagentoWebsite(models.Model):
         posted_invoice_data = self.get_magento_invoice_records(state)
         return posted_invoice_data.get('order_action')
 
-    def magento_waiting_stock_picking_ept(self):
-        """
-        get confirmed state picking action
-        :return:
-        """
-        state = 'confirmed'
-        confirmed_picking_data = self.get_magento_picking_records(state)
-        return confirmed_picking_data.get('order_action')
+    # def magento_waiting_stock_picking_ept(self):
+    #     """
+    #     get confirmed state picking action
+    #     :return:
+    #     """
+    #     state = 'confirmed'
+    #     confirmed_picking_data = self.get_magento_picking_records(state)
+    #     return confirmed_picking_data.get('order_action')
 
-    def magento_partially_available_stock_picking_ept(self):
+    def magento_partially_available_stock_picking(self):
         """
         get partially_available state picking action
         :return:
@@ -334,23 +334,23 @@ class MagentoWebsite(models.Model):
         partially_available_picking_data = self.get_magento_picking_records(state)
         return partially_available_picking_data.get('order_action')
 
-    def magento_ready_stock_picking_ept(self):
-        """
-        get assigned state picking action
-        :return:
-        """
-        state = 'assigned'
-        assigned_picking_data = self.get_magento_picking_records(state)
-        return assigned_picking_data.get('order_action')
+    # def magento_ready_stock_picking_ept(self):
+    #     """
+    #     get assigned state picking action
+    #     :return:
+    #     """
+    #     state = 'assigned'
+    #     assigned_picking_data = self.get_magento_picking_records(state)
+    #     return assigned_picking_data.get('order_action')
 
-    def magento_transferred_stock_picking_ept(self):
-        """
-        get done state picking action
-        :return:
-        """
-        state = 'done'
-        done_picking_data = self.get_magento_picking_records(state)
-        return done_picking_data.get('order_action')
+    # def magento_transferred_stock_picking_ept(self):
+    #     """
+    #     get done state picking action
+    #     :return:
+    #     """
+    #     state = 'done'
+    #     done_picking_data = self.get_magento_picking_records(state)
+    #     return done_picking_data.get('order_action')
 
     @api.model
     def perform_operation(self, record_id):

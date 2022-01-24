@@ -9,7 +9,7 @@
                     <field name="auto_workflow_process_id"/>
                 </field>
                 <xpath expr="//button[@name='action_view_invoice']" position="before">
-                    <button type="object" name="action_view_stock_move_ept" class="oe_stat_button"
+                    <button type="object" name="action_view_stock_move" class="oe_stat_button"
                             icon="fa-truck"
                             attrs="{'invisible': [('moves_count', '=', 0)]}"
                             groups="base.group_user">
@@ -49,7 +49,7 @@
             </field>
         </record>
 
-        <record id="sale_order_tree_view_ept" model="ir.ui.view">
+        <record id="magento_sale_order_tree_view" model="ir.ui.view">
             <field name="name">magento.sale.order.tree.view</field>
             <field name="model">sale.order</field>
             <field name="arch" type="xml">
@@ -67,8 +67,8 @@
             </field>
         </record>
 
-         <record id="sale_order_filter_view_ept" model="ir.ui.view">
-             <field name="name">sale.order.filter.view.ept</field>
+         <record id="sale_order_filter_view" model="ir.ui.view">
+             <field name="name">sale.order.filter.view</field>
              <field name="model">sale.order</field>
              <field name="inherit_id" ref="sale.view_sales_order_filter"/>
              <field name="arch" type="xml">
@@ -79,8 +79,8 @@
             </field>
         </record>
 
-        <record id="sale_order_quotation_filter_view_ept" model="ir.ui.view">
-             <field name="name">sale.order.quotation.filter.view.ept</field>
+        <record id="sale_order_quotation_filter_view" model="ir.ui.view">
+             <field name="name">sale.order.quotation.filter.view</field>
              <field name="model">sale.order</field>
              <field name="inherit_id" ref="sale.view_sales_order_filter"/>
              <field name="arch" type="xml">
@@ -91,15 +91,15 @@
         </record>
 
         <!-- dashboard -->
-        <record id="magento_action_sales_quotations_ept" model="ir.actions.act_window">
+        <record id="magento_action_sales_quotations" model="ir.actions.act_window">
             <field name="name">Quotations</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">sale.order</field>
-            <field name="view_id" ref="sale_order_tree_view_ept"/>
+            <field name="view_id" ref="magento_sale_order_tree_view"/>
             <field name="view_mode">tree,form,calendar,graph</field>
             <field name="domain">[('magento_instance_id','!=',False),
                 ('state','in',('draft','sent','cancel'))]</field>
-            <field name="search_view_id" ref="sale_order_quotation_filter_view_ept"/>
+            <field name="search_view_id" ref="sale_order_quotation_filter_view"/>
             <field name="help" type="html">
                 <div>
                     <br/>
@@ -155,15 +155,15 @@
         </record>
 
         <!-- dashboard -->
-        <record id="magento_action_sales_order_ept" model="ir.actions.act_window">
+        <record id="magento_action_sales_order" model="ir.actions.act_window">
             <field name="name">Sales Order</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">sale.order</field>
-            <field name="view_id" ref="sale_order_tree_view_ept"/>
+            <field name="view_id" ref="magento_sale_order_tree_view"/>
             <field name="view_mode">tree,form,calendar,graph</field>
             <field name="domain">[('magento_instance_id','!=',False),
                 ('state','not in',('draft','sent','cancel'))]</field>
-            <field name="search_view_id" ref="sale_order_filter_view_ept"/>
+            <field name="search_view_id" ref="sale_order_filter_view"/>
             <field name="help" type="html">
                 <div>
                     <br/>
@@ -221,11 +221,11 @@
 
         <menuitem id="magento_menu_item_sales_quotations" name="Quotations"
             parent="odoo_magento2.menu_item_parent_sale_order"
-            action="magento_action_sales_quotations_ept"
+            action="magento_action_sales_quotations"
             sequence="9"/>
 
         <menuitem id="magento_menu_item_sales_order" name="Orders"
             parent="odoo_magento2.menu_item_parent_sale_order"
-            action="magento_action_sales_order_ept"
+            action="magento_action_sales_order"
             sequence="10"/>
 </odoo>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
     <data>
-        <record model="ir.module.category" id="module_category_magento_ept">
+        <record model="ir.module.category" id="module_category_magento">
             <field name="name">Magento</field>
             <field name="description">Magento User Access Rights</field>
             <field name="sequence">200</field>
@@ -10,13 +10,13 @@
         <record model="res.groups" id="group_magento_user">
             <field name="name">User</field>
             <field name="implied_ids" eval="[(4,ref('sales_team.group_sale_salesman'))]"/>
-            <field name="category_id" ref="module_category_magento_ept"/>
+            <field name="category_id" ref="module_category_magento"/>
             <field name="users" eval="[(4, ref('base.user_root')),(4, ref('base.user_admin'))]"/>
         </record>
 
         <record model="res.groups" id="group_magento_manager">
             <field name="name">Manager</field>
-            <field name="category_id" ref="module_category_magento_ept"/>
+            <field name="category_id" ref="module_category_magento"/>
             <field name="implied_ids" eval="[(4,ref('odoo_magento2.group_magento_user')), (4,ref('sales_team.group_sale_manager'))]"/>
             <field name="users" eval="[(4, ref('base.user_root')),(4, ref('base.user_admin'))]"/>
         </record>

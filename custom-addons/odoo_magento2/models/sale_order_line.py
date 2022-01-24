@@ -16,7 +16,7 @@ class SaleOrderLine(models.Model):
         help="Magento Sale Order Line Reference"
     )
 
-    def create_sale_order_line_ept(self, vals):
+    def create_sale_order_line(self, vals):
         """
         Pass dictionary
         vals = {'order_id':order_id, 'product_id':product_id, 'company_id':company_id, 'description':product_name,
@@ -84,7 +84,7 @@ class SaleOrderLine(models.Model):
             'order_qty': order_qty,
             'price_unit': price_unit,
         }
-        order_line_vals = self.create_sale_order_line_ept(order_line_vals)
+        order_line_vals = self.create_sale_order_line(order_line_vals)
         order_line_vals.update({
             'magento_sale_order_line_ref': magento_sale_order_line_ref
         })

@@ -4,7 +4,7 @@ from odoo import models, fields, api
 
 
 class SaleWorkflowProcess(models.Model):
-    _name = "sale.workflow.process.ept"
+    _name = "sale.workflow.process"
     _description = "sale workflow process"
 
     @api.model

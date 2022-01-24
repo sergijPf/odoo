@@ -60,7 +60,7 @@
     </record>
     <record id="act_auto_payment_method_form" model="ir.actions.act_window">
         <field name="name">Auto Invoice Workflow </field>
-        <field name="res_model">sale.workflow.process.ept</field>
+        <field name="res_model">sale.workflow.process</field>
         <field name="view_mode">tree,form</field>
     </record>
 

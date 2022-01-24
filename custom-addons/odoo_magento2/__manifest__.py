@@ -6,8 +6,8 @@
     'summary': 'Odoo - Magento2 Connector',
 
     # Dependencies
-    'depends': ['delivery', 'sale_stock', 'account', 'sale_management'],
-    # 'depends': ['delivery', 'sale_stock', 'account', 'sale_management', 'smartino_common'],
+    # 'depends': ['delivery', 'sale_stock', 'account', 'sale_management'],
+    'depends': ['delivery', 'sale_stock', 'account', 'sale_management', 'smartino_common'],
     # Views
     'data': [
         'security/security.xml',
@@ -56,7 +56,7 @@
         'wizard_views/config_product_attributes_update_view.xml',
         'wizard_views/magento_customer_group_update_view.xml',
         'data/ecommerce_data.xml',
-        'data/automatic_workflow_data_.xml',
+        'data/automatic_workflow_data.xml',
         'security/ir.model.access.csv'
     ],
 

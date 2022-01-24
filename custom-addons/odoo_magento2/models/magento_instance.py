@@ -167,72 +167,72 @@ class MagentoInstance(models.Model):
         interval_in_seconds = _secondsConverter[interval_type](interval)
         return interval_in_seconds
 
-    def magento_action_open_deactive_wizard(self):
-        """
-        This method is used to open a wizard to display the information related to how many data active/inactive
-        while instance Active/Inactive.
-        :return: action
-        """
-        view = self.env.ref('odoo_magento2.view_inactive_magento_instance')
-        return {
-            'name': _('Instance Active/Inactive Details'),
-            'type': ACTION_ACT_WINDOW,
-            'view_type': 'form',
-            'view_mode': 'form',
-            'res_model': 'magento.queue.process.ept',
-            'views': [(view.id, 'form')],
-            'view_id': view.id,
-            'target': 'new',
-            'context': self._context,
-        }
+    # def magento_action_open_deactive_wizard(self):
+    #     """
+    #     This method is used to open a wizard to display the information related to how many data active/inactive
+    #     while instance Active/Inactive.
+    #     :return: action
+    #     """
+    #     view = self.env.ref('odoo_magento2.view_inactive_magento_instance')
+    #     return {
+    #         'name': _('Instance Active/Inactive Details'),
+    #         'type': ACTION_ACT_WINDOW,
+    #         'view_type': 'form',
+    #         'view_mode': 'form',
+    #         'res_model': 'magento.queue.process.ept',
+    #         'views': [(view.id, 'form')],
+    #         'view_id': view.id,
+    #         'target': 'new',
+    #         'context': self._context,
+    #     }
 
-    def magento_action_archive_unarchive(self):
-        """
-        This method archive/active related website, storeviews, products, queues,
-        financial status, inventory locations when instance archive/ active.
-        :return:
-        """
-        domain = [("magento_instance_id", "=", self.id)]
-        attribute_instance_domain = [("instance_id", "=", self.id)]
-        magento_product_obj = self.env["magento.product.product"]
-        magento_financial_status_obj = self.env["magento.financial.status"]
-        magento_payment_method_obj = self.env["magento.payment.method"]
-        magento_inventory_location_obj = self.env["magento.inventory.locations"]
-        magento_product_category_obj = self.env['magento.product.category']
-        magento_website_obj = self.env[MAGENTO_WEBSITE]
-        magento_storeview_obj = self.env[MAGENTO_STOREVIEW]
-        ir_cron_obj = self.env["ir.cron"]
-        if self.active:
-            activate = {"active": False}
-            auto_crons = ir_cron_obj.search([("name", "ilike", self.name), ("active", "=", True)])
-            if auto_crons:
-                auto_crons.write(activate)
-            magento_website_obj.search(domain).write(activate)
-            magento_storeview_obj.search(domain).write(activate)
-            magento_inventory_location_obj.search(domain).write(activate)
-            magento_financial_status_obj.search(domain).write(activate)
-            magento_payment_method_obj.search(domain).write(activate)
-            magento_product_category_obj.search(attribute_instance_domain).write(activate)
-        else:
-            activate = {"active": True}
-            domain.append(("active", "=", False))
-            magento_website_obj.search(domain).write(activate)
-            magento_storeview_obj.search(domain).write(activate)
-            magento_inventory_location_obj.search(domain).write(activate)
-            magento_financial_status_obj.search(domain).write(activate)
-            magento_payment_method_obj.search(domain).write(activate)
-            magento_product_category_obj.search(attribute_instance_domain).write(activate)
-            self.synchronize_metadata()
-        self.write(activate)
-        magento_product_obj.search(domain).write(activate)
-        return True
+    # def magento_action_archive_unarchive(self):
+    #     """
+    #     This method archive/active related website, storeviews, products, queues,
+    #     financial status, inventory locations when instance archive/ active.
+    #     :return:
+    #     """
+    #     domain = [("magento_instance_id", "=", self.id)]
+    #     attribute_instance_domain = [("instance_id", "=", self.id)]
+    #     magento_product_obj = self.env["magento.product.product"]
+    #     magento_financial_status_obj = self.env["magento.financial.status"]
+    #     magento_payment_method_obj = self.env["magento.payment.method"]
+    #     magento_inventory_location_obj = self.env["magento.inventory.locations"]
+    #     magento_product_category_obj = self.env['magento.product.category']
+    #     magento_website_obj = self.env[MAGENTO_WEBSITE]
+    #     magento_storeview_obj = self.env[MAGENTO_STOREVIEW]
+    #     ir_cron_obj = self.env["ir.cron"]
+    #     if self.active:
+    #         activate = {"active": False}
+    #         auto_crons = ir_cron_obj.search([("name", "ilike", self.name), ("active", "=", True)])
+    #         if auto_crons:
+    #             auto_crons.write(activate)
+    #         magento_website_obj.search(domain).write(activate)
+    #         magento_storeview_obj.search(domain).write(activate)
+    #         magento_inventory_location_obj.search(domain).write(activate)
+    #         magento_financial_status_obj.search(domain).write(activate)
+    #         magento_payment_method_obj.search(domain).write(activate)
+    #         magento_product_category_obj.search(attribute_instance_domain).write(activate)
+    #     else:
+    #         activate = {"active": True}
+    #         domain.append(("active", "=", False))
+    #         magento_website_obj.search(domain).write(activate)
+    #         magento_storeview_obj.search(domain).write(activate)
+    #         magento_inventory_location_obj.search(domain).write(activate)
+    #         magento_financial_status_obj.search(domain).write(activate)
+    #         magento_payment_method_obj.search(domain).write(activate)
+    #         magento_product_category_obj.search(attribute_instance_domain).write(activate)
+    #         self.synchronize_metadata()
+    #     self.write(activate)
+    #     magento_product_obj.search(domain).write(activate)
+    #     return True
 
     def cron_configuration_action(self):
         """
         Return action for cron configuration
         :return:
         """
-        action = self.env.ref('odoo_magento2.action_magento_wizard_cron_configuration_ept').read()[0]
+        action = self.env.ref('odoo_magento2.action_magento_wizard_cron_configuration').read()[0]
         context = {
             'magento_instance_id': self.id
         }
@@ -713,7 +713,7 @@ class MagentoInstance(models.Model):
         if result:
             for data in result:
                 order_ids.append(data.get('id'))
-        view = self.env.ref('odoo_magento2.magento_action_sales_order_ept').sudo().read()[0]
+        view = self.env.ref('odoo_magento2.magento_action_sales_order').sudo().read()[0]
         action = record.prepare_action(view, [('id', 'in', order_ids)])
         order_data.update({'order_count': len(order_ids), 'order_action': action})
         return order_data
@@ -769,12 +769,12 @@ class MagentoInstance(models.Model):
         if result:
             for data in result:
                 order_ids.append(data.get('id'))
-        view = self.env.ref('odoo_magento2.magento_action_sales_order_ept').sudo().read()[0]
+        view = self.env.ref('odoo_magento2.magento_action_sales_order').sudo().read()[0]
         action = record.prepare_action(view, [('id', 'in', order_ids)])
         order_data.update({'order_count': len(order_ids), 'order_action': action})
         return order_data
 
-    def magento_action_sales_quotations_ept(self):
+    def magento_action_sales_quotations(self):
         """
         get quotations action
         :return:
@@ -783,7 +783,7 @@ class MagentoInstance(models.Model):
         order_data = self.get_total_orders(self, state)
         return order_data.get('order_action')
 
-    def magento_action_sales_order_ept(self):
+    def magento_action_sales_order(self):
         """
         get sales order action
         :return:
@@ -812,7 +812,7 @@ class MagentoInstance(models.Model):
                         (self.id, state)
         self._cr.execute(invoice_query)
         result = self._cr.dictfetchall()
-        view = self.env.ref('odoo_magento2.action_magento_invoice_tree1_ept').sudo().read()[0]
+        view = self.env.ref('odoo_magento2.action_magento_invoice_tree').sudo().read()[0]
         if result:
             for data in result:
                 invoice_ids.append(data.get('id'))
@@ -863,16 +863,16 @@ class MagentoInstance(models.Model):
         invoice_data = self.get_magento_invoice_records(state)
         return invoice_data.get('order_action')
 
-    def magento_waiting_stock_picking_ept(self):
-        """
-        get confirmed state picking action
-        :return:
-        """
-        state = 'confirmed'
-        picking_data = self.get_magento_picking_records(state)
-        return picking_data.get('order_action')
+    # def magento_waiting_stock_picking_ept(self):
+    #     """
+    #     get confirmed state picking action
+    #     :return:
+    #     """
+    #     state = 'confirmed'
+    #     picking_data = self.get_magento_picking_records(state)
+    #     return picking_data.get('order_action')
 
-    def magento_partially_available_stock_picking_ept(self):
+    def magento_partially_available_stock_picking(self):
         """
         get partially_available state picking action
         :return:
@@ -881,23 +881,23 @@ class MagentoInstance(models.Model):
         picking_data = self.get_magento_picking_records(state)
         return picking_data.get('order_action')
 
-    def magento_ready_stock_picking_ept(self):
-        """
-        get assigned state picking action
-        :return:
-        """
-        state = 'assigned'
-        picking_data = self.get_magento_picking_records(state)
-        return picking_data.get('order_action')
+    # def magento_ready_stock_picking_ept(self):
+    #     """
+    #     get assigned state picking action
+    #     :return:
+    #     """
+    #     state = 'assigned'
+    #     picking_data = self.get_magento_picking_records(state)
+    #     return picking_data.get('order_action')
 
-    def magento_transferred_stock_picking_ept(self):
-        """
-        get done state picking action
-        :return:
-        """
-        state = 'done'
-        picking_data = self.get_magento_picking_records(state)
-        return picking_data.get('order_action')
+    # def magento_transferred_stock_picking_ept(self):
+    #     """
+    #     get done state picking action
+    #     :return:
+    #     """
+    #     state = 'done'
+    #     picking_data = self.get_magento_picking_records(state)
+    #     return picking_data.get('order_action')
 
     @api.model
     def perform_operation(self, record_id):

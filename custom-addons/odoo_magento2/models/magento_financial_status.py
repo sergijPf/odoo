@@ -17,7 +17,7 @@ class MagentoFinancialStatusEpt(models.Model):
                                          # ('processing_unpaid', 'Processing orders with Shipping'),
                                          # ('paid', 'Completed orders'),
                                          ], default="not_paid")
-    auto_workflow_id = fields.Many2one("sale.workflow.process.ept", "Auto Workflow", ondelete="restrict")
+    auto_workflow_id = fields.Many2one("sale.workflow.process", "Auto Workflow", ondelete="restrict")
     payment_method_id = fields.Many2one("magento.payment.method", "Payment Gateway", ondelete="restrict")
     payment_term_id = fields.Many2one('account.payment.term', string='Payment Term', default=_default_payment_term,
                                       ondelete="restrict")
@@ -50,7 +50,7 @@ class MagentoFinancialStatusEpt(models.Model):
             if payment_method.magento_workflow_process_id:
                 auto_workflow_record = payment_method.magento_workflow_process_id
             else:
-                auto_workflow_record = self.env.ref("odoo_magento2.automatic_validation_ept")
+                auto_workflow_record = self.env.ref("odoo_magento2.automatic_validation")
             if payment_method.payment_term_id:
                 payment_term_id = payment_method.payment_term_id
             else:

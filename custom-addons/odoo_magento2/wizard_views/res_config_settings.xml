@@ -3,13 +3,13 @@
     <data>
         <!-- Magento Configuration Setting -->
         <!-- Form View Section -->
-        <record id="view_magento_res_config_settings_ept" model="ir.ui.view">
+        <record id="view_magento_res_config_settings" model="ir.ui.view">
             <field name="name">Magento Settings</field>
             <field name="model">res.config.settings</field>
             <field name="inherit_id" ref="base.res_config_settings_view_form" />
             <field name="arch" type="xml">
                 <xpath expr="//div[hasclass('settings')]" position="inside">
-                    <div class="app_settings_block" data-string="Magento" data-key="odoo_magento2_ept" groups="odoo_magento2.group_magento_manager">
+                    <div class="app_settings_block" data-string="Magento" data-key="odoo_magento2" groups="odoo_magento2.group_magento_manager">
                         <h2 style="font-size:25px;background-color:#e9ecef;">Magento Instances
                         </h2>
                         <div class="row mt16 o_settings_container">
@@ -20,7 +20,7 @@
                                         <field name="magento_instance_id" widget="selection"
                                                attrs="{'required':[('magento_instance_id','!=',False)]}" class="oe_inline" />
                                         <button string="Create More Instances" icon="fa-arrow-right"
-                                            name="%(odoo_magento2.res_config_action_magento_instance_ept)d" type="action"
+                                            name="%(odoo_magento2.res_config_action_magento_instance)d" type="action"
                                             class="oe_link" />
                                     </div>
                                 </div>

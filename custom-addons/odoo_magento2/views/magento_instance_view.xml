@@ -42,16 +42,16 @@
                                     <span class="o_stat_text">Scheduler</span>
                                 </div>
                             </button>
-                            <button class="oe_stat_button"
-                                    name="magento_action_open_deactive_wizard" icon="fa-lock"
-                                    type="object" attrs="{'invisible': [('active','=',False)]}">
-                                <span class="o_stat_text" style="color:#2dab2d">Active</span>
-                            </button>
-                            <button class="oe_stat_button"
-                                    name="magento_action_open_deactive_wizard" icon="fa-unlock"
-                                    type="object" attrs="{'invisible': [('active','=',True)]}">
-                                <span class="o_stat_text" style="color:#da3434">Archive</span>
-                            </button>
+<!--                            <button class="oe_stat_button"-->
+<!--                                    name="magento_action_open_deactive_wizard" icon="fa-lock"-->
+<!--                                    type="object" attrs="{'invisible': [('active','=',False)]}">-->
+<!--                                <span class="o_stat_text" style="color:#2dab2d">Active</span>-->
+<!--                            </button>-->
+<!--                            <button class="oe_stat_button"-->
+<!--                                    name="magento_action_open_deactive_wizard" icon="fa-unlock"-->
+<!--                                    type="object" attrs="{'invisible': [('active','=',True)]}">-->
+<!--                                <span class="o_stat_text" style="color:#da3434">Archive</span>-->
+<!--                            </button>-->
                             <button name="open_all_websites" type="object"
                                     icon="fa-sitemap" class="oe_stat_button"
                                     style="width:16% !important;float: left; border-right: 1px solid #ced4da;">
@@ -111,8 +111,7 @@
         </record>
 
         <!-- Instance search view -->
-        <record id="magento_instance_search_view_ept"
-                model="ir.ui.view">
+        <record id="magento_instance_search_view"  model="ir.ui.view">
             <field name="name">Magento Instance Search View</field>
             <field name="model">magento.instance</field>
             <field name="type">search</field>
