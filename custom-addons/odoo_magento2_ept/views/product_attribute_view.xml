@@ -9,6 +9,12 @@
                 <xpath expr="//field[@name='create_variant']" position="after">
                     <field name="is_ignored_in_magento" groups="odoo_magento2_ept.group_magento_user_ept"/>
                 </xpath>
+
+<!--                <xpath expr="//tree/field[@name='name']" position="after">-->
+<!--                    <field name="attr_name" invisible="1"/>-->
+<!--                    <field name="grouped_color" groups="odoo_magento2_ept.group_magento_user_ept"-->
+<!--                           attrs="{'invisible':[('attr_name','!=','color_N')]}"/>-->
+<!--                </xpath>-->
             </field>
         </record>
     </data>
