@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="product_public_category_form_inherit_view" model="ir.ui.view">
+            <field name="name">product_public_category_form_inherit_view</field>
+            <field name="model">product.public.category</field>
+            <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='x_magento_details']" position="replace">
+                    <group name="x_magento_details" string="Magento Details">
+                        <field name="no_create_in_magento" id="no_create_in_magento"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_config_product_attribute_group_form" model="ir.ui.view">
+            <field name="name">config.product.attribute.group.form</field>
+            <field name="model">config.product.attribute.group</field>
+            <field name="arch" type="xml">
+                <form string="Product Page Attributes Group" delete="1">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="color" widget="color_picker"/>
+                            <field name="active"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+    <record id="view_config_product_attribute_tree" model="ir.ui.view">
+        <field name="name">config.product.attribute.tree</field>
+        <field name="model">config.product.attribute</field>
+        <field name="arch" type="xml">
+            <tree string="Product Page Attributes">
+                <field name="color" widget="color_picker"/>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="attribute_value"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_config_product_attribute_form" model="ir.ui.view">
+        <field name="name">config.product.attribute.form</field>
+        <field name="model">config.product.attribute</field>
+        <field name="arch" type="xml">
+            <form string="Product Page Attributes" delete="1">
+                <sheet>
+                    <group>
+                        <field name="categ_group_id"/>
+                        <field name="name"/>
+                        <field name="color" widget="color_picker"/>
+                        <field name="sequence"/>
+                        <field name="attribute_value"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="config_product_attribute_search_view" model="ir.ui.view">
+        <field name="name">config.product.attribute.search.view</field>
+        <field name="model">config.product.attribute</field>
+        <field name="arch" type="xml">
+            <search string="Product Page Attributes search view">
+                <field name="categ_group_id"/>
+                <group expand="0" string="Group By">
+                    <filter name="Attribute Category" string="Attribute Category"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="config_product_attribute_action" model="ir.actions.act_window">
+            <field name="name">Product Page Attributes</field>
+            <field name="res_model">config.product.attribute</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_config_product_attribute_tree"/>
+<!--            <field name="context">-->
+<!--                {'group_by': ['categ_group_id']}-->
+<!--            </field>-->
+    </record>
+
+    <menuitem id="menu_item_config_product_attribute" name="Product Page Attributes" sequence="5"
+        parent="stock.menu_product_in_config_stock" groups="odoo_magento2.group_magento_user"
+        action="config_product_attribute_action"/>
+</odoo>

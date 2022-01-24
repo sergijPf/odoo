@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="act_magento_product" model="ir.actions.act_window">
+        <field name="name">Magento Product</field>
+        <field name="res_model">magento.product.product</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('odoo_product_id','=',active_id)]</field>
+        <field name="context">{'search_default_product_id': active_id}</field>
+    </record>
+
+    <record id="product_product_magento_button" model="ir.ui.view">
+        <field name="name">product.product.magento.button</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" name="%(odoo_magento2.act_magento_product)d" type="action"
+                        icon="fa-external-link" help="Magento Products">
+                    <field string="Magento Products" name="magento_product_count" widget="statinfo"/>
+                </button>
+            </div>
+        </field>
+    </record>
+
+    <record id="view_magento_product_form" model="ir.ui.view">
+        <field name="name">magento.product.product.form</field>
+        <field name="model">magento.product.product</field>
+        <field name="arch" type="xml">
+            <form string="Product" name="product_form" create="false" delete="true" edit="true">
+                <sheet>
+                    <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
+                    <field name="active" invisible="True" />
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                name="toggle_active" icon="fa-lock"
+                                type="object" attrs="{'invisible': [('active','=',False)]}">
+                            <span class="o_stat_text" style="color:#2dab2d">Active</span>
+                        </button>
+                        <button class="oe_stat_button"
+                                name="toggle_active" icon="fa-unlock"
+                                type="object" attrs="{'invisible': [('active','=',True)]}">
+                            <span class="o_stat_text" style="color:#da3434">Archived</span>
+                        </button>
+                        <button class="oe_stat_button" name="delete_in_magento" icon="fa-remove" type="object"
+                                attrs="{'invisible': [('magento_product_id','in',['', False, None])]}"
+                                modifiers="{}" options="{}">
+                            <span class="o_stat_text" style="color:#da3434" modifiers="{}">
+                                Delete in Magento
+                            </span>
+                        </button>
+                        <button string="Odoo Product" type="object" name="view_odoo_product"  class="oe_stat_button" icon="fa-chain" />
+                    </div>
+                    <widget name="web_ribbon" text="In Magento" attrs="{'invisible': [('magento_status', '!=', 'in_magento')]}"/>
+                    <widget name="web_ribbon" title="Deleted" bg_color="bg-danger" attrs="{'invisible': [('magento_status', '!=', 'deleted')]}"/>
+                    <field name="thumbnail_image" widget="image" class="oe_avatar" readonly="0"/>
+                    <div class="oe_title">
+                        <label class="oe_edit_only" for="magento_product_name"/>
+                        <h1>
+                            <field name="magento_product_name" placeholder="Product Name" readonly="1" modifiers="{'required': true}"/>
+                        </h1>
+                        <h3>
+                            <field name="x_magento_name" placeholder="Name for Magento" id="x_magento_name"/>
+                        </h3>
+                        <field name="attribute_value_ids" widget="many2many_tags" readonly="1"/>
+                    </div>
+                    <notebook>
+                         <page string="Magento Details" name="magento_group">
+                             <group>
+                                <group name="group_odoo" string="Odoo Ref.">
+                                    <field name="odoo_product_id" readonly="1"/>
+                                    <field name="magento_conf_product_id" readonly="1"/>
+                                    <field name="magento_conf_prod_sku" readonly="1"/>
+                                    <field name="magento_sku" readonly="1"/>
+                                </group>
+                                 <group name="magento_info" string="Magento Info">
+                                     <field name="magento_instance_id" readonly="1"/>
+                                     <field name="magento_product_id" readonly="1"/>
+                                    <field name="magento_website_ids" widget="many2many_tags" readonly="1"/>
+<!--                                    <field name="category_ids" widget="many2many_tags" readonly="1"/>-->
+                                    <field name="magento_status" readonly="1"/>
+                                    <field name="magento_export_date" readonly="1"/>
+                                </group>
+                                 <group string="Product Images" name="magento_product_images">
+                                     <field name="product_image_ids" class="o_website_sale_image_list"
+                                            mode="kanban" nolabel="1" id="product_image_ids"/>
+                                 </group>
+                             </group>
+                        </page>
+                        <page string="Export Log Details" name="magento_export_logs">
+                            <field name="bulk_log_ids" readonly="1">
+                                <tree create="false" delete="false" edit="false">
+                                    <field name="topic"/>
+                                    <field name="bulk_uuid"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_magento_product_tree" model="ir.ui.view">
+        <field name="name">magento.product.product.tree</field>
+        <field name="model">magento.product.product</field>
+        <field name="arch" type="xml">
+            <tree string="Magento Product" create="false" delete="true" default_order="magento_instance_id,magento_sku">
+                <field name="magento_product_id" string="Magento Product ID" invisible="1"/>
+                <field name="magento_instance_id"/>
+                <field name="magento_product_id"/>
+                <field name="magento_website_ids" widget="many2many_tags"/>
+                <field name="magento_sku"/>
+                <field name="magento_product_name"/>
+                <field name="attribute_value_ids" widget="many2many_tags" readonly="1"
+                       optional="show" can_create="false" can_write="false"/>
+                <field name="magento_status" widget="badge" optional="show" on_change="1"
+                       decoration-success="magento_status == 'in_magento'"
+                       decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
+                       decoration-info="magento_status == 'in_process'"
+                       decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
+                       decoration-danger="magento_status == 'log_error'"
+                       modifiers="{'readonly':true}"
+                />
+            </tree>
+        </field>
+    </record>
+
+    <record id="magento_product_normal_action_sell_ept" model="ir.actions.act_window">
+        <field name="name">Simple Products</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">magento.product.product</field>
+        <field name="view_mode">form,tree</field>
+        <field name="view_id" ref="view_magento_product_tree"/>
+        <field name="help" type="html">
+            <p>
+                You can't create Product Variants directly from Here.
+            </p>
+        </field>
+    </record>
+
+    <record id="magento_product_product_search_view" model="ir.ui.view">
+        <field name="name">magento.product.product.search.view</field>
+        <field name="model">magento.product.product</field>
+        <field name="arch" type="xml">
+            <search string="Magento product search view">
+                <field name="magento_sku" />
+                <field name="magento_product_name" />
+                <field name="magento_conf_product_id"/>
+                <field name="magento_product_id" />
+                <filter string="Not in Magento" name="not_in_magento"
+                        domain="[('magento_status', '!=', 'in_magento')]"/>
+                <separator/>
+                <filter name="archived" string="Archived" domain="[('active','=',0)]"/>
+                <group expand="1" string="Group By">
+                    <filter string="Instances" name="group_by_instance"
+                            context="{'group_by': 'magento_instance_id'}"/>
+                    <filter string="Product Category" name="group_by_product_category"
+                            context="{'group_by': 'magento_conf_product_id'}"/>
+                    <filter string="Magento Status" name="group_by_status"
+                            context="{'group_by': 'magento_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+<!--    <record id="action_magento_product_export_prepare" model="ir.actions.server">-->
+<!--        <field name="name">Export To Magento</field>-->
+<!--        <field name="model_id" ref="model_magento_product_product"/>-->
+<!--        <field name="binding_model_id" ref="model_magento_product_product"/>-->
+<!--        <field name="binding_view_types">list,form</field>-->
+<!--        <field name="state">code</field>-->
+<!--        <field name="code">records.process_products_export_to_magento()</field>-->
+<!--    </record>-->
+
+
+<!--    bulk log view-->
+    <record id="view_magento_async_bulk_logs_form" model="ir.ui.view">
+        <field name="name">magento.async.bulk.logs.form</field>
+        <field name="model">magento.async.bulk.logs</field>
+        <field name="arch" type="xml">
+            <form string="Async Bulk Logs" create="false" delete="false" edit="false">
+                <header>
+                    <button name="check_bulk_log_statuses"
+                            string="Check Log statuses"
+                            type="object"
+                            class="btn btn-warning my-2"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="bulk_uuid"/>
+                        <field name="topic"/>
+                        <field name="magento_conf_product_ids" invisible="1"/>
+                        <field name="is_conf_prod" invisible="1"/>
+                    </group>
+                    <group>
+                        <field name="magento_product_ids"
+                               attrs="{'invisible': [('is_conf_prod', '=', True)]}">
+                            <tree>
+                                <field name="magento_sku"/>
+                                <field name="magento_status"/>
+                            </tree>
+                        </field>
+
+                        <field name="magento_conf_product_ids"
+                               attrs="{'invisible': [('is_conf_prod', '!=', True)]}">
+                            <tree>
+                                <field name="magento_sku"/>
+                                <field name="magento_status"/>
+                            </tree>
+                        </field>
+                    </group>
+                    <group>
+                        <field name="lod_details_ids" readonly="1">
+                            <tree>
+                                <field name="log_line_id" />
+                                <field name="sku" />
+                                <field name="result_message" />
+                                <field name="log_status"
+                                    decoration-success="log_status == '1'"
+                                    decoration-muted="log_status == '0'"
+                                    decoration-info="log_status == '4'"
+                                    decoration-warning="log_status == '2' or log_status == '3'"
+                                    decoration-danger="log_status == '5'"
+                                />
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_magento_catalog_parent" name="Catalog" parent="odoo_magento2.menu_magento_root" sequence="3"/>
+
+    <menuitem id="menu_product_details" name="Products"
+            sequence="2" parent="odoo_magento2.menu_magento_catalog_parent"/>
+
+    <menuitem id="menu_item_magento_product_variants" name="Simple Products"
+        parent="odoo_magento2.menu_product_details" sequence="4"
+        action="magento_product_normal_action_sell_ept"/>
+</odoo>

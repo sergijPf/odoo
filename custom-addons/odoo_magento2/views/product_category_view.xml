@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="product_category_form_view" model="ir.ui.view">
+            <field name="name">product_category_form_inherit_view</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet" position='inside'>
+                    <group string="Magento details" groups="odoo_magento2.group_magento_user">
+                        <field name="x_attribute_ids" id="x_attribute_ids" widget="many2many_tags"
+                               options="{'color_field': 'color', 'no_create':True, 'no_create_edit': True}"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

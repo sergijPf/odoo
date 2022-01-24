@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="product_attribute_form_inherit_view" model="ir.ui.view">
+            <field name="name">product_attribute_form_inherit_view</field>
+            <field name="model">product.attribute</field>
+            <field name="inherit_id" ref="product.product_attribute_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='create_variant']" position="after">
+                    <field name="is_ignored_in_magento" groups="odoo_magento2.group_magento_user"/>
+                </xpath>
+
+<!--                <xpath expr="//tree/field[@name='name']" position="after">-->
+<!--                    <field name="attr_name" invisible="1"/>-->
+<!--                    <field name="grouped_color" groups="odoo_magento2.group_magento_user"-->
+<!--                           attrs="{'invisible':[('attr_name','!=','color_N')]}"/>-->
+<!--                </xpath>-->
+            </field>
+        </record>
+    </data>
+</odoo>

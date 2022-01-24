@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_magento_import_export_operation" model="ir.ui.view">
+            <field name="name">Magento Operation</field>
+            <field name="model">magento.import.export</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="magento_instance_ids" options="{'no_create':True,'no_create_edit': True}"
+                               required="1" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="operations" required="1"/>
+                    </group>
+                    <footer>
+                        <button name="execute" string="Execute" type="object"
+                                class="oe_highlight"/>
+                        <button string="Cancel" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_wizard_magento_import_export_operation" model="ir.actions.act_window">
+            <field name="name">Magento Operation</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">magento.import.export</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <record id="view_magento_process_import_export_from_more" model="ir.ui.view">
+            <field name="name">Process Import/Export</field>
+            <field name="model">magento.import.export</field>
+            <field name="priority">100</field>
+            <field name="arch" type="xml">
+                <form string="Import/Export">
+                    <group>
+                        <field name="export_method" required="1"/>
+                        <field name="magento_instance_ids" widget="many2many_tags"
+                               options="{'no_create':True,'no_create_edit': True}" required="1"/>
+                    </group>
+                    <group>
+                        <div style="color:#000000">
+                            <p class="alert alert-warning" role="alert">
+                                <u>
+                                    <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
+                                </u>
+                                <b>
+                                    Products without Internal Reference (SKU) and Product Category will not
+                                    be exported to Magento Product Layer.
+                                </b>
+                            </p>
+                        </div>
+                    </group>
+                    <footer>
+                        <button string="Export Products" class="oe_highlight" type="object"
+                                name="prepare_product_for_export_to_magento"/>
+                        <button string="Cancel" class="oe_highlight" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_wizard_magento_product_for_prepare" model="ir.actions.act_window">
+            <field name="name">Magento - Export Products</field>
+            <field name="res_model">magento.import.export</field>
+            <field name="binding_model_id" ref="product.model_product_template"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_magento_process_import_export_from_more"/>
+            <field name="target">new</field>
+        </record>
+
+        <record id="view_process_magento_customers_export" model="ir.ui.view">
+            <field name="name">Process Customer Export</field>
+            <field name="model">magento.import.export</field>
+            <field name="arch" type="xml">
+                <form string="Export to Magento Layer">
+                    <group>
+                        <field name="magento_instance_ids" widget="many2many_tags"
+                               options="{'no_create':True,'no_create_edit': True}" required="1"/>
+                        <field name="magento_website_id"  domain="[('magento_instance_id','=',magento_instance_ids)]"
+                               options="{'no_create':True,'no_create_edit': True}" required="1"/>
+                    </group>
+                    <group>
+                        <div style="color:#000000">
+                            <p class="alert alert-warning" role="alert">
+                                <u>
+                                    <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
+                                </u>
+                                <b>
+                                    Please note: the only one Magento Instance should be selected at once
+                                </b>
+                                <br/>
+                                <b>
+                                    All selected customers will be added to Magento Layer and
+                                    afterwards they will be exported to Magento.
+                                </b>
+                            </p>
+                        </div>
+                    </group>
+                    <footer>
+                        <button string="Add to Layer" class="oe_highlight" type="object"
+                                name="prepare_customers_for_export_to_magento"/>
+                        <button string="Cancel" class="oe_highlight" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <record id="action_wizard_magento_customers_export" model="ir.actions.act_window">
+            <field name="name">Magento - Export Customers</field>
+            <field name="res_model">magento.import.export</field>
+            <field name="binding_model_id" ref="base.model_res_partner"/>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_process_magento_customers_export"/>
+            <field name="target">new</field>
+        </record>
+
+
+        <!-- Below action used to redirect operation wizard from the instance kanban view-->
+        <record id="action_wizard_magento_instance_import_export_operations"
+                model="ir.actions.act_window">
+            <field name="name">Magento Operations</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">magento.import.export</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="odoo_magento2.view_magento_import_export_operation"/>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="operation_magento_parent_menu" parent="menu_magento_root"
+                  name="Operations" action="action_wizard_magento_import_export_operation" sequence="7"/>
+    </data>
+</odoo>
