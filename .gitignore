@@ -50,7 +50,7 @@ package.json
 tsconfig.json
 
 #added by SPf
-backups/
-conf/
-venv*
-*.pdf
+*
+
+#except
+!custom-addons/odoo_magento2
