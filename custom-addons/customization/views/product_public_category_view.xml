@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record model="ir.ui.view" id="product_public_category_form_view_inherited">
+        <field name="name">product.public.category.form.inherited</field>
+        <field name="model">product.public.category</field>
+        <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
+        <field name="arch" type="xml">
+             <xpath expr="//sheet" position="inside">
+                <group name="x_category_image_ids" string="Extra Category Media" modifiers="{}">
+                    <field name="x_show_on_www" modifiers="{}" id="x_show_on_www"/>
+                    <field name="x_category_image_ids" class="o_website_sale_image_list" context="{'default_name': name}" mode="kanban" widget="one2many" options="{'create_text':'Add a Media', 'no_create_edit': True}" nolabel="1" can_create="true" can_write="true" modifiers="{}" id="x_category_image_ids"/>
+                </group>
+            </xpath>
+
+            <xpath expr="//group[@name='x_category_image_ids']" position="after">
+                <group name="x_magento_details" string="Magento Details" modifiers="{}">
+                    <field name="x_magento_attr_set" modifiers="{}" id="x_magento_attr_set"/>
+                    <field name="x_magento_no_create" modifiers="{}" id="x_magento_no_create"/>
+                    <field name="x_magento_attr_ids" widget="many2many_tags" attrs="{'invisible': [('x_magento_no_create', '=', True)]}" options="{'no_create_edit': True}" can_create="true" can_write="true" modifiers="{'invisible':[['x_magento_no_create','=',true]]}" id="x_magento_attr_ids"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

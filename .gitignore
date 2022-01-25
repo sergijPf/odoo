@@ -45,5 +45,3 @@ venv*
 *.conf
 backups
 *.pdf
-custom-addons/customization/
-odoo14/
