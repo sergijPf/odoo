@@ -12,7 +12,7 @@ from ..python_library.php import Php
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 MAX_SIZE_FOR_IMAGES = 2500000 # should be aligned with MYSQL - max_allowed_size (currently 4M), !!! NOTE 4M is converted size and constant value is before convertion
-PRODUCTS_THRESHOLD = 250
+PRODUCTS_THRESHOLD = 250 # product's count to be proceeded per one iteration
 IMG_SIZE = 'image_1024'
 
 
@@ -37,8 +37,7 @@ class MagentoConfigurableProduct(models.Model):
         ('log_error', 'Error to Export'),
         ('update_needed', 'Need to Update'),
         ('deleted', 'Deleted in Magento')
-    ], string='Export Status', help='The status of Configurable Product Export to Magento ',
-        default='not_exported')
+    ], string='Export Status', help='The status of Configurable Product Export to Magento ', default='not_exported')
     image_1920 = fields.Image(related="odoo_prod_template_id.image_1920")
     product_image_ids = fields.One2many(related="odoo_prod_template_id.product_template_image_ids")
     magento_product_id = fields.Char(string="Magento Product Id")
@@ -55,8 +54,7 @@ class MagentoConfigurableProduct(models.Model):
                                               compute="_compute_config_attributes")
     x_magento_main_config_attr_id = fields.Many2one('product.attribute', string="Main Config.Attribute",
                                                     compute="_compute_main_config_attribute")
-    magento_export_date = fields.Datetime(string="Last Export Date",
-                                          help="Configurable Product last Export Date to Magento")
+    magento_export_date = fields.Datetime(string="Last Export Date", help="Last Export Date to Magento of Config.Product")
     force_update = fields.Boolean(string="To force run of Configurable Product Export", default=False)
     simple_product_ids = fields.One2many('magento.product.product', 'magento_conf_product_id', 'Magento Products',
                                           required=True, context={'active_test': False})
@@ -94,13 +92,14 @@ class MagentoConfigurableProduct(models.Model):
             vals.update({'force_update': True})
 
         # archive/unarchive related simple products
-        if 'active' in vals:
-            if self.simple_product_ids:
-                self.simple_product_ids.write({'active': vals["active"]})
+        if 'active' in vals and self.simple_product_ids:
+            self.simple_product_ids.write({'active': vals["active"]})
+
         res = super(MagentoConfigurableProduct, self).write(vals)
         return res
 
     def unlink(self):
+        print(self)
         if len(self.simple_product_ids.with_context(active_test=False)):
             raise UserError("You can't remove this Product until it has related Simple Products: %s" % \
                   str([s.magento_sku for s in self.simple_product_ids.with_context(active_test=False)]))
