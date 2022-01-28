@@ -7,7 +7,7 @@ class ProductAttribute(models.Model):
     _inherit = "product.attribute"
 
     is_ignored_in_magento = fields.Boolean(string="Ignore for Magento", default=False,
-                                           help="The attribute will be ignored while Product's Export to Magento")
+                                           help="The attribute will be ignored while Product's export to Magento")
 
     def write(self, vals):
         res = super(ProductAttribute, self).write(vals)

@@ -24,7 +24,7 @@ class ProductTemplate(models.Model):
         res = super(ProductTemplate, self).write(vals)
 
         if self.magento_conf_prod_ids and ('website_description' in vals or 'product_template_image_ids' in vals or\
-                'x_magento_no_create' in vals or 'public_categ_ids' in vals):
+                'x_magento_no_create' in vals or 'public_categ_ids' in vals or 'categ_id' in vals):
             self.magento_conf_prod_ids.force_update = True
 
         return res
@@ -34,10 +34,10 @@ class ProductTemplate(models.Model):
 
         for prod in self:
             if prod.is_magento_config and prod.magento_conf_prod_ids:
-                reject_configs.append([c.magento_sku for c in prod.magento_conf_prod_ids])
+                reject_configs.append({c.magento_instance_id.name: c.magento_sku for c in prod.magento_conf_prod_ids})
 
         if reject_configs:
-            raise UserError("It's not allowed to delete these products as they were already added to Magento Layer "
+            raise UserError("It's not allowed to delete these product(s) as they were already added to Magento Layer "
                             "as Configurable Products: %s\n" % (str(tuple(reject_configs))))
 
         result = super(ProductTemplate, self).unlink()

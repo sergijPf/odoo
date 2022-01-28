@@ -211,7 +211,8 @@ class MagentoImportExport(models.TransientModel):
                     #     replace('%','').replace('#','').replace('/',''), # to remove later
                     'active': True
                 })
-            conf_product.simple_product_ids.write({'active': False})
+            conf_product.force_update = True
+            # conf_product.simple_product_ids.write({'active': False})
         product_dict.update({"conf_product_id": conf_product})
 
     def prepare_customers_for_export_to_magento(self):

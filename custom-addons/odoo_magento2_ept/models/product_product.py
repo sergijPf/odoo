@@ -11,29 +11,39 @@ class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     vendor_ids = fields.One2many('vendor.stock', 'vendor_product_id', string="Vendor")
-    is_drop_ship_product = fields.Boolean(store=False, compute="_compute_is_drop_ship_product")
     magento_product_count = fields.Integer(string='# Product Counts', compute='_compute_magento_product_count')
     magento_product_ids = fields.One2many(MAGENTO_PRODUCT, 'odoo_product_id', string='Magento Products',
                                           help='Magento Product Ids')
+    # is_drop_ship_product = fields.Boolean(store=False, compute="_compute_is_drop_ship_product")
     # config_product_id = fields.Many2one('product.public.category', string="Configurable Product",
     #                                     domain="[('is_magento_config','=',True)]")
 
-    @api.depends('route_ids')
-    def _compute_is_drop_ship_product(self):
+    # @api.depends('route_ids')
+    # def _compute_is_drop_ship_product(self):
+    #     """
+    #     This Method sets is_drop_ship_product field.
+    #     If dropship rule get this field _compute_is_drop_ship_product write boolean(True) and visible Vendor stock
+    #     notebook page.
+    #     """
+    #     customer_locations = self.env['stock.location'].search([('usage', '=', 'customer')])
+    #     route_ids = self.route_ids | self.categ_id.route_ids
+    #     stock_rule = self.env['stock.rule'].search([('company_id', '=', self.env.company.id), ('action', '=', 'buy'),
+    #                                                 ('location_id', 'in', customer_locations.ids),
+    #                                                 ('route_id', 'in', route_ids.ids)])
+    #     if stock_rule:
+    #         self.is_drop_ship_product = True
+    #     else:
+    #         self.is_drop_ship_product = False
+
+    def write(self, vals):
         """
-        This Method sets is_drop_ship_product field.
-        If dropship rule get this field _compute_is_drop_ship_product write boolean(True) and visible Vendor stock
-        notebook page.
+        This method will archive/unarchive Magento product based on Odoo Product
+        :param vals: Dictionary of Values
         """
-        customer_locations = self.env['stock.location'].search([('usage', '=', 'customer')])
-        route_ids = self.route_ids | self.categ_id.route_ids
-        stock_rule = self.env['stock.rule'].search([('company_id', '=', self.env.company.id), ('action', '=', 'buy'),
-                                                    ('location_id', 'in', customer_locations.ids),
-                                                    ('route_id', 'in', route_ids.ids)])
-        if stock_rule:
-            self.is_drop_ship_product = True
-        else:
-            self.is_drop_ship_product = False
+        if self.magento_product_ids and ('product_variant_image_ids' in vals or 'weight' in vals) :
+            self.magento_product_ids.force_update = True
+
+        return super(ProductProduct, self).write(vals)
 
     def _compute_magento_product_count(self):
         """
@@ -213,13 +223,3 @@ class ProductProduct(models.Model):
         if not magento_product_ids:
             return {'type': 'ir.actions.act_window_close'}
         return action
-
-    def write(self, vals):
-        """
-        This method will archive/unarchive Magento product based on Odoo Product
-        :param vals: Dictionary of Values
-        """
-        if 'product_variant_image_ids' in vals and self.magento_product_ids:
-            self.magento_product_ids.force_update = True
-
-        return super(ProductProduct, self).write(vals)

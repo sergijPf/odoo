@@ -26,7 +26,7 @@ class MagentoConfigurableProduct(models.Model):
 
     magento_instance_id = fields.Many2one('magento.instance', 'Magento Instance',
                                           help="This field relocates magento instance")
-    magento_sku = fields.Char(string="Magento Product SKU")
+    magento_sku = fields.Char(string="Magento Conf.Product SKU")
     magento_website_ids = fields.Many2many('magento.website', string='Magento Product Websites', readonly=False,
                                            domain="[('magento_instance_id','=',magento_instance_id)]")
     magento_status = fields.Selection([

@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record id="product_normal_form_inherit_view" model="ir.ui.view">
-            <field name="name">product_product_form_inherit_view</field>
-            <field name="model">product.product</field>
-            <field name="inherit_id" ref="product.product_normal_form_view"/>
-            <field name="arch" type="xml">
-                <xpath expr="//notebook" position='inside'>
-                    <page string="Vendor Stock"
-                          attrs="{'invisible': [('is_drop_ship_product', '=',False)]}">
-                        <field name="is_drop_ship_product" invisible="1"/>
-                        <group string="Vendor Stock">
-                            <field name="vendor_ids" nolabel="1">
-                                <tree editable="bottom">
-                                    <field name="vendor_id"/>
-                                    <field name="vendor_stock"/>
-                                </tree>
-                            </field>
-                        </group>
-                    </page>
-                </xpath>
-            </field>
-        </record>
+<!--        <record id="product_normal_form_inherit_view" model="ir.ui.view">-->
+<!--            <field name="name">product_product_form_inherit_view</field>-->
+<!--            <field name="model">product.product</field>-->
+<!--            <field name="inherit_id" ref="product.product_normal_form_view"/>-->
+<!--            <field name="arch" type="xml">-->
+<!--                <xpath expr="//notebook" position='inside'>-->
+<!--                    <page string="Vendor Stock"-->
+<!--                          attrs="{'invisible': [('is_drop_ship_product', '=',False)]}">-->
+<!--                        <field name="is_drop_ship_product" invisible="1"/>-->
+<!--                        <group string="Vendor Stock">-->
+<!--                            <field name="vendor_ids" nolabel="1">-->
+<!--                                <tree editable="bottom">-->
+<!--                                    <field name="vendor_id"/>-->
+<!--                                    <field name="vendor_stock"/>-->
+<!--                                </tree>-->
+<!--                            </field>-->
+<!--                        </group>-->
+<!--                    </page>-->
+<!--                </xpath>-->
+<!--            </field>-->
+<!--        </record>-->
 
         <record id="view_product_image_form_inherited" model="ir.ui.view">
             <field name="name">product.image.view.form.inherited</field>

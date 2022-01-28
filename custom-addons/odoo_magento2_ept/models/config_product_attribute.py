@@ -21,9 +21,9 @@ class ConfigProductAttribute(models.Model):
         res = super(ConfigProductAttribute, self).write(vals)
 
         # update config.products' "write_date"
-        if 'attribute_value' in vals or 'sequence' in vals:
+        if 'attribute_value' in vals or 'sequence' in vals or 'categ_group_id' in vals:
             for categ in self.product_category_ids:
-                if self.id in [a.id for a in categ.x_attribute_ids]:
+                if categ.product_template_ids and categ.product_template_ids.magento_conf_prod_ids:
                     categ.product_template_ids.magento_conf_prod_ids.write({'force_update': True})
         return res
 
