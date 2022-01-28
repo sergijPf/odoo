@@ -38,7 +38,7 @@ class ProductTemplate(models.Model):
 
         if reject_configs:
             raise UserError("It's not allowed to delete these product(s) as they were already added to Magento Layer "
-                            "as Configurable Products: %s\n" % (str(tuple(reject_configs))))
+                            "as Configurable Products: %s\n" % (str(reject_configs)))
 
         result = super(ProductTemplate, self).unlink()
         return result

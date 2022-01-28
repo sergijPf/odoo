@@ -45,6 +45,20 @@ class ProductProduct(models.Model):
 
         return super(ProductProduct, self).write(vals)
 
+    def unlink(self):
+        reject_configs = []
+
+        for prod in self:
+            if prod.magento_product_ids:
+                reject_configs.append({c.magento_instance_id.name: c.magento_sku for c in prod.magento_product_ids})
+
+        if reject_configs:
+            raise UserError("It's not allowed to delete these product(s) as they were already added to Magento Layer "
+                            "as Simple Product(s): %s\n" % (str(reject_configs)))
+
+        result = super(ProductProduct, self).unlink()
+        return result
+
     def _compute_magento_product_count(self):
         """
         calculate magento product count
