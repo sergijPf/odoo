@@ -200,8 +200,8 @@ class MagentoImportExport(models.TransientModel):
             values = {
                 'magento_instance_id': product_dict.get('instance_id'),
                 'odoo_prod_template_id': product.id,
-                'magento_sku': product.with_context(lang='en_US').name.replace('  ',' ').replace('-','').replace(' ','_').
-                    replace('%','').replace('#','').replace('/','')
+                'magento_sku': product.with_context(lang='en_US').name.replace(' - ','_').replace('-','_').
+                    replace('%','').replace('#','').replace('/','').replace('  ',' ').replace(' ','_')
             }
             conf_product = conf_product_obj.create(values)
         else:
