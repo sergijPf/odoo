@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="action_magento_product_export_prepare" model="ir.actions.server">
-        <field name="name">Export To Magento</field>
-        <field name="model_id" ref="model_magento_configurable_product"/>
-        <field name="binding_model_id" ref="model_magento_configurable_product"/>
-        <field name="binding_view_types">list,form</field>
-        <field name="state">code</field>
-        <field name="code">records.process_products_export_to_magento()</field>
-    </record>
+<!--    <record id="action_magento_product_export_prepare" model="ir.actions.server">-->
+<!--        <field name="name">Export To Magento</field>-->
+<!--        <field name="model_id" ref="model_magento_configurable_product"/>-->
+<!--        <field name="binding_model_id" ref="model_magento_configurable_product"/>-->
+<!--        <field name="binding_view_types">list,form</field>-->
+<!--        <field name="state">code</field>-->
+<!--        <field name="code">records.process_products_export_to_magento()</field>-->
+<!--    </record>-->
 
     <record id="action_get_simple_products" model="ir.actions.act_window">
         <field name="name">Simple Products</field>
@@ -24,15 +24,19 @@
         <field name="arch" type="xml">
             <form string="Product" name="product_form" create="false" delete="1">
                 <header>
-                    <button name="process_manually"
+                    <button name="process_products_export_to_magento"
                             string="Process Export directly"
-                            type="object" class="btn-primary ml-2"
-                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>
-                    <button name="status_check_of_export"
-                            context="{'status_check': True, 'single': True}"
-                            string="Check Export Status"
-                            type="object"
-                            class="btn btn-info ml-2"/>
+                            type="object" class="btn-primary ml-2"/>
+<!--                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
+                    <button name="process_products_export_to_magento"
+                            context="{'async_export': True}"
+                            string="Process Export async (RabbitMQ)"
+                            type="object" class="btn btn-info ml-2"/>
+<!--                    <button name="status_check_of_export"-->
+<!--                            context="{'status_check': True, 'single': True}"-->
+<!--                            string="Check Export Status"-->
+<!--                            type="object"-->
+<!--                            class="btn btn-info ml-2"/>-->
                 </header>
                 <sheet>
                     <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
@@ -126,15 +130,23 @@
         <field name="arch" type="xml">
             <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku">
                 <header>
-                    <button name="process_manually"
+                    <button name="process_products_export_to_magento"
                             string="Process Export directly"
-                            type="object" class="btn-primary ml-2"
-                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>
-                    <button name="status_check_of_export"
-                            context="{'status_check': True, 'single': False}"
-                            string="Check Export Status"
-                            type="object"
-                            class="btn btn-info ml-2"/>
+                            type="object" class="btn-primary ml-2"/>
+<!--                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
+                    <button name="process_products_export_to_magento"
+                            context="{'async_export': True}"
+                            string="Process Export async (RabbitMQ)"
+                            type="object" class="btn btn-info ml-2"/>
+<!--                    <button name="process_manually"-->
+<!--                            string="Process Export directly"-->
+<!--                            type="object" class="btn-primary ml-2"-->
+<!--                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
+<!--                    <button name="status_check_of_export"-->
+<!--                            context="{'status_check': True, 'single': False}"-->
+<!--                            string="Check Export Status"-->
+<!--                            type="object"-->
+<!--                            class="btn btn-info ml-2"/>-->
                 </header>
                 <field name="magento_instance_id"/>
                 <field name="magento_product_id" string="Magento Product ID"/>

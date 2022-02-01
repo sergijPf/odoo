@@ -203,6 +203,7 @@
                                attrs="{'invisible': [('is_conf_prod', '=', True)]}">
                             <tree>
                                 <field name="magento_sku"/>
+                                <field name="magento_product_id"/>
                                 <field name="magento_status"/>
                             </tree>
                         </field>
@@ -211,12 +212,13 @@
                                attrs="{'invisible': [('is_conf_prod', '!=', True)]}">
                             <tree>
                                 <field name="magento_sku"/>
+                                <field name="magento_product_id"/>
                                 <field name="magento_status"/>
                             </tree>
                         </field>
                     </group>
                     <group>
-                        <field name="lod_details_ids" readonly="1">
+                        <field name="log_details_ids" readonly="1">
                             <tree>
                                 <field name="log_line_id" />
                                 <field name="sku" />

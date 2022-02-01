@@ -46,7 +46,7 @@ def req(backend, path, method='GET', data=None, params=None):
     except (socket.gaierror, socket.error, socket.timeout) as err:
         raise UserError(_('A network error caused the failure of the job: %s', err))
     except Exception as err:
-        raise UserError(_("Request is not Satisfied. Odoo has received the next message: " + str(err)))
+        raise UserError(_("Odoo has received the next message: " + str(err)))
     return content
 
 

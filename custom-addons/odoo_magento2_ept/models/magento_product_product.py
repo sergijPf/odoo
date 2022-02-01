@@ -285,7 +285,8 @@ class MagentoProductProduct(models.Model):
                 continue
 
             # apply compatible date format to compare Product's dates
-            export_date = self.format_to_magento_date(ml_simp_products[prod]['export_date_to_magento'])
+            odoo_exp_date = ml_simp_products[prod]['export_date_to_magento']
+            export_date = datetime.strftime(odoo_exp_date, MAGENTO_DATETIME_FORMAT) if odoo_exp_date else ""
             # update_date_simp = self.format_to_magento_date(ml_simp_products[prod]['latest_update_date'])
             magento_date = ml_simp_products[prod].get('magento_update_date', '')
 
@@ -328,7 +329,7 @@ class MagentoProductProduct(models.Model):
             #     ml_simp_products[prod]['magento_status'] = 'update_needed'
 
     def process_simple_products_create_or_update(self, instance, odoo_simp_prod, ml_simp_products, attr_sets,
-                                                 ml_conf_products, single, method):
+                                                 ml_conf_products, async_export, method):
         """
         Process Simple Products (Odoo Products) creation or update in Magento
         :param instance: Magento Instance
@@ -336,17 +337,19 @@ class MagentoProductProduct(models.Model):
         :param ml_simp_products: Dictionary contains metadata of Simple Products (Odoo Products)
         :param attr_sets: Attribute-Set dictionary with available in Magento Attributes info for selected products
         :param ml_conf_products: Dictionary contains metadata of Configurable Products (Odoo categories)
-        :param single: In case of direct (Odoo-Magento) single product export - True, else - False
+        :param async_export:
         :param method: Http method (POST/PUT)
         :return: None
         """
         if not odoo_simp_prod:
             return
 
-        if single:
+        if not async_export:
             for simple_product in odoo_simp_prod:
                 prod_sku = simple_product.magento_sku
-                # to skip this step if only linking with parent needs to be done
+                simple_product.bulk_log_ids = [(5, 0, 0)]
+
+                # to skip product export if only linking with configurable needs to be done
                 if method == 'POST' or ml_simp_products[prod_sku]['magento_status'] != 'need_to_link':
                     res = self.export_single_simple_product_to_magento(
                         instance, simple_product, ml_simp_products, attr_sets, method
@@ -399,7 +402,7 @@ class MagentoProductProduct(models.Model):
                 ml_simp_products[prod.magento_sku]['log_message'] += text
                 continue
 
-            # add Product Life Phase attribute (aka x_status)
+            # add Product Life Phase attribute (aka x_status) managed differently than other attributes
             if prod.odoo_product_id.x_status:
                 prod_attr_list.append(("PRODUCTLIFEPHASE", self.to_upper(prod.odoo_product_id.x_status)))
 
@@ -431,16 +434,17 @@ class MagentoProductProduct(models.Model):
                     ml_simp_products[prod_sku]['magento_type_id'] != 'simple':
                 text = "The Product with such sku is already in Magento. (And it's type isn't Simple Product). \n"
                 ml_simp_products[prod_sku]['log_message'] += text
+                continue
 
             if not ml_simp_products[prod_sku]['do_not_export_conf']:
-                # check if product has assign attributes defined in it's configurable product
+                # check if product has assign attributes defined for its configurable product
                 simp_prod_attr = prod.attribute_value_ids.product_attribute_value_id
-                check_config_attr = prod.magento_conf_product_id.check_product_attr_are_in_attributes_list(
+                result = prod.magento_conf_product_id.check_product_attr_are_in_attributes_list(
                     [a.attribute_id.name for a in simp_prod_attr],
                     ml_conf_products[conf_sku]['config_attr']
                 )
-                if not check_config_attr:
-                    text = "Simple product is missing attribute(s) defined as configurable. \n"
+                if result:
+                    text = "Simple product is missing attribute: '%s' defined as configurable. \n" % result
                     ml_simp_products[prod_sku]['log_message'] += text
                     continue
 
@@ -1245,6 +1249,7 @@ class MagentoProductProduct(models.Model):
                 'magento_status': 'deleted',
                 'magento_product_id': '',
                 'magento_export_date': '',
+                'active': False,
                 'magento_website_ids': [(5, 0, 0)]
             })
 
@@ -1296,10 +1301,3 @@ class MagentoProductProduct(models.Model):
             return "".join(str(val).split()).upper()
         else:
             return val
-
-    @staticmethod
-    def format_to_magento_date(odoo_date):
-        if odoo_date:
-            return datetime.strftime(odoo_date, MAGENTO_DATETIME_FORMAT)
-        else:
-            return ""
