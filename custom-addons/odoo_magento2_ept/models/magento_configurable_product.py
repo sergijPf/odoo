@@ -201,9 +201,7 @@ class MagentoConfigurableProduct(models.Model):
                 if conf_prod != conf_products_list[-1] and len(export_products) < PRODUCTS_EXPORT_BATCH:
                     continue
                 else:
-                    ml_conf_products_dict, ml_simp_products_dict = self.create_products_metadata_dict(
-                        export_products, async_export
-                    )
+                    ml_conf_products_dict, ml_simp_products_dict = self.create_products_metadata_dict(export_products)
 
                     # get selected products info from Magento(if any) and update meta-dict with Magento data
                     [self.update_conf_product_dict_with_magento_data(prod, ml_conf_products_dict)
@@ -352,11 +350,10 @@ class MagentoConfigurableProduct(models.Model):
                     at['can_be_configurable'] = False
 
     @staticmethod
-    def create_products_metadata_dict(export_products, async_export):
+    def create_products_metadata_dict(export_products):
         """
         Create dictionary which contains metadata for selected Configurable Products and related Simple Products
         :param export_products: Odoo Product(s) in Magento Layer to be exported
-        :param async_export: Async export request (RabbitMQ) or direct
         :return: Configurable and Simple products dictionary
         """
         products_dict_conf = {
@@ -373,10 +370,6 @@ class MagentoConfigurableProduct(models.Model):
         }
 
         text = "Product Category is missing 'Magento Product SKU' field. \n"
-        # if not async_export:
-        #     export_products.filtered(lambda prod: prod.magento_status == 'deleted').write({
-        #         'magento_status': 'not_exported'
-        #     })
         products_dict_simp = {
             s.magento_sku: {
                 'conf_sku': s.magento_conf_prod_sku,
@@ -390,7 +383,6 @@ class MagentoConfigurableProduct(models.Model):
                 'force_update': s.force_update,
                 'to_export': True
             } for s in export_products
-            # } for s in export_products if s.magento_status != 'deleted'
         }
 
         return products_dict_conf, products_dict_simp
@@ -637,31 +629,6 @@ class MagentoConfigurableProduct(models.Model):
             log_book.create(vals)
         else:
             log_book.write(vals)
-
-    # def check_product_page_attributes_exist_in_magento(self, ml_product_dict, attribute_sets):
-    #     """
-    #     Check if Product Page's Attributes exist in Magento
-    #     :param attribute_sets: Dictionary with defined Attributes and their options in Magento
-    #     :param ml_product_dict: Dictionary contains metadata for selected Simple Products (Odoo products)
-    #     :return: None
-    #     """
-    #     for prod in ml_product_dict:
-    #         if not ml_product_dict[prod]['to_export']:
-    #             continue
-    #
-    #         conf_prod = ml_product_dict[prod]['conf_object']
-    #         available_attributes = attribute_sets[conf_prod.magento_attr_set]['attributes']
-    #         prod_attributes = conf_prod.odoo_prod_template_id.categ_id.x_attribute_ids
-    #         # create list of unique groups of product attributes to be used as attributes in magento
-    #         prod_attr_list = list({a.categ_group_id.name for a in prod_attributes if a.categ_group_id})
-    #
-    #         # logs if any of attributes are missed in Magento
-    #         for prod_attr in prod_attr_list:
-    #             attr = next((a for a in available_attributes if a and self.to_upper(prod_attr) == a['default_label']), {})
-    #             if not attr:
-    #                 text = "Attribute - %s has to be created on Magento side and linked " \
-    #                        "to relevant Attribute Set.\n" % prod_attr
-    #                 ml_product_dict[prod]['log_message'] += text
 
     def process_configurable_products_create_or_update(self, instance, ml_conf_products, attr_sets, async_export):
         """
@@ -1285,18 +1252,3 @@ class MagentoConfigurableProduct(models.Model):
                 lst += "<li>" + attr.with_context(lang=lang_code)['attribute_value'] + "</li>"
         return lst + "</ul>"
 
-    # def process_manually(self):
-    #     """
-    #     Process Product's Export (create/update) with regular Magento API process (without RabbitMQ)
-    #     :return: None
-    #     """
-    #     self.ensure_one()
-    #     self.process_products_export_to_magento(self.id)
-
-    # def status_check_of_export(self):
-    #     """
-    #     Check (Update) Product(s) Export Status
-    #     """
-    #     status_check = self.env.context.get("status_check", False)
-    #     single = self.env.context.get("single", False)
-    #     self.process_products_export_to_magento(self.id if single else 0, status_check)
