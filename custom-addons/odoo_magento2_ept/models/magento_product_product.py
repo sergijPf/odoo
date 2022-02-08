@@ -408,8 +408,7 @@ class MagentoProductProduct(models.Model):
 
             # logs if any of attributes are missed in Magento and creates new attr.option in Magento if needed
             for prod_attr in prod_attr_list:
-                attr = next((a for a in avail_attributes if a and self.to_upper(prod_attr[0]) == a['default_label']),
-                            {})
+                attr = avail_attributes.get(self.to_upper(prod_attr[0]))
                 if not attr:
                     text = "Attribute - %s has to be created on Magento side and attached " \
                            "to Attribute Set.\n" % prod_attr[0]
@@ -439,12 +438,10 @@ class MagentoProductProduct(models.Model):
             if not ml_simp_products[prod_sku]['do_not_export_conf']:
                 # check if product has assign attributes defined for its configurable product
                 simp_prod_attr = prod.attribute_value_ids.product_attribute_value_id
-                result = prod.magento_conf_product_id.check_product_attr_are_in_attributes_list(
-                    [a.attribute_id.name for a in simp_prod_attr],
-                    ml_conf_products[conf_sku]['config_attr']
-                )
-                if result:
-                    text = "Simple product is missing attribute: '%s' defined as configurable. \n" % result
+                missed_attrs = set(ml_conf_products[conf_sku]['config_attr']).difference({
+                    a.attribute_id.name for a in simp_prod_attr})
+                if missed_attrs:
+                    text = "Simple product is missing attribute(s): '%s' defined as configurable. \n" % missed_attrs
                     ml_simp_products[prod_sku]['log_message'] += text
                     continue
 
@@ -512,11 +509,11 @@ class MagentoProductProduct(models.Model):
         :return: Magento format Attributes list
         """
         custom_attributes = []
-        # update custom_attributes field with relevant data from Magento
         for prod_attr in product_attributes:
-            attr = next((a for a in available_attributes if a['default_label'] and prod_attr[0] == a['default_label']), {})
+            attr = available_attributes.get(prod_attr[0])
             if attr:
-                opt = next((o for o in attr['options'] if o.get('label') and self.to_upper(o['label']) == prod_attr[1]), {})
+                opt = next((o for o in attr['options'] if o.get('label') and
+                            self.to_upper(o['label']) == prod_attr[1]), {})
                 if opt:
                     custom_attributes.append({
                         "attribute_code": attr['attribute_code'],
@@ -534,11 +531,13 @@ class MagentoProductProduct(models.Model):
         :param ml_simp_products: Dictionary contains metadata for selected Simple Products
         :return: None
         """
+        prod_attr_magento = {}
         prod_attr_set = product.magento_conf_product_id.magento_attr_set
         available_attributes = attr_sets[prod_attr_set]['attributes']
         config_product_sku = product.magento_conf_prod_sku
         product_attributes = product.attribute_value_ids.product_attribute_value_id
         conf_prod_assigned_attr = ml_conf_products[config_product_sku]['config_attr']
+        attr_options = ml_conf_products[config_product_sku]['magento_conf_prod_options']
         data = {
             "option": {
                 "attribute_id": "",
@@ -549,9 +548,7 @@ class MagentoProductProduct(models.Model):
             }
         }
 
-        # check if config.product "assign" attributes are the same in magento and odoo
-        attr_options = ml_conf_products[config_product_sku]['magento_conf_prod_options']
-        prod_attr_magento = {}
+        # check if config.product "configurable" attributes are the same in magento and odoo
         if attr_options:
             prod_attr_magento = {
                 product.magento_conf_product_id.get_attribute_name_by_id(available_attributes, attr.get("attribute_id")): (
@@ -561,12 +558,13 @@ class MagentoProductProduct(models.Model):
 
             if prod_attr_odoo != set(prod_attr_magento.keys()):
                 # unlink attribute in Magento if assign attribute is not within Odoo attributes
-                for attr in prod_attr_magento:
+                for at in prod_attr_magento:
                     res = False
-                    if attr not in prod_attr_odoo:
+                    if at not in prod_attr_odoo:
                         try:
-                            api_url = '/V1/configurable-products/%s/options/%s' % (config_product_sku,
-                                                                                   prod_attr_magento[attr][0])
+                            api_url = '/V1/configurable-products/%s/options/%s' % (
+                                config_product_sku, prod_attr_magento[at][0]
+                            )
                             res = req(magento_instance, api_url, 'DELETE')
                         except Exception:
                             text = "Error while unlinking Assign Attribute of %s Config.Product " \
@@ -574,40 +572,41 @@ class MagentoProductProduct(models.Model):
                             ml_simp_products[product.magento_sku]['log_message'] += text
                     if res is True:
                         # update magento conf.product options list (without removed option)
-                        attr_options = list(filter(lambda i: str(i.get('attribute_id')) != str(prod_attr_magento[attr][1]),
-                                                   attr_options))
+                        attr_options = list(
+                            filter(lambda i: str(i.get('attribute_id')) != str(prod_attr_magento[attr][1]),
+                                   attr_options)
+                        )
                 ml_conf_products[config_product_sku]['magento_conf_prod_options'] = attr_options
 
         # assign new options to config.product with relevant info from Magento
         for attr_val in product_attributes:
             prod_attr_name = attr_val.attribute_id.name
-            if prod_attr_name in conf_prod_assigned_attr:
-                if self.to_upper(prod_attr_name) not in prod_attr_magento:
-                    # valid for new "assign" attributes for config.product to be created in Magento
-                    attr = next((a for a in available_attributes if a.get('default_label') and
-                                 self.to_upper(prod_attr_name) == a['default_label']), {})
-                    if attr:
-                        opt = next((o for o in attr['options'] if o.get('label') and
-                                    self.to_upper(o['label']) == self.to_upper(attr_val.name)), {})
-                        if opt:
-                            data['option'].update({
-                                "attribute_id": attr["attribute_id"],
-                                "label": attr["default_label"],
-                                "values": [{"value_index": opt["value"]}]
-                            })
-                            try:
-                                api_url = '/V1/configurable-products/%s/options' % config_product_sku
-                                req(magento_instance, api_url, 'POST', data)
-                            except Exception:
-                                txt = "Error while assigning product attribute option to %s Config.Product " \
-                                      "in Magento.\n " % config_product_sku
-                                ml_simp_products[product.magento_sku]['log_message'] += txt
-                            # update conf.product dict with new conf.product option
-                            ml_conf_products[config_product_sku]['magento_conf_prod_options'].append({
-                                'id': "",
-                                "attribute_id": attr["attribute_id"],
-                                "label": attr["default_label"]
-                            })
+            if prod_attr_name in conf_prod_assigned_attr and self.to_upper(prod_attr_name) not in prod_attr_magento:
+                # valid for new "configurable" attributes of config.product to be created in Magento
+                attr_name_up = self.to_upper(prod_attr_name)
+                attr = available_attributes.get(attr_name_up)
+                if attr:
+                    opt = next((o for o in attr['options'] if o.get('label') and
+                                self.to_upper(o['label']) == self.to_upper(attr_val.name)), {})
+                    if opt:
+                        data['option'].update({
+                            "attribute_id": attr["attribute_id"],
+                            "label": attr_name_up,
+                            "values": [{"value_index": opt["value"]}]
+                        })
+                        try:
+                            api_url = '/V1/configurable-products/%s/options' % config_product_sku
+                            req(magento_instance, api_url, 'POST', data)
+                        except Exception:
+                            txt = "Error while assigning product attribute option to %s Config.Product " \
+                                  "in Magento.\n " % config_product_sku
+                            ml_simp_products[product.magento_sku]['log_message'] += txt
+                        # update conf.product dict with new conf.product option
+                        ml_conf_products[config_product_sku]['magento_conf_prod_options'].append({
+                            'id': "",
+                            "attribute_id": attr["attribute_id"],
+                            "label": attr_name_up
+                        })
 
     @staticmethod
     def link_simple_to_config_product_in_magento(magento_instance, product, ml_conf_products, ml_simp_products):
@@ -877,7 +876,7 @@ class MagentoProductProduct(models.Model):
                 #         "value": prod.odoo_product_id.website_description
                 #     })
 
-                attr_set_id = attr_sets.get(prod.magento_conf_product_id.magento_attr_set, {}).get('id')
+                attr_set_id = attr_sets[prod.magento_conf_product_id.magento_attr_set]['id']
                 # add product categories info
                 # if prod.magento_conf_product.do_not_create_flag:
                 #     categ_list = [(cat.magento_prod_categ.id, cat.magento_prod_categ.category_id) for cat in
@@ -1019,14 +1018,14 @@ class MagentoProductProduct(models.Model):
 
             simp_prod_attrs = prod.attribute_value_ids.product_attribute_value_id
             mag_attr_set = prod.magento_conf_product_id.magento_attr_set
-            mag_avail_attrs = available_attributes.get(mag_attr_set).get('attributes')
+            mag_avail_attrs = available_attributes[mag_attr_set]['attributes']
             conf_sku = prod.magento_conf_prod_sku
 
             for prod_attr in simp_prod_attrs:
                 attr_name = prod_attr.attribute_id.name
                 if attr_name in config_prod_assigned_attr.get(conf_sku, {}).get('config_attr', {}):
-                    attr = next((a for a in mag_avail_attrs if a.get('default_label') and
-                                 self.to_upper(attr_name) == a['default_label']), {})
+                    attr_name_up = self.to_upper(attr_name)
+                    attr = mag_avail_attrs.get(attr_name_up)
                     if attr:
                         opt = next((o for o in attr['options'] if o.get('label') and
                                     self.to_upper(o['label']) == self.to_upper(prod_attr.name)), {})
@@ -1034,7 +1033,7 @@ class MagentoProductProduct(models.Model):
                             data.append({
                                 'option': {
                                     "attribute_id": attr["attribute_id"],
-                                    "label": attr["default_label"],
+                                    "label": attr_name_up,
                                     "is_use_default": "false",
                                     "values": [{"value_index": opt["value"]}]
                                 },
@@ -1098,8 +1097,8 @@ class MagentoProductProduct(models.Model):
                 })
                 odoo_products.write({'bulk_log_ids': [(4, log_id.id)]})
 
-    def check_products_attribute_value_pair(self, ml_conf_products, conf_sku, simp_prod_attr,
-                                            available_attributes, ml_simple_prod, magento_sku):
+    def check_products_attribute_value_pair(self, ml_conf_products, conf_sku, simp_prod_attr, available_attributes,
+                                            ml_simple_prod, magento_sku):
         """
         Check Product's "Attribute: Value" pair for duplication
         :param ml_conf_products: Dictionary contains metadata for selected Configurable Products (Odoo categories)
@@ -1117,15 +1116,15 @@ class MagentoProductProduct(models.Model):
         # create dict {simple_product_sku: {attribute: value,...}} with config.attributes only
         simp_attr_val = {}
         for prod_attr in simp_prod_attr:
-            prod_attr_name = prod_attr.attribute_id.name
-            if prod_attr_name in conf_prod_attributes:
-                attr = next((a for a in available_attributes if a['default_label'] and
-                             self.to_upper(prod_attr_name) == a['default_label']), {})
+            pa_name = prod_attr.attribute_id.name
+            if pa_name in conf_prod_attributes:
+                pa_name_up = self.to_upper(pa_name)
+                attr = available_attributes.get(pa_name_up)
                 if attr:
                     opt = next((o for o in attr['options'] if o.get('label') and
                                 self.to_upper(o.get('label')) == self.to_upper(prod_attr.name)), {})
                     if opt:
-                        simp_attr_val.update({attr['default_label']: self.to_upper(opt['label'])})
+                        simp_attr_val.update({pa_name_up: self.to_upper(opt['label'])})
 
         # check if simple product's "attribute: value" is already linked to configurable product in Magento
         for prod in magento_conf_prod_links:

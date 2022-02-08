@@ -307,7 +307,7 @@ class MagentoConfigurableProduct(models.Model):
         :return: Available in Magento Attributes list and their options
         """
         attribute_set_id = attr_sets[attribute_set_name]['id']
-        available_attributes = []
+        available_attributes = {}
 
         if attribute_set_id:
             try:
@@ -318,12 +318,13 @@ class MagentoConfigurableProduct(models.Model):
 
             # generate the list of available attributes and their options from Magento
             if response:
-                [available_attributes.append({
-                    "attribute_id": attr.get("attribute_id"),
-                    "attribute_code": attr.get('attribute_code'),
-                    'default_label': self.to_upper(attr.get('default_frontend_label')),
-                    'options': attr.get('options'),
-                    'can_be_configurable': True if attr.get('is_user_defined') else False
+                [available_attributes.update({
+                    self.to_upper(attr.get('default_frontend_label')): {
+                        'attribute_id': attr.get('attribute_id'),
+                        'attribute_code': attr.get('attribute_code'),
+                        'options': attr.get('options'),
+                        'can_be_configurable': True if attr.get('is_user_defined') else False
+                    }
                 }) for attr in response if attr.get('default_frontend_label')]
 
                 return available_attributes
@@ -331,23 +332,24 @@ class MagentoConfigurableProduct(models.Model):
         return available_attributes
 
     def check_configurable_attributes(self, magento_instance, conf_attributes, attr_sets):
-        avail_attributes = []
-        [avail_attributes.extend(attr_sets[at_set]['attributes']) for at_set in attr_sets]
+        avail_attributes = {}
+
+        for at_set in attr_sets:
+            avail_attributes.update(attr_sets[at_set]['attributes'])
         # for at_set in attr_sets:
         #     avail_attributes += attr_sets[at_set]['attributes']
 
-        # find attribute_id in Magento available attributes (if not found = 0)
         for attr in conf_attributes:
-            at = next((a for a in avail_attributes if self.to_upper(attr) == a['default_label']), {})
-            if at:
-                api_url = '/all/V1/products/attributes/%s' % at.get('attribute_id')
+            attr_up = self.to_upper(attr)
+            if attr_up in avail_attributes:
+                api_url = '/all/V1/products/attributes/%s' % avail_attributes[attr_up]['attribute_id']
                 try:
                     response = req(magento_instance, api_url)
                 except Exception:
                     response = {}
 
                 if response.get("scope") and response.get("scope") != 'global':
-                    at['can_be_configurable'] = False
+                    avail_attributes[attr_up]['can_be_configurable'] = False
 
     @staticmethod
     def create_products_metadata_dict(export_products):
@@ -433,8 +435,8 @@ class MagentoConfigurableProduct(models.Model):
                 continue
             conf_obj = ml_conf_products[prod]['conf_object']
             mag_attr_set = conf_obj.magento_attr_set
-            prod_attr_set_id = attr_sets[mag_attr_set]['id']
-            avail_attributes = attr_sets[mag_attr_set]['attributes']
+            prod_attr_set_id = attr_sets.get(mag_attr_set, {}).get('id')
+            avail_attributes = attr_sets.get(mag_attr_set, {}).get('attributes')
             prod_conf_attr = ml_conf_products[prod]['config_attr']
 
             if not mag_attr_set:
@@ -647,7 +649,6 @@ class MagentoConfigurableProduct(models.Model):
             conf_prod = ml_conf_products[prod]['conf_object']
             conf_prod.bulk_log_ids = [(5, 0, 0)]
             magento_attributes = attr_sets[conf_prod.magento_attr_set]['attributes']
-            available_attributes = {a['default_label']: a['can_be_configurable'] for a in magento_attributes if a}
             conf_prod_attr = [self.to_upper(c) for c in ml_conf_products[prod]['config_attr'] if c]
             product_page_attrs = conf_prod.odoo_prod_template_id.categ_id.x_attribute_ids
             # create list of unique groups of product attributes to be used as attributes in magento
@@ -660,15 +661,16 @@ class MagentoConfigurableProduct(models.Model):
 
             # check if Product's configurable and product page attribute(s) exist in Magento
             attr_list_up = [self.to_upper(a) for a in prod_attr_list]
-            result = self.check_product_attr_are_in_attributes_list(available_attributes, conf_prod_attr + attr_list_up)
-            if result:
-                text = "Attribute - '%s' has to be created and linked to relevant Attribute-set" \
-                       " on Magento side.\n" % result
+            missed_attrs = set(conf_prod_attr + attr_list_up).difference(magento_attributes)
+            # missed_attrs = self.check_product_attr_are_in_attributes_list(available_attributes, conf_prod_attr + attr_list_up)
+            if missed_attrs:
+                text = "Attribute(s) - '%s' have to be created and linked to relevant Attribute-set" \
+                       " on Magento side.\n" % missed_attrs
                 ml_conf_products[prod]['log_message'] += text
                 continue
 
             # check if attribute can be configurable
-            failed_config = [a for a in conf_prod_attr if not available_attributes[a]]
+            failed_config = [a for a in conf_prod_attr if not magento_attributes[a]['can_be_configurable']]
             if failed_config:
                 text = "'%s' Configurable Product's attribute(s) can't be assigned as configurable in Magento. " \
                        "Make sure it has 'Global' scope and was created manually. \n" % (str(failed_config))
@@ -683,7 +685,7 @@ class MagentoConfigurableProduct(models.Model):
                     ml_conf_products[prod]['log_message'] += text
                     continue
 
-                # check if assign attributes are the same in Magento and Odoo
+                # check if configurable attributes are the same in Magento and Odoo
                 check_config_attrs = self.check_config_product_assign_attributes_match(
                     ml_conf_products[prod]['magento_conf_prod_options'],
                     conf_prod_attr,
@@ -705,9 +707,7 @@ class MagentoConfigurableProduct(models.Model):
 
         # create (POST) new configurable products in Magento via async request (RabbitMQ)
         if new_conf_products:
-            self.export_new_conf_products_to_magento_in_bulk(
-                instance, new_conf_products, ml_conf_products, attr_sets
-            )
+            self.export_new_conf_products_to_magento_in_bulk(instance, new_conf_products, ml_conf_products, attr_sets)
 
     def export_single_conf_product_to_magento(self, magento_instance, prod_sku, ml_conf_products, attr_sets,
                                               check_config_attrs=True, method='POST'):
@@ -887,10 +887,8 @@ class MagentoConfigurableProduct(models.Model):
 
         # add Product Page attributes
         for prod_attr in prod_attr_list:
-            attr = next((a for a in available_attributes if a['default_label'] and
-                         self.to_upper(prod_attr[0]) == a['default_label']), {})
             custom_attributes.append({
-                "attribute_code": attr['attribute_code'],
+                "attribute_code": available_attributes[self.to_upper(prod_attr[0])]['attribute_code'],
                 "value": self.to_html_listitem(
                     prod_attributes.filtered(lambda x: x.categ_group_id.id == prod_attr[1]), lang_code)
             })
@@ -904,11 +902,10 @@ class MagentoConfigurableProduct(models.Model):
 
         # add main config attribute if any
         if conf_product.x_magento_main_config_attr_id:
-            attr = next((a for a in available_attributes if a['default_label'] and
-                         self.to_upper(conf_product.x_magento_main_config_attr_id.name) == a['default_label']), {})
+            main_attr_name = self.to_upper(conf_product.x_magento_main_config_attr_id.name)
             custom_attributes.append({
                 "attribute_code": 'main_config_attribute',
-                "value": attr.get('attribute_code', False)
+                "value": available_attributes[main_attr_name]['attribute_code']
             })
 
         # add attributes specific to conf.product
@@ -916,8 +913,7 @@ class MagentoConfigurableProduct(models.Model):
                 lambda x: not x.magento_config and not x.attribute_id.is_ignored_in_magento and len(x.value_ids) == 1
         )
         for attribute in conf_prod_single_attrs:
-            attr = next((a for a in available_attributes if a['default_label'] and
-                         self.to_upper(attribute.attribute_id.name) == a['default_label']), {})
+            attr = available_attributes[self.to_upper(attribute.attribute_id.name)]
             if attr:
                 opt = next((o for o in attr['options'] if o.get('label') and
                             self.to_upper(o['label']) == self.to_upper(attribute.value_ids.name)), {})
@@ -1011,10 +1007,10 @@ class MagentoConfigurableProduct(models.Model):
 
         link_data_dict = {}
         for prod in conf_prod_link_data:
-            new_dict = json.loads(prod)
             opt_dict = {}
-            for attr_opt in new_dict.get('simple_product_attribute'):
-                opt_dict.update({self.to_upper(attr_opt.get('label')): self.to_upper(attr_opt.get('value'))})
+            new_dict = json.loads(prod)
+            [opt_dict.update({self.to_upper(opt.get('label')): self.to_upper(opt.get('value'))}) for opt in new_dict.
+                get('simple_product_attribute')]
             link_data_dict.update({new_dict['simple_product_sku']: opt_dict})
 
         return link_data_dict
@@ -1215,14 +1211,14 @@ class MagentoConfigurableProduct(models.Model):
     @staticmethod
     def get_attribute_name_by_id(available_attributes, attr_id):
         """
-        Get Attribute Name by it's Id
+        Get Attribute Name by its ID
         :param available_attributes: List with available in Magento Product Attributes
-        :param attr_id: Attribute's Id
+        :param attr_id: Attribute's ID
         :return: Attribute's Name or None
         """
         for attr in available_attributes:
-            if str(attr.get('attribute_id')) == str(attr_id):
-                return attr.get('default_label')
+            if str(available_attributes[attr].get('attribute_id')) == str(attr_id):
+                return attr
 
     @staticmethod
     def to_upper(val):
@@ -1231,18 +1227,18 @@ class MagentoConfigurableProduct(models.Model):
         else:
             return val
 
-    @staticmethod
-    def check_product_attr_are_in_attributes_list(magento_attributes, prod_attrs):
-        """
-        Check if Attributes are in the list
-        :param magento_attributes: List with Product Attributes
-        :param prod_attrs: Attributes assigned to Product
-        :return: Boolean (True if in list, False if not)
-        """
-        for attr in prod_attrs:
-            if attr not in magento_attributes:
-                return attr
-        return False
+    # @staticmethod
+    # def check_product_attr_are_in_attributes_list(magento_attributes, prod_attrs):
+    #     """
+    #     Check if Attributes are in the list
+    #     :param magento_attributes: List with Product Attributes
+    #     :param prod_attrs: Attributes assigned to Product
+    #     :return: Boolean (True if in list, False if not)
+    #     """
+    #     for attr in prod_attrs:
+    #         if attr not in magento_attributes:
+    #             return attr
+    #     return False
 
     @staticmethod
     def to_html_listitem(attributes, lang_code):

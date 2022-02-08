@@ -45,3 +45,4 @@ venv*
 *.conf
 backups
 *.pdf
+third_party_addons
