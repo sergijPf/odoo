@@ -25,11 +25,14 @@ class MagentoAsyncBulkLogs(models.Model):
 
     def check_bulk_log_statuses(self):
         self.ensure_one()
-        instance = self.magento_conf_product_ids.magento_instance_id or self.magento_product_ids.magento_instance_id
+
+        if "4" not in self.log_details_ids.mapped('log_status'):
+            return True
 
         if not self.bulk_uuid:
-            return
+            return True
 
+        instance = self.magento_conf_product_ids.magento_instance_id or self.magento_product_ids.magento_instance_id
         try:
             api_url = '/V1/bulk/%s/detailed-status' % self.bulk_uuid
             response = req(instance, api_url)
@@ -61,6 +64,8 @@ class MagentoAsyncBulkLogs(models.Model):
         if unlinked_records:
             unlinked_records.log_details_ids.sudo().unlink()
             unlinked_records.sudo().unlink()
+
+        return False if '4' in self.log_details_ids.mapped('log_status') else True
 
 class MagentoAsyncBulkLogDetails(models.Model):
     _name = 'magento.async.bulk.log.details'

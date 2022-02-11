@@ -185,6 +185,7 @@ class MagentoImportExport(models.TransientModel):
                         'magento_conf_product_id': product_dict['conf_product_id'].id
                     }
                     magento_product_obj.create(prod_vals)
+
                 elif not simple_prod.active:
                     simple_prod.write({'active': True})
 

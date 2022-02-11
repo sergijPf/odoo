@@ -10,3 +10,12 @@ class ProductCategory(models.Model):
                                        string="Product Page attributes",
                                        help="Descriptive attributes for Product page")
     product_template_ids = fields.One2many('product.template', 'categ_id')
+
+
+    def write(self, vals):
+        res = super(ProductCategory, self).write(vals)
+
+        if 'x_attribute_ids' in vals :
+            self.product_template_ids.magento_conf_prod_ids.force_update = True
+
+        return res

@@ -14,7 +14,7 @@ class ProductTemplateAttributeLine(models.Model):
     main_conf_attr = fields.Boolean(string="Main Config.Attribute.", default=False)
     is_ignored = fields.Boolean(related="attribute_id.is_ignored_in_magento")
     create_variant = fields.Selection(related="attribute_id.create_variant")
-    is_magento_config = fields.Boolean(related="product_tmpl_id.is_magento_config")
+    is_magento_config_prod = fields.Boolean(related="product_tmpl_id.is_magento_config")
     x_magento_no_create = fields.Boolean(related="product_tmpl_id.x_magento_no_create")
 
     @api.onchange('magento_config')
@@ -30,7 +30,13 @@ class ProductTemplateAttributeLine(models.Model):
     def write(self, vals):
         res = super(ProductTemplateAttributeLine, self).write(vals)
 
+        if self.is_magento_config_prod and not self.is_ignored and len(self.value_ids) > 1 and not self.magento_config:
+            self.magento_config = True
+
         if 'magento_config' in vals or 'main_conf_attr' in vals:
-            self.product_tmpl_id.magento_conf_prod_ids.force_update = True
+            if self.is_ignored:
+                raise UserError ("Attribute with 'ignore for Magento' flag cannot be used as configurable!")
+            else:
+                self.product_tmpl_id.magento_conf_prod_ids.force_update = True
 
         return res

@@ -9,17 +9,11 @@ class ProductAttribute(models.Model):
     is_ignored_in_magento = fields.Boolean(string="Ignore for Magento", default=False,
                                            help="The attribute will be ignored while Product's export to Magento")
 
-    def write(self, vals):
-        res = super(ProductAttribute, self).write(vals)
-
-        # check if attribute already assigned to any of magento products
-        if 'is_ignored_in_magento' in vals:
-            attr_id = self.id
-            magento_products = self.env['magento.product.product'].search([])
-            magento_products.filtered(lambda x: attr_id in x.attribute_value_ids.product_attribute_value_id.mapped(
-                        'attribute_id').mapped('id')).write({'force_update': True})
-        return res
-
+    @api.onchange('is_ignored_in_magento')
+    def onchange_magento_ignore_attribute(self):
+        if self.is_ignored_in_magento and any(self.attribute_line_ids.mapped('magento_config')):
+            raise UserError("It's not allowed to ignore this attribute for Magento as it's already used for"
+                            " Magento configurable products as configurable attribute!")
 
 # class ProductAttributeValue(models.Model):
 #     _inherit = "product.attribute.value"

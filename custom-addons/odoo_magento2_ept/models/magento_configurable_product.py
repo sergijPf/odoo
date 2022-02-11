@@ -50,9 +50,12 @@ class MagentoConfigurableProduct(models.Model):
                                    default="Default")
     do_not_create_flag = fields.Boolean(related="odoo_prod_template_id.x_magento_no_create",
                                         string="Don't create Product in Magento")
-    x_magento_assign_attrs = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
-                                              compute="_compute_config_attributes")
-    x_magento_main_config_attr_id = fields.Many2one('product.attribute', string="Main Config.Attribute",
+    x_magento_assign_attr_ids = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
+                                                 compute="_compute_config_attributes")
+    x_magento_single_attr_ids = fields.Many2many('product.template.attribute.line',
+                                                 string="Single Attribute(s) of Config.Product ",
+                                                 compute="_compute_single_attributes_of_configurable")
+    x_magento_main_config_attr_id = fields.Many2one('product.attribute', string="Main conf.Attribute",
                                                     compute="_compute_main_config_attribute")
     magento_export_date = fields.Datetime(string="Last Export Date", help="Last Export Date to Magento of Config.Product")
     force_update = fields.Boolean(string="To force run of Configurable Product Export", default=False)
@@ -68,8 +71,14 @@ class MagentoConfigurableProduct(models.Model):
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_config_attributes(self):
         for rec in self:
-            rec.x_magento_assign_attrs = rec.odoo_prod_template_id.attribute_line_ids.filtered(
+            rec.x_magento_assign_attr_ids = rec.odoo_prod_template_id.attribute_line_ids.filtered(
                 lambda x: x.magento_config and not x.attribute_id.is_ignored_in_magento).attribute_id
+
+    @api.depends('odoo_prod_template_id.attribute_line_ids')
+    def _compute_single_attributes_of_configurable(self):
+        for rec in self:
+            rec.x_magento_single_attr_ids = rec.odoo_prod_template_id.attribute_line_ids.filtered(
+                lambda x: not x.magento_config and not x.attribute_id.is_ignored_in_magento and len(x.value_ids) == 1)
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_main_config_attribute(self):
@@ -159,11 +168,10 @@ class MagentoConfigurableProduct(models.Model):
         # in order to avoid sending the new requests before previous ones have been completed
         async_bulk_logs_obj = self.env['magento.async.bulk.logs']
         latest_bulk_request_rec = async_bulk_logs_obj.search([])[-1]
-        if latest_bulk_request_rec:
-            latest_bulk_request_rec.check_bulk_log_statuses()
-            if "4" in latest_bulk_request_rec.log_details_ids.mapped('log_status'):
-                raise UserError("There are some API requests still processing by RabbitMQ. "
-                                "Please wait a bit until it completes.")
+
+        if latest_bulk_request_rec and not latest_bulk_request_rec.check_bulk_log_statuses():
+            raise UserError("There are some API requests still processing by RabbitMQ. "
+                            "Please wait a bit until it completes.")
 
         # create dict with "config_product_sku: (attr_set, related_simple_product_ids, [product_config_attributes])"
         # for each magento instance to process products export
@@ -173,7 +181,7 @@ class MagentoConfigurableProduct(models.Model):
                 conf.magento_sku: (
                     conf.magento_attr_set,
                     conf.simple_product_ids.filtered(lambda x: x.active),
-                    [a.name for a in conf.x_magento_assign_attrs]
+                    [a.name for a in conf.with_context(lang='en_US').x_magento_assign_attr_ids]
                 ) for conf in products if conf.simple_product_ids.filtered(lambda x: x.active)
             })
         del products_to_export
@@ -336,8 +344,6 @@ class MagentoConfigurableProduct(models.Model):
 
         for at_set in attr_sets:
             avail_attributes.update(attr_sets[at_set]['attributes'])
-        # for at_set in attr_sets:
-        #     avail_attributes += attr_sets[at_set]['attributes']
 
         for attr in conf_attributes:
             attr_up = self.to_upper(attr)
@@ -348,11 +354,10 @@ class MagentoConfigurableProduct(models.Model):
                 except Exception:
                     response = {}
 
-                if response.get("scope") and response.get("scope") != 'global':
+                if response.get("scope", False) != 'global':
                     avail_attributes[attr_up]['can_be_configurable'] = False
 
-    @staticmethod
-    def create_products_metadata_dict(export_products):
+    def create_products_metadata_dict(self, export_products):
         """
         Create dictionary which contains metadata for selected Configurable Products and related Simple Products
         :param export_products: Odoo Product(s) in Magento Layer to be exported
@@ -361,7 +366,9 @@ class MagentoConfigurableProduct(models.Model):
         products_dict_conf = {
             c.magento_conf_prod_sku: {
                 'conf_object': c.magento_conf_product_id,
-                'config_attr': {a.name for a in c.magento_conf_product_id.x_magento_assign_attrs},
+                'config_attr': {
+                    self.to_upper(a.name) for a in c.with_context(lang='en_US').magento_conf_product_id.x_magento_assign_attr_ids
+                },
                 'children': [],
                 'magento_status': c.magento_conf_product_id.magento_status,
                 'log_message': '',
@@ -371,13 +378,12 @@ class MagentoConfigurableProduct(models.Model):
             } for c in export_products
         }
 
-        text = "Product Category is missing 'Magento Product SKU' field. \n"
+        text = "Configurable Product is missing 'Magento Product SKU' field. \n"
         products_dict_simp = {
             s.magento_sku: {
                 'conf_sku': s.magento_conf_prod_sku,
                 'log_message': '' if s.magento_conf_prod_sku else text,
                 'export_date_to_magento': s.magento_export_date,
-                # 'latest_update_date': max(s.odoo_product_id.write_date, s.odoo_product_id.product_tmpl_id.write_date), ### check for possible remove
                 'conf_attributes': s.get_product_conf_attributes_dict(),
                 'magento_status': s.magento_status,
                 'do_not_export_conf': s.magento_conf_product_id.do_not_create_flag,
@@ -463,19 +469,12 @@ class MagentoConfigurableProduct(models.Model):
                 continue
 
             if not prod_conf_attr:
-                text = "Missed 'Configurable Attribute(s)' for %s configurable product.\n" % prod
+                text = "Configurable Product has no configurable(assign) attributes defined. \n"
                 ml_conf_products[prod]['log_message'] += text
                 ml_conf_products[prod]['to_export'] = False
                 continue
 
-            failed_attr = [a.name for a in conf_obj.x_magento_assign_attrs.filtered(lambda x: x.is_ignored_in_magento)]
-            if failed_attr:
-                text = "The '%s' attribute(s) cannot be used in Configurable Product.\n" % str(failed_attr)
-                ml_conf_products[prod]['log_message'] += text
-                ml_conf_products[prod]['to_export'] = False
-                continue
-
-            # apply compatible date format to compare Product's dates
+            # apply compatible date format to compare Product dates
             odoo_exp_date = ml_conf_products[prod]['export_date_to_magento']
             export_date = datetime.strftime(odoo_exp_date, MAGENTO_DATETIME_FORMAT) if odoo_exp_date else ""
             magento_date = ml_conf_products[prod].get('magento_update_date', '')
@@ -497,9 +496,7 @@ class MagentoConfigurableProduct(models.Model):
                     # check if configurable attribute(s) and attribute-set are the same in Magento and Odoo
                     if ml_conf_products[prod]['magento_attr_set_id'] == prod_attr_set_id:
                         check_config_attrs = self.check_config_product_assign_attributes_match(
-                            ml_conf_products[prod]['magento_conf_prod_options'],
-                            [self.to_upper(c) for c in prod_conf_attr if c],
-                            avail_attributes
+                            ml_conf_products[prod]['magento_conf_prod_options'], prod_conf_attr, avail_attributes
                         )
                         if check_config_attrs:
                             ml_conf_products[prod]['to_export'] = False
@@ -649,35 +646,13 @@ class MagentoConfigurableProduct(models.Model):
             conf_prod = ml_conf_products[prod]['conf_object']
             conf_prod.bulk_log_ids = [(5, 0, 0)]
             magento_attributes = attr_sets[conf_prod.magento_attr_set]['attributes']
-            conf_prod_attr = [self.to_upper(c) for c in ml_conf_products[prod]['config_attr'] if c]
-            product_page_attrs = conf_prod.odoo_prod_template_id.categ_id.x_attribute_ids
-            # create list of unique groups of product attributes to be used as attributes in magento
-            prod_attr_list = list({a.categ_group_id.name for a in product_page_attrs if a.categ_group_id})
+            config_attrs = ml_conf_products[prod]['config_attr']
 
-            if not conf_prod_attr:
-                text = "Configurable Product has no configurable attributes defined. \n"
-                ml_conf_products[prod]['log_message'] += text
+            if not self.check_product_attributes(instance, ml_conf_products, magento_attributes, config_attrs,
+                                                 conf_prod, prod):
                 continue
 
-            # check if Product's configurable and product page attribute(s) exist in Magento
-            attr_list_up = [self.to_upper(a) for a in prod_attr_list]
-            missed_attrs = set(conf_prod_attr + attr_list_up).difference(magento_attributes)
-            # missed_attrs = self.check_product_attr_are_in_attributes_list(available_attributes, conf_prod_attr + attr_list_up)
-            if missed_attrs:
-                text = "Attribute(s) - '%s' have to be created and linked to relevant Attribute-set" \
-                       " on Magento side.\n" % missed_attrs
-                ml_conf_products[prod]['log_message'] += text
-                continue
-
-            # check if attribute can be configurable
-            failed_config = [a for a in conf_prod_attr if not magento_attributes[a]['can_be_configurable']]
-            if failed_config:
-                text = "'%s' Configurable Product's attribute(s) can't be assigned as configurable in Magento. " \
-                       "Make sure it has 'Global' scope and was created manually. \n" % (str(failed_config))
-                ml_conf_products[prod]['log_message'] += text
-                continue
-
-            # update (PUT) Conf.Product if it exists in Magento
+            # update (PUT method) Conf.Product if it exists in Magento
             if ml_conf_products[prod].get('magento_update_date', ''):
                 if ml_conf_products[prod]['magento_type_id'] != 'configurable':
                     text = "Product with the following sku - \"%s\" already exists in Magento. " \
@@ -685,11 +660,8 @@ class MagentoConfigurableProduct(models.Model):
                     ml_conf_products[prod]['log_message'] += text
                     continue
 
-                # check if configurable attributes are the same in Magento and Odoo
                 check_config_attrs = self.check_config_product_assign_attributes_match(
-                    ml_conf_products[prod]['magento_conf_prod_options'],
-                    conf_prod_attr,
-                    magento_attributes
+                    ml_conf_products[prod]['magento_conf_prod_options'], config_attrs, magento_attributes
                 )
 
                 result = self.export_single_conf_product_to_magento(
@@ -705,9 +677,124 @@ class MagentoConfigurableProduct(models.Model):
             if result:
                 self.update_conf_product_dict_with_magento_data(result, ml_conf_products)
 
-        # create (POST) new configurable products in Magento via async request (RabbitMQ)
         if new_conf_products:
             self.export_new_conf_products_to_magento_in_bulk(instance, new_conf_products, ml_conf_products, attr_sets)
+
+    def check_product_attributes(self, instance, ml_conf_products, magento_attributes, config_attrs, conf_prod, prod):
+        pp_attrs = conf_prod.odoo_prod_template_id.categ_id.x_attribute_ids
+        prod_page_attrs = list({
+            self.to_upper(a.with_context(lang='en_US').categ_group_id.name) for a in pp_attrs if a.categ_group_id
+        })
+        single_attr_recs = conf_prod.with_context(lang='en_US').x_magento_single_attr_ids
+        single_attrs = {self.to_upper(a.attribute_id.name): a.value_ids.name for a in single_attr_recs}
+
+        if conf_prod.odoo_prod_template_id.x_status:
+            single_attrs.update({
+                "PRODUCTLIFEPHASE": conf_prod.with_context(lang='en_US').odoo_prod_template_id.x_status
+            })
+
+        missed_attrs = set(
+            list(config_attrs) + list(prod_page_attrs) + list(single_attrs.keys())).difference(magento_attributes)
+        if missed_attrs:
+            text = "Attribute(s) - '%s' have to be created and linked to relevant Attribute-set" \
+                   " on Magento side. \n" % missed_attrs
+            ml_conf_products[prod]['log_message'] += text
+            return False
+
+        # available_attr_codes = {magento_attributes[a]['attribute_code'] for a in magento_attributes}
+        # const_attrs = set()
+        # if conf_prod.x_magento_main_config_attr_id:
+        #     const_attrs.update({'main_config_attribute'})
+        # if conf_prod.odoo_prod_template_id.website_description:
+        #     const_attrs.update({'description'})
+        # if const_attrs and const_attrs.difference(available_attr_codes):
+        #     text = "Attribute(s) - '%s' have to be created and linked to relevant Attribute-set" \
+        #            " on Magento side. \n" % const_attrs.difference(available_attr_codes)
+        #     ml_conf_products[prod]['log_message'] += text
+        #     return False
+
+        # check if attribute can be configurable
+        failed_config = list(filter(lambda a: not magento_attributes[a]['can_be_configurable'], config_attrs))
+        if failed_config:
+            text = "The attribute(s): %s can't be assigned as configurable in Magento. " \
+                   "Make sure each of it has 'Global' scope and was created manually. \n" % (str(failed_config))
+            ml_conf_products[prod]['log_message'] += text
+            return False
+
+        # check attribute options exist in Magento
+        for attr in single_attrs:
+            mag_attr = magento_attributes[attr]
+            attr_val = single_attrs[attr]
+            if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
+                ### PRODUCTLIFEPHASE is not translatable here - to check
+                res_id = single_attr_recs.filtered(lambda a: self.to_upper(a.attribute_id.name) == attr).value_ids.id or 0
+                _id, err = self.create_new_attribute_option_in_magento(
+                    instance, mag_attr['attribute_code'], attr_val, res_id
+                )
+                if err:
+                    ml_conf_products[prod]['log_message'] += err
+                else:
+                    mag_attr['options'].append({'label': attr_val.upper(), 'value': _id})
+
+        return True
+
+    def create_new_attribute_option_in_magento(self, magento_instance, attribute_code, attribute_option, res_id=False):
+        """
+        Creates new option(swatch) for defined attribute in Magento
+        :param magento_instance: Instance of Magento
+        :param attribute_code: The Code of Attribute defined in Magento
+        :param attribute_option: The Attribute Value in Odoo
+        :return: ID, error message
+        """
+        data = {
+            "option": {
+                "label": str(attribute_option).upper(),
+                "sort_order": 0,
+                "is_default": "false",
+                "store_labels": []
+            }
+        }
+        magento_storeviews = [w.store_view_ids for w in magento_instance.magento_website_ids]
+
+        # get store_views from Magento to update store_labels field, if error - store_label remains [] (admin only)
+        if magento_storeviews:
+            store_labels = []
+            # find Attribute Value translations if any
+            avail_translations = self.env['ir.translation'].search([('name', '=', 'product.attribute.value,name'),
+                                                                    ('res_id', '=', res_id)])
+            for view in magento_storeviews:
+                translated_label = ''
+                for item in avail_translations:
+                    if item.lang and (str(item.lang[:2]).upper()) == view.magento_storeview_code.upper():
+                        translated_label = str(item.value if item.value else item.src).upper()
+                        break
+                store_labels.append({"store_id": view.magento_storeview_id, "label": translated_label})
+            data['option'].update({"store_labels": store_labels})
+
+        try:
+            api_url = '/all/V1/products/attributes/%s/options' % attribute_code
+            res = req(magento_instance, api_url, 'POST', data)
+            try:
+                _id = int(res[3:])
+            except Exception:
+                raise
+        except Exception:
+            return 0, "Error while new Product Attribute Option(Swatch) creation for %s Attribute.\n" % attribute_code
+        return _id, ""
+
+    def check_config_product_assign_attributes_match(self, magento_prod_attrs, prod_attr_odoo, avail_attributes):
+        """
+        Check if Config.Product (Product Category in Odoo) "assign" attributes are the same in Magento and Odoo
+        :param magento_prod_attrs: Product Attributes defined as configurable in Magento
+        :param prod_attr_odoo: Product Attributes defined as configurable in Odoo
+        :param avail_attributes: Dictionary with available Attributes and their options in Magento
+        :return: Boolean, True if the same, False if not
+        """
+        prod_attr_magento = {self.get_attribute_name_by_id(avail_attributes, attr.get("attribute_id")) for attr in
+                             magento_prod_attrs if attr}
+        if prod_attr_odoo == prod_attr_magento:
+            return True
+        return False
 
     def export_single_conf_product_to_magento(self, magento_instance, prod_sku, ml_conf_products, attr_sets,
                                               check_config_attrs=True, method='POST'):
@@ -750,7 +837,7 @@ class MagentoConfigurableProduct(models.Model):
             data['product']["extension_attributes"].update({"configurable_product_links": []})
 
         try:
-            api_url = '/all/V1/products' + '' if method == "POST" else '/%s' % prod_sku
+            api_url = '/all/V1/products' + ('' if method == "POST" else '/' + str(prod_sku))
             response = req(magento_instance, api_url, method, data)
         except Exception as err:
             text = "Error while Config.Product %s in Magento.\n" % ('update' if method == "PUT" else "creation")
@@ -794,6 +881,7 @@ class MagentoConfigurableProduct(models.Model):
         """
         data = []
         lang_code = self.env['res.lang']._lang_get(self.env.user.lang).code
+
         for prod in new_conf_products:
             conf_product = ml_conf_products[prod]['conf_object']
             categ_list = [cat.magento_category for cat in conf_product.category_ids]
@@ -880,50 +968,78 @@ class MagentoConfigurableProduct(models.Model):
     def add_conf_product_attributes(self, conf_product, attr_sets, lang_code):
         custom_attributes = []
         available_attributes = attr_sets[conf_product.magento_attr_set]['attributes']
-        prod_attributes = conf_product.odoo_prod_template_id.categ_id.x_attribute_ids
-        prod_attr_list = list(
-            {(a.categ_group_id.name, a.categ_group_id.id) for a in prod_attributes if a.categ_group_id}
-        )
 
-        # add Product Page attributes
-        for prod_attr in prod_attr_list:
-            custom_attributes.append({
-                "attribute_code": available_attributes[self.to_upper(prod_attr[0])]['attribute_code'],
-                "value": self.to_html_listitem(
-                    prod_attributes.filtered(lambda x: x.categ_group_id.id == prod_attr[1]), lang_code)
-            })
-
-        # add Product's Website Description
-        if conf_product.odoo_prod_template_id.website_description:
-            custom_attributes.append({
-                "attribute_code": 'description',
-                "value": conf_product.with_context(lang=lang_code).odoo_prod_template_id.website_description
-            })
+        self.add_translatable_conf_product_attributes(custom_attributes, conf_product, available_attributes, lang_code)
 
         # add main config attribute if any
         if conf_product.x_magento_main_config_attr_id:
-            main_attr_name = self.to_upper(conf_product.x_magento_main_config_attr_id.name)
+            main_attr_name = self.to_upper(conf_product.with_context(lang='en_US').x_magento_main_config_attr_id.name)
             custom_attributes.append({
                 "attribute_code": 'main_config_attribute',
                 "value": available_attributes[main_attr_name]['attribute_code']
             })
 
-        # add attributes specific to conf.product
-        conf_prod_single_attrs = conf_product.odoo_prod_template_id.attribute_line_ids.filtered(
-                lambda x: not x.magento_config and not x.attribute_id.is_ignored_in_magento and len(x.value_ids) == 1
-        )
-        for attribute in conf_prod_single_attrs:
-            attr = available_attributes[self.to_upper(attribute.attribute_id.name)]
-            if attr:
+        # add single attributes specific to conf.product
+        unique_attr = set(conf_product.with_context(lang='en_US').x_magento_single_attr_ids.attribute_id.mapped('name'))
+        for attr_name in unique_attr:
+            value = ''
+            attr = available_attributes[self.to_upper(attr_name)]
+            for rec in conf_product.with_context(lang='en_US').x_magento_single_attr_ids.filtered(
+                    lambda x: x.attribute_id.name == attr_name):
                 opt = next((o for o in attr['options'] if o.get('label') and
-                            self.to_upper(o['label']) == self.to_upper(attribute.value_ids.name)), {})
-                if opt:
-                    custom_attributes.append({
-                        "attribute_code": attr['attribute_code'],
-                        "value": opt['value']
-                    })
+                            self.to_upper(o['label']) == self.to_upper(rec.value_ids.name)), {})
+                if opt :
+                    value = opt['value'] if not value else value + ',' + opt['value']
+
+            if value:
+                custom_attributes.append({
+                    "attribute_code": attr['attribute_code'],
+                    "value": value
+                })
+
+        # product life phase attribute
+        prod_status = conf_product.with_context(lang='en_US').odoo_prod_template_id.x_status
+        if prod_status:
+            attr = available_attributes["PRODUCTLIFEPHASE"]
+            opt = next((o for o in attr['options'] if o.get('label') and
+                        self.to_upper(o['label']) == self.to_upper(prod_status)), {})
+            if opt:
+                custom_attributes.append({
+                    "attribute_code": attr['attribute_code'],
+                    "value": opt['value']
+                })
 
         return custom_attributes
+
+    def add_translatable_conf_product_attributes(self, custom_attributes, conf_product, available_attributes, lang_code):
+        prod_attributes = conf_product.odoo_prod_template_id.categ_id.x_attribute_ids
+        prod_attr_list = list(
+            {(a.categ_group_id.name, a.categ_group_id.id) for a in prod_attributes if a.categ_group_id}
+        )
+
+        # add Product's Website Description
+        if conf_product.odoo_prod_template_id.website_description:
+            value = conf_product.with_context(lang=lang_code).odoo_prod_template_id.website_description
+            self.add_to_custom_attributes_list(custom_attributes, 'description', value)
+
+        # add Product Page attributes
+        for prod_attr in prod_attr_list:
+            value = self.to_html_listitem(prod_attributes.filtered(lambda x: x.categ_group_id.id == prod_attr[1]),
+                                          lang_code)
+            attr_code = available_attributes[self.to_upper(prod_attr[0])]['attribute_code']
+            self.add_to_custom_attributes_list(custom_attributes, attr_code, value)
+
+    @staticmethod
+    def add_to_custom_attributes_list(custom_attributes, attr_code, attr_value):
+        elem_in_list = next((o for o in custom_attributes if o['attribute_code'] == attr_code), {})
+
+        if elem_in_list:
+            elem_in_list['value'] = attr_value
+        else:
+            custom_attributes.append({
+                "attribute_code": attr_code,
+                "value": attr_value
+            })
 
     @staticmethod
     def process_product_websites_export(magento_instance, ml_products, prod_sku, product, method="POST"):
@@ -960,11 +1076,14 @@ class MagentoConfigurableProduct(models.Model):
             lang_code = view[1].lang_id.code
             if is_config:
                 data['product']['name'] = str(product.with_context(lang=lang_code).odoo_prod_template_id.name).upper()
-                data['product']['custom_attributes'] = self.add_conf_product_attributes(product, attr_sets, lang_code)
+                self.add_translatable_conf_product_attributes(
+                    data['product']['custom_attributes'], product, attr_sets[product.magento_attr_set]['attributes'],
+                    lang_code
+                )
             else:
                 # valid for simple products only
                 data["product"]["name"] = product.with_context(lang=lang_code).odoo_product_id.name + ' ' +\
-                                          ' '.join(product.attribute_value_ids.product_attribute_value_id.mapped('name'))
+                                          ' '.join(product.product_attribute_ids.mapped('x_attribute_value'))
 
                 # apply product prices for each website
                 if magento_instance.catalog_price_scope == 'website':
@@ -1014,20 +1133,6 @@ class MagentoConfigurableProduct(models.Model):
             link_data_dict.update({new_dict['simple_product_sku']: opt_dict})
 
         return link_data_dict
-
-    def check_config_product_assign_attributes_match(self, magento_prod_attrs, prod_attr_odoo, avail_attributes):
-        """
-        Check if Config.Product (Product Category in Odoo) "assign" attributes are the same in Magento and Odoo
-        :param magento_prod_attrs: Product Attributes defined as configurable in Magento
-        :param prod_attr_odoo: Product Attributes defined as configurable in Odoo
-        :param avail_attributes: Dictionary with available Attributes and their options in Magento
-        :return: Boolean, True if the same, False if not
-        """
-        prod_attr_magento = {self.get_attribute_name_by_id(avail_attributes, attr.get("attribute_id")) for attr in
-                             magento_prod_attrs if attr}
-        if set(prod_attr_odoo) == prod_attr_magento:
-            return True
-        return False
 
     def process_images_export_to_magento(self, magento_instance, ml_conf_products, magento_sku):
         # product images (Base)
@@ -1119,11 +1224,15 @@ class MagentoConfigurableProduct(models.Model):
             for product in data:
                 sku = product['product']['sku']
                 conf_prod = ml_conf_products[sku]['conf_object']
+                custom_attributes = product['product']['custom_attributes']
+                self.add_translatable_conf_product_attributes(
+                    custom_attributes, conf_prod, attr_sets[conf_prod.magento_attr_set]['attributes'], lang_code
+                )
                 prod = {
                     'product': {
                         'name': str(conf_prod.with_context(lang=lang_code).odoo_prod_template_id.name).upper(),
                         'sku': sku,
-                        'custom_attributes': self.add_conf_product_attributes(conf_prod, attr_sets, lang_code)
+                        'custom_attributes': custom_attributes
                     }
                 }
                 data_lst.append(prod)
@@ -1217,7 +1326,7 @@ class MagentoConfigurableProduct(models.Model):
         :return: Attribute's Name or None
         """
         for attr in available_attributes:
-            if str(available_attributes[attr].get('attribute_id')) == str(attr_id):
+            if str(available_attributes[attr]['attribute_id']) == str(attr_id):
                 return attr
 
     @staticmethod
@@ -1226,19 +1335,6 @@ class MagentoConfigurableProduct(models.Model):
             return "".join(str(val).split()).upper()
         else:
             return val
-
-    # @staticmethod
-    # def check_product_attr_are_in_attributes_list(magento_attributes, prod_attrs):
-    #     """
-    #     Check if Attributes are in the list
-    #     :param magento_attributes: List with Product Attributes
-    #     :param prod_attrs: Attributes assigned to Product
-    #     :return: Boolean (True if in list, False if not)
-    #     """
-    #     for attr in prod_attrs:
-    #         if attr not in magento_attributes:
-    #             return attr
-    #     return False
 
     @staticmethod
     def to_html_listitem(attributes, lang_code):

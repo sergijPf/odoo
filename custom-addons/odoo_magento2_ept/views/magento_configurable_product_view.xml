@@ -26,7 +26,7 @@
                 <header>
                     <button name="process_products_export_to_magento"
                             string="Process Export directly"
-                            type="object" class="btn-primary ml-2"/>
+                            type="object" class="btn-primary"/>
 <!--                            attrs="{'invisible':[('magento_status', '=', 'in_magento')]}"/>-->
                     <button name="process_products_export_to_magento"
                             context="{'async_export': True}"
@@ -72,7 +72,7 @@
                         <h1>
                             <field name="magento_product_name" readonly="1"/>
                         </h1>
-                        <field name="x_magento_assign_attrs"
+                        <field name="x_magento_assign_attr_ids"
                                widget="many2many_tags"
                                readonly="1"/>
                     </div>
@@ -83,22 +83,25 @@
                                     <field name="odoo_prod_template_id" readonly="1"/>
                                     <field name="magento_sku" readonly="1"/>
                                     <br/>
+                                    <field name="x_magento_single_attr_ids" readonly="1" widget="many2many_tags"/>
                                     <field name="x_magento_main_config_attr_id" readonly="1"/>
                                 </group>
                                 <group name="magento_info" string="Magento Info">
                                     <field name="magento_instance_id" readonly="1"/>
                                     <field name="do_not_create_flag" invisible="1"/>
-                                    <field name="magento_product_id" attrs="{'invisible': [('do_not_create_flag', '=', True)]}" readonly="1"/>
-                                    <field name="magento_website_ids" attrs="{'invisible': [('do_not_create_flag', '=', True)]}" widget="many2many_tags" readonly="1"/>
+                                    <field name="magento_product_id" attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                           readonly="1"/>
+                                    <field name="magento_website_ids" attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                           widget="many2many_tags" readonly="1"/>
                                     <field name="magento_status" widget="badge" optional="show" on_change="1"
                                            decoration-success="magento_status == 'in_magento'"
                                            decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
                                            decoration-info="magento_status == 'in_process'"
                                            decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
                                            decoration-danger="magento_status == 'log_error'"
-                                           modifiers="{'readonly':true}"
-                                    />
-                                    <field name="magento_export_date" attrs="{'invisible': [('do_not_create_flag', '=', True)]}" readonly="1" />
+                                           modifiers="{'readonly':true}"/>
+                                    <field name="magento_export_date" readonly="1"
+                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"/>
                                     <br/>
                                     <field name="magento_attr_set" required="1"/>
                                     <field name="category_ids" attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
