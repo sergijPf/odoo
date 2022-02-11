@@ -688,10 +688,10 @@ class MagentoConfigurableProduct(models.Model):
         single_attr_recs = conf_prod.with_context(lang='en_US').x_magento_single_attr_ids
         single_attrs = {self.to_upper(a.attribute_id.name): a.value_ids.name for a in single_attr_recs}
 
-        if conf_prod.odoo_prod_template_id.x_status:
-            single_attrs.update({
-                "PRODUCTLIFEPHASE": conf_prod.with_context(lang='en_US').odoo_prod_template_id.x_status
-            })
+        # if conf_prod.odoo_prod_template_id.x_status:
+        #     single_attrs.update({
+        #         "PRODUCTLIFEPHASE": conf_prod.with_context(lang='en_US').odoo_prod_template_id.x_status
+        #     })
 
         missed_attrs = set(
             list(config_attrs) + list(prod_page_attrs) + list(single_attrs.keys())).difference(magento_attributes)
@@ -726,7 +726,6 @@ class MagentoConfigurableProduct(models.Model):
             mag_attr = magento_attributes[attr]
             attr_val = single_attrs[attr]
             if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
-                ### PRODUCTLIFEPHASE is not translatable here - to check
                 res_id = single_attr_recs.filtered(lambda a: self.to_upper(a.attribute_id.name) == attr).value_ids.id or 0
                 _id, err = self.create_new_attribute_option_in_magento(
                     instance, mag_attr['attribute_code'], attr_val, res_id
@@ -998,16 +997,16 @@ class MagentoConfigurableProduct(models.Model):
                 })
 
         # product life phase attribute
-        prod_status = conf_product.with_context(lang='en_US').odoo_prod_template_id.x_status
-        if prod_status:
-            attr = available_attributes["PRODUCTLIFEPHASE"]
-            opt = next((o for o in attr['options'] if o.get('label') and
-                        self.to_upper(o['label']) == self.to_upper(prod_status)), {})
-            if opt:
-                custom_attributes.append({
-                    "attribute_code": attr['attribute_code'],
-                    "value": opt['value']
-                })
+        # prod_status = conf_product.with_context(lang='en_US').odoo_prod_template_id.x_status
+        # if prod_status:
+        #     attr = available_attributes["PRODUCTLIFEPHASE"]
+        #     opt = next((o for o in attr['options'] if o.get('label') and
+        #                 self.to_upper(o['label']) == self.to_upper(prod_status)), {})
+        #     if opt:
+        #         custom_attributes.append({
+        #             "attribute_code": attr['attribute_code'],
+        #             "value": opt['value']
+        #         })
 
         return custom_attributes
 

@@ -21,9 +21,9 @@
                 />
             </xpath>
 
-            <xpath expr="//field[@name='barcode']" position="before">
-                <field name="x_status" string="Status"/>
-            </xpath>
+<!--            <xpath expr="//field[@name='barcode']" position="before">-->
+<!--                <field name="x_status" string="Status"/>-->
+<!--            </xpath>-->
         </field>
     </record>
 </odoo>
