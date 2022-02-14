@@ -1,0 +1,139 @@
+
+// Colors
+$o-community-color: #7C7BAD;
+$o-enterprise-color: #336699;
+$o-enterprise-primary-color: #336699;
+
+$o-brand-odoo: $o-enterprise-color;
+$o-brand-primary: $o-enterprise-primary-color;
+
+.o_legacy_dialog {
+  padding-top: 50px;
+}
+
+@media (min-width: 992px) {
+  div.modal-lg {
+    max-width: 992px !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  div.modal-lg {
+    max-width: 1200px !important;
+  }
+}
+
+@media (min-width: 1300px) {
+  div.modal-lg {
+    max-width: 1300px !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  div.modal-lg {
+    max-width: 1400px !important;
+  }
+}
+
+/* customize footer */
+footer#bottom {
+  h5 {
+    font-size: 24px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    margin-bottom:0 !important;
+    line-height: 50px;
+  }
+
+  div.col-lg-2 {
+    flex-basis: 20% !important;
+    max-width: 20%;
+  }
+
+  p, a {
+    font-size: 13px;
+    padding: 6px 0;
+    font-weight: 400;
+  }
+
+  a {
+    line-height: 28px;
+    transition: opacity .3s ease;
+    &:hover {
+      text-decoration: none;
+      opacity: 0.6;
+    }
+  }
+  div.s_share a {
+    font-size: 20px !important;
+  }
+
+  div.col-lg-2:nth-of-type(4) {
+    ul.list-unstyled {
+      font-size: 13px;
+    }
+    ul.list-unstyled {
+      a {
+        padding: 0;
+        margin: 2px 0 10px 0;
+      }
+      span {
+        height: unset;
+      }
+      i.fa{
+        font-size: 19px;
+      }
+      img {
+        width: 15px;
+      }
+    }
+  }
+  div.col-lg-2:last-of-type a {
+    font-size: 16px;
+  }
+}
+
+/* customize store page */
+#wsale_products_categories_collapse li.nav-item:not(.has-children) {
+  padding-left: 0.6rem;
+}
+
+div#category_header > p {
+  color: #212529;
+  font-family: Poppins, "Odoo Unicode Support Noto", sans-serif !important;
+}
+div#category_header {
+  padding: 15px 0 5px;
+}
+
+a#add_to_cart > i {
+  padding: 0 0.4rem;
+}
+
+#product_full_description p {
+  color: rgba(29, 33, 39, 0.7);
+}
+
+/* customize page header */
+#top {
+  &:not(.o_header_is_scrolled) .navbar-brand img {
+    transform: scale(1.25);
+  }
+  .navbar-brand img {
+    transition: transform 0.3s ease-out;
+    -webkit-transform-origin: top center;
+        -ms-transform-origin: top center;
+            transform-origin: top center;
+  }
+  nav.navbar {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* customize store order quantity inputs */
+#product_details input.quantity.is-invalid,
+.oe_cart input.js_quantity.is-invalid  {
+  background-image: none;
+}

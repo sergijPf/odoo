@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="group_smartino_create_pickings_btn" model="res.groups">
+        <field name="name">Create Pickings Btn</field>
+        <field name="category_id" ref="base.module_category_sales"/>
+    </record>
+</odoo>

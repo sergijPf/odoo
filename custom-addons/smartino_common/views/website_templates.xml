@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="contactus_form_inherit" inherit_id="website_form.contactus_form">
+        <xpath expr="//*[@id='contactus_section']" position="before">
+            <t t-set="user" t-value="request.env.user"/>
+            <t t-set="logged_in" t-value="user.id != request.env.ref('base.public_user').id"/>
+        </xpath>
+
+        <xpath expr="//input[@name='Name']" position="attributes">
+            <attribute name="t-attf-value">#{ user.name if user and logged_in else ""}</attribute>
+            <attribute name="t-attf-type">#{ "hidden" if user and logged_in else "text"}</attribute>
+        </xpath>
+        <xpath expr="//input[@name='Name']/ancestor::div[hasclass('s_website_form_field')][1]" position="attributes">
+            <attribute name="t-attf-style">#{ "display:none;" if user and logged_in else "" }</attribute>
+        </xpath>
+
+        <xpath expr="//input[@name='Phone']" position="attributes">
+            <attribute name="t-attf-value">#{ user.mobile_phone if user and logged_in else ""}</attribute>
+            <attribute name="t-attf-type">#{ "hidden" if user and logged_in else "text"}</attribute>
+        </xpath>
+        <xpath expr="//input[@name='Phone']/ancestor::div[hasclass('s_website_form_field')][1]" position="attributes">
+            <attribute name="t-attf-style">#{ "display:none;" if user and logged_in else "" }</attribute>
+        </xpath>
+
+        <xpath expr="//input[@name='email_from']" position="attributes">
+            <attribute name="t-attf-value">#{ user.email if user and logged_in else ""}</attribute>
+            <attribute name="t-attf-type">#{ "hidden" if user and logged_in else "text"}</attribute>
+        </xpath>
+        <xpath expr="//input[@name='email_from']/ancestor::div[hasclass('s_website_form_field')][1]" position="attributes">
+            <attribute name="t-attf-style">#{ "display:none;" if user and logged_in else "" }</attribute>
+        </xpath>
+
+        <xpath expr="//input[@name='Partner Name']" position="attributes">
+            <attribute name="t-attf-value">#{ (user.partner_id[0].name if len(user.partner_id) > 0 else "") if user and logged_in else ""}</attribute>
+            <attribute name="t-attf-type">#{ "hidden" if user and logged_in else "text"}</attribute>
+        </xpath>
+        <xpath expr="//input[@name='Partner Name']/ancestor::div[hasclass('s_website_form_field')][1]" position="attributes">
+            <attribute name="t-attf-style">#{ "display:none;" if user and logged_in else "" }</attribute>
+        </xpath>
+    </template>
+</odoo>

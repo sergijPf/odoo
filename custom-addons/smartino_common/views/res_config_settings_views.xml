@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.smartino_common</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="website_sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='sale_product_catalog_settings']" position="inside">
+                <div class="col-12 col-lg-6 o_setting_box" id="create_quotations_at_checkout_setting">
+                    <div class="o_setting_left_pane">
+                        <field name="create_quotations_at_checkout"/>
+                    </div>
+                    <div class="o_setting_right_pane">
+                        <label for="create_quotations_at_checkout"/>
+                        <div class="text-muted">
+                            If checked, the order confirmation step of order checkout will be removed. Instead orders will be sent to the user as quotations.
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

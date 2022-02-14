@@ -1,0 +1,1000 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* smartino_common
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-12-14 20:20+0000\n"
+"PO-Revision-Date: 2021-12-14 20:20+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/quantity_validation_alert.xml:0
+#: code:addons/smartino_common/static/src/xml/quantity_validation_alert.xml:0
+#, python-format
+msgid "\" is"
+msgstr "\" wynosi"
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/add_to_cart_popup.xml:0
+#, python-format
+msgid "&nbsp;"
+msgstr ""
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/add_to_cart_popup.xml:0
+#, python-format
+msgid "&times;"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.actions.report,print_report_name:smartino_common.action_product_sticker_report
+msgid "'product-sticker-%s' % object.name"
+msgstr "'naklejka-produkt-%s' % object.name"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order_line__x_additional_status
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Additional Status"
+msgstr "Dodatkowy Status"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__x_quantity_multiplicity
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__x_quantity_multiplicity
+msgid "Allowed Quantity Multiplicity"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_attribute_value
+msgid "Attribute Value"
+msgstr ""
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.location_barcode_report
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_sticker_report
+msgid "Barcode"
+msgstr "Kod Kreskowy"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_inherit
+msgid "CN code:"
+msgstr "Kod CN:"
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_partner_choice__cancel
+#: model_terms:ir.ui.view,arch_db:smartino_common.change_ecom_category_wizard_form
+#: model_terms:ir.ui.view,arch_db:smartino_common.change_picking_type_wizard_form
+#: model_terms:ir.ui.view,arch_db:smartino_common.change_product_status_wizard_form
+#: model_terms:ir.ui.view,arch_db:smartino_common.sale_order_portal_content_inherit
+msgid "Cancel"
+msgstr "Anuluj"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.sale_order_portal_content_inherit
+msgid "Cancel Line"
+msgstr "Anuluj Pozycje"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.change_ecom_category_wizard_form
+#: model_terms:ir.ui.view,arch_db:smartino_common.change_picking_type_wizard_form
+#: model_terms:ir.ui.view,arch_db:smartino_common.change_product_status_wizard_form
+msgid "Change"
+msgstr "Zmień"
+
+#. module: smartino_common
+#: model:ir.actions.act_window,name:smartino_common.change_product_status_wizard
+msgid "Change Product Status"
+msgstr "Zmień Status Produktu"
+
+#. module: smartino_common
+#: model:ir.actions.act_window,name:smartino_common.change_picking_type_wizard
+msgid "Change Production Picking Type"
+msgstr "Zmień Typ Operacji Produkcji"
+
+#. module: smartino_common
+#: model:ir.actions.act_window,name:smartino_common.change_ecom_category_wizard
+msgid "Change eCom Category"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__check_moq
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Check MOQ"
+msgstr ""
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/add_to_cart_popup.xml:0
+#, python-format
+msgid "Close"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__code
+msgid "Code"
+msgstr "Kod"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel__color
+msgid "Color Index"
+msgstr "Kolor"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "Combination is not possible for the product."
+msgstr "Kombinacja nie jest możliwa dla tego produktu."
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__company_id
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__company_id
+msgid "Company"
+msgstr "Firma"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_res_config_settings
+msgid "Config Settings"
+msgstr "Ustawienia konfiguracji"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_res_partner
+msgid "Contact"
+msgstr "Kontakt"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "Continuation"
+msgstr "Kontynuacja"
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/add_to_cart_popup.xml:0
+#, python-format
+msgid "Continue shopping"
+msgstr "Przeglądaj dalej"
+
+#. module: smartino_common
+#: model:res.groups,name:smartino_common.group_smartino_create_pickings_btn
+msgid "Create Pickings Btn"
+msgstr ""
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_order_form_inherit
+msgid "Create Stock Pickings"
+msgstr "Symulacja"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.ptav_view_tree_inherit
+msgid "Create Variants"
+msgstr "Utwórz Warianty"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product_attribute.py:0
+#, python-format
+msgid "Create Variants is only available for one product.template"
+msgstr "Tworzenie wariantów jest jedynie możliwe dla jednego Produktu"
+
+#. module: smartino_common
+#: model_terms:ir.actions.act_window,help:smartino_common.action_producer_info
+msgid "Create a new product producer info"
+msgstr "Utwórz nowy Producent Produktu Informacje"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_res_config_settings__create_quotations_at_checkout
+#: model:ir.model.fields,field_description:smartino_common.field_website__create_quotations_at_checkout
+#: model:ir.model.fields,help:smartino_common.field_res_config_settings__create_quotations_at_checkout
+msgid "Create quotations at checkout"
+msgstr "Utwórz ofertę przy składaniu zamówienia"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product_attribute.py:0
+#, python-format
+msgid "Created %d new product(s)"
+msgstr "Utworzono %d nowych produkt(ów)"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product_attribute.py:0
+#, python-format
+msgid "Created Products"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol__create_uid
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__create_uid
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel__create_uid
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard__create_uid
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__create_uid
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard__create_uid
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__create_uid
+msgid "Created by"
+msgstr "Utworzono przez"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol__create_date
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__create_date
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel__create_date
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard__create_date
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__create_date
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard__create_date
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__create_date
+msgid "Created on"
+msgstr "Utworzono"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__currency_id
+msgid "Currency"
+msgstr "Waluta"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_order_form_inherit
+msgid "Delivery"
+msgstr "Dostawa"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_order_form_inherit
+msgid "Delivery Date"
+msgstr "Data Dostawy"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_account_move_line__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_ir_http__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_ir_translation__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_mrp_production__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_attribute__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_attribute_value__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_category__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_image__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_public_category__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_template_attribute_value__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_res_partner__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order_line__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_stock_move__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_stock_picking_type__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_stock_request__display_name
+#: model:ir.model.fields,field_description:smartino_common.field_website__display_name
+msgid "Display Name"
+msgstr "Nazwa wyświetlana"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_public_category__x_magento_no_create
+msgid "Do not create Product in Magento"
+msgstr "Nie twórz Produktu w Magento"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_inherit
+msgid "EAN:"
+msgstr ""
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "End of Series"
+msgstr "Koniec Serii"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_order_form_inherit
+msgid "Expected:"
+msgstr "Oczekiwany:"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_public_category__x_category_image_ids
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_public_category_form_inherit
+msgid "Extra Category Media"
+msgstr "Dodatkowe Zdjęcia Kategorii"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_category_form_inherit_view
+msgid "GUS"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_category__x_gus_prodpol_id
+#: model:ir.ui.menu,name:smartino_common.action_gus_prodpol
+msgid "GUS PRODPOL"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__x_gus_uom_id
+msgid "GUS UoM"
+msgstr "GUS JM"
+
+#. module: smartino_common
+#: model:ir.actions.server,name:smartino_common.generate_translation_action
+msgid "Generate Translation - Website Description"
+msgstr "Wygeneruj Tłumaczenie - Opis Strony"
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/add_to_cart_popup.xml:0
+#, python-format
+msgid "Go to cart"
+msgstr "Przejdź do koszyka"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Group By"
+msgstr "Grupuj"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol__name
+msgid "Group Name"
+msgstr "Nazwa Grupowania"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_ir_http
+msgid "HTTP Routing"
+msgstr "Wytyczanie HTTP"
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__product_attribute__x_website_sale_visibility__hidden
+msgid "Hidden"
+msgstr "Schowany"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_account_move_line__id
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol__id
+#: model:ir.model.fields,field_description:smartino_common.field_ir_http__id
+#: model:ir.model.fields,field_description:smartino_common.field_ir_translation__id
+#: model:ir.model.fields,field_description:smartino_common.field_mrp_production__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_attribute__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_attribute_value__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_category__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_image__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_public_category__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__id
+#: model:ir.model.fields,field_description:smartino_common.field_product_template_attribute_value__id
+#: model:ir.model.fields,field_description:smartino_common.field_res_config_settings__id
+#: model:ir.model.fields,field_description:smartino_common.field_res_partner__id
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order__id
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order_line__id
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard__id
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__id
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard__id
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__id
+#: model:ir.model.fields,field_description:smartino_common.field_stock_move__id
+#: model:ir.model.fields,field_description:smartino_common.field_stock_picking_type__id
+#: model:ir.model.fields,field_description:smartino_common.field_stock_request__id
+#: model:ir.model.fields,field_description:smartino_common.field_website__id
+msgid "ID"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,help:smartino_common.field_website__create_quotations_at_checkout
+msgid ""
+"If checked, the order confirmation step of order checkout will be removed. \n"
+"                                                   Instead orders will be sent to the user as quotations."
+msgstr ""
+"Jeżeli ta opcja jest zaznaczona, zamiast ostatniego kroku składania "
+"zamówienia, zamówienie będzie wysłane użytkowinikowi jako oferta"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.res_config_settings_view_form
+msgid ""
+"If checked, the order confirmation step of order checkout will be removed. "
+"Instead orders will be sent to the user as quotations."
+msgstr ""
+"Jeżeli ta opcja jest zaznaczona, zamiast ostatniego kroku składania "
+"zamówienia, zamówienie będzie wysłane użytkowinikowi jako oferta"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_attribute_value__x_image
+msgid "Image"
+msgstr "Zdjęcie"
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__impossible_combination
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Impossible Combination"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__impossible_deadline
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Impossible Deadline"
+msgstr ""
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "In Preparation"
+msgstr "W Przygotowaniu"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_stock_move__x_is_producer_move
+msgid "Is Producer Move"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_account_move_line
+msgid "Journal Item"
+msgstr "Pozycja zapisu"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_account_move_line____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_ir_http____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_ir_translation____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_mrp_production____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_attribute____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_attribute_value____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_category____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_image____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_product____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_public_category____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_template____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_product_template_attribute_value____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_res_config_settings____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_res_partner____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order_line____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_stock_move____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_stock_picking_type____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_stock_request____last_update
+#: model:ir.model.fields,field_description:smartino_common.field_website____last_update
+msgid "Last Modified on"
+msgstr "Data ostatniej modyfikacji"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol__write_uid
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__write_uid
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel__write_uid
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard__write_uid
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__write_uid
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard__write_uid
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__write_uid
+msgid "Last Updated by"
+msgstr "Ostatnia aktualizacja przez"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol__write_date
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__write_date
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel__write_date
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard__write_date
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__write_date
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard__write_date
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__write_date
+msgid "Last Updated on"
+msgstr "Ostatnia aktualizacja"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.sale_order_portal_content_inherit
+msgid "Line is OK"
+msgstr ""
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/menu.xml:0
+#, python-format
+msgid "Logo"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,help:smartino_common.field_product_public_category__x_magento_attr_set
+msgid "Magento Attribute set"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_public_category__x_magento_attr_ids
+msgid "Magento Configurable Attribute(s)"
+msgstr ""
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_public_category_form_inherit
+msgid "Magento Details"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_public_category__x_magento_attr_set
+msgid "Magento Product Attribute Set"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__x_minimal_quantity
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__x_minimal_quantity
+msgid "Minimal Quantity"
+msgstr ""
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/quantity_validation_alert.xml:0
+#, python-format
+msgid "Minimal quantity for product \""
+msgstr "Minimalna ilość zamówienia dla produktu \""
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/stock_request.py:0
+#, python-format
+msgid "Minimal quantity for product \"%s\" is %s %s"
+msgstr "Minimalna ilość dla produktu \"%s\" to %s %s"
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__missing_raw_materials
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Missing Raw Materials"
+msgstr ""
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_res_partner_filter_inherit
+msgid "My Partners"
+msgstr "Moi Partnerzy"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_sales_channel__name
+msgid "Name"
+msgstr "Nazwa"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_template_form_view_inherit
+msgid "Name for Magento"
+msgstr "Nazwa dla Magento"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__x_magento_name
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__x_magento_name
+msgid "Name for Magneto"
+msgstr "Nazwa dla Magento"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard__new_category_id
+msgid "New Category"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__new_moq
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "New MOQ"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__new_picking_type_id
+msgid "New Picking Type"
+msgstr "Nowy Typ Operacji"
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__new_price
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "New Price"
+msgstr ""
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "Newness"
+msgstr "Nowość"
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__ok
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_partner_choice__ok
+#: model_terms:ir.ui.view,arch_db:smartino_common.sale_order_portal_content_inherit
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "OK"
+msgstr ""
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "On Hold"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__order_id
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Order"
+msgstr "Zamówienie"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_gus_prodpol__code
+msgid "PKWIU / PRODPOL symbol"
+msgstr "Symbol PKWIU / PRODPOL"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "PKWIU / PRODPOL symbol for GUS PRODPOL must be unique!"
+msgstr "Symbol PKWIU / PRODPOL dla GUS PRODPOL musi być unikatowy!"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__x_pantone_code
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__x_pantone_code
+msgid "Pantone Code"
+msgstr "Kod Pantone"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Partner"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order_line__x_partner_choice
+msgid "Partner Choice"
+msgstr "Wybór Klienta"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_res_partner__x_partner_counselor_ids
+#: model:ir.model.fields,field_description:smartino_common.field_res_users__x_partner_counselor_ids
+msgid "Partner Counselors"
+msgstr "Opiekun Kontrahenta"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_account_move_line__x_partner_country
+msgid "Partner Country"
+msgstr "Kraj Partnera"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_stock_picking_type
+msgid "Picking Type"
+msgstr "Typ pobrania"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "Prapremiere"
+msgstr "Prapremiera"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "Premiere"
+msgstr "Premiera"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__price
+msgid "Price"
+msgstr "Cena"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__supplier_id
+#: model:ir.model.fields,field_description:smartino_common.field_stock_picking_type__x_producer_id
+msgid "Producer"
+msgstr "Producent"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__x_producer_info_ids
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__x_producer_info_ids
+#: model:ir.ui.menu,name:smartino_common.menu_stock_producer_info
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_template_form_view_inherit
+msgid "Producer Info"
+msgstr "Informację o Producencie"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_product
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__product_id
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_category_wizard__product_ids
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard__product_ids
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Product"
+msgstr "Produkt"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_attribute
+msgid "Product Attribute"
+msgstr "Atrybut produktu"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_category
+#: model:ir.model.fields,field_description:smartino_common.field_account_move_line__x_product_category_id
+msgid "Product Category"
+msgstr "Kategoria produktu"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_image
+msgid "Product Image"
+msgstr "Obraz produktu"
+
+#. module: smartino_common
+#: model:ir.actions.act_window,name:smartino_common.action_producer_info
+msgid "Product Producer Info"
+msgstr "Producent Produktu Informacje"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_sales_channel
+msgid "Product Sales Channel"
+msgstr "Kanał Sprzedaży Produktu"
+
+#. module: smartino_common
+#: model:ir.actions.report,name:smartino_common.action_product_sticker_report
+msgid "Product Sticker"
+msgstr "Naklejka Produktu"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_template
+msgid "Product Template"
+msgstr "Szablon produktu"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_template_attribute_value
+msgid "Product Template Attribute Value"
+msgstr ""
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/add_to_cart_popup.xml:0
+#, python-format
+msgid "Product added to your cart"
+msgstr "Produkt dodano do koszyka"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_picking_type_wizard__production_ids
+msgid "Production"
+msgstr "Zlecenia Produkcji"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_mrp_production
+msgid "Production Order"
+msgstr "Zamówienie produkcji"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order__x_qty_info_ids
+msgid "Qty Info"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__quantity
+msgid "Quantity"
+msgstr "Ilość"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_order_form_inherit
+msgid "Quantity Info"
+msgstr "Podsumowanie Ilości"
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/quantity_validation_alert.xml:0
+#, python-format
+msgid "Quantity multiplicity for product \""
+msgstr "Wielokrotność ilości zamówienia dla produku \""
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/stock_request.py:0
+#, python-format
+msgid "Quantity multiplicity for product \"%s\" is %s %s"
+msgstr "Wielokrotność dla produktu \"%s\" to %s %s"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Route"
+msgstr "Ścieżka"
+
+#. module: smartino_common
+#: model:ir.actions.act_window,name:smartino_common.view_smartino_sale_order_line_action
+#: model:ir.ui.menu,name:smartino_common.smartino_sale_order_line_menu
+msgid "Sale Order Lines"
+msgstr "Pozycje Zamówienia Sprzedaży"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__x_sales_channel
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__x_sales_channel
+msgid "Sales Channel"
+msgstr "Kanał Sprzedaży"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_sale_order
+msgid "Sales Order"
+msgstr "Zamówienie sprzedaży"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_sale_order_line
+msgid "Sales Order Line"
+msgstr "Pozycja zamówienia sprzedaży"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_account_move_line__x_team_id
+msgid "Sales Team"
+msgstr "Zespół sprzedaży"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Search Sale Order Lines"
+msgstr "Szukaj Pozycji Zamówień Sprzedaży"
+
+#. module: smartino_common
+#: model:ir.model.fields,help:smartino_common.field_account_move_line__x_product_category_id
+msgid "Select category for the current product"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_producer_info__sellable_product_tmpl_id
+msgid "Sellable Product"
+msgstr "Produkt Sprzedawany"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_public_category__x_show_on_www
+msgid "Show on WWW"
+msgstr "Pokazuj na WWW"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_gus_prodpol
+msgid "Smartino Common GUS PRODPOL"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_producer_info
+msgid "Smartino Common Producer Info"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_smartino_qty_info
+msgid "Smartino Quantity Info"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_smartino_change_product_status_wizard
+msgid "Smartino change Product Status wizard"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_smartino_change_category_wizard
+msgid "Smartino change eCom category wizard"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_smartino_change_picking_type_wizard
+msgid "Smartino change picking type wizard"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_product__x_status
+#: model:ir.model.fields,field_description:smartino_common.field_product_template__x_status
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_change_product_status_wizard__new_status
+#: model_terms:ir.ui.view,arch_db:smartino_common.sale_order_portal_content_inherit
+msgid "Status"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_stock_move
+msgid "Stock Move"
+msgstr "Przesunięcie"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_stock_request
+msgid "Stock Request"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__to_be_confirmed
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "To be confirmed"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_ir_translation
+msgid "Translation"
+msgstr "Tłumaczenie"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/ir_translation.py:0
+#, python-format
+msgid ""
+"Translation features are unavailable until you install an extra translation."
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_smartino_qty_info__uom_id
+msgid "Uom"
+msgstr "JM"
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__product_attribute__x_website_sale_visibility__visible
+msgid "Visible"
+msgstr "Widoczny"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_website
+msgid "Website"
+msgstr "Strona WWW"
+
+#. module: smartino_common
+#: model:ir.model,name:smartino_common.model_product_public_category
+#: model:ir.model.fields,field_description:smartino_common.field_product_image__x_category_id
+msgid "Website Product Category"
+msgstr "Strona kategorii produktu"
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_inherit
+msgid "Weight:"
+msgstr "Waga:"
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "Withdrawn"
+msgstr "Wycofane"
+
+#. module: smartino_common
+#: model:ir.model.fields.selection,name:smartino_common.selection__sale_order_line__x_additional_status__wrong_qty
+#: model_terms:ir.ui.view,arch_db:smartino_common.view_smartino_sales_order_line_filter
+msgid "Wrong Quantity"
+msgstr ""
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_sale_order__x_line_data
+msgid "X Line Data"
+msgstr ""
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product.py:0
+#, python-format
+msgid "You could not create a variant for the non-dynamic product."
+msgstr "Nie możesz utworzyć wariantu dla niedynamicznego produktu."
+
+#. module: smartino_common
+#: code:addons/smartino_common/models/product_attribute.py:0
+#, python-format
+msgid ""
+"You need to select at least one value from each multi option attribute."
+msgstr ""
+"Musisz wybrać co najmniej po jednym wartości dla atrybutów z wieloma opcjami"
+" wartości."
+
+#. module: smartino_common
+#: model_terms:ir.ui.view,arch_db:smartino_common.sale_order_portal_content_inherit
+msgid "Your Choice"
+msgstr "Wybór Klienta"
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/add_to_cart_popup.xml:0
+#, python-format
+msgid "added to your cart."
+msgstr "dodano do twojego koszyka"
+
+#. module: smartino_common
+#: model:ir.model.fields,field_description:smartino_common.field_product_attribute__x_website_sale_visibility
+#: model_terms:ir.ui.view,arch_db:smartino_common.attribute_tree_view
+#: model_terms:ir.ui.view,arch_db:smartino_common.product_attribute_view_form
+msgid "eCommerce Filter Visibility"
+msgstr "Widoczność w filtrach eCommerce"
+
+#. module: smartino_common
+#. openerp-web
+#: code:addons/smartino_common/static/src/xml/add_to_cart_popup.xml:0
+#, python-format
+msgid "of"
+msgstr "produktu"
+
+#. module: smartino_common
+#: model:ir.model.fields,help:smartino_common.field_product_product__x_status
+#: model:ir.model.fields,help:smartino_common.field_product_template__x_status
+#: model:ir.model.fields,help:smartino_common.field_smartino_change_product_status_wizard__new_status
+msgid ""
+"w przygotowaniu - dla produktów prototypowanych, niedostępne w zamówieniach, mogą być zlecane szwalni wyszycia próbne, tworzone receptury i wyceny\n"
+"prapremiera - produkt nie wprowadzony na rynek, ale dystrybutorzy mogą zamawiać\n"
+"premiera - produkt zaprezentowany konsumentom, 6 tygodni od publikacji w B2C (ESKLEP) zmiana statusu na nowość\n"
+"nowość - produkty w pierwszym sezonie sprzedaży\n"
+"kontynuacja - produkt, który jest sprzedawany drugi lub kolejny sezon\n"
+"on hold - nie domawiamy surowców, ale nie robimy głębokich promocji, bo produkt wróci w kolejnymsezonie (w tym statusie będzie np. asortyment letni jesenią, gdy chcemy go kontynuować kolejnego lata)\n"
+"koniec serii - produkcja i zamówienia do wyczerpania surowców, gdy surowce sie skońćzą automatycznie wchodzi w status wycofane\n"
+"wycofane - produkty, których juz nie planujemy w regularnej sprzedaży, ale w szczególnych warunkach po zapytaniu ofertowym dystrybutora może być wyprodukowane i zamówione specjalnie surowce, jeśli dysrybutor wykorzysta całą belkę surowca\n"
+msgstr ""

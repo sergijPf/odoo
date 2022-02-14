@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="Menu" t-extend="Menu">
+        <t t-jquery=".o_menu_brand" t-operation="before">
+            <a href="/web" style="display: none;">
+                <img id="company-logo" alt="Logo" style="width: auto;"/>
+            </a>
+        </t>
+    </t>
+
+</templates>

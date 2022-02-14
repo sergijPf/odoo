@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates>
+
+    <t t-name="smartino_common.quantity_validation_quantity_multiplicity_alert">
+        <div t-attf-class="quantity-validation-alert-#{product_id} quantity-validation-alert alert alert-danger">
+            Quantity multiplicity for product "<b><t t-esc="product_name"/></b>" is <t t-esc="product_quantity_multiplicity"/> <t t-esc="uom_name"/>
+        </div>
+    </t>
+
+    <t t-name="smartino_common.quantity_validation_minimal_quantity_alert">
+        <div t-attf-class="quantity-validation-alert-#{product_id} quantity-validation-alert alert alert-danger">
+            Minimal quantity for product "<b><t t-esc="product_name"/></b>" is <t t-esc="product_minimal_quantity"/> <t t-esc="uom_name"/>
+        </div>
+    </t>
+
+</templates>

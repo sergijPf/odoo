@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="change_ecom_category_wizard_form" model="ir.ui.view">
+        <field name="name">change.ecom.category.wizard.form</field>
+        <field name="model">smartino.change.category.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="product_ids" widget="many2many_tags"/>
+                        <field name="new_category_id" required="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Change" type="object" name="button_change_category" class="oe_highlight"/>
+                    <button string="Cancel" special="cancel" type="button" name="cancel" class="oe_link"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="change_ecom_category_wizard" model="ir.actions.act_window">
+        <field name="name">Change eCom Category</field>
+        <field name="res_model">smartino.change.category.wizard</field>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="binding_view_types">list</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="change_ecom_category_wizard_form"/>
+    </record>
+
+</odoo>

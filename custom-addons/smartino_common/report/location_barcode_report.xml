@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="location_barcode_report" inherit_id="stock.report_location_barcode">
+        <xpath expr="//t[@t-call='stock.report_generic_barcode']" position="replace">
+            <t t-call="web.basic_layout">
+                <t t-foreach="[docs[i * 14:(i + 1) * 14] for i in range((len(docs) + 14 - 1) // 14 )]" t-as="doc_page">
+                    <div class="page" style="page-break-after:always; width:100vw; max-height:100vh">
+                        <t t-foreach="[doc_page[i * 2:(i + 1) * 2] for i in range((len(doc_page) + 2 - 1) // 2 )]" t-as="row">
+                            <div class="row">
+                                <t t-foreach="row" t-as="loc">
+                                    <div class="col-6" style="min-width:105mm; height:48mm; padding: 0; border-bottom: 1px solid gray; border-left: 1px solid gray; text-align: center;">
+                                        <img class="barcode"
+                                            alt="Barcode"
+                                            style="max-height: 23mm; min-width: 80mm; margin-top: 10mm;"
+                                            t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', loc.barcode, 280, 280)"/>
+                                        <p style="height:8mm; padding:0; margin:0; text-align: center;"><t t-esc="loc.name"/></p>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
+    <record id="location_barcode_paperformat" model="report.paperformat">
+        <field name="name">Location Barcode Print</field>
+        <field name="format">A4</field>
+        <field name="page_width">0</field>
+        <field name="page_height">0</field>
+        <field name="dpi">90</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">0</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="margin_bottom">0</field>
+        <field name="header_spacing">0</field>
+    </record>
+
+    <record id="stock.action_report_location_barcode" model="ir.actions.report">
+        <field name="name">Location Barcode</field>
+        <field name="paperformat_id" ref="location_barcode_paperformat"/>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">smartino_common.location_barcode_report</field>
+        <field name="report_file">smartino_common.location_barcode_report</field>
+    </record>
+</odoo>

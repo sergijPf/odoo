@@ -408,7 +408,6 @@ class MagentoProductProduct(models.Model):
             conf_sku = prod.magento_conf_prod_sku
             prod_attr_set = prod.magento_conf_product_id.magento_attr_set
             avail_attributes = attribute_sets[prod_attr_set]['attributes']
-            simple_prod_specific_attrs = {'relative size'}
             prod_attrs = {a.x_attribute_name: a.x_attribute_value for a in prod.product_attribute_ids}
 
             if ml_conf_products[conf_sku]['log_message']:
@@ -416,32 +415,27 @@ class MagentoProductProduct(models.Model):
                 ml_simp_products[prod_sku]['log_message'] += text
                 continue
 
-            if not len(prod_attrs) and not ml_simp_products[prod.magento_sku]['do_not_export_conf']:
-                text = "Product - %s has no attributes.\n" % prod.magento_sku
-                ml_simp_products[prod.magento_sku]['log_message'] += text
+            if not len(prod_attrs) and not ml_simp_products[prod_sku]['do_not_export_conf']:
+                text = "Product - %s has no attributes.\n" % prod_sku
+                ml_simp_products[prod_sku]['log_message'] += text
                 continue
 
-            # add Product Life Phase attribute (aka x_status) managed differently than other attributes
-            # if prod.odoo_product_id.x_status:
-            #     prod_attr_list.append(("PRODUCTLIFEPHASE", self.to_upper(prod.odoo_product_id.x_status)))
-
-            for attr in simple_prod_specific_attrs:
-                if attr in prod_attrs:
-                    mag_attr = avail_attributes.get(self.to_upper(attr))
-                    if not mag_attr:
-                        text = "Attribute - %s has to be created on Magento side and attached " \
-                               "to Attribute Set.\n" % attr
-                        ml_simp_products[prod.magento_sku]['log_message'] += text
-                    else:
-                        attr_val = prod_attrs[attr]
-                        if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
-                            _id, err = prod.magento_conf_product_id.create_new_attribute_option_in_magento(
-                                instance, mag_attr['attribute_code'], attr_val
-                            )
-                            if err:
-                                ml_simp_products[prod.magento_sku]['log_message'] += err
-                            else:
-                                mag_attr['options'].append({'label': attr_val.upper(), 'value': _id})
+            for attr in prod_attrs:
+                mag_attr = avail_attributes.get(self.to_upper(attr))
+                if not mag_attr:
+                    text = "Attribute - %s has to be created on Magento side and attached " \
+                           "to Attribute Set.\n" % attr
+                    ml_simp_products[prod_sku]['log_message'] += text
+                else:
+                    attr_val = prod_attrs[attr]
+                    if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
+                        _id, err = prod.magento_conf_product_id.create_new_attribute_option_in_magento(
+                            instance, mag_attr['attribute_code'], attr_val
+                        )
+                        if err:
+                            ml_simp_products[prod_sku]['log_message'] += err
+                        else:
+                            mag_attr['options'].append({'label': attr_val.upper(), 'value': _id})
 
             if ml_simp_products[prod_sku]['log_message']:
                 continue
@@ -708,10 +702,6 @@ class MagentoProductProduct(models.Model):
         prod_attr_list = [(self.to_upper(a.x_attribute_name), self.to_upper(a.x_attribute_value)) for a in
                           product.product_attribute_ids]
 
-        # add Product Life Phase attribute (aka x_status)
-        # if product.odoo_product_id.x_status:
-        #     prod_attr_list.append(("PRODUCTLIFEPHASE", self.to_upper(product.odoo_product_id.x_status)))
-
         custom_attributes = self.map_product_attributes_with_magento_attr(prod_attr_list, available_attributes)
 
         # add Product's Website Description
@@ -836,9 +826,6 @@ class MagentoProductProduct(models.Model):
             if ml_simp_products[prod.magento_sku]['magento_status'] != 'need_to_link':
                 prod_attr_list = [(self.to_upper(a.x_attribute_name), self.to_upper(a.x_attribute_value)) for a in
                                   prod.product_attribute_ids]
-                # add Product Life Phase attribute (aka x_status)
-                # if prod.odoo_product_id.x_status:
-                #     prod_attr_list.append(("PRODUCTLIFEPHASE", self.to_upper(prod.odoo_product_id.x_status)))
 
                 custom_attributes = self.map_product_attributes_with_magento_attr(
                     prod_attr_list, attr_sets[prod.magento_conf_product_id.magento_attr_set]['attributes']

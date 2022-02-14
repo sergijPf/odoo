@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="gus_prodpol_form" model="ir.ui.view">
+        <field name="name">gus.prodpol.form</field>
+        <field name="model">gus.prodpol</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="gus_prodpol_tree" model="ir.ui.view">
+        <field name="name">gus.prodpol.tree</field>
+        <field name="model">gus.prodpol</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="code"/>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_gus_prodpol" model="ir.actions.act_window">
+        <field name="name">GUS PRODPOL</field>
+        <field name="res_model">gus.prodpol</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+                (0, 0, {'view_mode': 'tree', 'view_id': ref('smartino_common.gus_prodpol_tree')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('smartino_common.gus_prodpol_form')})]"/>
+    </record>
+
+    <menuitem action="action_gus_prodpol" id="action_gus_prodpol" parent="stock.menu_product_in_config_stock"/>
+
+</odoo>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_smartino_sale_order_line_tree" model="ir.ui.view">
+        <field name="name">smartino.sale.order.line.tree</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <tree create="0" multi_edit="true">
+                <field name="company_id" invisible="1"/>
+                <field name="order_id" readonly="1"/>
+                <field name="order_partner_id" readonly="1"/>
+                <field name="product_id" readonly="1"/>
+                <field name="name" readonly="1"/>
+                <field name="x_additional_status"/>
+                <field name="route_id"/>
+                <field name="price_unit" readonly="1"/>
+                <field name="discount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_smartino_sales_order_line_filter" model="ir.ui.view">
+        <field name="name">smartino.sale.order.line.search</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Sale Order Lines">
+                <field name="order_id"/>
+                <field name="order_partner_id"/>
+                <field name="product_id"/>
+                <field name="x_additional_status"/>
+                <field name="route_id"/>
+
+                <filter name="x_additional_status_ok" string="OK" domain="[('x_additional_status', '=', 'ok')]"/>
+                <filter name="x_additional_status_check_moq" string="Check MOQ"
+                        domain="[('x_additional_status', '=', 'check_moq')]"/>
+                <filter name="x_additional_status_new_moq" string="New MOQ"
+                        domain="[('x_additional_status', '=', 'new_moq')]"/>
+                <filter name="x_additional_status_wrong_qty" string="Wrong Quantity"
+                        domain="[('x_additional_status', '=', 'wrong_qty')]"/>
+                <filter name="x_additional_status_impossible_deadline" string="Impossible Deadline"
+                        domain="[('x_additional_status', '=', 'impossible_deadline')]"/>
+                <filter name="x_additional_status_missing_raw_materials" string="Missing Raw Materials"
+                        domain="[('x_additional_status', '=', 'missing_raw_materials')]"/>
+                <filter name="x_additional_status_impossible_combination" string="Impossible Combination"
+                        domain="[('x_additional_status', '=', 'impossible_combination')]"/>
+                <filter name="x_additional_status_to_be_confirmed" string="To be confirmed"
+                        domain="[('x_additional_status', '=', 'to_be_confirmed')]"/>
+                <filter name="x_additional_status_new_price" string="New Price"
+                        domain="[('x_additional_status', '=', 'new_price')]"/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Product" name="product" domain="[]" context="{'group_by':'product_id'}"/>
+                    <filter string="Order" name="order" domain="[]" context="{'group_by':'order_id'}"/>
+                    <filter string="Partner" name="partner" domain="[]" context="{'group_by':'order_partner_id'}"/>
+                    <filter string="Product" name="product" domain="[]" context="{'group_by':'product_id'}"/>
+                    <filter string="Additional Status" name="x_additional_status" domain="[]"
+                            context="{'group_by':'x_additional_status'}"/>
+                    <filter string="Route" name="route" domain="[]" context="{'group_by':'route_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+
+    <record id="view_smartino_sale_order_line_action" model="ir.actions.act_window">
+        <field name="name">Sale Order Lines</field>
+        <field name="res_model">sale.order.line</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_smartino_sales_order_line_filter"/>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_smartino_sale_order_line_tree')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('sale.sale_order_line_view_form_readonly')})]"/>
+    </record>
+
+    <menuitem id="smartino_sale_order_line_menu" parent="sale.sale_order_menu"
+              action="view_smartino_sale_order_line_action"/>
+
+</odoo>

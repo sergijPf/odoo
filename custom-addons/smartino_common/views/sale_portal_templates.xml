@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="sale_order_portal_content_inherit" inherit_id="sale.sale_order_portal_content">
+        <xpath expr="//table[@id='sales_order_table']/thead/tr/th[1]" position="before">
+            <th class="text-left">Status</th>
+        </xpath>
+        <xpath expr="//table[@id='sales_order_table']/tbody/t[@t-as='line']/tr/t[@t-if='not line.display_type']/td[1]"
+               position="before">
+            <td id="x_additional_status">
+                <span t-field="line.x_additional_status"/>
+            </td>
+        </xpath>
+
+        <xpath expr="//table[@id='sales_order_table']/thead/tr" position="inside">
+            <th class="text-center">Your Choice</th>
+        </xpath>
+        <xpath expr="//table[@id='sales_order_table']/tbody/t[@t-as='line']/tr/t[@t-if='not line.display_type']"
+               position="inside">
+            <td class="text-center" t-if="report_type == 'html' and not line.x_partner_choice">
+                <span class="d-inline-flex" style="gap: 5px;">
+                    <a t-att-data-so-line-id="line.id" data-choice="ok" href="#"
+                       class="mb8 js_x_partner_choice d-print-none"
+                       aria-label="Line is OK" title="Line is OK">
+                        OK
+                    </a>
+                    /
+                    <a t-att-data-so-line-id="line.id" data-choice="cancel" href="#"
+                       class="mb8 js_x_partner_choice d-print-none"
+                       aria-label="Cancel Line" title="Cancel Line">
+                        Cancel
+                    </a>
+                </span>
+            </td>
+            <td class="text-center">
+                <span t-field="line.x_partner_choice"/>
+            </td>
+        </xpath>
+
+    </template>
+
+    <template id="assets_frontend_inherit" inherit_id="web.assets_frontend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/smartino_common/static/src/js/sale_management.js"></script>
+        </xpath>
+    </template>
+
+    <template id="option_collapse_categories_recursive_inherit" inherit_id="website_sale.option_collapse_categories_recursive">
+        <xpath expr="/*/li" position="before">
+            <t t-set="children" t-value="not search and c.child_id or c.child_id.filtered(lambda c: c.id in search_categories_ids)"/>
+        </xpath>
+        <xpath expr="/*/li" position="attributes">
+            <attribute name="t-attf-class">#{"nav-item has-children" if children else "nav-item"}</attribute>
+        </xpath>
+    </template>
+
+    <template id="product_inherit" inherit_id="website_sale.product">
+        <xpath expr="//div[@id='product_full_description']" position="replace">
+            <t/>
+        </xpath>
+        <xpath expr="//section/div[last()]" position="after">
+            <div class="row">
+                <div itemprop="description" t-field="product.website_description" class="oe_structure oe_empty mt16" id="product_full_description"/>
+            </div>
+        </xpath>
+        <xpath expr="//div[@id='product_details']/form" position="after">
+            <hr/>
+            <p t-if="product.intrastat_id" class="text-muted mb-0">CN code: <span t-field="product.intrastat_id"/></p>
+            <p t-if="product.barcode" class="text-muted mb-0">EAN: <span t-field="product.barcode"/></p>
+            <p t-if="product.weight" class="text-muted mb-0">Weight: <span t-field="product.weight"/><span t-field="product.weight_uom_name"/></p>
+        </xpath>
+    </template>
+
+    <template id="view_product_add_to_cart_minimal_qty_inherit" inherit_id="website_sale.products_add_to_cart">
+        <xpath expr="//input[@name='product_id']" position="after">
+            <input t-if="request.website.viewref('smartino_common.validate_order_quantity_enable').active" name="add_qty" type="hidden" t-att-value="product.x_minimal_quantity"/>
+        </xpath>
+    </template>
+    
+    <template id="validate_order_quantity_enable" name="Validate order quantity" inherit_id="website_sale.products" customize_show="True">
+        <xpath expr="/*" position="inside">
+          <!-- An empty view acting as a flag to enable frontend order quantity validation -->
+        </xpath>
+      </template>
+</odoo>

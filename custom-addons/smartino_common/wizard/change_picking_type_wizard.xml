@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="change_picking_type_wizard_form" model="ir.ui.view">
+        <field name="model">smartino.change.picking.type.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="production_ids" widget="many2many_tags"/>
+                        <field name="company_id" invisible="1"/>
+                        <field name="new_picking_type_id" required="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Change" type="object" name="button_change_picking_type" class="oe_highlight"/>
+                    <button string="Cancel" special="cancel" type="button" name="cancel" class="oe_link"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="change_picking_type_wizard" model="ir.actions.act_window">
+        <field name="name">Change Production Picking Type</field>
+        <field name="res_model">smartino.change.picking.type.wizard</field>
+        <field name="binding_model_id" ref="mrp.model_mrp_production"/>
+        <!--        <field name="binding_view_types">list</field>-->
+        <field name="target">new</field>
+        <field name="view_id" ref="change_picking_type_wizard_form"/>
+    </record>
+</odoo>

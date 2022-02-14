@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_order_form_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']//tree//field[@name='product_uom_qty']" position="before">
+                <field name="x_additional_status"/>
+                <field name="x_partner_choice" decoration-success="x_partner_choice == 'ok'"
+                       decoration-danger="x_partner_choice == 'cancel'" optional="show"/>
+            </xpath>
+
+
+            <xpath expr="//group[@name='sale_shipping']/label[@for='commitment_date']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//group[@name='sale_shipping']/field[@name='picking_policy']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//group[@name='sale_shipping']/field[@name='warehouse_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//group[@name='sale_shipping']/div[child::field[@name='commitment_date']]"
+                   position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//group[@name='order_details']" position="after">
+                <group string="Delivery" class="float-right">
+                    <field name="warehouse_id" options="{'no_create': True}" groups="stock.group_stock_multi_warehouses"
+                           force_save="1"/>
+                    <field name="picking_policy" required="True"/>
+                    <label for="commitment_date" string="Delivery Date"/>
+                    <div class="o_row">
+                        <field name="commitment_date"/>
+
+                        <span class="text-muted"
+                              attrs="{'invisible': [('effective_date', '!=', False), ('commitment_date', '!=', False)]}">
+                            Expected: <field name="expected_date" widget="date"/></span>
+                    </div>
+                    <field name="effective_date" attrs="{'invisible': [('effective_date', '=', False)]}"/>
+                </group>
+            </xpath>
+
+            <xpath expr="//header" position="inside">
+                <button name="x_create_stock_pickings" string="Create Stock Pickings"
+                        groups="smartino_common.group_smartino_create_pickings_btn"
+                        type="object" class="btn-primary"/>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page name="x_qty_info_ids" string="Quantity Info">
+                    <field name="x_qty_info_ids">
+                        <tree>
+                            <field name="order_id" invisible="1"/>
+                            <field name="quantity"/>
+                            <field name="uom_id"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
