@@ -6,7 +6,7 @@
             <field name="model">product.public.category</field>
             <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
             <field name="arch" type="xml">
-                <xpath expr="//group[@name='x_magento_details']" position="replace">
+                <xpath expr="//group[@name='x_category_image_ids']" position="after">
                     <group name="x_magento_details" string="Magento Details">
                         <field name="no_create_in_magento" id="no_create_in_magento"/>
                     </group>
