@@ -76,7 +76,6 @@
                                      <field name="magento_instance_id" readonly="1"/>
                                      <field name="magento_product_id" readonly="1"/>
                                     <field name="magento_website_ids" widget="many2many_tags" readonly="1"/>
-<!--                                    <field name="category_ids" widget="many2many_tags" readonly="1"/>-->
                                     <field name="magento_status" widget="badge" optional="show" on_change="1"
                                            decoration-success="magento_status == 'in_magento'"
                                            decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
@@ -149,8 +148,8 @@
         <field name="model">magento.product.product</field>
         <field name="arch" type="xml">
             <search string="Magento product search view">
-                <field name="magento_sku" />
-                <field name="magento_product_name" />
+                <field name="magento_sku"/>
+                <field name="magento_product_name"/>
                 <field name="magento_conf_product_id"/>
                 <field name="magento_product_id" />
                 <filter string="Not in Magento" name="not_in_magento"
@@ -169,17 +168,7 @@
         </field>
     </record>
 
-<!--    <record id="action_magento_product_export_prepare" model="ir.actions.server">-->
-<!--        <field name="name">Export To Magento</field>-->
-<!--        <field name="model_id" ref="model_magento_product_product"/>-->
-<!--        <field name="binding_model_id" ref="model_magento_product_product"/>-->
-<!--        <field name="binding_view_types">list,form</field>-->
-<!--        <field name="state">code</field>-->
-<!--        <field name="code">records.process_products_export_to_magento()</field>-->
-<!--    </record>-->
-
-
-<!--    bulk log view-->
+<!--  bulk logs view  -->
     <record id="view_magento_async_bulk_logs_form" model="ir.ui.view">
         <field name="name">magento.async.bulk.logs.form</field>
         <field name="model">magento.async.bulk.logs</field>

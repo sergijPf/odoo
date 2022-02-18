@@ -7,7 +7,7 @@ import pytz
 from datetime import datetime, timedelta
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
-from .api_request import req
+from ..python_library.api_request import req
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 PRODUCT_PRODUCT = 'product.product'
@@ -134,30 +134,6 @@ class MagentoProductProduct(models.Model):
             data = {'skuData': stock_data}
             api_url = "/V1/product/updatestock"
             return self.call_export_product_stock_api(instance, api_url, data, 'PUT')
-
-    def export_product_stock_to_multiple_locations(self, instance, magento_locations):
-        """
-        This method is used to export product stock to magento, when Multi inventory sources is available.
-        It will create a product inventory
-        :param instance: Instance of Magento
-        :param magento_locations: Magento products object
-        :return: True
-        """
-        stock_data = []
-        for magento_location in magento_locations:
-            export_stock_locations = magento_location.mapped('export_stock_warehouse_ids')
-            if export_stock_locations and export_stock_locations.ids:
-                export_product_stock = self.get_export_product_stock(instance, export_stock_locations)
-                if export_product_stock:
-                    for product_id, stock in export_product_stock.items():
-                        stock_data = self.prepare_export_product_stock_dict(
-                            product_id, instance, stock, stock_data, magento_location)
-            else:
-                raise UserError(_("Please Choose Export product stock location for %s", magento_location.name))
-        if stock_data:
-            data = {'sourceItems': stock_data}
-            api_url = "/V1/inventory/source-items"
-            return self.call_export_product_stock_api(instance, api_url, data, 'POST')
 
     def prepare_export_product_stock_dict(self, product_id, instance, stock, stock_data, magento_location):
         """

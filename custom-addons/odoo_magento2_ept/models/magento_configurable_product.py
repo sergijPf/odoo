@@ -7,8 +7,8 @@ import json
 from datetime import datetime
 from odoo import fields, models, api
 from odoo.exceptions import UserError
-from .api_request import req, create_search_criteria
 from ..python_library.php import Php
+from ..python_library.api_request import req, create_search_criteria
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 MAX_SIZE_FOR_IMAGES = 2500000  # should be aligned with MYSQL - max_allowed_size (currently 4M), !!! NOTE 4M is converted size and constant value is before convertion
@@ -119,7 +119,6 @@ class MagentoConfigurableProduct(models.Model):
         result = super(MagentoConfigurableProduct, self).unlink()
         return result
 
-    # @api.depends('simple_product_ids.magento_conf_product_id')
     @api.depends('simple_product_ids')
     def _compute_magento_product_variant_count(self):
         for template in self:

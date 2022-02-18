@@ -4,7 +4,7 @@ import secrets
 import string
 from odoo import models, fields
 from odoo.exceptions import UserError
-from .api_request import req
+from ..python_library.api_request import req
 
 
 class MagentoResPartner(models.Model):

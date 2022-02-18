@@ -36,53 +36,26 @@ class MagentoCronConfiguration(models.TransientModel):
     def _get_magento_instance(self):
         return self.env.context.get('magento_instance_id', False)
 
-    magento_instance_id = fields.Many2one(
-        'magento.instance',
-        string='Magento Instance',
-        default=_get_magento_instance,
-        readonly=True
-    )
-    # Auto Export Product Stock
-    auto_export_product_stock = fields.Boolean(
-        string='Auto Export Product Stock?',
-        help="Automatic Export Product Stock"
-    )
-    auto_export_product_stock_interval_number = fields.Integer(
-        string='Auto Export Product Stock Interval Numbers',
-        help="Export product stock every x interval.",
-        default=1
-    )
-    auto_export_product_stock_interval_type = fields.Selection(
-        [
-            ('minutes', 'Minutes'),
-            ('hours', 'Hours'),
-            ('days', 'Days'),
-            ('weeks', 'Weeks'),
-            ('months', 'Months')
-        ],
-        string='Auto Import Product Stock Interval Unit',
-        help='Auto Import Product Stock Interval Unit'
-    )
-    auto_export_product_stock_next_execution = fields.Datetime(
-        string='Auto Next Export Product Execution',
-        help='Next execution time for export product stock'
-    )
-    auto_export_product_stock_user_id = fields.Many2one(
-        RES_USERS,
-        string='Auto Export Product User',
-        help="Responsible User for export product stock"
-    )
+    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', default=_get_magento_instance,
+                                          readonly=True)
+    auto_export_product_stock = fields.Boolean(string='Auto Export Product Stock?', help="Automatic Export Product Stock")
+    auto_export_product_stock_interval_number = fields.Integer('Auto Export Product Stock Interval Numbers',
+                                                               help="Export product stock every x interval.", default=1)
+    auto_export_product_stock_interval_type = fields.Selection([
+        ('minutes', 'Minutes'),
+        ('hours', 'Hours'),
+        ('days', 'Days'),
+        ('weeks', 'Weeks'),
+        ('months', 'Months')
+    ], string='Auto Import Product Stock Interval Unit', help='Auto Import Product Stock Interval Unit')
+    auto_export_product_stock_next_execution = fields.Datetime( string='Auto Next Export Product Execution',
+                                                                help='Next execution time for export product stock')
+    auto_export_product_stock_user_id = fields.Many2one(RES_USERS, string='Auto Export Product User',
+                                                        help="Responsible User for export product stock")
 
-    # Auto Export Invoice
-    auto_export_invoice = fields.Boolean(
-        string='Auto Export Invoice?',
-        help="Auto Automatic Export Invoice"
-    )
-    auto_export_invoice_interval_number = fields.Integer(
-        string='Auto Export Invoice Interval Numbers',
-        help="Export Invoice every x interval.",
-        default=1
-    )
+    auto_export_invoice = fields.Boolean(string='Auto Export Invoice?', help="Auto Automatic Export Invoice")
+    auto_export_invoice_interval_number = fields.Integer(string='Auto Export Invoice Interval Numbers',
+                                                         help="Export Invoice every x interval.", default=1)
     auto_export_invoice_interval_type = fields.Selection([
         ('minutes', 'Minutes'),
         ('hours', 'Hours'),
@@ -90,25 +63,15 @@ class MagentoCronConfiguration(models.TransientModel):
         ('weeks', 'Weeks'),
         ('months', 'Months')
     ], string='Auto Export Invoice  Interval Unit', help='Auto Export Invoice  Interval Unit')
-    auto_export_invoice_next_execution = fields.Datetime(
-        string='Auto Next Export Invoice  Execution',
-        help='Next execution time for export invoice'
-    )
-    auto_export_invoice_user_id = fields.Many2one(
-        RES_USERS,
-        string='Auto Export Invoice User',
-        help="Responsible User for export invoice"
-    )
-    # Auto Export Shipment Information
-    auto_export_shipment_order_status = fields.Boolean(
-        string='Auto Export Shipment Information?',
-        help="Automatic Export Shipment Information"
-    )
-    auto_export_shipment_order_status_interval_number = fields.Integer(
-        string='Auto Update Order Status Interval Number',
-        help="Export shipment every x interval.",
-        default=1
-    )
+    auto_export_invoice_next_execution = fields.Datetime(string='Auto Next Export Invoice  Execution',
+                                                         help='Next execution time for export invoice')
+    auto_export_invoice_user_id = fields.Many2one(RES_USERS, string='Auto Export Invoice User',
+                                                  help="Responsible User for export invoice")
+    auto_export_shipment_order_status = fields.Boolean(string='Auto Export Shipment Information?',
+                                                       help="Automatic Export Shipment Information")
+    auto_export_shipment_order_status_interval_number = fields.Integer('Auto Update Order Status Interval Number',
+                                                                       help="Export shipment every x interval.",
+                                                                       default=1)
     auto_export_shipment_order_status_interval_type = fields.Selection([
         ('minutes', 'Minutes'),
         ('hours', 'Hours'),
@@ -116,15 +79,10 @@ class MagentoCronConfiguration(models.TransientModel):
         ('weeks', 'Weeks'),
         ('months', 'Months')
     ], string='Auto Export Shipment Interval Unit', help='Auto Export Shipment Interval Unit')
-    auto_export_shipment_order_status_next_execution = fields.Datetime(
-        string='Auto Next Order Status Execution',
-        help='Next execution time for export shipment'
-    )
-    auto_export_shipment_order_status_user_id = fields.Many2one(
-        RES_USERS,
-        string='Auto Update Order User',
-        help="Responsible User for export shipment"
-    )
+    auto_export_shipment_order_status_next_execution = fields.Datetime(string='Auto Next Order Status Execution',
+                                                                       help='Next execution time for export shipment')
+    auto_export_shipment_order_status_user_id = fields.Many2one(RES_USERS, string='Auto Update Order User',
+                                                                help="Responsible User for export shipment")
 
     @api.onchange("magento_instance_id")
     def onchange_magento_instance_id(self):

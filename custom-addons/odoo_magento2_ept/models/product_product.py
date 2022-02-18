@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # See LICENSE file for full copyright and licensing details.
 from datetime import datetime
-from odoo import models, fields, api
+from odoo import models, fields
 from odoo.exceptions import UserError
 
 MAGENTO_PRODUCT = 'magento.product.product'
@@ -10,30 +10,9 @@ MAGENTO_PRODUCT = 'magento.product.product'
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    vendor_ids = fields.One2many('vendor.stock', 'vendor_product_id', string="Vendor")
     magento_product_count = fields.Integer(string='# Product Counts', compute='_compute_magento_product_count')
     magento_product_ids = fields.One2many(MAGENTO_PRODUCT, 'odoo_product_id', string='Magento Products',
                                           help='Magento Product Ids')
-    # is_drop_ship_product = fields.Boolean(store=False, compute="_compute_is_drop_ship_product")
-    # config_product_id = fields.Many2one('product.public.category', string="Configurable Product",
-    #                                     domain="[('is_magento_config','=',True)]")
-
-    # @api.depends('route_ids')
-    # def _compute_is_drop_ship_product(self):
-    #     """
-    #     This Method sets is_drop_ship_product field.
-    #     If dropship rule get this field _compute_is_drop_ship_product write boolean(True) and visible Vendor stock
-    #     notebook page.
-    #     """
-    #     customer_locations = self.env['stock.location'].search([('usage', '=', 'customer')])
-    #     route_ids = self.route_ids | self.categ_id.route_ids
-    #     stock_rule = self.env['stock.rule'].search([('company_id', '=', self.env.company.id), ('action', '=', 'buy'),
-    #                                                 ('location_id', 'in', customer_locations.ids),
-    #                                                 ('route_id', 'in', route_ids.ids)])
-    #     if stock_rule:
-    #         self.is_drop_ship_product = True
-    #     else:
-    #         self.is_drop_ship_product = False
 
     def write(self, vals):
         """

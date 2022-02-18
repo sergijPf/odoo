@@ -3,7 +3,7 @@
 
 from odoo import models, fields, _
 from odoo.exceptions import UserError
-from ..models.api_request import req
+from ..python_library.api_request import req
 
 
 class MagentoProductCategoryConfiguration(models.TransientModel):

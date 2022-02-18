@@ -33,9 +33,6 @@ class MagentoImportExport(models.TransientModel):
     ], string='Import/ Export Operations', help='Import/ Export Operations')
     start_date = fields.Datetime(string="From Date", help="From date.")
     end_date = fields.Datetime("To Date", help="To date.")
-    export_method = fields.Selection([
-        ("direct", "Export to Magento Layer")
-    ], default="direct")
 
     def execute(self):
         """
@@ -46,6 +43,7 @@ class MagentoImportExport(models.TransientModel):
         picking = self.env['stock.picking']
         magento_product_obj = self.env[MAGENTO_PRODUCT_PRODUCT]
         message = ''
+
         if self.magento_instance_ids:
             instances = self.magento_instance_ids
         else:
@@ -73,6 +71,7 @@ class MagentoImportExport(models.TransientModel):
                 }
 
         title = [vals for key, vals in self._fields['operations'].selection if key == self.operations]
+
         return {
             'effect': {
                 'fadeout': 'slow',
@@ -89,16 +88,9 @@ class MagentoImportExport(models.TransientModel):
         :return:
         """
         res = True
-        magento_inventory_locations_obj = self.env['magento.inventory.locations']
         for instance in instances:
-            if instance.magento_version in ['2.1', '2.2'] or not instance.is_multi_warehouse_in_magento:
-                if not magento_product_obj.export_products_stock_to_magento(instance):
-                    res = False
-            else:
-                inventory_locations = magento_inventory_locations_obj.search([
-                    ('magento_instance_id', '=', instance.id)])
-                if not magento_product_obj.export_product_stock_to_multiple_locations(instance, inventory_locations):
-                    res = False
+            if not magento_product_obj.export_products_stock_to_magento(instance):
+                res = False
             instance.last_update_stock_time = datetime.now()
 
         return res
@@ -111,20 +103,20 @@ class MagentoImportExport(models.TransientModel):
         active_product_ids = self._context.get("active_ids", [])
         selection = self.env["product.template"].browse(active_product_ids)
         failed_products = selection.filtered(lambda product: product.type != "product" or not product.is_magento_config)
+
         if failed_products:
             raise Warning(_("It seems like selected product(s) are not Storable or don't have"
                             " proper Magento Config.Product setup: %s" % str([p.name for p in failed_products])))
 
-        if self.export_method == "direct":
-            self.add_products_to_magento_layer(selection)
-            return {
-                'effect': {
-                    'fadeout': 'slow',
-                    'message': " 'Export to Magento Layer' process completed successfully! {}".format(""),
-                    'img_url': '/web/static/src/img/smile.svg',
-                    'type': 'rainbow_man',
-                }
+        self.add_products_to_magento_layer(selection)
+        return {
+            'effect': {
+                'fadeout': 'slow',
+                'message': " 'Export to Magento Layer' process completed successfully! {}".format(""),
+                'img_url': '/web/static/src/img/smile.svg',
+                'type': 'rainbow_man',
             }
+        }
 
     def add_products_to_magento_layer(self, odoo_products):
         """

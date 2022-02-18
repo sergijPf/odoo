@@ -11,30 +11,32 @@
                  <field name="company_id"/>
              </tree>
          </field>
-         </record>
+     </record>
+
         <record id="view_magento_website_form" model="ir.ui.view">
             <field name="name">magento.website.form</field>
             <field name="model">magento.website</field>
             <field name="arch" type="xml">
-                <form string="Magento Website" create="false" delete="false">
+                <form string="Magento Website" create="false" delete="false" edit="false">
                     <sheet>
                         <div class="oe_button_box" name="button_box">
-                            <field name="store_view_ids" invisible="1" />
-                            <button name="open_store_views" type="object" string="Store Views" icon="fa-sitemap" class="oe_stat_button"/>
+                            <field name="store_view_ids" invisible="1"/>
+                            <button name="open_store_views" type="object" string="Store Views"
+                                    icon="fa-sitemap" class="oe_stat_button"/>
                         </div>
                         <h1>
-                            <field name="name" class="oe_inline" />
+                            <field name="name" class="oe_inline"/>
                         </h1>
                         <group>
                             <group>
-                                <field name="magento_instance_id" readonly="1" />
-                                <field name="magento_website_id" readonly="1" />
-                                <field name="tax_calculation_method" string="Tax Calculation Method" readonly="1" />
+                                <field name="magento_instance_id" readonly="1"/>
+                                <field name="magento_website_id" readonly="1"/>
+                                <field name="tax_calculation_method" string="Tax Calculation Method" readonly="1"/>
                             </group>
                             <group>
                                 <field name="warehouse_id" readonly="1"/>
-                                <field name="company_id" invisible="1" />
-                                <field name="catalog_price_scope" invisible="1" />
+                                <field name="company_id" invisible="1"/>
+                                <field name="catalog_price_scope" invisible="1"/>
                                 <field name="pricelist_id" readonly="1"
                                        attrs="{'invisible':[('catalog_price_scope', '=', 'global')]}"/>
                             </group>
@@ -49,9 +51,8 @@
             <field name="model">magento.website</field>
             <field name="arch" type="xml">
                 <tree string="Magento Website" create="false" delete="false">
-                    <field name="name" />
-                    <field name="magento_instance_id" />
-                    <field name="sort_order" />
+                    <field name="name"/>
+                    <field name="magento_instance_id"/>
                 </tree>
             </field>
         </record>

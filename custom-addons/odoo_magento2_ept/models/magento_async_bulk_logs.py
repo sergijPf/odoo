@@ -3,7 +3,7 @@
 import json
 from odoo import fields, models
 from odoo.exceptions import UserError
-from .api_request import req
+from ..python_library.api_request import req
 
 
 class MagentoAsyncBulkLogs(models.Model):
@@ -66,6 +66,7 @@ class MagentoAsyncBulkLogs(models.Model):
             unlinked_records.sudo().unlink()
 
         return False if '4' in self.log_details_ids.mapped('log_status') else True
+
 
 class MagentoAsyncBulkLogDetails(models.Model):
     _name = 'magento.async.bulk.log.details'

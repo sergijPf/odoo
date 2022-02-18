@@ -6,7 +6,8 @@
             <field name="arch" type="xml">
                 <form string="Update Product Page Attributes">
                     <group>
-                        <field name="config_prod_attr_ids" required="1" widget="many2many_tags" options="{'no_create':True,'no_create_edit': True}"/>
+                        <field name="config_prod_attr_ids" required="1" widget="many2many_tags"
+                               options="{'no_create':True,'no_create_edit': True}"/>
                     </group>
                     <group>
                         <div style="color:#000000">
@@ -15,7 +16,8 @@
                                     <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
                                 </u>
                                 <b>
-                                    This action will update Product Page Attributes for the selected Product Categories and related Products!
+                                    This action will update Product Page Attributes for the
+                                    selected Product Categories and related Products!
                                 </b>
                             </p>
                         </div>

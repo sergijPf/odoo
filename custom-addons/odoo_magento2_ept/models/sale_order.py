@@ -5,7 +5,7 @@ Describes fields and methods for create/ update sale order
 """
 from odoo import models, fields, api
 from odoo.exceptions import UserError
-from .api_request import req
+from ..python_library.api_request import req
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 SALE_ORDER_LINE = 'sale.order.line'

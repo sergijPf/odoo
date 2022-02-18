@@ -12,10 +12,12 @@
                     <group name="general">
                         <group name="config">
                             <field name="payment_method_code" string="Payment Method Code" readonly="1"/>
-                            <field name="company_id" string="Company" />
+                            <field name="company_id" string="Company"/>
                         </group>
                         <group>
-                            <field name="import_rule" />
+                            <field name="import_rule"/>
+                            <field name="magento_workflow_process_id"/>
+                            <field name="payment_term_id"/>
                         </group>
                     </group>
                     <group name="magento">
@@ -28,6 +30,7 @@
             </form>
         </field>
     </record>
+
      <record id="magento_synced_paymentmethod_data_filter" model="ir.ui.view">
             <field name="name">magento.synced.paymentmethod.data.filter</field>
             <field name="model">magento.payment.method</field>
@@ -37,11 +40,13 @@
                     <field name="payment_method_name"/>
                     <field name="payment_method_code"/>
                     <group expand="0" string="Group By">
-                        <filter string="Instance" name="group_by_instance" context="{'group_by': 'magento_instance_id'}"/>
+                        <filter string="Instance" name="group_by_instance"
+                                context="{'group_by': 'magento_instance_id'}"/>
                     </group>
                 </search>
             </field>
     </record>
+
     <record id="payment_method_view_tree" model="ir.ui.view">
         <field name="name">payment_method_view_tree</field>
         <field name="model">magento.payment.method</field>
@@ -53,17 +58,22 @@
             </tree>
         </field>
     </record>
+
     <record id="act_payment_method_form" model="ir.actions.act_window">
         <field name="name">Payment Methods </field>
         <field name="res_model">magento.payment.method</field>
         <field name="view_mode">tree,form</field>
     </record>
+
     <record id="act_auto_payment_method_form" model="ir.actions.act_window">
         <field name="name">Auto Invoice Workflow </field>
         <field name="res_model">sale.workflow.process.ept</field>
         <field name="view_mode">tree,form</field>
     </record>
 
-    <menuitem action="act_payment_method_form" id="menu_action_payment_method_form" parent="odoo_magento2_ept.menu_instance_details" sequence="5"/>
-    <menuitem action="act_auto_payment_method_form" id="menu_action_auto_payment_method_form" parent="odoo_magento2_ept.menu_instance_details" sequence="6"/>
+    <menuitem action="act_payment_method_form" id="menu_action_payment_method_form"
+              parent="odoo_magento2_ept.menu_instance_details" sequence="4"/>
+
+    <menuitem action="act_auto_payment_method_form" id="menu_action_auto_payment_method_form"
+              parent="odoo_magento2_ept.menu_instance_details" sequence="2"/>
 </odoo>

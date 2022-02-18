@@ -4,6 +4,8 @@
 Describes Magento Payment Methods
 """
 from odoo import models, api, fields
+from odoo.exceptions import UserError
+from ..python_library.api_request import req
 
 
 class MagentoPaymentMethod(models.Model):
@@ -31,7 +33,7 @@ class MagentoPaymentMethod(models.Model):
                                       help="Default payment term of a sale order using this method.")
     magento_workflow_process_id = fields.Many2one('sale.workflow.process.ept', string='Automatic Workflow',
                                                   help="Workflow for Order")
-    company_id = fields.Many2one('res.company', string='Company', default=_default_company_id, help="Magento Company Id.")
+    company_id = fields.Many2one('res.company', 'Company', default=_default_company_id, help="Magento Company Id.")
     create_invoice_on = fields.Selection([
         ('open', 'Validate'),
         ('in_payment_paid', 'In-Payment/Paid')
@@ -49,6 +51,25 @@ class MagentoPaymentMethod(models.Model):
              "[Never] : This Payment Method Order will never be imported \n ")
     active = fields.Boolean(string="Status", default=True)
 
-    _sql_constraints = [
-        ('unique_payment_method_code', 'unique(magento_instance_id,payment_method_code)',
-         'This payment method code is already exist')]
+    _sql_constraints = [('unique_payment_method_code', 'unique(magento_instance_id,payment_method_code)',
+                         'This payment method code is already exist')]
+
+    @staticmethod
+    def import_payment_method(instance):
+        try:
+            url = '/V1/paymentmethod'
+            payment_methods = req(instance, url)
+        except Exception as e:
+            raise UserError(e)
+
+        for pm in payment_methods:
+            pm_code = pm.get('value')
+            odoo_pm = instance.payment_method_ids.with_context(active_test=False).filtered(
+                lambda x: x.payment_method_code == pm_code)
+
+            if not odoo_pm:
+                odoo_pm.create({
+                    'payment_method_code': pm.get('value'),
+                    'payment_method_name': pm.get('title'),
+                    'magento_instance_id': instance.id
+                })

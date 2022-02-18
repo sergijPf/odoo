@@ -3,7 +3,6 @@
 
 from odoo import models, fields
 
-MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 class SaleOrderLine(models.Model):
     """

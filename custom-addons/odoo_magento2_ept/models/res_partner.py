@@ -3,12 +3,9 @@
 """
 Describes methods for importing magento customers into Odoo.
 """
-import logging
 from odoo import models, fields, api
 
-MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 MAGENTO_RES_PARTNER = 'magento.res.partner'
-_logger = logging.getLogger(__name__)
 
 
 class ResPartner(models.Model):
@@ -16,7 +13,7 @@ class ResPartner(models.Model):
 
     is_magento_customer = fields.Boolean(string="Is Magento Customer?",
                                          help="Used for identified that the customer is imported from Magento store.")
-    magento_res_partner_ids = fields.One2many("magento.res.partner", "partner_id", string='Magento Customers')
+    magento_res_partner_ids = fields.One2many(MAGENTO_RES_PARTNER, "partner_id", string='Magento Customers')
     allow_search_fiscal_based_on_origin_warehouse = fields.Boolean("Search fiscal based on origin warehouse?",
                                                                    default=False)
 

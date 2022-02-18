@@ -5,7 +5,7 @@ Describes methods for Export shipment information.
 """
 from odoo import models, fields, _
 from odoo.exceptions import UserError
-from .api_request import req
+from ..python_library.api_request import req
 
 STOCK_PICKING = 'stock.picking'
 
@@ -24,9 +24,9 @@ class StockPicking(models.Model):
                                          readonly=True)
     storeview_id = fields.Many2one("magento.storeview", "Magento Store Views", compute="_compute_set_magento_info",
                                    readonly=True)
-    is_exported_to_magento = fields.Boolean(string="Exported to Magento?", help="If checked, Picking is exported to Magento")
+    is_exported_to_magento = fields.Boolean("Exported to Magento?", help="If checked, Picking is exported to Magento")
     magento_instance_id = fields.Many2one('magento.instance', 'Instance')
-    magento_shipping_id = fields.Char(string="Magento Shipping Ids", help="Magento Shipping Ids")
+    magento_shipping_id = fields.Char(string="Magento Shipping Id")
 
 
     def _shipment_exportable(self):
@@ -37,7 +37,7 @@ class StockPicking(models.Model):
         module_obj = self.env['ir.module.module']
         purchase_module = module_obj.sudo().search([('name', '=', 'purchase'),
                                                     ('state', '=', 'installed')])
-        # check purchase module is installed or not and it it's installed then
+        # check purchase module is installed or not and if it's installed then
         # picking is purchase's picking & is_export_dropship_picking is True
         # or
         # purchase is not installed and that picking is SO's picking
@@ -215,8 +215,50 @@ class StockPicking(models.Model):
         return super(StockPicking, self).send_to_shipper()
 
 
+
+class StockMove(models.Model):
+    """
+    Describes Magento order stock picking values
+    """
+    _inherit = 'stock.move'
+
+    def _get_new_picking_values(self):
+        """
+        We need this method to set our custom fields in Stock Picking
+        :return:
+        """
+        res = super(StockMove, self)._get_new_picking_values()
+        sale_order = self.group_id.sale_id
+        sale_line_id = sale_order.order_line
+        if sale_order and sale_line_id and sale_order.magento_instance_id:
+            res.update({
+                'magento_instance_id': sale_order.magento_instance_id.id,
+                'is_exported_to_magento': False,
+                'is_magento_picking': True
+            })
+        return res
+
+    def _action_assign(self):
+        """
+        In Dropshipping case, While create picking
+        set magento instance id and magento picking as True
+        if the order is imported from the Magento Instance.
+        :return:
+        """
+        res = super(StockMove, self)._action_assign()
+        picking_ids = self.mapped('picking_id')
+        for picking in picking_ids:
+            if not picking.magento_instance_id and picking.sale_id and picking.sale_id.magento_instance_id:
+                picking.write({
+                    'magento_instance_id': picking.sale_id.magento_instance_id.id,
+                    'is_exported_to_magento': False,
+                    'is_magento_picking': True
+                })
+        return res
+
+
+
 class StockQuantPackage(models.Model):
     _inherit = 'stock.quant.package'
 
     tracking_no = fields.Char("Additional Reference", help="This field is used for storing the tracking number.")
-

@@ -1,35 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record id="view_magento_import_export_operation" model="ir.ui.view">
-            <field name="name">Magento Operation</field>
-            <field name="model">magento.import.export</field>
-            <field name="arch" type="xml">
-                <form>
-                    <group>
-                        <field name="magento_instance_ids" options="{'no_create':True,'no_create_edit': True}"
-                               required="1" widget="many2many_tags"/>
-                    </group>
-                    <group>
-                        <field name="operations" required="1"/>
-                    </group>
-                    <footer>
-                        <button name="execute" string="Execute" type="object"
-                                class="oe_highlight"/>
-                        <button string="Cancel" special="cancel"/>
-                    </footer>
-                </form>
-            </field>
-        </record>
-
-        <record id="action_wizard_magento_import_export_operation" model="ir.actions.act_window">
-            <field name="name">Magento Operation</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">magento.import.export</field>
-            <field name="view_mode">form</field>
-            <field name="target">new</field>
-        </record>
-
         <record id="view_magento_process_import_export_from_more" model="ir.ui.view">
             <field name="name">Process Import/Export</field>
             <field name="model">magento.import.export</field>
@@ -37,7 +8,6 @@
             <field name="arch" type="xml">
                 <form string="Import/Export">
                     <group>
-                        <field name="export_method" required="1"/>
                         <field name="magento_instance_ids" widget="many2many_tags"
                                options="{'no_create':True,'no_create_edit': True}" required="1"/>
                     </group>
@@ -108,6 +78,7 @@
                 </form>
             </field>
         </record>
+
         <record id="action_wizard_magento_customers_export" model="ir.actions.act_window">
             <field name="name">Magento - Export Customers</field>
             <field name="res_model">magento.import.export</field>
@@ -117,15 +88,31 @@
             <field name="target">new</field>
         </record>
 
+        <record id="view_magento_import_export_operation" model="ir.ui.view">
+            <field name="name">Magento Operation</field>
+            <field name="model">magento.import.export</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="magento_instance_ids" options="{'no_create':True,'no_create_edit': True}"
+                               required="1" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="operations" required="1"/>
+                    </group>
+                    <footer>
+                        <button name="execute" string="Execute" type="object" class="oe_highlight"/>
+                        <button string="Cancel" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
 
-        <!-- Below action used to redirect operation wizard from the instance kanban view-->
-        <record id="action_wizard_magento_instance_import_export_operations"
-                model="ir.actions.act_window">
-            <field name="name">Magento Operations</field>
+        <record id="action_wizard_magento_import_export_operation" model="ir.actions.act_window">
+            <field name="name">Magento Operation</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">magento.import.export</field>
             <field name="view_mode">form</field>
-            <field name="view_id" ref="odoo_magento2_ept.view_magento_import_export_operation"/>
             <field name="target">new</field>
         </record>
 

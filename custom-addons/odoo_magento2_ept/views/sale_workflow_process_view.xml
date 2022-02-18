@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <odoo>
-    <!-- VIEW FOR THE OBJECT : sale_workflow_process -->
     <record id="sale_workflow_process_view_form" model="ir.ui.view">
         <field name="name">sale_automatic_workflow.sale_workflow_process.view_form</field>
         <field name="model">sale.workflow.process.ept</field>

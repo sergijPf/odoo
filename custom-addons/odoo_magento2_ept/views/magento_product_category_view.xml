@@ -1,77 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-        <record id="view_magento_product_category_tree" model="ir.ui.view">
-            <field name="name">magento.product.category.tree</field>
-            <field name="model">magento.product.category</field>
-            <field name="arch" type="xml">
-                <tree string="Magento Product Category" create="false" delete="false">
-                    <field name="complete_category_name"/>
-                    <field name="magento_category"/>
-                    <field name="instance_id"/>
-                </tree>
-            </field>
-        </record>
+    <record id="view_magento_product_category_tree" model="ir.ui.view">
+        <field name="name">magento.product.category.tree</field>
+        <field name="model">magento.product.category</field>
+        <field name="arch" type="xml">
+            <tree string="Magento Product Category" create="false" delete="false">
+                <field name="complete_category_name"/>
+                <field name="magento_category"/>
+                <field name="instance_id"/>
+            </tree>
+        </field>
+    </record>
 
-        <record id="view_magento_product_category_form" model="ir.ui.view">
-            <field name="name">magento.product.category.form</field>
-            <field name="model">magento.product.category</field>
-            <field name="arch" type="xml">
-                <form string="Magento Product Category" create="false" edit="false" delete="false">
-                    <sheet>
-                        <group>
-                            <group colspan="4">
-                                <group>
-                                    <field name="instance_id" readonly="1"/>
-                                    <field name="magento_category"/>
-                                </group>
-                                <group>
-                                    <field name="magento_parent_id"/>
-<!--                                    <field name="complete_category_name"/>-->
-                                </group>
-                                <group>
-                                    <field name="magento_child_ids" widget="many2many_tags"/>
-                                </group>
-                                <group>
-                                    <field name="product_public_categ_id"/>
-                                </group>
+    <record id="view_magento_product_category_form" model="ir.ui.view">
+        <field name="name">magento.product.category.form</field>
+        <field name="model">magento.product.category</field>
+        <field name="arch" type="xml">
+            <form string="Magento Product Category" create="false" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group colspan="4">
+                            <group>
+                                <field name="instance_id" readonly="1"/>
+                                <field name="magento_category"/>
+                            </group>
+                            <group>
+                                <field name="magento_parent_id"/>
+                            </group>
+                            <group>
+                                <field name="magento_child_ids" widget="many2many_tags"/>
+                            </group>
+                            <group>
+                                <field name="product_public_categ_id"/>
                             </group>
                         </group>
-                    </sheet>
-                </form>
-            </field>
-        </record>
-
-        <record id="magento_product_category_search_view" model="ir.ui.view">
-            <field name="name">magento.product.category.search.view</field>
-            <field name="model">magento.product.category</field>
-            <field name="arch" type="xml">
-                <search string="Magento Category search view">
-                    <field name="name"/>
-                    <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
-                    <group expand="0" string="Group By">
-                        <filter name = "Instance" string="Magento Instance" context="{'group_by' : 'instance_id'}"/>
-                        <filter name = "Magento Parent Category" string="Magento Parent" context="{'group_by' : 'magento_parent_id'}"/>
                     </group>
-                </search>
-            </field>
-        </record>
+                </sheet>
+            </form>
+        </field>
+    </record>
 
-        <record id="magento_product_category_action" model="ir.actions.act_window">
-                <field name="name">Product Category</field>
-                <field name="type">ir.actions.act_window</field>
-                <field name="res_model">magento.product.category</field>
-                <field name="view_mode">tree,form</field>
-                <field name="view_id" ref="view_magento_product_category_tree"/>
-                <field name="help" type="html">
-                <p>
-                    You can't create Product Category directly from Here. Please assign root product category from settings
-                    <i class="fa fa-angle-double-right" /> instance <i class="fa fa-angle-double-right" />
-                    select instance <i class="fa fa-angle-double-right" /> Product Categories
-                </p>
-            </field>
-        </record>
+    <record id="magento_product_category_search_view" model="ir.ui.view">
+        <field name="name">magento.product.category.search.view</field>
+        <field name="model">magento.product.category</field>
+        <field name="arch" type="xml">
+            <search string="Magento Category search view">
+                <field name="name"/>
+                <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name = "Instance" string="Magento Instance" context="{'group_by' : 'instance_id'}"/>
+                    <filter name = "Magento Parent Category" string="Magento Parent"
+                            context="{'group_by' : 'magento_parent_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
 
-        <menuitem id="menu_item_magento_product_category" name="Product Categories"
-            parent="odoo_magento2_ept.menu_magento_catalog_parent" sequence="1"
-            action="magento_product_category_action"/>
+    <record id="magento_product_category_action" model="ir.actions.act_window">
+            <field name="name">Product Category</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">magento.product.category</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_magento_product_category_tree"/>
+            <field name="help" type="html">
+            <p>
+                You can't create Product Category directly from Here. Please assign root product category from settings
+                <i class="fa fa-angle-double-right" /> instance <i class="fa fa-angle-double-right" />
+                select instance <i class="fa fa-angle-double-right" /> Product Categories
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_item_magento_product_category" name="Product Categories"
+        parent="odoo_magento2_ept.menu_magento_catalog_parent" sequence="1"
+        action="magento_product_category_action"/>
 </odoo>

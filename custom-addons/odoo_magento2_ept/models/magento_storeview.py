@@ -12,10 +12,8 @@ class MagentoStoreview(models.Model):
     """
     _name = 'magento.storeview'
     _description = "Magento Storeview"
-    _order = 'sort_order ASC, id ASC'
 
     name = fields.Char("Store view Name", required=True, readonly=True)
-    sort_order = fields.Integer('Website Sort Order', readonly=True)
     magento_website_id = fields.Many2one('magento.website', string="Magento Website")
     lang_id = fields.Many2one('res.lang', string='Language', help="Language Name")
     team_id = fields.Many2one('crm.team', string='Sales Team')

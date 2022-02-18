@@ -2,7 +2,7 @@
 
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
-from .api_request import req
+from ..python_library.api_request import req
 
 class ProductPublicCategory(models.Model):
     _inherit = "product.public.category"

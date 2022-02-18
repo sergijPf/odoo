@@ -13,6 +13,7 @@ class ConfigProductAttributesUpdate(models.TransientModel):
         active_product_ids = self._context.get("active_ids", [])
         products_to_update = self.env['product.category'].browse(active_product_ids)
         update_data = {
-            'x_attribute_ids': [(6, 0, [c.id for c in self.config_prod_attr_ids])]
+            'x_attribute_ids': [(6, 0, self.config_prod_attr_ids.mapped("id"))]
         }
+
         products_to_update.write(update_data)

@@ -29,3 +29,21 @@ class MagentoProductCategory(models.Model):
     active = fields.Boolean(string="Status", default=True)
     product_public_categ_id = fields.Many2one('product.public.category', string="Product Public Category")
     name = fields.Char("Name", related="product_public_categ_id.name")
+
+
+class ProductCategory(models.Model):
+    _inherit = "product.category"
+
+    x_attribute_ids = fields.Many2many('config.product.attribute', 'product_category_ids',
+                                       string="Product Page attributes",
+                                       help="Descriptive attributes for Product page")
+    product_template_ids = fields.One2many('product.template', 'categ_id')
+
+
+    def write(self, vals):
+        res = super(ProductCategory, self).write(vals)
+
+        if 'x_attribute_ids' in vals :
+            self.product_template_ids.magento_conf_prod_ids.force_update = True
+
+        return res

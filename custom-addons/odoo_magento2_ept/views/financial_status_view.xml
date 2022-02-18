@@ -71,6 +71,7 @@
     </record>
 
     <!--Menu of Financial Status -->
-    <menuitem action="act_magento_financial_status_form" id="menu_action_financial_status_form" parent="odoo_magento2_ept.menu_instance_details" sequence="6"/>
+    <menuitem action="act_magento_financial_status_form" id="menu_action_financial_status_form"
+              parent="odoo_magento2_ept.menu_instance_details" sequence="3"/>
 
 </odoo>
