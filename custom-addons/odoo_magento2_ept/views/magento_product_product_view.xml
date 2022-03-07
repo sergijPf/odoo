@@ -159,7 +159,7 @@
                 <group expand="1" string="Group By">
                     <filter string="Instances" name="group_by_instance"
                             context="{'group_by': 'magento_instance_id'}"/>
-                    <filter string="Product Category" name="group_by_product_category"
+                    <filter string="Config.Product" name="group_by_conf_product"
                             context="{'group_by': 'magento_conf_product_id'}"/>
                     <filter string="Magento Status" name="group_by_status"
                             context="{'group_by': 'magento_status'}"/>

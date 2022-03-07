@@ -32,7 +32,6 @@ class ProductTemplate(models.Model):
 
     def unlink(self):
         reject_configs = []
-
         for prod in self:
             if prod.is_magento_config and prod.magento_conf_prod_ids:
                 reject_configs.append({c.magento_instance_id.name: c.magento_sku for c in prod.magento_conf_prod_ids})
@@ -41,8 +40,7 @@ class ProductTemplate(models.Model):
             raise UserError("It's not allowed to delete these product(s) as they were already added to Magento Layer "
                             "as Configurable Products: %s\n" % (str(reject_configs)))
 
-        result = super(ProductTemplate, self).unlink()
-        return result
+        return super(ProductTemplate, self).unlink()
 
 
 class ProductTemplateAttributeLine(models.Model):

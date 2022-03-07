@@ -6,7 +6,7 @@ Describes product import export process.
 
 import re
 from datetime import datetime
-from odoo.exceptions import Warning, UserError
+from odoo.exceptions import UserError
 from odoo import fields, models, _
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -31,8 +31,8 @@ class MagentoImportExport(models.TransientModel):
         ('export_product_prices', 'Export Product Prices'),
         ('export_product_stock', 'Export Product Stock')
     ], string='Import/ Export Operations', help='Import/ Export Operations')
-    start_date = fields.Datetime(string="From Date", help="From date.")
-    end_date = fields.Datetime("To Date", help="To date.")
+    start_date = fields.Datetime(string="From Date")
+    end_date = fields.Datetime("To Date")
 
     def execute(self):
         """
@@ -105,10 +105,11 @@ class MagentoImportExport(models.TransientModel):
         failed_products = selection.filtered(lambda product: product.type != "product" or not product.is_magento_config)
 
         if failed_products:
-            raise Warning(_("It seems like selected product(s) are not Storable or don't have"
+            raise UserError(_("It seems like selected product(s) are not Storable or don't have"
                             " proper Magento Config.Product setup: %s" % str([p.name for p in failed_products])))
 
         self.add_products_to_magento_layer(selection)
+
         return {
             'effect': {
                 'fadeout': 'slow',

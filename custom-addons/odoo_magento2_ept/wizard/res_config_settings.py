@@ -18,10 +18,10 @@ class ResConfigSettings(models.TransientModel):
                                          domain="[('magento_instance_id', '=', magento_instance_id)]")
     magento_storeview_id = fields.Many2one('magento.storeview', string="Storeviews",  help="Magento Storeviews",
                                            domain="[('magento_website_id', '=', magento_website_id)]")
-    magento_team_id = fields.Many2one('crm.team', string='Sales Team')
+    magento_team_id = fields.Many2one('crm.team', string='Magento Sales Team')
     magento_sale_prefix = fields.Char(
         string="Sale Order Prefix", help="A prefix put before the name of imported sales orders.")
-    magento_website_warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse',
+    magento_website_warehouse_id = fields.Many2one('stock.warehouse', string='Magento Warehouse',
                                                    help='Warehouse to be used to deliver an order from this website.')
     location_ids = fields.Many2many('stock.location', string="Locations",
                                     help='Locations used to compute stock quantities to be exported to Magento.')

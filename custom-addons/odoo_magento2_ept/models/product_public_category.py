@@ -45,8 +45,8 @@ class ProductPublicCategory(models.Model):
         if par_id and par_id.magento_prod_categ_ids:
             raise UserError("You're not allowed to create and link to this parent category as it was already exported to Magento.\n"
                             "Please create category first, add translations and link to Parent category you'd like.")
-        result = super(ProductPublicCategory, self).create(vals)
-        return result
+
+        return super(ProductPublicCategory, self).create(vals)
 
     def unlink(self):
         reject_to_remove = []
@@ -68,8 +68,8 @@ class ProductPublicCategory(models.Model):
                     res = False
                 if res is True:
                     categ.unlink()
-        result = super(ProductPublicCategory, self).unlink()
-        return result
+
+        return super(ProductPublicCategory, self).unlink()
 
     def create_product_category_in_magento_and_layer(self, product_categ_object, product_categ, magento_instance,
                                                      magento_categ_id, parent_categ):

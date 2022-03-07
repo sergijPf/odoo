@@ -238,6 +238,7 @@ class MagentoProductProduct(models.Model):
             elif instance.magento_stock_field == 'virtual_available':
                 product_listing_stock = prod_obj.get_forecasted_qty(locations, product_ids)
         return product_listing_stock
+    # end of stock section
 
     @staticmethod
     def update_simp_product_dict_with_magento_data(magento_prod, ml_simp_products_dict):
@@ -1036,8 +1037,8 @@ class MagentoProductProduct(models.Model):
                                             ml_simple_prod, magento_sku):
         """
         Check Product's "Attribute: Value" pair for duplication
-        :param ml_conf_products: Dictionary contains metadata for selected Configurable Products (Odoo categories)
-        :param conf_sku: Product Category Name
+        :param ml_conf_products: Dictionary contains metadata for selected Configurable Products
+        :param conf_sku: Config.Product Name
         :param simp_prod_attr: Simple Product Attributes defined in Odoo
         :param available_attributes: Dictionary with defined Attributes and their values in Magento
         :param ml_simple_prod: Dictionary contains metadata for selected Simple Products (Odoo products)

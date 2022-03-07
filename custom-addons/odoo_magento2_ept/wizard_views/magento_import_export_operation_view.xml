@@ -18,7 +18,7 @@
                                     <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
                                 </u>
                                 <b>
-                                    Products without Internal Reference (SKU) and Product Category will not
+                                    Products without Internal Reference (SKU) will not
                                     be exported to Magento Product Layer.
                                 </b>
                             </p>

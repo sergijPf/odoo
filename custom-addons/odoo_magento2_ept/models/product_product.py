@@ -14,11 +14,17 @@ class ProductProduct(models.Model):
     magento_product_ids = fields.One2many(MAGENTO_PRODUCT, 'odoo_product_id', string='Magento Products',
                                           help='Magento Product Ids')
 
+    def _compute_magento_product_count(self):
+        """
+        calculate magento product count
+        :return:
+        """
+        magento_product_obj = self.env[MAGENTO_PRODUCT]
+        for product in self:
+            magento_products = magento_product_obj.search([('odoo_product_id', '=', product.id)])
+            product.magento_product_count = len(magento_products) if magento_products else 0
+
     def write(self, vals):
-        """
-        This method will archive/unarchive Magento product based on Odoo Product
-        :param vals: Dictionary of Values
-        """
         if self.magento_product_ids and ('product_variant_image_ids' in vals or 'weight' in vals) :
             self.magento_product_ids.force_update = True
 
@@ -35,18 +41,7 @@ class ProductProduct(models.Model):
             raise UserError("It's not allowed to delete these product(s) as they were already added to Magento Layer "
                             "as Simple Product(s): %s\n" % (str(reject_configs)))
 
-        result = super(ProductProduct, self).unlink()
-        return result
-
-    def _compute_magento_product_count(self):
-        """
-        calculate magento product count
-        :return:
-        """
-        magento_product_obj = self.env[MAGENTO_PRODUCT]
-        for product in self:
-            magento_products = magento_product_obj.search([('odoo_product_id', '=', product.id)])
-            product.magento_product_count = len(magento_products) if magento_products else 0
+        return super(ProductProduct, self).unlink()
 
     def get_products_based_on_movement_date(self, from_datetime, company=False):
         """
@@ -203,16 +198,3 @@ class ProductProduct(models.Model):
             for i in result:
                 forcasted_qty.update({i.get('product_id'):i.get('stock')})
         return forcasted_qty
-
-    def view_magento_products(self):
-        """
-        This method is used to view Magento product.
-        :return: Action
-        """
-        magento_product_ids = self.mapped('magento_product_ids')
-        xmlid = ('odoo_magento2_ept', 'action_magento_stock_picking')
-        action = self.env['ir.actions.act_window'].for_xml_id(*xmlid)
-        action['domain'] = "[('id','in',%s)]" % magento_product_ids.ids
-        if not magento_product_ids:
-            return {'type': 'ir.actions.act_window_close'}
-        return action

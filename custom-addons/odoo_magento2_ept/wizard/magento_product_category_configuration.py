@@ -13,18 +13,18 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
     _name = "magento.product.category.configuration"
     _description = "Magento Product Category Configuration"
 
-    def _get_magento_instance(self):
+    def _default_get_magento_instance(self):
         return self.env.context.get('magento_instance_id', False)
 
-    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', default=_get_magento_instance,
-                                          readonly=True)
     update_existed = fields.Boolean(string="To Update Existed")
+    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', readonly=True,
+                                          default=_default_get_magento_instance)
 
     def create_update_product_public_category_structure(self):
         prod_publ_categ_obj = self.env['product.public.category']
+        magento_product_categ_obj = self.env['magento.product.category']
         url = '/V1/categories'
         domain = [('parent_id', '=', False), ('no_create_in_magento', '=', False)]
-        magento_product_categ_obj = self.env['magento.product.category']
         magento_categ_rec = magento_product_categ_obj.with_context(active_test=False).search([
             ('instance_id', '=', self.magento_instance_id.id)
         ])

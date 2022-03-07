@@ -71,14 +71,77 @@ class MagentoInstance(models.Model):
                                         help="Check this if your Magento site is using SSL certificate")
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
+    cron_count = fields.Integer("Scheduler Count", compute="_compute_get_scheduler_list",
+                                help="This Field relocates Scheduler Count.")
 
     def _compute_get_scheduler_list(self):
         seller_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
         for record in self:
             record.cron_count = len(seller_cron.ids)
 
-    cron_count = fields.Integer("Scheduler Count", compute="_compute_get_scheduler_list",
-                                help="This Field relocates Scheduler Count.")
+    @api.model
+    def _scheduler_update_product_stock_qty(self, args=None):
+        """
+        This method is used to export product stock quantity to Magento via cron job
+        :param args: arguments to export product stock quantity.
+        :return:
+        """
+        if args is None:
+            args = {}
+        magento_product_product = self.env['magento.product.product']
+        magento_instance = self.env[MAGENTO_INSTANCE]
+        magento_instance_id = args.get('magento_instance_id')
+        if magento_instance_id:
+            instance = magento_instance.browse(magento_instance_id)
+            magento_product_product.export_products_stock_to_magento(instance)
+            instance.last_update_stock_time = datetime.now()
+
+    @api.model
+    def _scheduler_update_order_status(self, args=None):
+        """
+        This method is used to export shipment to Magento via cron job
+        :param args: arguments to export invoice
+        :return:
+        """
+        if args is None:
+            args = {}
+        stock_picking = self.env['stock.picking']
+        magento_instance = self.env[MAGENTO_INSTANCE]
+        magento_instance_id = args.get('magento_instance_id')
+        if magento_instance_id:
+            instance = magento_instance.browse(magento_instance_id)
+            stock_picking.export_shipments_to_magento(instance)
+
+    @api.model
+    def _scheduler_export_invoice(self, args=None):
+        """
+        This method is used to export invoices to Magento via cron job
+        :param args: arguments to export invoice
+        :return:
+        """
+        if args is None:
+            args = {}
+        account_move = self.env['account.move']
+        magento_instance = self.env[MAGENTO_INSTANCE]
+        magento_instance_id = args.get('magento_instance_id')
+        if magento_instance_id:
+            instance = magento_instance.browse(magento_instance_id)
+            account_move.export_invoices_to_magento(instance)
+
+    @staticmethod
+    def _check_location_url(location_url):
+        """
+        Set Magento rest API URL
+        :param location_url: Magento URL
+        :return:
+        """
+        if location_url:
+            location_url = location_url.strip()
+            location_url = location_url.rstrip('/')
+            location_vals = location_url.split('/')
+            if location_vals[-1] != 'rest':
+                location_url = location_url + '/rest'
+        return location_url
 
     def write(self, vals):
         """
@@ -348,67 +411,3 @@ class MagentoInstance(models.Model):
         }
         action['context'] = context
         return action
-
-    @api.model
-    def _scheduler_update_product_stock_qty(self, args=None):
-        """
-        This method is used to export product stock quantity to Magento via cron job
-        :param args: arguments to export product stock quantity.
-        :return:
-        """
-        if args is None:
-            args = {}
-        magento_product_product = self.env['magento.product.product']
-        magento_instance = self.env[MAGENTO_INSTANCE]
-        magento_instance_id = args.get('magento_instance_id')
-        if magento_instance_id:
-            instance = magento_instance.browse(magento_instance_id)
-            magento_product_product.export_products_stock_to_magento(instance)
-            instance.last_update_stock_time = datetime.now()
-
-    @api.model
-    def _scheduler_update_order_status(self, args=None):
-        """
-        This method is used to export shipment to Magento via cron job
-        :param args: arguments to export invoice
-        :return:
-        """
-        if args is None:
-            args = {}
-        stock_picking = self.env['stock.picking']
-        magento_instance = self.env[MAGENTO_INSTANCE]
-        magento_instance_id = args.get('magento_instance_id')
-        if magento_instance_id:
-            instance = magento_instance.browse(magento_instance_id)
-            stock_picking.export_shipments_to_magento(instance)
-
-    @api.model
-    def _scheduler_export_invoice(self, args=None):
-        """
-        This method is used to export invoices to Magento via cron job
-        :param args: arguments to export invoice
-        :return:
-        """
-        if args is None:
-            args = {}
-        account_move = self.env['account.move']
-        magento_instance = self.env[MAGENTO_INSTANCE]
-        magento_instance_id = args.get('magento_instance_id')
-        if magento_instance_id:
-            instance = magento_instance.browse(magento_instance_id)
-            account_move.export_invoices_to_magento(instance)
-
-    @staticmethod
-    def _check_location_url(location_url):
-        """
-        Set Magento rest API URL
-        :param location_url: Magento URL
-        :return:
-        """
-        if location_url:
-            location_url = location_url.strip()
-            location_url = location_url.rstrip('/')
-            location_vals = location_url.split('/')
-            if location_vals[-1] != 'rest':
-                location_url = location_url + '/rest'
-        return location_url

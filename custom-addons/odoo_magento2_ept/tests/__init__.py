@@ -1,1 +1,2 @@
-# from . import test_
+
+from . import test_magento_product

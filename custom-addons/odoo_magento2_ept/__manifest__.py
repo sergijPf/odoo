@@ -11,18 +11,17 @@
     # Views
     'data': [
         'security/security.xml',
+        'security/ir.model.access.csv',
         'data/import_order_status.xml',
         'data/ir_cron_.xml',
         'data/magento_data_cron.xml',
+        'data/ecommerce_data.xml',
+        'data/automatic_workflow_data_.xml',
         'views/magento_instance_view.xml',
         'views/magento_website_view.xml',
         'views/magento_storeview_view.xml',
         'views/magento_payment_method_view.xml',
         'views/delivery_carrier_view.xml',
-        'wizard_views/magento_import_export_operation_view.xml',
-        'wizard_views/magento_cron_configuration_view.xml',
-        'wizard_views/res_config_magento_instance.xml',
-        'wizard_views/res_config_settings.xml',
         'views/magento_product_product_view.xml',
         'views/magento_res_partner_view.xml',
         'views/sale_order_view.xml',
@@ -49,12 +48,13 @@
         'views/sale_workflow_process_view.xml',
         'views/product_template_view.xml',
         'views/product_category_view.xml',
+        'wizard_views/magento_import_export_operation_view.xml',
+        'wizard_views/magento_cron_configuration_view.xml',
+        'wizard_views/res_config_magento_instance.xml',
+        'wizard_views/res_config_settings.xml',
         'wizard_views/magento_product_categories_configuration_view.xml',
         'wizard_views/config_product_attributes_update_view.xml',
-        'wizard_views/magento_customer_group_update_view.xml',
-        'data/ecommerce_data.xml',
-        'data/automatic_workflow_data_.xml',
-        'security/ir.model.access.csv'
+        'wizard_views/magento_customer_group_update_view.xml'
     ],
 
     # Odoo Store Specific

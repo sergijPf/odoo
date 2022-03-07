@@ -46,3 +46,4 @@ venv*
 backups
 *.pdf
 third_party_addons
+custom-addons/odoo_magento2_ept/tests
