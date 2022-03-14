@@ -26,7 +26,7 @@ class MagentoAsyncBulkLogs(models.Model):
     def check_bulk_log_statuses(self):
         self.ensure_one()
 
-        if "4" not in self.log_details_ids.mapped('log_status'):
+        if self.log_details_ids and "4" not in self.log_details_ids.mapped('log_status'):
             return True
 
         if not self.bulk_uuid:

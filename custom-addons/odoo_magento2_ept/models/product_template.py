@@ -66,6 +66,15 @@ class ProductTemplateAttributeLine(models.Model):
         if self.main_conf_attr and len(self.product_tmpl_id.attribute_line_ids.filtered(lambda x: x.main_conf_attr)) > 1:
             raise UserError("There is only one main configurable attribute allowed for Magento setup!")
 
+    @api.model
+    def create(self, vals):
+        res = super(ProductTemplateAttributeLine, self).create(vals)
+
+        if res.is_magento_config_prod and not res.is_ignored and len(res.value_ids) > 1 and not res.magento_config:
+            res.magento_config = True
+
+        return res
+
     def write(self, vals):
         res = super(ProductTemplateAttributeLine, self).write(vals)
 
