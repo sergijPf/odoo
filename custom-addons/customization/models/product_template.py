@@ -19,3 +19,9 @@ class ProductTemplate(models.Model):
     # ], string='Status')
 
     x_sales_channel = fields.Many2many('product.sales.channel', string='Sales Channel')
+
+
+class ProductAttributeValue(models.Model):
+    _inherit = 'product.attribute.value'
+
+    x_image = fields.Image(string='Image', max_width=128, max_height=128)

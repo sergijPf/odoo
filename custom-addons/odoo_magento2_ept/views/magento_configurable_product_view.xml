@@ -74,9 +74,11 @@
                                 <group name="magento_info" string="Magento Info">
                                     <field name="magento_instance_id" readonly="1"/>
                                     <field name="do_not_create_flag" invisible="1"/>
-                                    <field name="magento_product_id" attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                    <field name="magento_product_id"
+                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
                                            readonly="1"/>
-                                    <field name="magento_website_ids" attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                    <field name="magento_website_ids"
+                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
                                            widget="many2many_tags" readonly="1"/>
                                     <field name="magento_status" widget="badge" optional="show" on_change="1"
                                            decoration-success="magento_status == 'in_magento'"
@@ -89,7 +91,8 @@
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"/>
                                     <br/>
                                     <field name="magento_attr_set" required="1"/>
-                                    <field name="category_ids" attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                    <field name="category_ids"
+                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
                                            readonly="1" widget="many2many_tags"/>
                                 </group>
                                 <group string="Product Images" name="magento_product_images">

@@ -15,6 +15,7 @@
 <!--                    <field name="grouped_color" groups="odoo_magento2_ept.group_magento_user_ept"-->
 <!--                           attrs="{'invisible':[('attr_name','!=','color_N')]}"/>-->
 <!--                </xpath>-->
+
             </field>
         </record>
     </data>

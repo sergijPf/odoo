@@ -726,7 +726,7 @@ class MagentoConfigurableProduct(models.Model):
             mag_attr = magento_attributes[attr]
             attr_val = single_attrs[attr]
             if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
-                res_id = single_attr_recs.filtered(lambda a: self.to_upper(a.attribute_id.name) == attr).value_ids.id or 0
+                res_id = single_attr_recs.filtered(lambda a: self.to_upper(a.attribute_id.name) == attr).value_ids or 0
                 _id, err = self.create_new_attribute_option_in_magento(
                     instance, mag_attr['attribute_code'], attr_val, res_id
                 )
@@ -737,7 +737,7 @@ class MagentoConfigurableProduct(models.Model):
 
         return True
 
-    def create_new_attribute_option_in_magento(self, magento_instance, attribute_code, attribute_option, res_id=False):
+    def create_new_attribute_option_in_magento(self, magento_instance, attribute_code, attribute_option, res_id=0):
         """
         Creates new option(swatch) for defined attribute in Magento
         :param magento_instance: Instance of Magento
@@ -745,9 +745,34 @@ class MagentoConfigurableProduct(models.Model):
         :param attribute_option: The Attribute Value in Odoo
         :return: ID, error message
         """
+        attachment = self.env['ir.attachment'].sudo().search([('res_field', '=', 'x_image'),
+                                                              ('res_model', '=', 'product.attribute.value'),
+                                                              ('res_id', '=', int(res_id.id) if res_id else 0)])
+        html_color = res_id.html_color if res_id.html_color and res_id.html_color[0] == '#'  else ""
+        value = html_color if html_color else \
+            attachment.mimetype.replace("/", "_%s." % str(attachment.id)) if attachment else ""
+
+        if not html_color and attachment:
+            data = {
+                "entry": {
+                    'base64_encoded_data': res_id.x_image.decode('utf-8'),
+                    "type": attachment.mimetype,
+                    "name": value,
+                    "sub_folder": ""
+                }
+            }
+
+            try:
+                api_url = '/V1/products/attributes/swatch/upload'
+                req(magento_instance, api_url, 'POST', data)
+            except Exception as e:
+                return 0, "Error while Product Attribute Option(Swatch) Image upload for %s Attribute: %s\n" % \
+                       (attribute_code, e)
+
         data = {
             "option": {
                 "label": str(attribute_option).upper(),
+                "value": ("/" if not html_color and attachment else "") + value,
                 "sort_order": 0,
                 "is_default": "false",
                 "store_labels": []
@@ -760,7 +785,7 @@ class MagentoConfigurableProduct(models.Model):
             store_labels = []
             # find Attribute Value translations if any
             avail_translations = self.env['ir.translation'].search([('name', '=', 'product.attribute.value,name'),
-                                                                    ('res_id', '=', res_id)])
+                                                                    ('res_id', '=', res_id.id if res_id else 0)])
             for view in magento_storeviews:
                 translated_label = ''
                 for item in avail_translations:
@@ -777,8 +802,10 @@ class MagentoConfigurableProduct(models.Model):
                 _id = int(res[3:])
             except Exception:
                 raise
-        except Exception:
-            return 0, "Error while new Product Attribute Option(Swatch) creation for %s Attribute.\n" % attribute_code
+        except Exception as e:
+            return 0, "Error while new Product Attribute Option(Swatch) creation for %s Attribute: %s\n" % \
+                   (attribute_code, e)
+
         return _id, ""
 
     def check_config_product_assign_attributes_match(self, magento_prod_attrs, prod_attr_odoo, avail_attributes):
@@ -1162,7 +1189,7 @@ class MagentoConfigurableProduct(models.Model):
         for img in products_media[prod_sku]:
             role = img[3]
             attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', 'image_256' if role == 'thumbnail' else IMG_SIZE),
+                ('res_field', '=', 'image_128' if role == 'thumbnail' else IMG_SIZE),
                 ('res_model', '=', res_model),
                 ('res_id', '=', img[0])
             ])
@@ -1285,7 +1312,7 @@ class MagentoConfigurableProduct(models.Model):
                 if ml_simp_products[prod_sku]['log_message']:
                     continue
                 attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', 'image_256' if role == 'thumbnail' else IMG_SIZE),
+                    ('res_field', '=', 'image_128' if role == 'thumbnail' else IMG_SIZE),
                     ('res_model', '=', res_model),
                     ('res_id', '=', img[0])
                 ])

@@ -151,8 +151,7 @@ class MagentoInstance(models.Model):
         """
         if 'magento_url' in vals:
             vals['magento_url'] = vals['magento_url'].rstrip('/')
-        res = super(MagentoInstance, self).write(vals)
-        return res
+        return super(MagentoInstance, self).write(vals)
 
     def list_of_delivery_method(self):
         """
@@ -160,7 +159,8 @@ class MagentoInstance(models.Model):
         :return:
         """
         tree_view = self.env.ref('odoo_magento2_ept.magento_delivery_carrier_tree_view').id
-        action = {
+
+        return {
             'name': 'Magento Carriers Views',
             'type': ACTION_ACT_WINDOW,
             'view_type': 'form',
@@ -171,7 +171,6 @@ class MagentoInstance(models.Model):
             'target': 'current',
             'domain': [("magento_instance_id", "=", self.id)]
         }
-        return action
 
     def list_of_instance_cron(self):
         """
@@ -179,14 +178,13 @@ class MagentoInstance(models.Model):
         :return:
         """
         instance_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
-        action = {
+        return {
             'domain': "[('id', 'in', " + str(instance_cron.ids) + " )]",
             'name': 'Cron Scheduler',
             'view_mode': 'tree,form',
             'res_model': IR_CRON,
             'type': ACTION_ACT_WINDOW,
         }
-        return action
 
     def cron_configuration_action(self):
         """
@@ -198,6 +196,7 @@ class MagentoInstance(models.Model):
             'magento_instance_id': self.id
         }
         action['context'] = context
+
         return action
 
     def magento_test_connection(self):

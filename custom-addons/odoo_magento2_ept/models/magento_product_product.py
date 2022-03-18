@@ -736,6 +736,7 @@ class MagentoProductProduct(models.Model):
 
         if response.get("sku"):
             ml_simp_products[product.magento_sku]['export_date_to_magento'] = response.get("updated_at")
+
             if ml_simp_products[product.magento_sku]['do_not_export_conf']:
                 ml_simp_products[product.magento_sku]['magento_status'] = 'in_magento'
             else:
