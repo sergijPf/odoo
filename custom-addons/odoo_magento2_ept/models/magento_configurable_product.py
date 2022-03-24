@@ -152,14 +152,14 @@ class MagentoConfigurableProduct(models.Model):
                 'magento_website_ids': [(5, 0, 0)]
             })
 
-    def process_products_export_to_magento(self):
+    def process_products_export_to_magento(self, is_cron=False):
         """
         The main method to process Products Export to Magento. The Product Templates are treated as
         Configurable Products and Odoo Product Variants as Simple Products in Magento
         :return: None
         """
-        async_export = self.env.context.get("async_export", False)
-        active_products = self._context.get("active_ids", []) or self.id
+        async_export = True if is_cron else self.env.context.get("async_export", False)
+        active_products = self.search([]).mapped("id") if is_cron else self._context.get("active_ids", []) or self.id
         products_to_export = self.browse(active_products)
         products_dict = {i.magento_instance_id: {} for i in products_to_export}
 
@@ -726,7 +726,8 @@ class MagentoConfigurableProduct(models.Model):
             mag_attr = magento_attributes[attr]
             attr_val = single_attrs[attr]
             if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
-                res_id = single_attr_recs.filtered(lambda a: self.to_upper(a.attribute_id.name) == attr).value_ids or 0
+                res_id = single_attr_recs.filtered(lambda a: self.to_upper(a.attribute_id.name) == attr and
+                                                             self.to_upper(a.value_ids.name) == attr_val).value_ids or 0
                 _id, err = self.create_new_attribute_option_in_magento(
                     instance, mag_attr['attribute_code'], attr_val, res_id
                 )

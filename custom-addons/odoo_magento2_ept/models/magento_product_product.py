@@ -5,7 +5,7 @@ Describes fields and methods for Magento products
 """
 import pytz
 from datetime import datetime, timedelta
-from odoo import fields, models, api, _
+from odoo import fields, models, api
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
