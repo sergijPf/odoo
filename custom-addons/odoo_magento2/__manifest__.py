@@ -57,7 +57,7 @@
 
     'assets': {
         'web.assets_backend': [
-            '/odoo_magento2_ept/static/src/js/magento_icon_view.js',
+            '/odoo_magento2/static/src/js/magento_icon_view.js',
         ],
     },
 
