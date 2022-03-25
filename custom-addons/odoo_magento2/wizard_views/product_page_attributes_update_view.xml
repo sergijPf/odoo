@@ -1,12 +1,12 @@
 <odoo>
 
-    <record id="view_config_product_attributes_update" model="ir.ui.view">
-            <field name="name">Update Product Attributes</field>
-            <field name="model">config.product.attributes.update</field>
+    <record id="view_product_page_attributes_update" model="ir.ui.view">
+            <field name="name">Update Product Page Attributes</field>
+            <field name="model">product.page.attributes.update</field>
             <field name="arch" type="xml">
                 <form string="Update Product Page Attributes">
                     <group>
-                        <field name="config_prod_attr_ids" required="1" widget="many2many_tags"
+                        <field name="prod_page_attr_ids" required="1" widget="many2many_tags"
                                options="{'no_create':True,'no_create_edit': True}"/>
                     </group>
                     <group>
@@ -24,20 +24,20 @@
                     </group>
                     <footer>
                         <button string="Update" class="oe_highlight" type="object"
-                                name="update_product_attributes"/>
+                                name="update_product_page_attributes"/>
                         <button string="Cancel" class="oe_highlight" special="cancel"/>
                     </footer>
                 </form>
             </field>
         </record>
 
-    <record id="magento_product_attributes_update_wizard" model="ir.actions.act_window">
-        <field name="name">Update Product Attributes</field>
-        <field name="res_model">config.product.attributes.update</field>
+    <record id="magento_product_page_attributes_update_wizard" model="ir.actions.act_window">
+        <field name="name">Update Product Page Attributes</field>
+        <field name="res_model">product.page.attributes.update</field>
         <field name="binding_model_id" ref="model_product_category"/>
         <field name="binding_view_types">list</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="view_config_product_attributes_update"/>
+        <field name="view_id" ref="view_product_page_attributes_update"/>
         <field name="target">new</field>
     </record>
 

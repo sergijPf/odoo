@@ -28,7 +28,6 @@ class StockPicking(models.Model):
     magento_instance_id = fields.Many2one('magento.instance', 'Instance')
     magento_shipping_id = fields.Char(string="Magento Shipping Id")
 
-
     def _shipment_exportable(self):
         """
         set is_shipment_exportable true or false based on condition
@@ -215,7 +214,6 @@ class StockPicking(models.Model):
         return super(StockPicking, self).send_to_shipper()
 
 
-
 class StockMove(models.Model):
     """
     Describes Magento order stock picking values
@@ -255,7 +253,6 @@ class StockMove(models.Model):
                     'is_magento_picking': True
                 })
         return res
-
 
 
 class StockQuantPackage(models.Model):

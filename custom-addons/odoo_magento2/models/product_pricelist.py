@@ -34,7 +34,8 @@ class ProductPricelistItem(models.Model):
                     self.env['magento.product.product'].search(domain).write({"force_update": True})
                 else:
                     if applied == '1_product':
-                        product = self.env['product.product'].search([('product_tmpl_id', '=', vals.get('product_tmpl_id'))])
+                        product = self.env['product.product'].search([
+                            ('product_tmpl_id', '=', vals.get('product_tmpl_id'))])
                     else:
                         # applied == '0_product_variant':
                         product = self.env['product.product'].browse(vals.get('product_id'))

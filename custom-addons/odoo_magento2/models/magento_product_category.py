@@ -26,7 +26,8 @@ class MagentoProductCategory(models.Model):
     def _compute_complete_name(self):
         for category in self:
             if category.magento_parent_id:
-                category.complete_category_name = '%s / %s' % (category.magento_parent_id.complete_category_name, category.name)
+                category.complete_category_name = '%s / %s' % (category.magento_parent_id.complete_category_name,
+                                                               category.name)
             else:
                 category.complete_category_name = category.name
 
@@ -34,16 +35,14 @@ class MagentoProductCategory(models.Model):
 class ProductCategory(models.Model):
     _inherit = "product.category"
 
-    x_attribute_ids = fields.Many2many('config.product.attribute', 'product_category_ids',
-                                       string="Product Page attributes",
-                                       help="Descriptive attributes for Product page")
+    x_attribute_ids = fields.Many2many('product.page.attribute', 'product_category_ids',
+                                       string="Product Page attributes", help="Descriptive attributes for Product page")
     product_template_ids = fields.One2many('product.template', 'categ_id')
-
 
     def write(self, vals):
         res = super(ProductCategory, self).write(vals)
 
-        if 'x_attribute_ids' in vals :
+        if 'x_attribute_ids' in vals:
             self.product_template_ids.magento_conf_prod_ids.force_update = True
 
         return res

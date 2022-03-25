@@ -209,6 +209,7 @@ class MagentoInstance(models.Model):
             website_response = req(self, api_url, method='GET')
         except Exception as error:
             raise UserError(_("Connection Test Failed! Here is what we got instead:\n \n%s") % ustr(error))
+
         if website_response:
             return {
                 'effect': {
@@ -233,10 +234,6 @@ class MagentoInstance(models.Model):
         self.env['magento.financial.status'].create_financial_status(self, 'not_paid')
 
     def make_currencies_active(self):
-        """
-        This method is used to import all currency as pricelist
-        :return:
-        """
         try:
             url = '/V1/directory/currency'
             magento_currency = req(self, url)

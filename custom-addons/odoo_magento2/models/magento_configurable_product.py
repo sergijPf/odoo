@@ -168,7 +168,7 @@ class MagentoConfigurableProduct(models.Model):
         async_bulk_logs_obj = self.env['magento.async.bulk.logs']
         latest_bulk_request_rec = async_bulk_logs_obj.search([]) and async_bulk_logs_obj.search([])[-1]
 
-        if latest_bulk_request_rec and not latest_bulk_request_rec.check_bulk_log_statuses():
+        if latest_bulk_request_rec and not latest_bulk_request_rec.check_and_update_bulk_log_statuses():
             raise UserError("There are some API requests still processing by RabbitMQ. "
                             "Please wait a bit until it completes.")
 

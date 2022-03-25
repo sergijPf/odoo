@@ -37,7 +37,7 @@
         'views/product_attribute_view.xml',
         'views/product_product_view.xml',
         'views/product_public_category_view.xml',
-        'views/config_product_attribute_view.xml',
+        'views/product_page_attribute_view.xml',
         'views/magento_customer_groups_view.xml',
         'views/magento_invoices_log_book_view.xml',
         'views/magento_shipments_log_book_view.xml',
@@ -51,7 +51,7 @@
         'wizard_views/res_config_magento_instance.xml',
         'wizard_views/res_config_settings.xml',
         'wizard_views/magento_product_categories_configuration_view.xml',
-        'wizard_views/config_product_attributes_update_view.xml',
+        'wizard_views/product_page_attributes_update_view.xml',
         'wizard_views/magento_customer_group_update_view.xml'
     ],
 

@@ -25,7 +25,7 @@ class ProductProduct(models.Model):
             product.magento_product_count = len(magento_products) if magento_products else 0
 
     def write(self, vals):
-        if self.magento_product_ids and ('product_variant_image_ids' in vals or 'weight' in vals) :
+        if self.magento_product_ids and ('product_variant_image_ids' in vals or 'weight' in vals):
             self.magento_product_ids.force_update = True
 
         return super(ProductProduct, self).write(vals)
@@ -62,14 +62,14 @@ class ProductProduct(models.Model):
                     inner join mrp_bom_line as ml on ml.bom_id=mb.id
                     inner join stock_move as sm on sm.product_id=ml.product_id
                     where sm.date >= '%s' and sm.company_id = %d and sm.state in 
-                    ('partially_available','assigned','done')"""%(date, company.id))
+                    ('partially_available','assigned','done')""" % (date, company.id))
             self._cr.execute(mrp_qry)
             result = self._cr.dictfetchall()
 
         qry = ("""select product_id from stock_move where date >= '%s' and
-                 state in ('partially_available','assigned','done')"""%(date))
+                 state in ('partially_available','assigned','done')""" % date)
         if company:
-            qry += ("""and company_id = %d"""%company.id)
+            qry += ("""and company_id = %d""" % company.id)
 
         self._cr.execute(qry)
         result += self._cr.dictfetchall()
@@ -78,12 +78,6 @@ class ProductProduct(models.Model):
         return list(set(product_ids))
 
     def prepare_location_and_product_ids(self, locations, product_list):
-        """
-        This method prepares location and product ids from warehouse and list of product id.
-        @param warehouse: Record of Warehouse
-        @param product_list: Ids of Product.
-        @return: Ids of locations and products in string.
-        """
         # locations = self.env['stock.location'].search([('location_id', 'child_of', warehouse.lot_stock_id.ids)])
         if not len(locations):
             raise UserError("Need to specify the location(s) for each instance in Magento >> Configuration >> Settings")
@@ -106,7 +100,7 @@ class ProductProduct(models.Model):
         if mrp_module:
             qry = ("""select p.id as product_id from product_product as p
                         inner join mrp_bom as mb on mb.product_tmpl_id=p.product_tmpl_id
-                        and p.id in (%s)"""% product_ids)
+                        and p.id in (%s)""" % product_ids)
             self._cr.execute(qry)
             bom_product_ids = self._cr.dictfetchall()
             bom_product_ids = [product_id.get('product_id') for product_id in bom_product_ids]
@@ -142,14 +136,14 @@ class ProductProduct(models.Model):
                 union all
                 select product_id as product_id, sum(product_qty) as stock from stock_move
                 where state in ('assigned') and product_id in (%s) and location_dest_id in (%s)
-                group by product_id) as test group by test.product_id"""%(location_ids, simple_product_list_ids,
+                group by product_id) as test group by test.product_id""" % (location_ids, simple_product_list_ids,
                  simple_product_list_ids, location_ids))
         return query
 
     def get_free_qty(self, locations, product_list):
         """
         This method returns On hand quantity based on warehouse and product list
-        :param warehouse: warehouse object
+        :param locations: locations
         :param product_list: list of product_ids (Not browsable record)
         :return: Dictionary as product_id : on_hand_qty
         """
@@ -160,7 +154,7 @@ class ProductProduct(models.Model):
             bom_products = self.with_context(location=locations.ids).browse(bom_product_ids)
             for product in bom_products:
                 actual_stock = getattr(product, 'free_qty')
-                qty_on_hand.update({product.id:actual_stock})
+                qty_on_hand.update({product.id: actual_stock})
 
         simple_product_list = list(set(product_list) - set(bom_product_ids))
         simple_product_list_ids = ','.join(str(e) for e in simple_product_list)
@@ -169,13 +163,13 @@ class ProductProduct(models.Model):
             self._cr.execute(qry)
             result = self._cr.dictfetchall()
             for i in result:
-                qty_on_hand.update({i.get('product_id'):i.get('stock')})
+                qty_on_hand.update({i.get('product_id'): i.get('stock')})
         return qty_on_hand
 
     def get_forecasted_qty(self, locations, product_list):
         """
         This method is return forecasted quantity based on warehouse and product list
-        :param warehouse:warehouse object
+        :param locations: locations
         :param product_list:list of product_ids (Not browsable records)
         :return: Forecasted Quantity
         """
@@ -187,7 +181,7 @@ class ProductProduct(models.Model):
             bom_products = self.with_context(location=locations.ids).browse(bom_product_ids)
             for product in bom_products:
                 actual_stock = getattr(product, 'free_qty') + getattr(product, 'incoming_qty')
-                forcasted_qty.update({product.id:actual_stock})
+                forcasted_qty.update({product.id: actual_stock})
 
         simple_product_list = list(set(product_list) - set(bom_product_ids))
         simple_product_list_ids = ','.join(str(e) for e in simple_product_list)
@@ -196,5 +190,5 @@ class ProductProduct(models.Model):
             self._cr.execute(qry)
             result = self._cr.dictfetchall()
             for i in result:
-                forcasted_qty.update({i.get('product_id'):i.get('stock')})
+                forcasted_qty.update({i.get('product_id'): i.get('stock')})
         return forcasted_qty

@@ -224,7 +224,7 @@ class SaleOrder(models.Model):
 
             order_lines = order.mapped('order_line').filtered(lambda l: l.product_id.invoice_policy == 'order')
             if not order_lines.filtered(lambda l: l.product_id.type == 'product') and len(order.order_line) != len(
-                    order_lines.filtered(lambda l: l.product_id.type in ['service','consu'])):
+                    order_lines.filtered(lambda l: l.product_id.type in ['service', 'consu'])):
                 continue
 
             order.validate_invoice(work_flow_process_record)
@@ -260,7 +260,7 @@ class SaleOrder(models.Model):
                 ('magento_instance_id', '=', instance.id),
                 ('magento_order_ref', '=', order_ref)
             ])
-            message = "Error to cancel the order via Magento admin: " +  str(error)
+            message = "Error to cancel the order via Magento admin: " + str(error)
             self.log_order_import_error(log_errors, order_ref, instance, self.magento_website_id, message)
             return False
 
@@ -524,7 +524,7 @@ class SaleOrder(models.Model):
                 ('magento_instance_id', '=', magento_instance.id), ('magento_sku', '=', prod_sku)
             ], limit=1)
             if not magento_product:
-                message = "Product with sku '%s' is missed in magento layer in Odoo" % (prod_sku)
+                message = "Product with sku '%s' is missed in magento layer in Odoo" % prod_sku
                 break
 
             # check if product prices are the same
@@ -672,12 +672,12 @@ class SaleOrder(models.Model):
                 sales_order, price, shipping_product, magento_order
             )
             if tax_percent:
-                tax_id = account_tax_obj.get_tax_from_rate(rate=float(tax_percent), is_tax_included = is_tax_included)
+                tax_id = account_tax_obj.get_tax_from_rate(rate=float(tax_percent), is_tax_included=is_tax_included)
                 if tax_id and not tax_id.active:
                     return "Shipping Line: The system unable to find the tax '%s'.\n" \
-                           "Please check if the Tax is archived?." % (tax_id.name)
+                           "Please check if the Tax is archived?." % tax_id.name
                 if not tax_id:
-                    name = '%s %% ' % (tax_percent)
+                    name = '%s %% ' % tax_percent
                     tax_id = account_tax_obj.sudo().create({
                         'name': name,
                         'description': name,
@@ -712,12 +712,12 @@ class SaleOrder(models.Model):
             )
             is_tax_included, tax_percent = self.check_discount_has_tax_included_and_percent(sales_order)
             if tax_percent:
-                tax_id = account_tax_obj.get_tax_from_rate(rate=float(tax_percent), is_tax_included = is_tax_included)
+                tax_id = account_tax_obj.get_tax_from_rate(rate=float(tax_percent), is_tax_included=is_tax_included)
                 if tax_id and not tax_id.active:
                     return "Discount Line: The system unable to find the tax '%s'.\n" \
-                           "Please check if the Tax is archived?." % (tax_id.name)
+                           "Please check if the Tax is archived?." % tax_id.name
                 if not tax_id:
-                    name = '%s %% ' % (tax_percent)
+                    name = '%s %% ' % tax_percent
                     tax_id = account_tax_obj.sudo().create({
                         'name': name,
                         'description': name,

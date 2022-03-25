@@ -4,6 +4,7 @@ from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
+
 class ProductPublicCategory(models.Model):
     _inherit = "product.public.category"
 
@@ -43,7 +44,8 @@ class ProductPublicCategory(models.Model):
     def create(self, vals):
         par_id = self.browse(vals.get("parent_id"))
         if par_id and par_id.magento_prod_categ_ids:
-            raise UserError("You're not allowed to create and link to this parent category as it was already exported to Magento.\n"
+            raise UserError("You're not allowed to create and link to this parent category as it was already "
+                            "exported to Magento.\n"
                             "Please create category first, add translations and link to Parent category you'd like.")
 
         return super(ProductPublicCategory, self).create(vals)

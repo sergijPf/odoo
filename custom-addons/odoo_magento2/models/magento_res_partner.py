@@ -35,7 +35,6 @@ class MagentoResPartner(models.Model):
         customer_group_name = str(customer_dict.get("customer_group_name"))
         billing_address = customer_dict.get("billing_address")
         delivery_addresses = customer_dict.get("extension_attributes", {}).get("shipping_assignments")
-
         magento_customer = self.search([('magento_instance_id', '=', magento_instance.id),
                                         ('magento_customer_id', '=', customer_id)])
         if magento_customer:
