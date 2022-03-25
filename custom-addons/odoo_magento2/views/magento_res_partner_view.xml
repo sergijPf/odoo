@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_magento_res_partner_form" model="ir.ui.view">
+            <field name="name">magento.res.partner.form</field>
+            <field name="model">magento.res.partner</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Magento Instance" create="false" edit="false">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="is_company"/>
+                                <field name="partner_id"/>
+                                <field name="name"/>
+                                <field name="phone"/>
+                                <field name="email"/>
+                            </group>
+                            <group>
+                                <field name="magento_instance_id"/>
+                                <field name="magento_website_id" />
+                                <field name="customer_group_name"/>
+                                <field name="magento_customer_id"/>
+                                <field name="status"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="customer_addresses" string="Related Addresses">
+                                <field name="customer_address_ids">
+                                    <tree create="false">
+                                        <field name="address_type" invisible="0" />
+                                        <field name="name"/>
+                                        <field name="city"/>
+                                        <field name="street"/>
+                                        <field name="street2"/>
+                                        <field name="zip"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_magento_res_partner_tree" model="ir.ui.view">
+            <field name="name">magento.res.partner.tree</field>
+            <field name="model">magento.res.partner</field>
+            <field name="arch" type="xml">
+                <tree string="Magento Customers" create="false" edit="false">
+                    <header>
+                        <button name="export_to_magento"
+                                string="Export to Magento"
+                                type="object"
+                                class="btn btn-info ml-3"/>
+                    </header>
+                    <field name="name"/>
+                    <field name="email"/>
+                    <field name="phone"/>
+                    <field name="customer_group_name"/>
+                    <field name="magento_customer_id"/>
+                    <field name="status" widget="badge"
+                        decoration-success="status == 'exported'"
+                        decoration-info="status == 'imported'"
+                        decoration-muted="status == 'to_export'"
+                    />
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_magento_res_partner_filter" model="ir.ui.view">
+            <field name="name">magento.res.partner.search</field>
+            <field name="model">magento.res.partner</field>
+            <field name="arch" type="xml">
+                <search string="Magento Customer Search View">
+                    <field name="name"/>
+                    <field name="email"/>
+                    <field name="magento_customer_id"/>
+                    <group expand="1" string="Group By">
+                        <filter string="Instances" name="group_by_instance"
+                                context="{'group_by': 'magento_instance_id'}"/>
+                        <filter string="Websites" name="group_by_websites"
+                                context="{'group_by': 'magento_website_id'}"/>
+                        <filter string="Customer Groups" name="group_by_groups"
+                                context="{'group_by': 'customer_group_name'}"/>
+                        <filter string="Status" name="group_by_status"
+                                context="{'group_by': 'status'}"/>
+                     </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_magento_res_partner" model="ir.actions.act_window">
+            <field name="name">Customers</field>
+            <field name="res_model">magento.res.partner</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_magento_res_partner_tree"/>
+            <field name="search_view_id" ref="view_magento_res_partner_filter" />
+            <field name="help" type="html">
+                <p>You can't create Magento Customer from Here.</p>
+                <br />
+                <p>
+                    <b>When order is imported system will automatically create customer in Odoo. </b>
+                    <br />
+                    or
+                    <br />
+                    <b>You can run Export Customer process for B2B instance.</b>
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_magento_sales_and_customer" name="Sales"
+            parent="odoo_magento2.menu_magento_root" sequence="4"/>
+
+        <menuitem id="menu_item_parent_customer" name="Customers"
+            parent="odoo_magento2.menu_magento_sales_and_customer" sequence="10"/>
+
+        <menuitem id="menu_item_magento_customer" name="Customers"
+            parent="odoo_magento2.menu_item_parent_customer" sequence="2"
+            action="action_magento_res_partner" />
+</odoo>

@@ -54,3 +54,4 @@ backups/
 conf/
 venv*
 *.pdf
+third_party_addons

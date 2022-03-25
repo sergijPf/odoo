@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_product_image_form_inherited" model="ir.ui.view">
+            <field name="name">product.image.view.form.inherited</field>
+            <field name="model">product.image</field>
+            <field name="inherit_id" ref="website_sale.view_product_image_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='video_url']" position='after'>
+                    <label for="image_role" string="Image role in Magento" class="mt-3"
+                        groups="odoo_magento2.group_magento_user"/>
+                    <field name="image_role"
+                        groups="odoo_magento2.group_magento_user"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

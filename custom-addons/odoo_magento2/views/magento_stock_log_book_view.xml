@@ -1,0 +1,80 @@
+<?xml version="1.0" ?>
+<odoo>
+    <record id="view_magento_stock_export_log_book_filter" model="ir.ui.view">
+        <field name="name">Magento Stock Log Book Search</field>
+        <field name="model">magento.stock.log.book</field>
+        <field name="arch" type="xml">
+            <search string="Stock Export Log Book">
+                <field name="magento_instance_id"/>
+                <field name="batch"/>
+                <group expand="1" string="Group By">
+                    <filter string="Instances" name="group_by_instance"
+                            context="{'group_by': 'magento_instance_id'}"/>
+                     <filter string="Export batches" name="group_by_batch"
+                            context="{'group_by': 'batch'}"/>
+                </group>
+                <filter name="archive" string="Archived" domain="[('active','=',False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_magento_stock_export_log_book_tree" model="ir.ui.view">
+        <field name="name">Magento Stock Export Log Book Tree</field>
+        <field name="model">magento.stock.log.book</field>
+        <field name="arch" type="xml">
+            <tree create="0" delete="0" decoration-success="log_message == 'Successfully Exported'">
+                <field name="active" invisible="1"/>
+                <field name="magento_instance_id"/>
+                <field name="batch"/>
+                <field name="log_message"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_magento_stock_export_log_book_form" model="ir.ui.view">
+        <field name="name">Magento Stock Export Log Book Form</field>
+        <field name="model">magento.stock.log.book</field>
+        <field name="arch" type="xml">
+            <form create="0" delete="0" edit="0">
+                <sheet>
+                    <group>
+                        <field name="magento_instance_id"/>
+                        <field name="batch"/>
+                    </group>
+                    <notebook>
+                        <page name="log" string="Log Message(s)">
+                            <tree create="false" editable="bottom">
+                                <field name="log_message"/>
+                            </tree>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_show_log_messages_of_stock_export" model="ir.actions.act_window">
+        <field name="name">Stock Export Logs</field>
+        <field name="res_model">magento.stock.log.book</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_magento_stock_export_log_book_tree"/>
+        <field name="search_view_id" ref="view_magento_stock_export_log_book_filter"/>
+        <field name="help" type="html">
+            <div class="oe_empty_magento_instance">
+                <br/>
+                <br/>
+                <br/>
+                <p>
+                    <b>There is No Data yet...</b>
+                </p>
+            </div>
+        </field>
+    </record>
+
+    <menuitem id="magento_stock_log_menu"
+              sequence="3"
+              name="Stock"
+              parent="odoo_magento2.menu_products_log_details"
+              action="action_show_log_messages_of_stock_export"/>
+
+</odoo>

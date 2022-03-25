@@ -1,0 +1,49 @@
+<odoo>
+
+    <record id="view_magento_customer_group_update" model="ir.ui.view">
+            <field name="name">Change Magento Customer Group </field>
+            <field name="model">magento.customer.group.update</field>
+            <field name="arch" type="xml">
+                <form string="Change Magento Customer Group">
+                    <group>
+                        <field name="magento_instance_id" required="1" options="{'no_create':True,'no_create_edit': True}"/>
+                        <field name="customer_group_id" required="1"
+                               options="{'no_create':True,'no_create_edit': True}"
+                               domain="[('magento_instance_id', '=', magento_instance_id)]"/>
+                    </group>
+                    <group>
+                        <div style="color:#000000">
+                            <p class="alert alert-warning" role="alert">
+                                <u>
+                                    <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
+                                </u>
+                                <b>
+                                    <p>This action will update Customer Group in Magento Layer for selected Customers
+                                        to be exported to Magento!</p>
+                                    <p>You are not able to change customer group for already exported customers!</p>
+                                    <p>To update Customer Groups List with latest groups created in Magento
+                                        please use 'Synchronize Metadata' in Instance setup</p>
+                                </b>
+                            </p>
+                        </div>
+                    </group>
+                    <footer>
+                        <button string="Update" class="oe_highlight" type="object"
+                                name="update_customer_group_for_exported_customers"/>
+                        <button string="Cancel" class="oe_highlight" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    <record id="magento_customer_group_update_wizard" model="ir.actions.act_window">
+        <field name="name">Change Customer Group</field>
+        <field name="res_model">magento.customer.group.update</field>
+        <field name="binding_model_id" ref="model_magento_res_partner"/>
+        <field name="binding_view_types">list</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_magento_customer_group_update"/>
+        <field name="target">new</field>
+    </record>
+
+</odoo>
