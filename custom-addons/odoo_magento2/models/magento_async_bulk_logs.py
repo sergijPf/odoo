@@ -29,7 +29,6 @@ class MagentoAsyncBulkLogs(models.Model):
         if (self.log_details_ids and "4" not in self.log_details_ids.mapped('log_status')) or not self.bulk_uuid:
             return True
 
-        # remove previous record's details
         if self.log_details_ids:
             self.log_details_ids.sudo().unlink()
 
@@ -51,11 +50,7 @@ class MagentoAsyncBulkLogs(models.Model):
                 'result_message': item.get('result_message', '')
             })
 
-        # clean invalid records and their details
-        unlinked_records = self.search([('magento_product_ids', '=', False), ('magento_conf_product_ids', '=', False)])
-        if unlinked_records:
-            unlinked_records.log_details_ids.sudo().unlink()
-            unlinked_records.sudo().unlink()
+        self.clear_invalid_records()
 
         return False if '4' in self.log_details_ids.mapped('log_status') else True
 
@@ -69,6 +64,12 @@ class MagentoAsyncBulkLogs(models.Model):
             raise UserError("Error while Magento data requesting!")
 
         return response
+
+    def clear_invalid_records(self):
+        unlinked_records = self.search([('magento_product_ids', '=', False), ('magento_conf_product_ids', '=', False)])
+        if unlinked_records:
+            unlinked_records.log_details_ids.sudo().unlink()
+            unlinked_records.sudo().unlink()
 
 
 class MagentoAsyncBulkLogDetails(models.Model):

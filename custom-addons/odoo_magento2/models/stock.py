@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes methods for Export shipment information.
-"""
+
 from odoo import models, fields, _
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
@@ -27,15 +24,12 @@ class StockPicking(models.Model):
     is_exported_to_magento = fields.Boolean("Exported to Magento?", help="If checked, Picking is exported to Magento")
     magento_instance_id = fields.Many2one('magento.instance', 'Instance')
     magento_shipping_id = fields.Char(string="Magento Shipping Id")
+    is_shipment_exportable = fields.Boolean("Is Shipment exportable", compute='_compute_shipment_exportable',
+                                            store=False)
 
-    def _shipment_exportable(self):
-        """
-        set is_shipment_exportable true or false based on condition
-        :return:
-        """
+    def _compute_shipment_exportable(self):
         module_obj = self.env['ir.module.module']
-        purchase_module = module_obj.sudo().search([('name', '=', 'purchase'),
-                                                    ('state', '=', 'installed')])
+        purchase_module = module_obj.sudo().search([('name', '=', 'purchase'), ('state', '=', 'installed')])
         # check purchase module is installed or not and if it's installed then
         # picking is purchase's picking & is_export_dropship_picking is True
         # or
@@ -46,13 +40,7 @@ class StockPicking(models.Model):
         else:
             self.is_shipment_exportable = False
 
-    is_shipment_exportable = fields.Boolean("Is Shipment exportable", compute='_shipment_exportable', store=False)
-
     def _compute_set_magento_info(self):
-        """
-        Computes Magento Information
-        :return:
-        """
         for record in self:
             if record.sale_id.magento_order_id:
                 record.magento_website_id = record.sale_id.magento_website_id
@@ -62,11 +50,6 @@ class StockPicking(models.Model):
                 record.storeview_id = False
 
     def export_shipments_to_magento(self, magento_instance):
-        """
-        This method is used for exporting shipments from odoo to magento
-        :param magento_instance: Instance of Magento
-        :return:
-        """
         pickings = self.search([
             ('is_exported_to_magento', '=', False),
             ('state', 'in', ['done']),
@@ -75,6 +58,7 @@ class StockPicking(models.Model):
         ])
         module_obj = self.env['ir.module.module']
         purchase_module = module_obj.sudo().search([('name', '=', 'purchase'), ('state', '=', 'installed')])
+
         for picking in pickings:
             # if purchase_module and picking.purchase_id and picking.magento_instance_id and \
             #         not picking.magento_instance_id.is_export_dropship_picking:
@@ -86,11 +70,9 @@ class StockPicking(models.Model):
             picking.export_single_shipment_to_magento(False)
 
     def export_single_shipment_to_magento(self, is_single_call=True):
-        """
-        Export Shipment details to Magento for a single shipment
-        """
         order_item = []
         log_book_obj = self.env['magento.shipments.log.book']
+
         for move in self.move_lines:
             if move.sale_line_id and move.sale_line_id.magento_sale_order_line_ref:
                 order_item_id = move.sale_line_id.magento_sale_order_line_ref
@@ -100,7 +82,9 @@ class StockPicking(models.Model):
                     'orderItemId': order_item_id,
                     'qty': qty_delivered
                 })
+
         track_numbers, message = self.add_tracking_number()
+
         if message:
             if is_single_call:
                 raise UserError(message)
@@ -157,9 +141,6 @@ class StockPicking(models.Model):
                 }
 
     def add_tracking_number(self):
-        """
-        Add new Tracking Number for Picking
-        """
         if self.carrier_id and not self.carrier_id.magento_carrier_code:
             return [], "You are trying to 'Export Shipment Information'.\n But still, you didn't set the Magento " \
                        "Carrier Code for '%s' Delivery Method" % (str(self.carrier_id.name))

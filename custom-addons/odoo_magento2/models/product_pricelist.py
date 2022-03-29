@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
+
 from odoo import models, api
 
 
@@ -88,6 +88,7 @@ class ProductPricelistItem(models.Model):
                     domain.append(('magento_sku', '=', self.product_tmpl_id.default_code))
                 elif self.applied_on == '0_product_variant':
                     domain.append(('magento_sku', '=', self.product_id.default_code))
+
                 self.env['magento.product.product'].search(domain).write({"force_update": True})
 
         return res

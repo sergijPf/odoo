@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes methods for importing magento customers into Odoo.
-"""
+
 from odoo import models, fields, api
 
 MAGENTO_RES_PARTNER = 'magento.res.partner'
@@ -66,8 +63,7 @@ class ResPartner(models.Model):
                     'property_product_pricelist': website.pricelist_id.id,
                     'is_magento_customer': True
                 })
-            except Exception as e:
+            except Exception:
                 return
 
         return odoo_partner
-

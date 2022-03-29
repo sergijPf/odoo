@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!--This is a common view for cron configuration wizard -->
         <record id="magento_product_category_configuration_form_view" model="ir.ui.view">
             <field name="name">magento.product.category.configuration</field>
             <field name="model">magento.product.category.configuration</field>
@@ -17,11 +16,12 @@
                                     <h3 style="font-weight:bold;color:#7d5a29">Note :</h3>
                                 </u>
                                 <p>
-                                    <b>1. This action will create Product Category structure in Magento and Odoo's Magento Layer</b>
+                                    <b>1. This action will create Product Category structure in Magento itself and in
+                                        Magento Layer in Odoo</b>
                                 </p>
                                 <p>
-                                    <b>2. If "To Update Existed" field is checked, it'll update Product Category
-                                        Names for each website of already exported Categories to Magento. </b>
+                                    <b>2. If "To Update Existed" checkbox is checked, it'll update Product Category
+                                        Names for each website of already exported Categories in Magento. </b>
                                 </p>
                             </p>
                         </div>

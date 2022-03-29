@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes methods for Magento Instance
-"""
+
 from datetime import datetime
 
 from odoo import models, fields, api, _
@@ -18,18 +15,12 @@ IR_CRON = 'ir.cron'
 
 
 class MagentoInstance(models.Model):
-    """
-    Describes methods for Magento Instance
-    """
     _name = MAGENTO_INSTANCE
     _description = 'Magento Instance'
 
     @api.model
     def _default_order_status(self):
-        """
-        Get default status for importing magento order
-        :return:
-        """
+
         order_status = self.env.ref('odoo_magento2.processing')
         return [(6, 0, [order_status.id])] if order_status else False
 
@@ -46,23 +37,23 @@ class MagentoInstance(models.Model):
     magento_stock_field = fields.Selection([
         ('free_qty', 'On Hand Quantity'),
         ('virtual_available', 'Forcast Quantity')
-    ], string="Magento Stock Type", default='free_qty', help="Magento Stock Type")
+    ], string="Magento Stock Type", default='free_qty')
     catalog_price_scope = fields.Selection([
         ('global', 'Global'),
         ('website', 'Website')
     ], string="Catalog Price Scopes", help="Scope of Price in Magento", default='website')
     pricelist_id = fields.Many2one('product.pricelist', "Pricelist", help="Product Price is set in selected Pricelist")
-    access_token = fields.Char(string="Magento Access Token", help="Magento Access Token")
-    last_update_stock_time = fields.Datetime(string="Last Update Product Stock Time", help="Last Update Stock Time")
-    company_id = fields.Many2one('res.company', string='Magento Company', help="Magento Company")
+    access_token = fields.Char(string="Magento Access Token")
+    last_update_stock_time = fields.Datetime(string="Last Update Product Stock Time")
+    company_id = fields.Many2one('res.company', string='Magento Company')
     invoice_done_notify_customer = fields.Boolean(string="Invoices Done Notify customer", default=False,
-                                                  help="while export invoice send email")
+                                                  help="Send email while export invoice")
     auto_export_product_stock = fields.Boolean(string='Auto Export Product Stock?')
     auto_export_invoice = fields.Boolean(string='Auto Export Invoice?')
     auto_export_shipment_order_status = fields.Boolean(string='Auto Export Shipment Information?')
     payment_method_ids = fields.One2many("magento.payment.method", "magento_instance_id", "Payment Methods in Magento")
     shipping_method_ids = fields.One2many("magento.delivery.carrier", "magento_instance_id",
-                                          "Shipping Methods in Magento")
+                                          string="Shipping Methods in Magento")
     import_magento_order_status_ids = fields.Many2many(
         'import.magento.order.status', 'magento_instance_order_status_rel', 'magento_instance_id', 'order_status_id',
         string="Import Order Status", default=_default_order_status,
@@ -71,8 +62,7 @@ class MagentoInstance(models.Model):
                                         help="Check this if your Magento site is using SSL certificate")
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
-    cron_count = fields.Integer("Scheduler Count", compute="_compute_get_scheduler_list",
-                                help="This Field relocates Scheduler Count.")
+    cron_count = fields.Integer("Scheduler Count", compute="_compute_get_scheduler_list")
 
     def _compute_get_scheduler_list(self):
         seller_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
@@ -81,11 +71,6 @@ class MagentoInstance(models.Model):
 
     @api.model
     def _scheduler_update_product_stock_qty(self, args=None):
-        """
-        This method is used to export product stock quantity to Magento via cron job
-        :param args: arguments to export product stock quantity.
-        :return:
-        """
         if args is None:
             args = {}
         magento_product_product = self.env['magento.product.product']
@@ -98,11 +83,6 @@ class MagentoInstance(models.Model):
 
     @api.model
     def _scheduler_update_order_status(self, args=None):
-        """
-        This method is used to export shipment to Magento via cron job
-        :param args: arguments to export invoice
-        :return:
-        """
         if args is None:
             args = {}
         stock_picking = self.env['stock.picking']
@@ -114,11 +94,6 @@ class MagentoInstance(models.Model):
 
     @api.model
     def _scheduler_export_invoice(self, args=None):
-        """
-        This method is used to export invoices to Magento via cron job
-        :param args: arguments to export invoice
-        :return:
-        """
         if args is None:
             args = {}
         account_move = self.env['account.move']
@@ -129,35 +104,23 @@ class MagentoInstance(models.Model):
             account_move.export_invoices_to_magento(instance)
 
     @staticmethod
-    def _check_location_url(location_url):
-        """
-        Set Magento rest API URL
-        :param location_url: Magento URL
-        :return:
-        """
+    def _append_rest_suffix_to_url(location_url):
         if location_url:
             location_url = location_url.strip()
             location_url = location_url.rstrip('/')
             location_vals = location_url.split('/')
             if location_vals[-1] != 'rest':
                 location_url = location_url + '/rest'
+
         return location_url
 
     def write(self, vals):
-        """
-        Remove '/' from the magento URL if exist
-        :param vals:
-        :return:
-        """
         if 'magento_url' in vals:
             vals['magento_url'] = vals['magento_url'].rstrip('/')
+
         return super(MagentoInstance, self).write(vals)
 
     def list_of_delivery_method(self):
-        """
-        This method is for list all delivery method
-        :return:
-        """
         tree_view = self.env.ref('odoo_magento2.magento_delivery_carrier_tree_view').id
 
         return {
@@ -173,11 +136,8 @@ class MagentoInstance(models.Model):
         }
 
     def list_of_instance_cron(self):
-        """
-        Opens view for cron scheduler of instance
-        :return:
-        """
         instance_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
+
         return {
             'domain': "[('id', 'in', " + str(instance_cron.ids) + " )]",
             'name': 'Cron Scheduler',
@@ -187,22 +147,14 @@ class MagentoInstance(models.Model):
         }
 
     def cron_configuration_action(self):
-        """
-        Return action for cron configuration
-        :return:
-        """
         action = self.env.ref('odoo_magento2.action_magento_wizard_cron_configuration').read()[0]
-        context = {
+        action['context'] = {
             'magento_instance_id': self.id
         }
-        action['context'] = context
 
         return action
 
     def magento_test_connection(self):
-        """
-        This method check connection in magento.
-        """
         self.ensure_one()
         try:
             api_url = "/V1/store/websites"
@@ -221,9 +173,6 @@ class MagentoInstance(models.Model):
             }
 
     def synchronize_metadata(self):
-        """
-        Sync all the websites, store view , Payment methods and delivery methods
-        """
         self.make_currencies_active()
         self.sync_price_scope()
         self.sync_website()
@@ -248,10 +197,6 @@ class MagentoInstance(models.Model):
                 currency_id.write({'active': True})
 
     def sync_price_scope(self):
-        """
-        get price attribute scope and set it in the current instance.
-        :return:
-        """
         api_url = "/V1/products/attributes/price"
         try:
             attributes_price = req(self, api_url, method='GET')
@@ -261,9 +206,6 @@ class MagentoInstance(models.Model):
         self.catalog_price_scope = attributes_price.get('scope')
 
     def sync_website(self):
-        """
-        Sync all the websites from magento
-        """
         try:
             website_response = req(self, "/V1/store/websites", method='GET')
         except Exception as error:
@@ -280,9 +222,6 @@ class MagentoInstance(models.Model):
                     })
 
     def sync_storeview(self):
-        """
-        This method used for import all storeviews from magento.
-        """
         storeview_obj = self.env[MAGENTO_STOREVIEW]
         try:
             storeview_configs = req(self, "/V1/store/storeConfigs", method='GET')
@@ -329,13 +268,6 @@ class MagentoInstance(models.Model):
         })
 
     def get_store_view_language_and_name(self, stores, magento_storeview_id, storeview_data):
-        """
-        Get Store view language and name.
-        :param stores: Magento stores received from API
-        :param magento_storeview_id: Magento store view id
-        :param storeview_data: data received from Magento
-        :return: name and res language object
-        """
         name = ''
         res_lang_obj = self.env['res.lang']
         lang = storeview_data.get('locale')
@@ -377,13 +309,10 @@ class MagentoInstance(models.Model):
                     })
 
     def open_all_websites(self):
-        """
-        This method used for smart button for view all website.
-        return : Action.
-        """
         form_view_id = self.env.ref('odoo_magento2.view_magento_website_form').id
         tree_view = self.env.ref('odoo_magento2.view_magento_website_tree').id
-        action = {
+
+        return {
             'name': 'Magento Website',
             'type': ACTION_ACT_WINDOW,
             'view_type': 'form',
@@ -394,16 +323,10 @@ class MagentoInstance(models.Model):
             'target': 'current',
             'domain': [('id', 'in', self.magento_website_ids.ids)]
         }
-        return action
 
     def product_categories_action(self):
-        """
-        Return action for product categories configuration
-        :return:
-        """
         action = self.env.ref('odoo_magento2.action_wizard_magento_product_category_configuration').read()[0]
-        context = {
+        action['context'] = {
             'magento_instance_id': self.id
         }
-        action['context'] = context
         return action

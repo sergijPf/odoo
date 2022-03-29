@@ -1,27 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!--This is a common view for cron configuration wizard -->
-        <record id="magento_cron_configuration_form_view"
-                model="ir.ui.view">
+        <record id="magento_cron_configuration_form_view" model="ir.ui.view">
             <field name="name">magento.cron.configuration</field>
             <field name="model">magento.cron.configuration</field>
             <field name="priority">11</field>
             <field name="arch" type="xml">
                 <form string="Schedulers Configurations" class="o_magento">
-                    <div class="oe_title mb-2 ml-2" attrs="{'invisible': [('magento_instance_id', '!=', False)]}">
-                        <h1 class="o_on_board_heading">
-                            No Instance Created Yet!
-                        </h1>
-                    </div>
                     <div class="oe_title" attrs="{'invisible': [('magento_instance_id', '=', False)]}">
                         <h1 class="font-weight-bold o_on_board_heading">
                             <field name="magento_instance_id" readonly="1" options="{'no_open': True}"/>
                         </h1>
-                    </div>
-
-                    <div class="o_horizontal_separator o_onboard_header font-weight-bold">
-                        Export Product Stock
                     </div>
                     <group>
                         <div class="o_setting_left_pane">
@@ -34,7 +23,8 @@
                                     <div class="o_setting_right_pane">
                                         <span>
                                             <h6>
-                                                <label for="auto_export_product_stock" string="Auto Export product Stock ?"/>
+                                                <label for="auto_export_product_stock"
+                                                       string="Auto Export product Stock ?"/>
                                             </h6>
                                         </span>
                                         <div class="text-muted">
@@ -43,18 +33,22 @@
                                         <br/>
                                         <div class="o_onboard_cron_settings"
                                              attrs="{'invisible': [('auto_export_product_stock', '=', False)]}">
-                                            <field name="auto_export_product_stock_interval_number"
+                                            <field name="export_product_stock_interval_number"
                                                    placeholder="Interval Number"
-                                                   attrs="{'required': [('auto_export_product_stock', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_product_stock_interval_type"
+                                                   attrs="{'required': [('auto_export_product_stock', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_product_stock_interval_type"
                                                    placeholder="Interval Type"
-                                                   attrs="{'required': [('auto_export_product_stock', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_product_stock_next_execution"
+                                                   attrs="{'required': [('auto_export_product_stock', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_product_stock_next_execution"
                                                    placeholder="Next Execution Date"
-                                                   attrs="{'required': [('auto_export_product_stock', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_product_stock_user_id"
+                                                   attrs="{'required': [('auto_export_product_stock', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_product_stock_user_id"
                                                    placeholder="Responsible User"
-                                                   attrs="{'required': [('auto_export_product_stock', '=', True),('magento_instance_id','!=',False)]}"/>
+                                                   attrs="{'required': [('auto_export_product_stock', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
                                         </div>
                                     </div>
                                 </div>
@@ -66,12 +60,15 @@
                             <div class="row mt16 o_settings_container o_onboard_padding">
                                 <div class="ol-12 o_setting_box o_onboard_setting_box">
                                     <div class="o_setting_left_pane">
-                                        <field name="auto_export_invoice" widget="boolean_toggle" class="o_onboard_boolean_toggle"/>
+                                        <field name="auto_export_invoice"
+                                               widget="boolean_toggle"
+                                               class="o_onboard_boolean_toggle"/>
                                     </div>
                                     <div class="o_setting_right_pane">
                                         <span>
                                             <h6>
-                                                <label for="auto_export_invoice" string="Auto Export Invoice Information ?"/>
+                                                <label for="auto_export_invoice"
+                                                       string="Auto Export Invoice Information ?"/>
                                             </h6>
                                         </span>
                                         <div class="text-muted">
@@ -80,18 +77,22 @@
                                         <br/>
                                         <div class="o_onboard_cron_settings"
                                          attrs="{'invisible': [('auto_export_invoice', '=', False)]}">
-                                            <field name="auto_export_invoice_interval_number"
+                                            <field name="export_invoice_interval_number"
                                                    placeholder="Interval Number"
-                                                   attrs="{'required': [('auto_export_invoice', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_invoice_interval_type"
+                                                   attrs="{'required': [('auto_export_invoice', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_invoice_interval_type"
                                                    placeholder="Interval Type"
-                                                   attrs="{'required': [('auto_export_invoice', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_invoice_next_execution"
+                                                   attrs="{'required': [('auto_export_invoice', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_invoice_next_execution"
                                                    placeholder="Next Execution Date"
-                                                   attrs="{'required': [('auto_export_invoice', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_invoice_user_id"
+                                                   attrs="{'required': [('auto_export_invoice', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_invoice_user_id"
                                                    placeholder="Responsible User"
-                                                   attrs="{'required': [('auto_export_invoice', '=', True),('magento_instance_id','!=',False)]}"/>
+                                                   attrs="{'required': [('auto_export_invoice', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
                                         </div>
                                     </div>
                                 </div>
@@ -109,7 +110,8 @@
                                     <div class="o_setting_right_pane">
                                         <span>
                                             <h6>
-                                                <label for="auto_export_shipment_order_status" string="Auto Export Shipment Information ?"/>
+                                                <label for="auto_export_shipment_order_status"
+                                                       string="Auto Export Shipment Information ?"/>
                                             </h6>
                                         </span>
                                         <div class="text-muted">
@@ -118,18 +120,22 @@
                                         <br/>
                                         <div class="o_onboard_cron_settings"
                                          attrs="{'invisible': [('auto_export_shipment_order_status', '=', False)]}">
-                                            <field name="auto_export_shipment_order_status_interval_number"
+                                            <field name="export_shipment_order_status_interval_number"
                                                    placeholder="Interval Number"
-                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_shipment_order_status_interval_type"
+                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_shipment_order_status_interval_type"
                                                    placeholder="Interval Type"
-                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_shipment_order_status_next_execution"
+                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_shipment_order_status_next_execution"
                                                    placeholder="Next Execution Date"
-                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),('magento_instance_id','!=',False)]}"/>
-                                            <field name="auto_export_shipment_order_status_user_id"
+                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <field name="export_shipment_order_status_user_id"
                                                    placeholder="Responsible User"
-                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),('magento_instance_id','!=',False)]}"/>
+                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),
+                                                   ('magento_instance_id','!=',False)]}"/>
                                         </div>
                                     </div>
                                 </div>

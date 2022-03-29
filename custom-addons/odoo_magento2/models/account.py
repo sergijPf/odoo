@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
-"""For Odoo Magento2 Connector Module"""
+
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
 
 class AccountTaxCode(models.Model):
-    """Inherited account tax model to calculate tax."""
     _inherit = 'account.tax'
 
     def get_tax_from_rate(self, rate, is_tax_included=False):
-        """
-        This method base on tax rate it'll find in Odoo
-        :return: Tax_ids
-        """
         tax_ids = self.with_context(active_test=False).search(
             [('price_include', '=', is_tax_included),
              ('type_tax_use', 'in', ['sale']),
@@ -36,8 +31,8 @@ class AccountFiscalPosition(models.Model):
     _inherit = 'account.fiscal.position'
 
     origin_country_ = fields.Many2one('res.country', string='Origin Country',
-                                         help="Warehouse country based on sales order warehouse country system will "
-                                              "apply fiscal position")
+                                      help="Warehouse country based on sales order warehouse country system will "
+                                           "apply fiscal position")
 
     @api.model
     def _get_fpos_by_region(self, country_id=False, state_id=False, zipcode=False, vat_required=False):
@@ -54,11 +49,6 @@ class AccountFiscalPosition(models.Model):
     @api.model
     def search_fiscal_position_based_on_origin_country(self, origin_country_id, country_id, state_id, zipcode,
                                                        vat_required):
-        """
-        Search fiscal position based on origin country
-        Updated by twinkalc on 11 sep 2020 - [changes related to the pass domain of company and is_amazon_fpos]
-        [UPD] Check all base conditions for search fiscal position as per base and with origin country
-        """
         if not country_id:
             return False
         base_domain = [('vat_required', '=', vat_required), ('company_id', 'in', [self.env.company.id, False]),
@@ -93,9 +83,6 @@ class AccountFiscalPosition(models.Model):
 
 
 class AccountInvoice(models.Model):
-    """
-    Describes fields and methods to export invoice info to Magento
-    """
     _inherit = 'account.move'
 
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Magento Payment Method")
@@ -104,10 +91,6 @@ class AccountInvoice(models.Model):
     magento_invoice_id = fields.Char(string="Magento Invoice Ref")
 
     def export_invoices_to_magento(self, magento_instance):
-        """
-        This method is used to export invoices to Magento by automatic cron-job or by calling an action
-        :param magento_instance: Instance of Magento.
-        """
         invoices = self.search([
             ('is_exported_to_magento', '=', False),
             ('magento_instance_id', 'in', magento_instance.ids),
@@ -117,10 +100,6 @@ class AccountInvoice(models.Model):
             invoice.export_single_invoice_to_magento(False)
 
     def export_single_invoice_to_magento(self, is_single_call=True):
-        """
-        Export specific invoice to Magento through API
-        :param is_single_call: If method called for single Invoice only from Frontend
-        """
         self.ensure_one()
         res = True
         log_book_obj = self.env['magento.invoices.log.book']
@@ -151,11 +130,6 @@ class AccountInvoice(models.Model):
             }
 
     def call_export_invoice_api(self, log_book_obj, is_single_call):
-        """
-        Export All invoices in Magento through API
-        :param log_book_obj: Invoice Errors log book object
-        :param is_single_call: If method called for single Invoice only
-        """
         sale_orders = self.invoice_line_ids.mapped('sale_line_ids').mapped('order_id')
         sale_order = sale_orders and sale_orders[0]
         order_item = []
@@ -184,6 +158,7 @@ class AccountInvoice(models.Model):
                         "2. An invoice can't be created without products. Add products and try again.\n"
                         "The order does not allow an invoice to be created") % (sale_order.name, self.name)
             self.log_invoice_export_error(log_book_obj, message)
+
             return False
 
         if response:

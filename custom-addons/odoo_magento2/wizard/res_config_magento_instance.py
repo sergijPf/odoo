@@ -1,32 +1,23 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes configuration for Magento Instance.
-"""
+
 from odoo import models, fields, _
 from odoo.exceptions import UserError
 
 
 class ResConfigMagentoInstance(models.TransientModel):
-    """
-    Describes configuration for Magento instance
-    """
     _name = 'res.config.magento.instance'
     _description = 'Res Config Magento Instance'
 
     name = fields.Char("Instance Name")
-    magento_url = fields.Char(string='Magento URLs', required=True, help="URL of Magento")
+    magento_url = fields.Char(string='Magento URLs', required=True)
     access_token = fields.Char("Magento Access Token", help="Set Access token: Magento >> System >> Integrations")
     company_id = fields.Many2one('res.company', string='Magento Company')
     is_use_odoo_order_sequence = fields.Boolean("Use Odoo Order Sequences?", default=False,
                                                 help="If checked, Odoo Order Sequence is used")
-    magento_verify_ssl = fields.Boolean(string="Verify SSL", default=False, help="Check this if your Magento site is "
+    magento_verify_ssl = fields.Boolean(string="Verify SSL", default=False, help="Check if your Magento site is "
                                                                                  "using SSL certificate")
 
     def create_magento_instance(self):
-        """
-        Creates Magento Instance.
-        """
         magento_instance_obj = self.env['magento.instance']
         magento_url = self.magento_url.rstrip('/')
         magento_instance_exist = magento_instance_obj.with_context(active_test=False).search([

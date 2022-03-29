@@ -12,14 +12,8 @@ class ProductPublicCategory(models.Model):
                                              string="Magento categories", context={'active_test': False})
     no_create_in_magento = fields.Boolean(string="Do not create Category in Magento", default=False)
 
-    @api.onchange('parent_id')
+    @api.onchange('parent_id', 'no_create_in_magento')
     def onchange_parent(self):
-        curr_categ = self.browse(self._origin.id)
-        if curr_categ and curr_categ.magento_prod_categ_ids:
-            raise UserError("You're not able to change the parent category as it was already exported to Magento.")
-
-    @api.onchange('no_create_in_magento')
-    def onchange_no_create_in_magento(self):
         curr_categ = self.browse(self._origin.id)
         if curr_categ and curr_categ.magento_prod_categ_ids:
             raise UserError("You're not able to change it as it was already exported to Magento.")
@@ -34,10 +28,10 @@ class ProductPublicCategory(models.Model):
             if parent_rec and parent_rec.magento_prod_categ_ids:
                 categ_rec = self.browse(self._origin.id)
                 magento_product_categ_obj = self.env['magento.product.category']
-                # loop on each product category in Magento Layer of parent record if any
                 for categ in parent_rec.magento_prod_categ_ids:
                     self.create_product_category_in_magento_and_layer(
-                        magento_product_categ_obj, categ_rec, categ.instance_id, categ.magento_category, categ)
+                        magento_product_categ_obj, categ_rec, categ.instance_id, categ.magento_category, categ
+                    )
         return res
 
     @api.model
@@ -68,6 +62,7 @@ class ProductPublicCategory(models.Model):
                     res = req(categ.instance_id, url, 'DELETE')
                 except Exception:
                     res = False
+
                 if res is True:
                     categ.unlink()
 
@@ -75,7 +70,6 @@ class ProductPublicCategory(models.Model):
 
     def create_product_category_in_magento_and_layer(self, product_categ_object, product_categ, magento_instance,
                                                      magento_categ_id, parent_categ):
-        # create category on Magento side
         data = {
             'category': {
                 'name': product_categ.name,
@@ -93,7 +87,6 @@ class ProductPublicCategory(models.Model):
         if magento_category.get("id"):
             self.process_storeview_translations_export(magento_instance, product_categ, magento_category['id'])
 
-            # create product category in Magento Layer
             ml_prod_categ = product_categ_object.create({
                 'instance_id': magento_instance.id,
                 'product_public_categ_id': product_categ.id,
@@ -113,10 +106,12 @@ class ProductPublicCategory(models.Model):
                         'magento_child_ids': [(4, child_rec.id, 0)]
                     })
                 return ml_prod_categ
+
         return None
 
     def process_storeview_translations_export(self, magento_instance, product_category, magento_category_id):
         magento_storeviews = [w.store_view_ids for w in magento_instance.magento_website_ids]
+
         for view in magento_storeviews:
             data = {
                 "category": {

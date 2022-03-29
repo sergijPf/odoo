@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
+
 from odoo import models, fields, api
 
 
@@ -39,7 +39,6 @@ class SaleWorkflowProcess(models.Model):
         for record in self:
             if not record.validate_order:
                 record.create_invoice = False
-
 
     @api.model
     def auto_workflow_process(self, auto_workflow_process_id=False, order_ids=[]):

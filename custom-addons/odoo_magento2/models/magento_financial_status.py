@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
 
 from odoo import models, fields
 
@@ -27,17 +26,11 @@ class MagentoFinancialStatusEpt(models.Model):
                          "Financial status must be unique in the list")]
 
     def create_financial_status(self, magento_instance, financial_status):
-        """
-        Creates Financial Status for the payment methods of the Instance
-        :param magento_instance: Magento Instance
-        :param financial_status: Financial Status can be pending, processing_paid, processing_unpaid or paid.
-        :return: True
-        """
         for payment_method in magento_instance.payment_method_ids:
             domain = [('magento_instance_id', '=', magento_instance.id),
                       ('payment_method_id', '=', payment_method.id),
                       ('financial_status', '=', financial_status)]
-            existing_financial_status = self.search(domain).ids
+            existing_financial_status = self.search(domain)
 
             if existing_financial_status:
                 continue

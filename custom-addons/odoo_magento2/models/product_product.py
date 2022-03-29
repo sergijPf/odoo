@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
+
 from datetime import datetime
 from odoo import models, fields
 from odoo.exceptions import UserError
@@ -11,35 +11,32 @@ class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     magento_product_count = fields.Integer(string='# Product Counts', compute='_compute_magento_product_count')
-    magento_product_ids = fields.One2many(MAGENTO_PRODUCT, 'odoo_product_id', string='Magento Products',
-                                          help='Magento Product Ids')
+    magento_product_ids = fields.One2many(MAGENTO_PRODUCT, 'odoo_product_id', string='Magento Products')
 
     def _compute_magento_product_count(self):
-        """
-        calculate magento product count
-        :return:
-        """
         magento_product_obj = self.env[MAGENTO_PRODUCT]
         for product in self:
             magento_products = magento_product_obj.search([('odoo_product_id', '=', product.id)])
             product.magento_product_count = len(magento_products) if magento_products else 0
 
     def write(self, vals):
+        res = super(ProductProduct, self).write(vals)
+
         if self.magento_product_ids and ('product_variant_image_ids' in vals or 'weight' in vals):
             self.magento_product_ids.force_update = True
 
-        return super(ProductProduct, self).write(vals)
+        return res
 
     def unlink(self):
-        reject_configs = []
+        rejected_variants = []
 
         for prod in self:
             if prod.magento_product_ids:
-                reject_configs.append({c.magento_instance_id.name: c.magento_sku for c in prod.magento_product_ids})
+                rejected_variants.append({c.magento_instance_id.name: c.magento_sku for c in prod.magento_product_ids})
 
-        if reject_configs:
+        if rejected_variants:
             raise UserError("It's not allowed to delete these product(s) as they were already added to Magento Layer "
-                            "as Simple Product(s): %s\n" % (str(reject_configs)))
+                            "as Simple Product(s): %s\n" % (str(rejected_variants)))
 
         return super(ProductProduct, self).unlink()
 

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Requrests API to magento.
-"""
+
 import json
 import socket
 import logging
@@ -17,7 +14,7 @@ def req(backend, path, method='GET', data=None, params=None):
     """
     This method use for base on API request it call API method.
     """
-    location_url = backend._check_location_url(backend.magento_url)
+    location_url = backend._append_rest_suffix_to_url(backend.magento_url)
     verify_ssl = backend.magento_verify_ssl
     api_url = '%s%s' % (location_url, path)
     headers = {

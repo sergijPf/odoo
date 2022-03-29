@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-"""For Odoo Magento2 Connector Module"""
+
 from odoo import models, fields, api
 
 
 class ProductImage(models.Model):
-    """Inherited account tax model to calculate tax."""
     _inherit = 'product.image'
 
     image_role = fields.Selection([

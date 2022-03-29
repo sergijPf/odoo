@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes product import export process.
-"""
 
 import re
 from datetime import datetime
@@ -17,9 +13,6 @@ MAGENTO_PRODUCT_PRODUCT = 'magento.product.product'
 
 
 class MagentoImportExport(models.TransientModel):
-    """
-    Describes Magento Process for import/ export operations
-    """
     _name = 'magento.import.export'
     _description = 'Magento Import Export'
 
@@ -35,14 +28,11 @@ class MagentoImportExport(models.TransientModel):
     end_date = fields.Datetime("To Date")
 
     def execute(self):
-        """
-        Execute different Magento operations based on selected operation,
-        """
+        message = ''
         magento_instance = self.env['magento.instance']
         account_move = self.env['account.move']
         picking = self.env['stock.picking']
         magento_product_obj = self.env[MAGENTO_PRODUCT_PRODUCT]
-        message = ''
 
         if self.magento_instance_ids:
             instances = self.magento_instance_ids
@@ -81,12 +71,8 @@ class MagentoImportExport(models.TransientModel):
             }
         }
 
-    def export_product_stock_operation(self, instances, magento_product_obj):
-        """
-        Export product stock from Odoo to Magento
-        :param instances: Magento Instances
-        :return:
-        """
+    @staticmethod
+    def export_product_stock_operation(instances, magento_product_obj):
         res = True
         for instance in instances:
             if not magento_product_obj.export_products_stock_to_magento(instance):
@@ -95,11 +81,7 @@ class MagentoImportExport(models.TransientModel):
 
         return res
 
-    def prepare_product_for_export_to_magento(self):
-        """
-        This method is used to export products in Magento layer as per selection.
-        If "direct" is selected, then it will direct export product into Magento layer.
-        """
+    def export_products_to_magento_layer_operation(self):
         active_product_ids = self._context.get("active_ids", [])
         selection = self.env["product.template"].browse(active_product_ids)
         failed_products = selection.filtered(lambda product: product.type != "product" or not product.is_magento_config)
@@ -120,23 +102,17 @@ class MagentoImportExport(models.TransientModel):
         }
 
     def add_products_to_magento_layer(self, odoo_products):
-        """
-        Add product and product categories to Magento Layer in Odoo
-        :param odoo_products: Odoo product objects
-        :return:
-        """
         magento_product_obj = self.env[MAGENTO_PRODUCT_PRODUCT]
         ptae_obj = self.env['product.template.attribute.exclusion']
         magento_sku_missing = []
         product_dict = {}
-
 
         for instance in self.magento_instance_ids:
             product_dict.update({'instance_id': instance.id})
             for odoo_prod in odoo_products:
                 product_dict.update({'odoo_product_id': odoo_prod})
                 self.create_or_update_configurable_product_in_magento_layer(product_dict)
-                magento_sku_missing = self.create_or_update_magento_product_variant(
+                magento_sku_missing = self.create_or_update_simple_product_in_magento_layer(
                     product_dict, magento_sku_missing, magento_product_obj, ptae_obj
                 )
         if magento_sku_missing:
@@ -144,9 +120,32 @@ class MagentoImportExport(models.TransientModel):
 
         return True
 
-    def create_or_update_magento_product_variant(self, product_dict, magento_sku_missing, magento_product_obj, ptae_obj):
-        product_templ = product_dict.get('odoo_product_id')
+    def create_or_update_configurable_product_in_magento_layer(self, product_dict):
+        conf_product_obj = self.env['magento.configurable.product']
+        product = product_dict.get('odoo_product_id')
+        domain = [('magento_instance_id', '=', product_dict.get('instance_id')),
+                  ('odoo_prod_template_id', '=', product.id)]
+        conf_product = conf_product_obj.with_context(active_test=False).search(domain)
+        if not conf_product:
+            values = {
+                'magento_instance_id': product_dict.get('instance_id'),
+                'odoo_prod_template_id': product.id,
+                'magento_sku': product.with_context(lang='en_US').name.replace(' - ', '_').replace('-', '_').
+                    replace('%', '').replace('#', '').replace('/', '').replace('  ', ' ').replace(' ', '_')
+            }
+            conf_product = conf_product_obj.create(values)
+        else:
+            if not conf_product.active:
+                conf_product.write({'active': True})
+            conf_product.force_update = True
+
+        product_dict.update({"conf_product_id": conf_product})
+
+    @staticmethod
+    def create_or_update_simple_product_in_magento_layer(product_dict, magento_sku_missing, magento_product_obj,
+                                                         ptae_obj):
         excl_combinations = []
+        product_templ = product_dict.get('odoo_product_id')
         excl_ptav = ptae_obj.search([('product_tmpl_id', '=', product_templ.id)])
 
         [[excl_combinations.append(
@@ -184,38 +183,13 @@ class MagentoImportExport(models.TransientModel):
 
         return magento_sku_missing
 
-    def create_or_update_configurable_product_in_magento_layer(self, product_dict):
-        conf_product_obj = self.env['magento.configurable.product']
-        product = product_dict.get('odoo_product_id')
-        domain = [('magento_instance_id', '=', product_dict.get('instance_id')),
-                  ('odoo_prod_template_id', '=', product.id)]
-        conf_product = conf_product_obj.with_context(active_test=False).search(domain)
-        if not conf_product:
-            values = {
-                'magento_instance_id': product_dict.get('instance_id'),
-                'odoo_prod_template_id': product.id,
-                'magento_sku': product.with_context(lang='en_US').name.replace(' - ','_').replace('-','_').
-                    replace('%','').replace('#','').replace('/','').replace('  ',' ').replace(' ','_')
-            }
-            conf_product = conf_product_obj.create(values)
-        else:
-            if not conf_product.active:
-                conf_product.write({
-                    # 'magento_sku': product.product_tmpl_id.with_context(lang='en_US').name.replace(' ','_').
-                    #     replace('%','').replace('#','').replace('/',''), # to remove later
-                    'active': True
-                })
-            conf_product.force_update = True
-            # conf_product.simple_product_ids.write({'active': False})
-        product_dict.update({"conf_product_id": conf_product})
-
     def prepare_customers_for_export_to_magento(self):
         active_ids = self._context.get("active_ids", [])
         selection = self.env["res.partner"].browse(active_ids)
         filt_customers = selection.filtered(lambda c: c.customer_rank == 1 and c.type == 'contact')
 
         if not filt_customers:
-            raise UserError(_("It seems selected partners are not Customers or have different Address type than 'contact'"))
+            raise UserError("It seems selected partners are not Customers or have different Address type than 'contact'")
 
         failed_to_add = self.add_customers_to_magento_layer(filt_customers)
 
@@ -262,7 +236,7 @@ class MagentoImportExport(models.TransientModel):
 
     def create_magento_customer_in_layer(self, customer, instance, website):
         magento_partner_obj = self.env['magento.res.partner']
-        res =  magento_partner_obj.create({
+        res = magento_partner_obj.create({
             'partner_id': customer.id,
             'magento_instance_id': instance.id,
             'magento_website_id': website.id,
@@ -273,14 +247,14 @@ class MagentoImportExport(models.TransientModel):
             customer.is_magento_customer = True
         return res
 
-    def create_and_link_customer_address(self, odoo_partner, magento_customer, type):
+    def create_and_link_customer_address(self, odoo_partner, magento_customer, addr_type):
         customer_address_obj = self.env['magento.customer.addresses']
         if odoo_partner.id in magento_customer.customer_address_ids.mapped('odoo_partner_id').ids:
             return
 
-        if type == 'invoice':
+        if addr_type == 'invoice':
             _type = 'billing'
-        elif type == 'delivery':
+        elif addr_type == 'delivery':
             _type = 'shipping'
         else:
             return

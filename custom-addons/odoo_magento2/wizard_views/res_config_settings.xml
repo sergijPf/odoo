@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Magento Configuration Setting -->
-        <!-- Form View Section -->
         <record id="view_magento_res_config_settings" model="ir.ui.view">
             <field name="name">Magento Settings</field>
             <field name="model">res.config.settings</field>

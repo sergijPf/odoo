@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
+
 import secrets
 import string
 from odoo import models, fields
@@ -50,7 +50,7 @@ class MagentoResPartner(models.Model):
             if not len(magento_customer.customer_address_ids.filtered(
                     lambda x: x.magento_customer_address_id == str(billing_address.get('entity_id')) and
                               x.address_type == 'billing')):
-                 magento_customer.customer_address_ids.create_and_link_customer_address(
+                magento_customer.customer_address_ids.create_and_link_customer_address(
                     billing_address, magento_customer, odoo_partner, 'billing'
                 )
             # check customer shipping addresses(magento_layer) / delivery address(odoo) exist
@@ -188,10 +188,10 @@ class MagentoCustomerAddresses(models.Model):
     street2 = fields.Char(related="odoo_partner_id.street2", string="Street2")
     zip = fields.Char(related="odoo_partner_id.zip", string="Postcode *")
 
-    def create_and_link_customer_address(self, address_dict, magento_customer, odoo_partner, type):
-        if type == 'billing':
+    def create_and_link_customer_address(self, address_dict, magento_customer, odoo_partner, addr_type):
+        if addr_type == 'billing':
             _type = 'invoice'
-        elif type == 'shipping':
+        elif addr_type == 'shipping':
             _type = 'delivery'
         else:
             _type = 'other'
@@ -216,7 +216,7 @@ class MagentoCustomerAddresses(models.Model):
 
         # create address in magento layer
         address_id = self.create({
-            'address_type': type,
+            'address_type': addr_type,
             'magento_customer_address_id': address_dict.get('entity_id'),
             'customer_id': magento_customer.id,
             'odoo_partner_id': odoo_address.id

@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Describes methods for webhooks to create/cancel sales orders
-"""
+
 import json
 from odoo import http
 from odoo.http import request
 
 
 class Binary(http.Controller):
-    """
-    Describes methods for webhooks to create order, invoice, product and customer.
-    """
     @http.route('/web_magento_place_order', csrf=False, auth="public", type="json")
     def place_order(self):
         """

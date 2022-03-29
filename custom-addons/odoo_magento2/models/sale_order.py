@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes fields and methods for create/ update sale order
-"""
+
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 from ..python_library.api_request import req

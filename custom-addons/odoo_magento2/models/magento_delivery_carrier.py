@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes methods and fields for Magento Delivery Carriers
-"""
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
 
 class MagentoDeliveryCarrier(models.Model):
-    """
-    Model for Magento's carriers.
-    """
     _name = 'magento.delivery.carrier'
     _rec_name = 'carrier_code'
     _description = 'Magento Delivery Carrier'
@@ -28,10 +22,6 @@ class MagentoDeliveryCarrier(models.Model):
 
     @api.depends('carrier_code')
     def name_get(self):
-        """
-        Append the Magento instance name with Delivery Carrier code in the list only.
-        :return:
-        """
         result = []
         for delivery in self:
             instance_name = ' - ' + delivery.magento_instance_id.name if delivery.magento_instance_id else False

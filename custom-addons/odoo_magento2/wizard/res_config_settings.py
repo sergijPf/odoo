@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes configuration for Magento Instance.
-"""
+
 from odoo import models, fields, api
 
 
 class ResConfigSettings(models.TransientModel):
-    """
-    Describes Magento Instance Configurations
-    """
     _inherit = 'res.config.settings'
 
     magento_instance_id = fields.Many2one('magento.instance', 'Instance', ondelete='cascade',
@@ -19,8 +13,8 @@ class ResConfigSettings(models.TransientModel):
     magento_storeview_id = fields.Many2one('magento.storeview', string="Storeviews",  help="Magento Storeviews",
                                            domain="[('magento_website_id', '=', magento_website_id)]")
     magento_team_id = fields.Many2one('crm.team', string='Magento Sales Team')
-    magento_sale_prefix = fields.Char(
-        string="Sale Order Prefix", help="A prefix put before the name of imported sales orders.")
+    magento_sale_prefix = fields.Char(string="Sale Order Prefix", help="A prefix put before the name of imported "
+                                                                       "sales orders.")
     magento_website_warehouse_id = fields.Many2one('stock.warehouse', string='Magento Warehouse',
                                                    help='Warehouse to be used to deliver an order from this website.')
     location_ids = fields.Many2many('stock.location', string="Locations",
@@ -59,7 +53,7 @@ class ResConfigSettings(models.TransientModel):
     @api.onchange('magento_instance_id')
     def onchange_magento_instance_id(self):
         """
-        Sets default values for configuration when change/ select Magento Instance.
+        Sets default values for Magento Instance configuration.
         """
         instance_id = self.magento_instance_id
         if instance_id:
@@ -76,9 +70,6 @@ class ResConfigSettings(models.TransientModel):
 
     @api.onchange('magento_website_id')
     def onchange_magento_website_id(self):
-        """
-        set some Magento configurations based on changed Magento instance.
-        """
         website_id = self.magento_website_id
         self.magento_storeview_id = self.magento_website_warehouse_id = self.magento_website_pricelist_id = False
 
@@ -91,9 +82,6 @@ class ResConfigSettings(models.TransientModel):
 
     @api.onchange('magento_storeview_id')
     def onchange_magento_storeview_id(self):
-        """
-        set some Magento configurations based on changed Magento instance.
-        """
         storeview_id = self.magento_storeview_id
         self.is_use_odoo_order_sequence = self.magento_team_id = False
         self.magento_sale_prefix = ''
@@ -104,9 +92,6 @@ class ResConfigSettings(models.TransientModel):
             self.is_use_odoo_order_sequence = storeview_id.is_use_odoo_order_sequence
 
     def execute(self):
-        """
-        Save all selected Magento Instance configurations
-        """
         instance = self.magento_instance_id
         website_pricelist = self.magento_website_pricelist_id
 

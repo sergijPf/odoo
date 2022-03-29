@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes Magento Payment Methods
-"""
+
 from odoo import models, api, fields
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
 
 class MagentoPaymentMethod(models.Model):
-    """
-    Describes Magento Payment Methods
-    """
     _name = 'magento.payment.method'
     _description = 'Magento Payment Method'
     _rec_name = 'payment_method_name'
@@ -19,10 +13,6 @@ class MagentoPaymentMethod(models.Model):
     @api.model
     @api.returns('res.company')
     def _default_company_id(self):
-        """
-        Returns Default Company Id
-        :return: Default company id
-        """
         return self.env.company
 
     magento_instance_id = fields.Many2one('magento.instance', 'Instance', ondelete="cascade",
@@ -32,7 +22,7 @@ class MagentoPaymentMethod(models.Model):
     payment_term_id = fields.Many2one('account.payment.term', string='Payment Term',
                                       help="Default payment term of a sale order using this method.")
     magento_workflow_process_id = fields.Many2one('sale.workflow.process', string='Automatic Workflow',
-                                                  help="Workflow for Order")
+                                                  help="Auto workflow for imported orders")
     company_id = fields.Many2one('res.company', 'Company', default=_default_company_id, help="Magento Company Id.")
     create_invoice_on = fields.Selection([
         ('open', 'Validate'),

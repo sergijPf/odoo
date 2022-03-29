@@ -19,14 +19,14 @@
                                 </u>
                                 <b>
                                     Products without Internal Reference (SKU) will not
-                                    be exported to Magento Product Layer.
+                                    be added to Magento Layer in Odoo.
                                 </b>
                             </p>
                         </div>
                     </group>
                     <footer>
-                        <button string="Export Products" class="oe_highlight" type="object"
-                                name="prepare_product_for_export_to_magento"/>
+                        <button string="Export to Layer" class="oe_highlight" type="object"
+                                name="export_products_to_magento_layer_operation"/>
                         <button string="Cancel" class="oe_highlight" special="cancel"/>
                     </footer>
                 </form>
@@ -34,7 +34,7 @@
         </record>
 
         <record id="action_wizard_magento_product_for_prepare" model="ir.actions.act_window">
-            <field name="name">Magento - Export Products</field>
+            <field name="name">Magento - Add to Layer</field>
             <field name="res_model">magento.import.export</field>
             <field name="binding_model_id" ref="product.model_product_template"/>
             <field name="view_mode">form</field>

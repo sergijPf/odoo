@@ -4,9 +4,6 @@ from odoo import fields, models
 
 
 class MagentoProductLogBook(models.Model):
-    """
-    Describes fields and methods for Magento products
-    """
     _name = 'magento.product.log.book'
     _description = 'Product Log Book'
     _rec_name = 'magento_sku'
@@ -23,9 +20,6 @@ class MagentoProductLogBook(models.Model):
 
 
 class MagentoOrdersLogBook(models.Model):
-    """
-    Describes fields and methods for Magento Sales Order Errors
-    """
     _name = 'magento.orders.log.book'
     _description = 'Magento Sales Order Errors Log Book'
     _rec_name = 'magento_order_ref'
@@ -40,9 +34,6 @@ class MagentoOrdersLogBook(models.Model):
 
 
 class MagentoInvoicesLogBook(models.Model):
-    """
-    Describes fields and methods for Magento Invoice Export Errors
-    """
     _name = 'magento.invoices.log.book'
     _description = 'Magento Invoice Export errors log book'
     _rec_name = 'invoice_name'
@@ -55,9 +46,6 @@ class MagentoInvoicesLogBook(models.Model):
 
 
 class MagentoShipmentsLogBook(models.Model):
-    """
-    Describes fields and methods for Magento Shipment Export Errors
-    """
     _name = 'magento.shipments.log.book'
     _description = 'Magento Shipment Export errors log book'
     _rec_name = 'picking_id'
@@ -70,9 +58,6 @@ class MagentoShipmentsLogBook(models.Model):
 
 
 class MagentoStockLogBook(models.Model):
-    """
-    Describes fields and methods for Magento Stock Export
-    """
     _name = 'magento.stock.log.book'
     _description = 'Stock Export Log Book'
     _rec_name = 'batch'
@@ -85,9 +70,6 @@ class MagentoStockLogBook(models.Model):
 
 
 class MagentoPricesLogBook(models.Model):
-    """
-    Describes fields and methods for Magento Product Prices Export
-    """
     _name = 'magento.prices.log.book'
     _description = 'Magento Product Prices Export Log Book'
     _rec_name = 'magento_sku'

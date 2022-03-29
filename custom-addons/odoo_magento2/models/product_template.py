@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
+
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 
@@ -25,28 +25,26 @@ class ProductTemplate(models.Model):
 
         if self.magento_conf_prod_ids and ('website_description' in vals or 'product_template_image_ids' in vals or
                                            'attribute_line_ids' in vals or 'x_magento_no_create' in vals or
-                                           'public_categ_ids' in vals or 'categ_id' in vals ):
+                                           'public_categ_ids' in vals or 'categ_id' in vals):
             self.magento_conf_prod_ids.force_update = True
 
         return res
 
     def unlink(self):
-        reject_configs = []
+        rejected_configs = []
+
         for prod in self:
             if prod.is_magento_config and prod.magento_conf_prod_ids:
-                reject_configs.append({c.magento_instance_id.name: c.magento_sku for c in prod.magento_conf_prod_ids})
+                rejected_configs.append({c.magento_instance_id.name: c.magento_sku for c in prod.magento_conf_prod_ids})
 
-        if reject_configs:
+        if rejected_configs:
             raise UserError("It's not allowed to delete these product(s) as they were already added to Magento Layer "
-                            "as Configurable Products: %s\n" % (str(reject_configs)))
+                            "as Configurable Products: %s\n" % (str(rejected_configs)))
 
         return super(ProductTemplate, self).unlink()
 
 
 class ProductTemplateAttributeLine(models.Model):
-    """Attributes available on product.template with their selected values in a m2m.
-    Used as a configuration model to generate the appropriate product.template.attribute.value"""
-
     _inherit = "product.template.attribute.line"
 
     magento_config = fields.Boolean(string="Magento Config.Attribute", default=False)
@@ -83,7 +81,7 @@ class ProductTemplateAttributeLine(models.Model):
 
         if 'magento_config' in vals or 'main_conf_attr' in vals:
             if self.is_ignored:
-                raise UserError ("Attribute with 'ignore for Magento' flag cannot be used as configurable!")
+                raise UserError("Attribute with 'ignore for Magento' flag cannot be used as configurable!")
             else:
                 self.product_tmpl_id.magento_conf_prod_ids.force_update = True
 

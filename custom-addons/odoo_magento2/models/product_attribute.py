@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields, models, api, tools
+from odoo import fields, models, api
 from odoo.exceptions import UserError
 
-import os
 
 class ProductAttribute(models.Model):
     _inherit = "product.attribute"

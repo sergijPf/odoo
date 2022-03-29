@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-# See LICENSE file for full copyright and licensing details.
-"""
-Describes methods for importing magento customers into Odoo.
-"""
+
 from odoo import models, fields, api
 
 
@@ -17,7 +14,7 @@ class MagentoProductCategory(models.Model):
     magento_child_ids = fields.One2many(comodel_name='magento.product.category', inverse_name='magento_parent_id',
                                         string='Child Categories')
     complete_category_name = fields.Char("Full Category Name", help="Complete Category Path(Name)",
-                                         compute="_compute_complete_name")
+                                         compute="_compute_complete_name", recursive=True)
     active = fields.Boolean(string="Status", default=True)
     product_public_categ_id = fields.Many2one('product.public.category', string="Product Public Category")
     name = fields.Char("Name", related="product_public_categ_id.name")

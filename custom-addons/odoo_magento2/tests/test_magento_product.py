@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from . import common
 from odoo.exceptions import UserError
@@ -51,7 +50,8 @@ class TestMagentoProduct(common.TestMagentoInstanceCommon):
         self.product_2.default_code = "variant_2"
 
         imp_exp_wiz = self.env['magento.import.export'].create({'magento_instance_ids': [(6, 0, [self.instance.id])]})
-        self.result = imp_exp_wiz.with_context({'active_ids': self.product_template.id}).prepare_product_for_export_to_magento()
+        self.result = imp_exp_wiz.with_context({'active_ids': self.product_template.id}).\
+            export_products_to_magento_layer_operation()
 
         return res
 
