@@ -102,129 +102,67 @@ class MagentoProductProduct(models.Model):
 
     # product's stock export section
     def export_products_stock_to_magento(self, instance):
-        """
-        This method is used to export multiple product stock from odoo to magento
-        :param instance: Instance of Magento
-        :return:
-        """
         stock_data = []
-        export_product_stock = self.get_export_product_stock(instance, instance.location_ids)
+        current_instance_prods = self.search([('magento_instance_id', '=', instance.id)])
+        odoo_products = current_instance_prods.mapped("odoo_product_id")
+        export_product_stock = self.get_product_stock_qty(instance, odoo_products)
+
         if export_product_stock:
-            for product_id, stock in export_product_stock.items():
-                exp_product = self.search([('odoo_product_id', '=', product_id),
-                                           ('magento_instance_id', '=', instance.id)], limit=1)
-                if exp_product and stock >= 0.0:
-                    if exp_product.odoo_product_id.type == 'product':
-                        product_stock_dict = {'sku': exp_product.magento_sku, 'qty': stock, 'is_in_stock': 1}
-                        stock_data.append(product_stock_dict)
+            for product_id, qty in export_product_stock.items():
+                exp_product = current_instance_prods.filtered(lambda x: x.odoo_product_id.id == product_id)[0]
+
+                if exp_product and qty >= 0.0 and exp_product.odoo_product_id.type == 'product':
+                    product_stock_dict = {'sku': exp_product.magento_sku, 'qty': qty, 'is_in_stock': 1}
+                    stock_data.append(product_stock_dict)
+
         if stock_data:
             data = {'skuData': stock_data}
-            api_url = "/V1/product/updatestock"
-            return self.call_export_product_stock_api(instance, api_url, data, 'PUT')
+            return self.call_export_product_stock_api_and_log_result(instance, data, 'PUT')
 
-    def prepare_export_product_stock_dict(self, product_id, instance, stock, stock_data, magento_location):
-        """
-        Prepare Export Product Stock Dictionary
-        :param product_id: Odoo product id
-        :param instance: Magneto instance
-        :param stock: stock of product
-        :param stock_data: dictionary for export product stock
-        :param magento_location: magento inventory location object
-        :return: dictionary for export product stock
-        """
-        exp_product = self.search([
-            ('odoo_product_id', '=', product_id), ('magento_instance_id', '=', instance.id)
-        ], limit=1)
-        if exp_product and stock >= 0.0:
-            if exp_product.odoo_product_id.type == 'product':
-                stock_data.append({
-                    'sku': exp_product.magento_sku,
-                    'source_code': magento_location.magento_location_code,
-                    'quantity': stock,
-                    'status': 1
-                })
-        return stock_data
+    def get_product_stock_qty(self, instance, products):
+        product_stock_dict = {}
+        sq_obj = self.env['stock.quant']
+        locations = instance.location_ids
 
-    def get_export_product_stock(self, instance, export_stock_locations):
-        """
-        Get export product stock dictionary with stock
-        :param instance: Magento instance object
-        :param export_stock_locations: Stock location object
-        :return: Export product stock dictionary.
-        """
-        product_product_obj = self.env[PRODUCT_PRODUCT]
-        instance_export_date = instance.last_update_stock_time
-        if not instance_export_date:
-            instance_export_date = datetime.today() - timedelta(days=365)
-        product_ids = product_product_obj.get_products_based_on_movement_date(instance_export_date,
-                                                                              instance.company_id)
-        export_product_stock = self.get_magento_product_stock(instance, product_ids, product_product_obj,
-                                                              export_stock_locations)
-        return export_product_stock
+        for prod in products:
+            qty = sum([sq_obj._get_available_quantity(prod, loc) for loc in locations])
+            product_stock_dict.update({prod.id: qty})
 
-    def call_export_product_stock_api(self, instance, api_url, data, method_type):
-        """
-        Call export product stock API for single or multi tracking inventory
-        :param instance: Magento instance object
-        :param api_url: API Call URL
-        :param data: Dictionary to be passed
-        :param method_type: Api Request Method type (PUT/POST)
-        :return:
-        """
-        stock_log_book_obj = self.env['magento.stock.log.book']
+        return product_stock_dict
+
+    def call_export_product_stock_api_and_log_result(self, instance, data, method_type):
         is_error = False
+        stock_log_book_obj = self.env['magento.stock.log.book']
         tz = pytz.timezone('Europe/Warsaw')
-        batch_code = datetime.now(tz).strftime("%Y-%b-%d %H:%M:%S")
+        logbook_rec = {
+            'magento_instance_id': instance.id,
+            'batch': datetime.now(tz).strftime("%Y-%b-%d %H:%M:%S"),
+            'log_message': ''
+        }
+
         self.clean_old_log_records(instance, stock_log_book_obj)
 
         try:
-            responses = req(instance, api_url, method_type, data)
+            api_url = "/V1/product/updatestock"
+            response = req(instance, api_url, method_type, data)
         except Exception as error:
-            message = "Error while Export product stock " + str(error)
-            stock_log_book_obj.create({
-                'magento_instance_id': instance.id,
-                'batch': batch_code,
-                'log_message': message
-            })
+            logbook_rec.update({"log_message": "Error while Export product stock " + str(error)})
+            stock_log_book_obj.create(logbook_rec)
             return False
 
-        if responses:
-            for response in responses:
-                if response.get('code', False) != '200':
+        if response:
+            for resp in response:
+                if resp.get('code', False) != '200':
                     is_error = True
-                    stock_log_book_obj.create({
-                        'magento_instance_id': instance.id,
-                        'batch': batch_code,
-                        'log_message': response.get('message', response)
-                    })
+                    logbook_rec.update({"log_message": resp.get('message', resp)})
+                    stock_log_book_obj.create(logbook_rec)
 
         if is_error:
             return False
         else:
-            stock_log_book_obj.create({
-                'magento_instance_id': instance.id,
-                'batch': batch_code,
-                'log_message': "Successfully Exported"
-            })
+            logbook_rec.update({"log_message": "Successfully Exported"})
+            stock_log_book_obj.create(logbook_rec)
             return True
-
-    @staticmethod
-    def get_magento_product_stock(instance, product_ids, prod_obj, locations):
-        """
-        This Method relocates check type of stock
-        :param instance: Magento instance
-        :param product_ids: Id of products list
-        :param prod_obj: Product object
-        :param locations: Odoo locations related to Magento stock
-        :return: This Method return product listing stock
-        """
-        product_listing_stock = False
-        if product_ids:
-            if instance.magento_stock_field == 'free_qty':
-                product_listing_stock = prod_obj.get_free_qty(locations, product_ids)
-            elif instance.magento_stock_field == 'virtual_available':
-                product_listing_stock = prod_obj.get_forecasted_qty(locations, product_ids)
-        return product_listing_stock
     # end of stock section
 
     @staticmethod
@@ -568,34 +506,15 @@ class MagentoProductProduct(models.Model):
             ml_simp_products[simple_product_sku]['log_message'] += text
 
     def export_single_simple_product_to_magento(self, magento_instance, product, ml_simp_products, attr_sets, method):
-        """
-        Export(update) Simple Product to Magento
-        :param magento_instance: Instance of Magento
-        :param product: Odoo Product object
-        :param ml_simp_products: Dictionary contains metadata for selected Simple Products (Odoo products)
-        :param attr_sets: Dictionary with defined Attributes and their values in Magento
-        :param method: http method (POST or PUT)
-        :return: {} or Updated product
-        """
         prod_attr_set = product.magento_conf_product_id.magento_attr_set
         available_attributes = attr_sets[prod_attr_set]['attributes']
         prod_attr_list = [(self.to_upper(a.x_attribute_name), self.to_upper(a.x_attribute_value)) for a in
                           product.product_attribute_ids]
-
         custom_attributes = self.map_product_attributes_with_magento_attr(prod_attr_list, available_attributes)
-
-        # get product stock from specified locations, valid for initial(POST) export only
-        stock_item = {
-            "qty": self.get_magento_product_stock(magento_instance, [product.odoo_product_id.id],
-                                                  self.env[PRODUCT_PRODUCT],
-                                                  magento_instance.location_ids).get(product.odoo_product_id.id),
-            "is_in_stock": "true"
-        } if method == 'POST' else {}
 
         data = {
             "product": {
                 "name": product.x_magento_name,
-                # "name": product.magento_product_name,
                 "attribute_set_id":  attr_sets[prod_attr_set]['id'],
                 "status": 1,
                 "visibility": 3,
@@ -604,12 +523,19 @@ class MagentoProductProduct(models.Model):
                 "weight": product.odoo_product_id.weight,
                 "custom_attributes": custom_attributes,
                 "extension_attributes": {
-                    "stock_item": stock_item
+                    "stock_item": {}
                 }
             }
         }
+
         if method == 'POST':
             data["product"].update({"sku": product.magento_sku})
+            data["product"]["extension_attributes"]["stock_item"].update({
+                "qty": self.get_product_stock_qty(
+                    magento_instance, product.odoo_product_id
+                ).get(product.odoo_product_id.id, 0),
+                "is_in_stock": "true"
+            })
 
         try:
             api_url = '/all/V1/products' if method == 'POST' else '/all/V1/products/%s' % product.magento_sku
@@ -644,7 +570,8 @@ class MagentoProductProduct(models.Model):
             if len(product.product_image_ids):
                 prod_media = {
                     product.magento_sku: [
-                        (img.id, img.name, getattr(img, IMG_SIZE), img.image_role) for img in product.product_image_ids if img
+                        (img.id, img.name, getattr(img, IMG_SIZE), img.image_role)
+                        for img in product.product_image_ids if img
                     ]
                 }
                 product.magento_conf_product_id.export_media_to_magento(
@@ -663,15 +590,6 @@ class MagentoProductProduct(models.Model):
         return {}
 
     def export_simple_products_in_bulk(self, magento_instance, odoo_products, ml_simp_products, attr_sets, method='POST'):
-        """
-        Export(POST) to Magento new Simple Products in bulk (asynchronously)
-        :param magento_instance: Instance of Magento
-        :param odoo_products: Odoo Product objects
-        :param ml_simp_products: Dictionary contains metadata for selected Simple Products (Odoo products)
-        :param attr_sets: Attribute set dictionary with unique data for selected products
-        :param method: Http request method (POST/PUT)
-        :return: None or False
-        """
         data = []
         prod_media = {}
         # thumb_images = {}
@@ -679,10 +597,8 @@ class MagentoProductProduct(models.Model):
         remove_images = []
         conf_prod_obj = self.env['magento.configurable.product']
         # get product stock from specified locations, valid for initial(POST) export only
-        prod_stock = self.get_magento_product_stock(
-            magento_instance, [p.odoo_product_id.id for p in odoo_products], self.env[PRODUCT_PRODUCT],
-            magento_instance.location_ids
-        ) if method == 'POST' else {}
+        prod_stock = self.get_product_stock_qty(magento_instance, odoo_products.mapped("odoo_product_id")
+                                                ) if method == 'POST' else {}
 
         for prod in odoo_products:
             if ml_simp_products[prod.magento_sku]['magento_status'] != 'need_to_link':
@@ -1138,6 +1054,21 @@ class MagentoProductProduct(models.Model):
         })
 
     @staticmethod
+    def format_error_log(result):
+        text = ""
+        for err in result:
+            cnt = 0
+            mess = str(err.get("message", ""))
+            param = err.get("parameters", [])
+            while mess.find("%") >= 0:
+                ind = mess.find("%")
+                ind2 = mess.find(" ", ind) if mess.find(" ", ind) >= 0 else len(mess)
+                mess = mess.replace(mess[ind:ind2], param[cnt] if len(param) > cnt else "")
+                cnt += 1
+            text += mess + "\n"
+        return text
+
+    @staticmethod
     def clean_old_log_records(instance, log_book_obj):
         # remove all records older than 30 days
         log_book_rec = log_book_obj.with_context(active_test=False).search([
@@ -1153,21 +1084,6 @@ class MagentoProductProduct(models.Model):
         ])
         if log_book_rec:
             log_book_rec.write({'active': False})
-
-    @staticmethod
-    def format_error_log(result):
-        text = ""
-        for err in result:
-            cnt = 0
-            mess = str(err.get("message", ""))
-            param = err.get("parameters", [])
-            while mess.find("%") >= 0:
-                ind = mess.find("%")
-                ind2 = mess.find(" ", ind) if mess.find(" ", ind) >= 0 else len(mess)
-                mess = mess.replace(mess[ind:ind2], param[cnt] if len(param) > cnt else "")
-                cnt += 1
-            text += mess + "\n"
-        return text
 
     @staticmethod
     def to_upper(val):

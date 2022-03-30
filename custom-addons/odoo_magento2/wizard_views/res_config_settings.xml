@@ -110,16 +110,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-lg-6 o_setting_box">
-                                <div class="o_setting_right_pane">
-                                    <label for="magento_stock_field" string="Magento Stock field"/>
-                                    <field name="magento_stock_field" class="oe_inline"
-                                           attrs="{'required':[('magento_instance_id','!=', False)]}"/>
-                                    <div class="text-muted" id="sale_coupon">
-                                        Select inventory field for Magento products
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </xpath>

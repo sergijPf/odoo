@@ -33,10 +33,11 @@ class MagentoAsyncBulkLogs(models.Model):
             self.log_details_ids.sudo().unlink()
 
         response = self.get_detailed_status_of_log()
+        print(response)
 
         for item in response.get('operations_list', []):
             data = {}
-            ser_data = item.get("result_serialized_data", "")
+            ser_data = item.get("result_serialized_data", "") or item.get("serialized_data", "")
             if ser_data:
                 data = json.loads(ser_data)
                 if not isinstance(data, dict):

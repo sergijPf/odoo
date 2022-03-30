@@ -55,7 +55,7 @@ class MagentoConfigurableProduct(models.Model):
     force_update = fields.Boolean(string="Force export", help="Force run of Configurable Product Export", default=False)
     simple_product_ids = fields.One2many('magento.product.product', 'magento_conf_product_id', 'Magento Products',
                                          required=True, context={'active_test': False})
-    product_variant_count = fields.Integer('# Product Variants', compute='_compute_magento_product_variant_count')
+    product_variant_count = fields.Integer('Simple Products #', compute='_compute_magento_product_variant_count')
     bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs")
 
     _sql_constraints = [('_magento_conf_product_unique_constraint',
@@ -143,18 +143,13 @@ class MagentoConfigurableProduct(models.Model):
         """
         The main method to process Products Export to Magento. The Product Templates are treated as
         Configurable Products and Odoo Product Variants as Simple Products in Magento
-        :return: None
         """
+        # self.check_export_can_be_processed_further()
+
         async_export = True if is_cron else self.env.context.get("async_export", False)
-        active_products = self.search([]).mapped("id") if is_cron else self._context.get("active_ids", []) or self.id
+        active_products = self.search([]).mapped("id") if is_cron else (self._context.get("active_ids", []) or self.id)
         products_to_export = self.browse(active_products)
         products_dict = {i.magento_instance_id: {} for i in products_to_export}
-
-        async_bulk_logs_obj = self.env['magento.async.bulk.logs']
-        latest_bulk_request_rec = async_bulk_logs_obj.search([]) and async_bulk_logs_obj.search([])[-1]
-        if latest_bulk_request_rec and not latest_bulk_request_rec.check_and_update_bulk_log_statuses():
-            raise UserError("There are some API requests still processing by RabbitMQ. "
-                            "Please wait a bit until it completes.")
 
         # create dict with "config_product_sku: (attr_set, related_simple_product_ids, [product_config_attributes])"
         # for each magento instance to process products export
@@ -193,6 +188,14 @@ class MagentoConfigurableProduct(models.Model):
                     self.process_export(export_products, mag_inst, attr_sets, async_export)
                     export_products = []
 
+    # def check_export_can_be_processed_further(self):
+    #     async_bulk_logs_obj = self.env['magento.async.bulk.logs']
+    #     latest_bulk_request_rec = async_bulk_logs_obj.search([]) and async_bulk_logs_obj.search([])[-1]
+    #
+    #     if latest_bulk_request_rec and not latest_bulk_request_rec.check_and_update_bulk_log_statuses():
+    #         raise UserError("There are some API requests still processing by RabbitMQ. "
+    #                         "Please wait a bit until it completes.")
+
     def process_export(self, export_products, instance, attr_sets, async_export):
         ml_conf_products_dict, ml_simp_products_dict = self.create_products_metadata_dict(export_products)
 
@@ -218,7 +221,6 @@ class MagentoConfigurableProduct(models.Model):
                         ml_simp_products_dict[prd.magento_sku]['to_export'] is True and
                         not ml_simp_products_dict[prd.magento_sku]['log_message']
         )
-
         odoo_simp_prod.check_simple_products_for_errors_before_export(
             instance, odoo_simp_prod, ml_simp_products_dict, ml_conf_products_dict, attr_sets
         )
@@ -405,7 +407,6 @@ class MagentoConfigurableProduct(models.Model):
         Check each Configurable Product if it needs to be exported to Magento
         :param ml_conf_products: Dictionary contains metadata for selected Configurable Products (Odoo categories)
         :param attr_sets: Attribute-Set dictionary with available in Magento Attributes info for selected products
-        :return: None
         """
         for prod in ml_conf_products:
             if ml_conf_products[prod]['log_message']:
@@ -507,7 +508,6 @@ class MagentoConfigurableProduct(models.Model):
         :param ml_simp_products: Dictionary contains metadata for selected Simple Products (Odoo products)
         :param ml_conf_products: Dictionary contains metadata for selected Configurable Products (Odoo categories)
         :param export_products: Magento Layer's Odoo Product to be exported
-        :return: None
         """
         for s_prod in ml_simp_products:
             simple_product_obj = export_products.filtered(lambda prod: prod.magento_sku == s_prod)
@@ -748,7 +748,7 @@ class MagentoConfigurableProduct(models.Model):
         :param prod_sku: New Configurable Product SKU to be exported
         :param ml_conf_products: Dictionary contains metadata for selected Configurable Products (Odoo categories)
         :param attr_sets: Attribute set dictionary with unique data for selected products
-        :param check_config_attrs: Assign attributes are the same in Odoo and Magento (Boolean)
+        :param check_config_attrs: "Assigned" attributes are the same in Odoo and Magento (Boolean)
         :param method: HTTP method (POST/PUT)
         :return: Magento Product or empty dict
         """
@@ -776,7 +776,7 @@ class MagentoConfigurableProduct(models.Model):
                 "sku": prod_sku
             })
 
-        # here if not True - means assign attributes were changed and will unlink all related simple products
+        # here if not True - means "assigned" attributes were changed and need to unlink all related simple products
         if not check_config_attrs:
             data['product']["extension_attributes"].update({"configurable_product_links": []})
 
@@ -791,7 +791,6 @@ class MagentoConfigurableProduct(models.Model):
         if response.get('sku'):
             if method == "POST":
                 self.process_products_website_info_export(magento_instance, ml_conf_products, prod_sku, response)
-
             self.process_storeview_data_export(magento_instance, conf_product, ml_conf_products, prod_sku, data,
                                                attr_sets, True)
 
@@ -820,7 +819,6 @@ class MagentoConfigurableProduct(models.Model):
         :param new_conf_products: List of new Configurable Products to be exported
         :param ml_conf_products: Dictionary contains metadata for selected Configurable Products (Odoo categories)
         :param attr_sets: Attribute set dictionary with unique data for selected products
-        :return: None
         """
         data = []
         lang_code = self.env['res.lang']._lang_get(self.env.user.lang).code
@@ -1076,7 +1074,6 @@ class MagentoConfigurableProduct(models.Model):
         :param products_media: Dictionary with list of Product's Image tuples (img_id, img_name, img_bytecode)
         :param ml_products: Dictionary contains metadata for selected Conf/Simple Products
         :param res_model: Model to be referenced to find image in attachment model
-        :return: None
         """
         images = {}
         prod_sku = list(products_media.keys())[0]
@@ -1182,7 +1179,6 @@ class MagentoConfigurableProduct(models.Model):
         :param products_media: Dictionary with Product Images added in Odoo
         :param ml_simp_products: Dictionary contains metadata for selected Simple Products (Odoo products)
         :param res_model: Model to be referenced to find image in attachment model
-        :return: None
         """
         files_size = 0
         images = []

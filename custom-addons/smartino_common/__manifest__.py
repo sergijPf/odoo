@@ -14,7 +14,6 @@
     # Views
     'data': [
 
-        'views/product_public_category_view.xml',
         'views/product_template_view.xml',
         'security/ir.model.access.csv',
     ],

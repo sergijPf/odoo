@@ -29,7 +29,9 @@
                     <div class="oe_button_box" name="button_box">
                         <button type="action" icon="fa-sitemap" class="oe_stat_button"
                                 name="%(odoo_magento2.action_get_simple_products)d">
-                            <field string="Variants" name="product_variant_count" widget="statinfo" modifiers="{'readonly':true}" id="product_variant_count"/>
+                            <field string="Simp.Products" name="product_variant_count"
+                                   widget="statinfo" modifiers="{'readonly':true}"
+                                   id="product_variant_count"/>
                         </button>
                         <button class="oe_stat_button"
                                 name="toggle_active" icon="fa-lock"

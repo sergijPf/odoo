@@ -34,10 +34,10 @@ class MagentoInstance(models.Model):
     lang_id = fields.Many2one('res.lang', string='Default Language',
                               help="If a default language is selected, the records will be imported in the translation "
                                    "of this language.\n Note that a similar configuration exists for each storeview.")
-    magento_stock_field = fields.Selection([
-        ('free_qty', 'On Hand Quantity'),
-        ('virtual_available', 'Forcast Quantity')
-    ], string="Magento Stock Type", default='free_qty')
+    # magento_stock_field = fields.Selection([
+    #     ('free_qty', 'On Hand Quantity'),
+    #     ('virtual_available', 'Forcast Quantity')
+    # ], string="Magento Stock Type", default='free_qty')
     catalog_price_scope = fields.Selection([
         ('global', 'Global'),
         ('website', 'Website')
