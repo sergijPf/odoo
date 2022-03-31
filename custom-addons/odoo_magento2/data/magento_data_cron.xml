@@ -18,7 +18,7 @@
             <field name="name"> Magento - Export Products</field>
             <field name="active" eval="False"/>
             <field name="user_id" ref="base.user_root"/>
-            <field name="interval_number">5</field>
+            <field name="interval_number">15</field>
             <field name="interval_type">minutes</field>
             <field name="numbercall">-1</field>
             <field name="doall" eval="False"/>

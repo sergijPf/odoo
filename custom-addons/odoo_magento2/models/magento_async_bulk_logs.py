@@ -23,17 +23,16 @@ class MagentoAsyncBulkLogs(models.Model):
             record.is_conf_prod = True if len(record.magento_conf_product_ids) else\
                 False if len(record.magento_product_ids) else None
 
-    def check_and_update_bulk_log_statuses(self):
+    def update_bulk_log_status(self):
         self.ensure_one()
 
-        if (self.log_details_ids and "4" not in self.log_details_ids.mapped('log_status')) or not self.bulk_uuid:
-            return True
+        if not self.bulk_uuid:
+            raise UserError("Missed Bulk ID")
 
         if self.log_details_ids:
             self.log_details_ids.sudo().unlink()
 
         response = self.get_detailed_status_of_log()
-        print(response)
 
         for item in response.get('operations_list', []):
             data = {}
@@ -51,10 +50,6 @@ class MagentoAsyncBulkLogs(models.Model):
                 'result_message': item.get('result_message', '')
             })
 
-        self.clear_invalid_records()
-
-        return False if '4' in self.log_details_ids.mapped('log_status') else True
-
     def get_detailed_status_of_log(self):
         instance = self.magento_conf_product_ids.magento_instance_id or self.magento_product_ids.magento_instance_id
 
@@ -62,9 +57,15 @@ class MagentoAsyncBulkLogs(models.Model):
             api_url = '/V1/bulk/%s/detailed-status' % self.bulk_uuid
             response = req(instance, api_url)
         except Exception:
-            raise UserError("Error while Magento data requesting!")
+            raise UserError("Error while requesting Magento data!")
 
         return response
+
+    def check_bulk_log_status(self):
+        response = self.get_detailed_status_of_log()
+        log_statuses = [i.get('status', 0) for i in response.get('operations_list', [])]
+
+        return True if 4 in log_statuses else False
 
     def clear_invalid_records(self):
         unlinked_records = self.search([('magento_product_ids', '=', False), ('magento_conf_product_ids', '=', False)])
@@ -80,6 +81,7 @@ class MagentoAsyncBulkLogDetails(models.Model):
     bulk_log_id = fields.Many2one('magento.async.bulk.logs', string="Log bulk")
     log_line_id = fields.Char(string="Log line id")
     sku = fields.Char(string="Product SKU")
+    result_message = fields.Char(string="Result Message")
     log_status = fields.Selection([
         ('0', 'None'),
         ('1', 'Complete'),
@@ -88,4 +90,3 @@ class MagentoAsyncBulkLogDetails(models.Model):
         ('4', 'Open'),
         ('5', 'Rejected')
     ], string="Bulk Item Status")
-    result_message = fields.Char(string="Result Message")

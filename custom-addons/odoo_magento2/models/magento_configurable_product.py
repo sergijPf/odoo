@@ -144,9 +144,8 @@ class MagentoConfigurableProduct(models.Model):
         The main method to process Products Export to Magento. The Product Templates are treated as
         Configurable Products and Odoo Product Variants as Simple Products in Magento
         """
-        # self.check_export_can_be_processed_further()
-
         async_export = True if is_cron else self.env.context.get("async_export", False)
+        async_export and self.check_async_export_can_be_processed()
         active_products = self.search([]).mapped("id") if is_cron else (self._context.get("active_ids", []) or self.id)
         products_to_export = self.browse(active_products)
         products_dict = {i.magento_instance_id: {} for i in products_to_export}
@@ -188,13 +187,16 @@ class MagentoConfigurableProduct(models.Model):
                     self.process_export(export_products, mag_inst, attr_sets, async_export)
                     export_products = []
 
-    # def check_export_can_be_processed_further(self):
-    #     async_bulk_logs_obj = self.env['magento.async.bulk.logs']
-    #     latest_bulk_request_rec = async_bulk_logs_obj.search([]) and async_bulk_logs_obj.search([])[-1]
-    #
-    #     if latest_bulk_request_rec and not latest_bulk_request_rec.check_and_update_bulk_log_statuses():
-    #         raise UserError("There are some API requests still processing by RabbitMQ. "
-    #                         "Please wait a bit until it completes.")
+    def check_async_export_can_be_processed(self):
+        async_bulk_logs_obj = self.env['magento.async.bulk.logs']
+        async_bulk_logs_obj.clear_invalid_records()
+
+        bulk_logs = async_bulk_logs_obj.search([])
+        latest_bulk_log = bulk_logs and bulk_logs[-1]
+
+        if latest_bulk_log and latest_bulk_log.check_bulk_log_status():
+            raise UserError("There are some API requests still processing by RabbitMQ. "
+                            "Please wait a bit until it completes or run Direct Export.")
 
     def process_export(self, export_products, instance, attr_sets, async_export):
         ml_conf_products_dict, ml_simp_products_dict = self.create_products_metadata_dict(export_products)

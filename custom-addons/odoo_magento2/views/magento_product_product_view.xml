@@ -175,7 +175,7 @@
         <field name="arch" type="xml">
             <form string="Async Bulk Logs" create="false" delete="false" edit="false">
                 <header>
-                    <button name="check_and_update_bulk_log_statuses"
+                    <button name="update_bulk_log_status"
                             string="Check Log statuses"
                             type="object"
                             class="btn btn-warning my-2"/>
