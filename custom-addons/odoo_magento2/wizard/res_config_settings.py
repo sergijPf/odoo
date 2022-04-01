@@ -25,10 +25,6 @@ class ResConfigSettings(models.TransientModel):
     ], string="Magento Catalog Price Scope", help="Scope of Price in Magento", default='website')
     pricelist_id = fields.Many2one('product.pricelist', "Pricelist", help="Product price will be taken/set from this "
                                                                           "pricelist if Catalog Price Scope is global")
-    # magento_stock_field = fields.Selection([
-    #     ('free_qty', 'Free Quantity'),
-    #     ('virtual_available', 'Forecast Quantity')
-    # ], string="Magento Stock Type", default='free_qty')
     is_use_odoo_order_sequence = fields.Boolean("Use Odoo Order Sequences?", default=False,
                                                 help="If checked, Odoo Order Sequence is used when import and create "
                                                      "orders.")
@@ -59,7 +55,6 @@ class ResConfigSettings(models.TransientModel):
         if instance_id:
             self.write({
                 'location_ids': [(6, 0, instance_id.location_ids.ids)] if instance_id.location_ids else False,
-                # 'magento_stock_field': instance_id.magento_stock_field,
                 'catalog_price_scope': instance_id.catalog_price_scope,
                 'pricelist_id': instance_id.pricelist_id.id if instance_id.pricelist_id else False,
                 'invoice_done_notify_customer': instance_id.invoice_done_notify_customer,
@@ -122,7 +117,6 @@ class ResConfigSettings(models.TransientModel):
         values = {}
         values.update({
             'location_ids': [(6, 0, self.location_ids.ids)] if self.location_ids else False,
-            # 'magento_stock_field': self.magento_stock_field,
             'catalog_price_scope': magento_instance.catalog_price_scope if magento_instance else False,
             'pricelist_id': self.pricelist_id.id if self.pricelist_id else False,
             'invoice_done_notify_customer': self.invoice_done_notify_customer,

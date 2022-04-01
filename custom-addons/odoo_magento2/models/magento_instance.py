@@ -20,8 +20,8 @@ class MagentoInstance(models.Model):
 
     @api.model
     def _default_order_status(self):
-
         order_status = self.env.ref('odoo_magento2.processing')
+
         return [(6, 0, [order_status.id])] if order_status else False
 
     name = fields.Char("Instance Name", required=True)
@@ -34,10 +34,6 @@ class MagentoInstance(models.Model):
     lang_id = fields.Many2one('res.lang', string='Default Language',
                               help="If a default language is selected, the records will be imported in the translation "
                                    "of this language.\n Note that a similar configuration exists for each storeview.")
-    # magento_stock_field = fields.Selection([
-    #     ('free_qty', 'On Hand Quantity'),
-    #     ('virtual_available', 'Forcast Quantity')
-    # ], string="Magento Stock Type", default='free_qty')
     catalog_price_scope = fields.Selection([
         ('global', 'Global'),
         ('website', 'Website')
@@ -71,10 +67,9 @@ class MagentoInstance(models.Model):
 
     @api.model
     def _scheduler_update_product_stock_qty(self, args=None):
-        if args is None:
-            args = {}
-
+        args = {} if args is None else args
         magento_instance_id = args.get('magento_instance_id')
+
         if magento_instance_id:
             instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
             self.env['magento.product.product'].export_products_stock_to_magento(instance)
@@ -82,20 +77,18 @@ class MagentoInstance(models.Model):
 
     @api.model
     def _scheduler_update_order_status(self, args=None):
-        if args is None:
-            args = {}
-
+        args = {} if args is None else args
         magento_instance_id = args.get('magento_instance_id')
+
         if magento_instance_id:
             instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
             self.env['stock.picking'].export_shipments_to_magento(instance)
 
     @api.model
     def _scheduler_export_invoice(self, args=None):
-        if args is None:
-            args = {}
-
+        args = {} if args is None else args
         magento_instance_id = args.get('magento_instance_id')
+
         if magento_instance_id:
             instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
             self.env['account.move'].export_invoices_to_magento(instance)
@@ -103,8 +96,7 @@ class MagentoInstance(models.Model):
     @staticmethod
     def _append_rest_suffix_to_url(location_url):
         if location_url:
-            location_url = location_url.strip()
-            location_url = location_url.rstrip('/')
+            location_url = location_url.strip().rstrip('/')
             location_vals = location_url.split('/')
             if location_vals[-1] != 'rest':
                 location_url = location_url + '/rest'
@@ -323,7 +315,6 @@ class MagentoInstance(models.Model):
 
     def product_categories_action(self):
         action = self.env.ref('odoo_magento2.action_wizard_magento_product_category_configuration').read()[0]
-        action['context'] = {
-            'magento_instance_id': self.id
-        }
+        action['context'] = {'magento_instance_id': self.id}
+
         return action

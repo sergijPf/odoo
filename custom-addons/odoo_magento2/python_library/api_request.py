@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 def req(backend, path, method='GET', data=None, params=None):
     """
-    This method use for base on API request it call API method.
+    Make API request based on API method
     """
     location_url = backend._append_rest_suffix_to_url(backend.magento_url)
     verify_ssl = backend.magento_verify_ssl

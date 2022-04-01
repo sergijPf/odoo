@@ -8,9 +8,7 @@ IR_CRON = 'ir.cron'
 EXPORT_PRODUCT_STOCK_CRON = 'odoo_magento2.ir_cron_export_product_stock_qty_instance_id_%d'
 EXPORT_SHIPMENT_ORDER_STATUS_CRON = 'odoo_magento2.ir_cron_export_shipment_order_status_instance_id_%d'
 EXPORT_INVOICE_CRON = 'odoo_magento2.ir_cron_export_invoice_instance_id_%d'
-CRON_ERROR_MSG = 'Core settings of Magento are deleted, please upgrade Magento module to back this settings.'
 MAGENTO_STR = 'Magento-'
-
 INTERVALS = [
     ('minutes', 'Minutes'),
     ('hours', 'Hours'),

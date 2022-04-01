@@ -72,6 +72,6 @@
     </record>
 
     <menuitem id="menu_item_magento_product_category" name="Product Categories"
-        parent="odoo_magento2.menu_magento_catalog_parent" sequence="1"
+        parent="odoo_magento2.menu_product_details" sequence="4"
         action="magento_product_category_action"/>
 </odoo>

@@ -33,8 +33,11 @@ class ProductPageAttributeGroup(models.Model):
 
     color = fields.Integer(string='Color Index')
     active = fields.Boolean("Active", default=True)
-    name = fields.Char(string="Attributes Category(Group)", help="Attribute name must match 'Attribute code' "
-                                                                 "of product attribute in Magento", required=True)
+    name = fields.Char(
+        string="Attributes Category(Group)",
+        help="Attribute name must match 'Attribute code' of product attribute in Magento",
+        required=True
+    )
 
     _sql_constraints = [('_config_attribute_group_name_unique_constraint',
                          'unique(name)',

@@ -109,7 +109,8 @@ class ProductPublicCategory(models.Model):
 
         return None
 
-    def process_storeview_translations_export(self, magento_instance, product_category, magento_category_id):
+    @staticmethod
+    def process_storeview_translations_export(magento_instance, product_category, magento_category_id):
         magento_storeviews = [w.store_view_ids for w in magento_instance.magento_website_ids]
 
         for view in magento_storeviews:

@@ -11,17 +11,6 @@ class Php(object):
 
     @classmethod
     def http_build_query(cls, params, convention="%s"):
-        """
-        This was ripped shamelessly from a PHP forum and ported to Python:
-          http://www.codingforums.com/showthread.php?t=72179
-
-        Essentially, it's a (hopefully perfect) replica of PHP's
-        http_build_query() that allows you to pass multi-dimensional arrays
-        to a URL via POST or GET.
-        Example:
-          from php import Php
-          Php.http_build_query({"x": [1,2,3]})
-        """
         if len(params) == 0:
             return ""
 
