@@ -73,35 +73,32 @@ class MagentoInstance(models.Model):
     def _scheduler_update_product_stock_qty(self, args=None):
         if args is None:
             args = {}
-        magento_product_product = self.env['magento.product.product']
-        magento_instance = self.env[MAGENTO_INSTANCE]
+
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
-            instance = magento_instance.browse(magento_instance_id)
-            magento_product_product.export_products_stock_to_magento(instance)
+            instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
+            self.env['magento.product.product'].export_products_stock_to_magento(instance)
             instance.last_update_stock_time = datetime.now()
 
     @api.model
     def _scheduler_update_order_status(self, args=None):
         if args is None:
             args = {}
-        stock_picking = self.env['stock.picking']
-        magento_instance = self.env[MAGENTO_INSTANCE]
+
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
-            instance = magento_instance.browse(magento_instance_id)
-            stock_picking.export_shipments_to_magento(instance)
+            instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
+            self.env['stock.picking'].export_shipments_to_magento(instance)
 
     @api.model
     def _scheduler_export_invoice(self, args=None):
         if args is None:
             args = {}
-        account_move = self.env['account.move']
-        magento_instance = self.env[MAGENTO_INSTANCE]
+
         magento_instance_id = args.get('magento_instance_id')
         if magento_instance_id:
-            instance = magento_instance.browse(magento_instance_id)
-            account_move.export_invoices_to_magento(instance)
+            instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
+            self.env['account.move'].export_invoices_to_magento(instance)
 
     @staticmethod
     def _append_rest_suffix_to_url(location_url):

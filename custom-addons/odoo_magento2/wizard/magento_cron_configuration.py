@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo import models, fields, api
 
 RES_USERS = 'res.users'
+IR_MODEL_DATA = 'ir.model.data'
+IR_CRON = 'ir.cron'
 EXPORT_PRODUCT_STOCK_CRON = 'odoo_magento2.ir_cron_export_product_stock_qty_instance_id_%d'
 EXPORT_SHIPMENT_ORDER_STATUS_CRON = 'odoo_magento2.ir_cron_export_shipment_order_status_instance_id_%d'
 EXPORT_INVOICE_CRON = 'odoo_magento2.ir_cron_export_invoice_instance_id_%d'
 CRON_ERROR_MSG = 'Core settings of Magento are deleted, please upgrade Magento module to back this settings.'
-MAGENTO_STR = 'Magento - '
-IR_MODEL_DATA = 'ir.model.data'
-IR_CRON = 'ir.cron'
+MAGENTO_STR = 'Magento-'
 
 INTERVALS = [
     ('minutes', 'Minutes'),
@@ -30,6 +29,7 @@ class MagentoCronConfiguration(models.TransientModel):
 
     magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', default=_get_magento_instance,
                                           readonly=True)
+    # product stock
     auto_export_product_stock = fields.Boolean(string='Auto Product Stock Export?')
     export_product_stock_interval_number = fields.Integer('Product Stock Export interval',
                                                           help="Export product stock every x interval.", default=1)
@@ -37,7 +37,7 @@ class MagentoCronConfiguration(models.TransientModel):
     export_product_stock_next_execution = fields.Datetime(string='Next Product Stock Export execution')
     export_product_stock_user_id = fields.Many2one(RES_USERS, string='Product Stock Export user',
                                                    help="Responsible user for Product Stock export")
-
+    # invoices
     auto_export_invoice = fields.Boolean('Auto Invoice Export?')
     export_invoice_interval_number = fields.Integer(string='Invoice Export interval',
                                                     help="Export Invoice every x interval.", default=1)
@@ -45,7 +45,7 @@ class MagentoCronConfiguration(models.TransientModel):
     export_invoice_next_execution = fields.Datetime(string='Next Invoice Export execution')
     export_invoice_user_id = fields.Many2one(RES_USERS, string='Invoice Export user',
                                              help="Responsible user for Invoice export")
-
+    # shipment order statuses
     auto_export_shipment_order_status = fields.Boolean(string='Auto Shipment Info Export?')
     export_shipment_order_status_interval_number = fields.Integer('Order Status(Shipment) Export interval',
                                                                   help="Export shipment every x interval.", default=1)
@@ -58,186 +58,136 @@ class MagentoCronConfiguration(models.TransientModel):
     def onchange_magento_instance_id(self):
         magento_instance = self.magento_instance_id
         self.set_export_product_stock_cron(magento_instance)
-        self.set_export_shipment_order_cron(magento_instance)
+        self.set_export_shipment_order_status_cron(magento_instance)
         self.set_export_invoice_cron(magento_instance)
 
     def set_export_product_stock_cron(self, instance):
         try:
-            magento_export_product_stock_cron_exist = instance and self.env.ref(
-                EXPORT_PRODUCT_STOCK_CRON % instance.id
-            )
+            export_product_stock_cron = instance and self.env.ref(EXPORT_PRODUCT_STOCK_CRON % instance.id)
         except Exception:
-            magento_export_product_stock_cron_exist = False
+            return
 
-        if magento_export_product_stock_cron_exist:
-            interval_number = magento_export_product_stock_cron_exist.interval_number or False
-            interval_type = magento_export_product_stock_cron_exist.interval_type or False
-            nextcall = magento_export_product_stock_cron_exist.nextcall or False
-            user_id = magento_export_product_stock_cron_exist.user_id.id or False
-            self.auto_export_product_stock = magento_export_product_stock_cron_exist.active or False
-            self.export_product_stock_interval_number = interval_number
-            self.export_product_stock_interval_type = interval_type
-            self.export_product_stock_next_execution = nextcall
-            self.export_product_stock_user_id = user_id
+        self.auto_export_product_stock = export_product_stock_cron.active or False
+        self.export_product_stock_interval_number = export_product_stock_cron.interval_number or False
+        self.export_product_stock_interval_type = export_product_stock_cron.interval_type or False
+        self.export_product_stock_next_execution = export_product_stock_cron.nextcall or False
+        self.export_product_stock_user_id = export_product_stock_cron.user_id.id or False
 
-    def set_export_shipment_order_cron(self, instance):
+    def set_export_shipment_order_status_cron(self, instance):
         try:
-            export_shipment_order_cron_exist = instance and self.env.ref(
-                EXPORT_SHIPMENT_ORDER_STATUS_CRON % instance.id
-            )
+            export_shipment_order_cron = instance and self.env.ref(EXPORT_SHIPMENT_ORDER_STATUS_CRON % instance.id)
         except Exception:
-            export_shipment_order_cron_exist = False
+            return
 
-        if export_shipment_order_cron_exist:
-            export_shipment_order_cron_active = export_shipment_order_cron_exist.active
-            interval_number = export_shipment_order_cron_exist.interval_number or False
-            interval_type = export_shipment_order_cron_exist.interval_type or False
-            nextcall = export_shipment_order_cron_exist.nextcall or False
-            user_id = export_shipment_order_cron_exist.user_id.id or False
-            self.auto_export_shipment_order_status = export_shipment_order_cron_active or False
-            self.export_shipment_order_status_interval_number = interval_number
-            self.export_shipment_order_status_interval_type = interval_type
-            self.export_shipment_order_status_next_execution = nextcall
-            self.export_shipment_order_status_user_id = user_id
+        self.auto_export_shipment_order_status = export_shipment_order_cron.active or False
+        self.export_shipment_order_status_interval_number = export_shipment_order_cron.interval_number or False
+        self.export_shipment_order_status_interval_type = export_shipment_order_cron.interval_type or False
+        self.export_shipment_order_status_next_execution = export_shipment_order_cron.nextcall or False
+        self.export_shipment_order_status_user_id = export_shipment_order_cron.user_id.id or False
 
     def set_export_invoice_cron(self, magento_instance):
         try:
-            export_invoice_cron_exist = magento_instance and self.env.ref(EXPORT_INVOICE_CRON % magento_instance.id)
+            export_invoice_cron = magento_instance and self.env.ref(EXPORT_INVOICE_CRON % magento_instance.id)
         except Exception:
-            export_invoice_cron_exist = False
+            return
 
-        if export_invoice_cron_exist:
-            interval_number = export_invoice_cron_exist.interval_number or False
-            interval_type = export_invoice_cron_exist.interval_type or False
-            self.auto_export_invoice = export_invoice_cron_exist.active or False
-            self.export_invoice_interval_number = interval_number
-            self.export_invoice_interval_type = interval_type
-            self.export_invoice_next_execution = export_invoice_cron_exist.nextcall or False
-            self.export_invoice_user_id = export_invoice_cron_exist.user_id.id or False
+        self.auto_export_invoice = export_invoice_cron.active or False
+        self.export_invoice_interval_number = export_invoice_cron.interval_number or False
+        self.export_invoice_interval_type = export_invoice_cron.interval_type or False
+        self.export_invoice_next_execution = export_invoice_cron.nextcall or False
+        self.export_invoice_user_id = export_invoice_cron.user_id.id or False
 
     def save_cron_configuration(self):
         vals = {}
         magento_instance = self.magento_instance_id
+
         self.generate_auto_export_product_stock_cron(magento_instance)
         self.generate_auto_export_shipment_order_status_cron(magento_instance)
         self.generate_auto_export_invoice_cron(magento_instance)
+
         vals['auto_export_product_stock'] = self.auto_export_product_stock or False
         vals['auto_export_shipment_order_status'] = self.auto_export_shipment_order_status or False
         vals['auto_export_invoice'] = self.auto_export_invoice or False
-        magento_instance.write(vals)
-        return True
 
-    def generate_auto_export_product_stock_cron(self, magento_instance):
-        cron_exist = self.env.ref(EXPORT_PRODUCT_STOCK_CRON % magento_instance.id, raise_if_not_found=False)
+        magento_instance.write(vals)
+
+    def generate_auto_export_product_stock_cron(self, instance):
+        cron_exist = self.env.ref(EXPORT_PRODUCT_STOCK_CRON % instance.id, raise_if_not_found=False)
 
         if self.auto_export_product_stock:
+            cron_name = MAGENTO_STR + instance.name + ': Update Stock Quantities'
+            ref_name = 'ir_cron_export_product_stock_qty_instance_id_%d' % instance.id
             vals = {
                 "active": True,
                 "interval_number": self.export_product_stock_interval_number,
                 "interval_type": self.export_product_stock_interval_type,
                 "nextcall": self.export_product_stock_next_execution,
-                "code": "model._scheduler_update_product_stock_qty({'magento_instance_id' : %d})" % (
-                    magento_instance.id),
+                "code": "model._scheduler_update_product_stock_qty({'magento_instance_id' : %d})" % instance.id,
                 "user_id": self.export_product_stock_user_id and self.export_product_stock_user_id.id,
-                "magento_instance_id": magento_instance.id
+                "magento_instance_id": instance.id,
+                "numbercall": -1,
+                "model_id": self.env['ir.model'].search([("model", "=", "magento.instance")]).id
             }
 
-            if cron_exist:
-                cron_exist.write(vals)
-            else:
-                export_product_stock_cron = self.env.ref('odoo_magento2.ir_cron_export_product_stock_qty',
-                                                         raise_if_not_found=False)
-                if not export_product_stock_cron:
-                    raise UserError(_(CRON_ERROR_MSG))
+            self.create_or_update_cron(cron_exist, vals, cron_name, ref_name)
+        elif cron_exist:
+            cron_exist.write({'active': False})
 
-                name = MAGENTO_STR + magento_instance.name + ': Update Stock Quantities'
-                vals.update({'name': name})
-                new_cron = export_product_stock_cron.copy(default=vals)
-                self.env[IR_MODEL_DATA].create({
-                    'module': 'odoo_magento2',
-                    'name': 'ir_cron_export_product_stock_qty_instance_id_%d' % magento_instance.id,
-                    'model': IR_CRON,
-                    'res_id': new_cron.id,
-                    'noupdate': True
-                })
-        else:
-            if cron_exist:
-                cron_exist.write({'active': False})
-
-        return True
-
-    def generate_auto_export_shipment_order_status_cron(self, magento_instance):
-        cron_exist = self.env.ref(EXPORT_SHIPMENT_ORDER_STATUS_CRON % magento_instance.id, raise_if_not_found=False)
+    def generate_auto_export_shipment_order_status_cron(self, instance):
+        cron_exist = self.env.ref(EXPORT_SHIPMENT_ORDER_STATUS_CRON % instance.id, raise_if_not_found=False)
 
         if self.auto_export_shipment_order_status:
-            export_ship_order_status_user = self.export_shipment_order_status_user_id
+            cron_name = MAGENTO_STR + instance.name + ': Export Shipment Information'
+            ref_name = 'ir_cron_export_shipment_order_status_instance_id_%d' % instance.id
             vals = {
                 "active": True,
                 "interval_number": self.export_shipment_order_status_interval_number,
                 "interval_type": self.export_shipment_order_status_interval_type,
                 "nextcall": self.export_shipment_order_status_next_execution,
-                "code": "model._scheduler_update_order_status({'magento_instance_id' : %d})" % magento_instance.id,
-                "user_id": export_ship_order_status_user and export_ship_order_status_user.id,
-                "magento_instance_id": magento_instance.id
+                "code": "model._scheduler_update_order_status({'magento_instance_id' : %d})" % instance.id,
+                "user_id": self.export_shipment_order_status_user_id and self.export_shipment_order_status_user_id.id,
+                "magento_instance_id": instance.id,
+                "numbercall": -1,
+                "model_id": self.env['ir.model'].search([("model", "=", "magento.instance")]).id
             }
 
-            if cron_exist:
-                cron_exist.write(vals)
-            else:
-                update_order_status_cron = self.env.ref('odoo_magento2.ir_cron_export_shipment_order_status',
-                                                        raise_if_not_found=False)
-                if not update_order_status_cron:
-                    raise UserError(_(CRON_ERROR_MSG))
+            self.create_or_update_cron(cron_exist, vals, cron_name, ref_name)
+        elif cron_exist:
+            cron_exist.write({'active': False})
 
-                name = MAGENTO_STR + magento_instance.name + ': Export Shipment Information'
-                vals.update({'name': name})
-                new_cron = update_order_status_cron.copy(default=vals)
-                self.env[IR_MODEL_DATA].create({
-                    'module': 'odoo_magento2',
-                    'name': 'ir_cron_export_shipment_order_status_instance_id_%d' % magento_instance.id,
-                    'model': IR_CRON,
-                    'res_id': new_cron.id,
-                    'noupdate': True
-                })
-        else:
-            if cron_exist:
-                cron_exist.write({'active': False})
-
-        return True
-
-    def generate_auto_export_invoice_cron(self, magento_instance):
-        cron_exist = self.env.ref(EXPORT_INVOICE_CRON % magento_instance.id, raise_if_not_found=False)
+    def generate_auto_export_invoice_cron(self, instance):
+        cron_exist = self.env.ref(EXPORT_INVOICE_CRON % instance.id, raise_if_not_found=False)
 
         if self.auto_export_invoice:
+            cron_name = MAGENTO_STR + instance.name + ': Export Invoice'
+            ref_name = 'ir_cron_export_invoice_instance_id_%d' % instance.id
             vals = {
                 "active": True,
                 "interval_number": self.export_invoice_interval_number,
                 "interval_type": self.export_invoice_interval_type,
                 "nextcall": self.export_invoice_next_execution,
-                "code": "model._scheduler_export_invoice({'magento_instance_id' : %d})" % magento_instance.id,
+                "code": "model._scheduler_export_invoice({'magento_instance_id' : %d})" % instance.id,
                 "user_id": self.export_invoice_user_id and self.export_invoice_user_id.id,
-                "magento_instance_id": magento_instance.id
+                "magento_instance_id": instance.id,
+                "numbercall": -1,
+                "model_id": self.env['ir.model'].search([("model", "=", "magento.instance")]).id
             }
 
-            if cron_exist:
-                cron_exist.write(vals)
-            else:
-                export_inovice_cron = self.env.ref('odoo_magento2.ir_cron_export_invoice', raise_if_not_found=False)
-                if not export_inovice_cron:
-                    raise UserError(_(CRON_ERROR_MSG))
+            self.create_or_update_cron(cron_exist, vals, cron_name, ref_name)
+        elif cron_exist:
+            cron_exist.write({'active': False})
 
-                name = MAGENTO_STR + magento_instance.name + ': Export Invoice'
-                vals.update({'name': name})
-                new_cron = export_inovice_cron.copy(default=vals)
-                self.env[IR_MODEL_DATA].create({
-                    'module': 'odoo_magento2',
-                    'name': 'ir_cron_export_invoice_instance_id_%d' % magento_instance.id,
-                    'model': IR_CRON,
-                    'res_id': new_cron.id,
-                    'noupdate': True
-                })
+    def create_or_update_cron(self, cron_exist, vals, cron_name, ref_name):
+        if cron_exist:
+            cron_exist.write(vals)
         else:
-            if cron_exist:
-                cron_exist.write({'active': False})
+            vals.update({'name': cron_name})
+            new_cron_id = self.env[IR_CRON].create(vals).id
 
-        return True
+            self.env[IR_MODEL_DATA].create({
+                'module': 'odoo_magento2',
+                'name': ref_name,
+                'model': IR_CRON,
+                'res_id': new_cron_id,
+                'noupdate': True
+            })

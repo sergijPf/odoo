@@ -68,9 +68,10 @@
                              <group>
                                 <group name="group_odoo" string="Odoo Ref.">
                                     <field name="odoo_product_id" readonly="1"/>
-                                    <field name="magento_sku" readonly="1"/>
-                                    <br/>
                                     <field name="magento_conf_product_id" readonly="1"/>
+                                    <br/>
+                                    <field name="magento_sku" readonly="1"/>
+                                    <field name="qty_avail" readonly="1"/>
                                 </group>
                                  <group name="magento_info" string="Magento Info">
                                      <field name="magento_instance_id" readonly="1"/>

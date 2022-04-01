@@ -50,6 +50,8 @@ class MagentoProductProduct(models.Model):
         ('deleted', 'Deleted in Magento')
     ], string='Export Status', help='The status of Product Variant export to Magento ', default='not_exported')
     force_update = fields.Boolean(string="Force export", help="Force run of Simple Product Export", default=False)
+    qty_avail = fields.Float(string="Qty on hand", help="Available quantity on specified Locations",
+                             compute="_compute_available_qty")
     bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs",
                                     help="Logs of async (via RabbitMQ) export of products to Magento")
 
@@ -89,6 +91,14 @@ class MagentoProductProduct(models.Model):
                         'x_attribute_value': value
                     })
 
+    @api.depends('odoo_product_id', 'magento_instance_id.location_ids')
+    def _compute_available_qty(self):
+        sq_obj = self.env['stock.quant']
+        locations = self.magento_instance_id.location_ids
+        for prod in self:
+            qty = sum([sq_obj._get_available_quantity(prod.odoo_product_id, loc) for loc in locations])
+            prod.qty_avail = qty if qty > 0.0 else 0
+
     def view_odoo_product(self):
         if self.odoo_product_id:
             return {
@@ -100,35 +110,16 @@ class MagentoProductProduct(models.Model):
                 'domain': [('id', '=', self.odoo_product_id.id)],
             }
 
-    # product's stock export section
     def export_products_stock_to_magento(self, instance):
         stock_data = []
-        current_instance_prods = self.search([('magento_instance_id', '=', instance.id)])
-        odoo_products = current_instance_prods.mapped("odoo_product_id")
-        export_product_stock = self.get_product_stock_qty(instance, odoo_products)
+        instance_products = self.search([('magento_instance_id', '=', instance.id)])
 
-        if export_product_stock:
-            for product_id, qty in export_product_stock.items():
-                exp_product = current_instance_prods.filtered(lambda x: x.odoo_product_id.id == product_id)[0]
-
-                if exp_product and qty >= 0.0 and exp_product.odoo_product_id.type == 'product':
-                    product_stock_dict = {'sku': exp_product.magento_sku, 'qty': qty, 'is_in_stock': 1}
-                    stock_data.append(product_stock_dict)
+        for product in instance_products:
+            stock_data.append({'sku': product.magento_sku, 'qty': product.qty_avail, 'is_in_stock': 1})
 
         if stock_data:
             data = {'skuData': stock_data}
             return self.call_export_product_stock_api_and_log_result(instance, data, 'PUT')
-
-    def get_product_stock_qty(self, instance, products):
-        product_stock_dict = {}
-        sq_obj = self.env['stock.quant']
-        locations = instance.location_ids
-
-        for prod in products:
-            qty = sum([sq_obj._get_available_quantity(prod, loc) for loc in locations])
-            product_stock_dict.update({prod.id: qty})
-
-        return product_stock_dict
 
     def call_export_product_stock_api_and_log_result(self, instance, data, method_type):
         is_error = False
@@ -163,7 +154,23 @@ class MagentoProductProduct(models.Model):
             logbook_rec.update({"log_message": "Successfully Exported"})
             stock_log_book_obj.create(logbook_rec)
             return True
-    # end of stock section
+
+    @staticmethod
+    def clean_old_log_records(instance, log_book_obj):
+        # remove all records older than 30 days
+        log_book_rec = log_book_obj.with_context(active_test=False).search([
+            ('create_date', '<', datetime.today() - timedelta(days=30))
+        ])
+        if log_book_rec:
+            log_book_rec.sudo().unlink()
+
+        # archive all previous records older than 7 days
+        log_book_rec = log_book_rec.search([
+            ('magento_instance_id', '=', instance.id),
+            ('create_date', '<', datetime.today() - timedelta(days=7))
+        ])
+        if log_book_rec:
+            log_book_rec.write({'active': False})
 
     @staticmethod
     def update_simple_product_dict_with_magento_data(magento_product, ml_simp_products_dict):
@@ -531,9 +538,7 @@ class MagentoProductProduct(models.Model):
         if method == 'POST':
             data["product"].update({"sku": product.magento_sku})
             data["product"]["extension_attributes"]["stock_item"].update({
-                "qty": self.get_product_stock_qty(
-                    magento_instance, product.odoo_product_id
-                ).get(product.odoo_product_id.id, 0),
+                "qty": self.qty_avail,
                 "is_in_stock": "true"
             })
 
@@ -596,9 +601,6 @@ class MagentoProductProduct(models.Model):
         product_websites = []
         remove_images = []
         conf_prod_obj = self.env['magento.configurable.product']
-        # get product stock from specified locations, valid for initial(POST) export only
-        prod_stock = self.get_product_stock_qty(magento_instance, odoo_products.mapped("odoo_product_id")
-                                                ) if method == 'POST' else {}
 
         for prod in odoo_products:
             if ml_simp_products[prod.magento_sku]['magento_status'] != 'need_to_link':
@@ -622,8 +624,7 @@ class MagentoProductProduct(models.Model):
                         "type_id": "simple",
                         "weight": prod.odoo_product_id.weight,
                         "extension_attributes": {
-                            "stock_item": {"qty": prod_stock.get(prod.odoo_product_id.id) or 0,
-                                           "is_in_stock": "true"} if method == 'POST' else {}
+                            "stock_item": {"qty": prod.qty_avail, "is_in_stock": "true"} if method == 'POST' else {}
                         },
                         "custom_attributes": custom_attributes
                     }
@@ -1067,23 +1068,6 @@ class MagentoProductProduct(models.Model):
                 cnt += 1
             text += mess + "\n"
         return text
-
-    @staticmethod
-    def clean_old_log_records(instance, log_book_obj):
-        # remove all records older than 30 days
-        log_book_rec = log_book_obj.with_context(active_test=False).search([
-            ('create_date', '<', datetime.today() - timedelta(days=30))
-        ])
-        if log_book_rec:
-            log_book_rec.sudo().unlink()
-
-        # archive all previous records older than 7 days
-        log_book_rec = log_book_rec.search([
-            ('magento_instance_id', '=', instance.id),
-            ('create_date', '<', datetime.today() - timedelta(days=7))
-        ])
-        if log_book_rec:
-            log_book_rec.write({'active': False})
 
     @staticmethod
     def to_upper(val):
