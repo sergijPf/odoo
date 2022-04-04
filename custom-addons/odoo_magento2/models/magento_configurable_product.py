@@ -1021,10 +1021,8 @@ class MagentoConfigurableProduct(models.Model):
                     lang_code
                 )
             else:
-                # valid for simple products only
                 data["product"]["name"] = product.with_context(lang=lang_code).odoo_product_id.name + ' ' +\
                                           ' '.join(product.product_attribute_ids.mapped('x_attribute_value'))
-
                 # apply product prices for each website
                 if magento_instance.catalog_price_scope == 'website':
                     if not len(view[0].pricelist_id):

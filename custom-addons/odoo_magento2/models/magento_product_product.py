@@ -523,8 +523,8 @@ class MagentoProductProduct(models.Model):
             "product": {
                 "name": product.x_magento_name,
                 "attribute_set_id":  attr_sets[prod_attr_set]['id'],
-                "status": 1,
-                "visibility": 3,
+                "status": 1, # Enabled(1) / Disabled(0)
+                "visibility": 3, # Search
                 "price": 0,
                 "type_id": "simple",
                 "weight": product.odoo_product_id.weight,
@@ -618,8 +618,8 @@ class MagentoProductProduct(models.Model):
                         # "name": prod.magento_product_name,
                         "name": prod.x_magento_name,
                         "attribute_set_id": attr_set_id,
-                        "status": 1,
-                        "visibility": 3,
+                        "status": 1, # Enabled(1) / Disabled(0)
+                        "visibility": 3, # Search
                         "price": 0,
                         "type_id": "simple",
                         "weight": prod.odoo_product_id.weight,
@@ -847,7 +847,6 @@ class MagentoProductProduct(models.Model):
                     }
                 }
 
-                # product price
                 if magento_instance.catalog_price_scope == 'global':
                     product_price = magento_instance.pricelist_id.get_product_price(product.odoo_product_id, 1.0, False)
                 elif magento_instance.catalog_price_scope == 'website':
