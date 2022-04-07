@@ -14,7 +14,7 @@ IMG_SIZE = 'image_1024'
 class MagentoProductProduct(models.Model):
     _name = 'magento.product.product'
     _description = 'Magento Product'
-    _rec_name = 'magento_product_name'
+    _rec_name = 'x_magento_name'
 
     magento_instance_id = fields.Many2one('magento.instance', 'Magento Instance')
     magento_product_id = fields.Char(string="Magento Product Id")
@@ -32,10 +32,12 @@ class MagentoProductProduct(models.Model):
     product_attribute_ids = fields.One2many('magento.product.attributes', 'magento_product_id',
                                             compute="_compute_product_attributes", store=True)
     currency_id = fields.Many2one(related='odoo_product_id.currency_id')
+    odoo_prod_template_id = fields.Many2one(related='magento_conf_product_id.odoo_prod_template_id')
     company_id = fields.Many2one(related='odoo_product_id.company_id')
     uom_id = fields.Many2one(related='odoo_product_id.uom_id')
     magento_conf_product_id = fields.Many2one('magento.configurable.product', string='Magento Configurable Product')
     magento_conf_prod_sku = fields.Char('Magento Config.Product SKU', related='magento_conf_product_id.magento_sku')
+    prod_category_ids = fields.Many2many(related='magento_conf_product_id.category_ids')
     inventory_category_id = fields.Many2one(string='Odoo product category', related='odoo_product_id.categ_id')
     x_magento_name = fields.Char(string='Product Name for Magento', compute="_compute_simpl_product_name")
     magento_export_date = fields.Datetime(string="Last Export Date", help="Product Variant last Export Date to Magento",
@@ -538,16 +540,16 @@ class MagentoProductProduct(models.Model):
         if method == 'POST':
             data["product"].update({"sku": product.magento_sku})
             data["product"]["extension_attributes"]["stock_item"].update({
-                "qty": self.qty_avail,
+                "qty": product.qty_avail,
                 "is_in_stock": "true"
             })
 
         try:
             api_url = '/all/V1/products' if method == 'POST' else '/all/V1/products/%s' % product.magento_sku
             response = req(magento_instance, api_url, method, data)
-        except Exception:
-            text = "Error while new Simple Product creation in Magento.\n" if method == 'POST' else \
-                "Error while Simple Product update in Magento.\n"
+        except Exception as err:
+            text = ("Error while new Simple Product creation in Magento:" if method == 'POST' else \
+                "Error while Simple Product update in Magento:") + str(err)
             ml_simp_products[product.magento_sku]['log_message'] += text
             return {}
 
@@ -842,6 +844,7 @@ class MagentoProductProduct(models.Model):
                         'name': product.with_context(lang=lang_code).odoo_product_id.name + ' ' +
                                 ' '.join(product.product_attribute_ids.mapped('x_attribute_value')),
                         'sku': sku,
+                        "status": 1,
                         'price': 0,
                         'custom_attributes': prod['product']["custom_attributes"].copy()
                     }
@@ -865,8 +868,7 @@ class MagentoProductProduct(models.Model):
                 if product_price:
                     prod["product"]["price"] = product_price
                 else:
-                    prod["product"]["price"] = 0
-                    prod["product"].update({"status": 0})
+                    prod["product"]["price"] = prod["product"]["status"] = 0
                     if not ml_products[sku]['log_message']:
                         text = "There are no or '0' price defined for product in '%s' " \
                                 "website price-lists.\n" % view[0].name
@@ -961,7 +963,7 @@ class MagentoProductProduct(models.Model):
                 'magento_website_ids': [(5, 0, 0)]
             })
 
-    def export_product_prices(self, instances):
+    def export_adv_product_prices(self, instances):
         prices_log_obj = self.env['magento.prices.log.book']
         is_error = False
         tz = pytz.timezone('Europe/Warsaw')

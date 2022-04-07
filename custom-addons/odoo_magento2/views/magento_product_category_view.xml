@@ -64,9 +64,9 @@
             <field name="view_id" ref="view_magento_product_category_tree"/>
             <field name="help" type="html">
             <p>
-                You can't create Product Category directly from Here. Please assign root product category from settings
-                <i class="fa fa-angle-double-right" /> instance <i class="fa fa-angle-double-right" />
-                select instance <i class="fa fa-angle-double-right" /> Product Categories
+                You can't create Product Category directly from Here. Please sync product categories in Configuration
+                <i class="fa fa-angle-double-right" /> Instance <i class="fa fa-angle-double-right" />
+                Select instance <i class="fa fa-angle-double-right" /> Product Categories
             </p>
         </field>
     </record>

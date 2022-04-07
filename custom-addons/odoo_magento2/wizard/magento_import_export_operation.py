@@ -21,7 +21,7 @@ class MagentoImportExport(models.TransientModel):
     operations = fields.Selection([
         ('export_shipment_information', 'Export Shipment Information'),
         ('export_invoice_information', 'Export Invoice Information'),
-        ('export_product_prices', 'Export Product Prices'),
+        ('export_adv_product_prices', 'Export Advanced Prices'),
         ('export_product_stock', 'Export Product Stock')
     ], string='Import/ Export Operations', help='Import/ Export Operations')
     start_date = fields.Datetime(string="From Date")
@@ -29,30 +29,26 @@ class MagentoImportExport(models.TransientModel):
 
     def execute(self):
         message = ''
-        magento_instance = self.env['magento.instance']
-        account_move = self.env['account.move']
-        picking = self.env['stock.picking']
-        magento_product_obj = self.env[MAGENTO_PRODUCT_PRODUCT]
 
         if self.magento_instance_ids:
             instances = self.magento_instance_ids
         else:
-            instances = magento_instance.search([])
+            instances = self.env['magento.instance'].search([])
 
         if self.operations == 'export_shipment_information':
-            picking.export_shipments_to_magento(instances)
+            self.env['stock.picking'].export_shipments_to_magento(instances)
         elif self.operations == 'export_invoice_information':
-            account_move.export_invoices_to_magento(instances)
-        elif self.operations == 'export_product_prices':
-            if not magento_product_obj.export_product_prices(instances):
+            self.env['account.move'].export_invoices_to_magento(instances)
+        elif self.operations == 'export_adv_product_prices':
+            if not self.env['magento.special.pricing'].export_adv_prices():
                 return {
-                    'name': 'Product Prices Export Logs',
+                    'name': 'Product Advanced Prices Export Logs',
                     'view_mode': 'tree,form',
                     'res_model': 'magento.prices.log.book',
                     'type': 'ir.actions.act_window'
                 }
         elif self.operations == 'export_product_stock':
-            if not self.export_product_stock_operation(instances, magento_product_obj):
+            if not self.export_product_stock_operation(instances):
                 return {
                     'name': 'Product Stock Export Logs',
                     'view_mode': 'tree,form',
@@ -71,11 +67,10 @@ class MagentoImportExport(models.TransientModel):
             }
         }
 
-    @staticmethod
-    def export_product_stock_operation(instances, magento_product_obj):
+    def export_product_stock_operation(self, instances):
         res = True
         for instance in instances:
-            if not magento_product_obj.export_products_stock_to_magento(instance):
+            if not self.env[MAGENTO_PRODUCT_PRODUCT].export_products_stock_to_magento(instance):
                 res = False
             instance.last_update_stock_time = datetime.now()
 

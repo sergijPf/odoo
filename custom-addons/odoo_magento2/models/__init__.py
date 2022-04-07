@@ -28,3 +28,4 @@ from . import product_pricelist
 from . import magento_async_bulk_logs
 from . import product_template
 from . import product_image
+from . import magento_special_pricing

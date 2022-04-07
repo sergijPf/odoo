@@ -28,6 +28,9 @@ class ProductTemplate(models.Model):
                                            'public_categ_ids' in vals or 'categ_id' in vals):
             self.magento_conf_prod_ids.force_update = True
 
+            if 'public_categ_ids' in vals:
+                self.magento_conf_prod_ids._compute_config_product_categories()
+
         return res
 
     def unlink(self):

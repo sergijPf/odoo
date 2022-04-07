@@ -14,16 +14,16 @@ class ProductPricelistItem(models.Model):
         magento_instances = self.env['magento.instance'].search([])
 
         for instance in magento_instances:
-            is_in_instance = False
+            valid_for_magento = False
             if instance.catalog_price_scope == 'global':
                 if instance.pricelist_id and instance.pricelist_id.id == vals.get('pricelist_id'):
-                    is_in_instance = True
+                    valid_for_magento = True
             elif instance.catalog_price_scope == 'website':
                 for website in instance.magento_website_ids:
                     if website.pricelist_id and website.pricelist_id.id == vals.get('pricelist_id'):
-                        is_in_instance = True
+                        valid_for_magento = True
 
-            if is_in_instance:
+            if valid_for_magento:
                 applied = vals.get('applied_on')
 
                 if applied == '3_global' or applied == '2_product_category':
@@ -37,12 +37,11 @@ class ProductPricelistItem(models.Model):
                         product = self.env['product.product'].search([
                             ('product_tmpl_id', '=', vals.get('product_tmpl_id'))])
                     else:
-                        # applied == '0_product_variant':
+                        # applied on '0_product_variant':
                         product = self.env['product.product'].browse(vals.get('product_id'))
 
-                    self.env['magento.product.product'].browse(product.magento_product_ids.ids).filtered(
-                        lambda x: x.magento_instance_id.id == instance.id
-                    ).write({"force_update": True})
+                    product.magento_product_ids.filtered(
+                        lambda x: x.magento_instance_id.id == instance.id).write({"force_update": True})
 
         return res
 
@@ -60,32 +59,32 @@ class ProductPricelistItem(models.Model):
 
         magento_instances = self.env['magento.instance'].search([])
         for instance in magento_instances:
-            is_in_instance = False
+            valid_for_magento = False
             if instance.catalog_price_scope == 'global':
                 if instance.pricelist_id.id == self.pricelist_id.id:
-                    is_in_instance = True
+                    valid_for_magento = True
             elif instance.catalog_price_scope == 'website':
                 for website in instance.magento_website_ids:
                     if website.pricelist_id.id == self.pricelist_id.id:
-                        is_in_instance = True
+                        valid_for_magento = True
 
-            if is_in_instance:
+            if valid_for_magento:
                 domain = [("magento_instance_id", "=", instance.id)]
                 if applied_on_before != self.applied_on:
                     if applied_on_before > self.applied_on:
                         if applied_on_before == '2_product_category':
                             domain.append(('inventory_category_id', '=', scope.id))
                         elif applied_on_before == '1_product':
-                            domain.append(('magento_sku', '=', scope.default_code))
+                            domain.append(('odoo_prod_template_id', '=', scope.id))
                     else:
                         if self.applied_on == '2_product_category':
                             domain.append(('inventory_category_id', '=', self.categ_id.id))
                         elif self.applied_on == '1_product':
-                            domain.append(('magento_sku', '=', self.product_tmpl_id.default_code))
+                            domain.append(('odoo_prod_template_id', '=', self.product_tmpl_id.id))
                 elif self.applied_on == '2_product_category':
                     domain.append(('inventory_category_id', '=', self.categ_id.id))
                 elif self.applied_on == '1_product':
-                    domain.append(('magento_sku', '=', self.product_tmpl_id.default_code))
+                    domain.append(('odoo_prod_template_id', '=', self.product_tmpl_id.id))
                 elif self.applied_on == '0_product_variant':
                     domain.append(('magento_sku', '=', self.product_id.default_code))
 

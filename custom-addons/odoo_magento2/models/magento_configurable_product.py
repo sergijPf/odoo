@@ -39,7 +39,7 @@ class MagentoConfigurableProduct(models.Model):
     active = fields.Boolean("Active", default=True)
     odoo_prod_template_id = fields.Many2one('product.template', string='Odoo Product Template')
     magento_product_name = fields.Char(string="Magento Configurable Product Name", related='odoo_prod_template_id.name')
-    category_ids = fields.Many2many("magento.product.category", string="Product Categories",
+    category_ids = fields.Many2many("magento.product.category", string="Product Categories", store=True,
                                     help="Magento Product Categories", compute="_compute_config_product_categories")
     magento_attr_set = fields.Char(string='Magento Product Attribute Set', default="Default")
     do_not_create_flag = fields.Boolean(related="odoo_prod_template_id.x_magento_no_create",
@@ -83,8 +83,9 @@ class MagentoConfigurableProduct(models.Model):
     @api.depends('odoo_prod_template_id.public_categ_ids')
     def _compute_config_product_categories(self):
         for rec in self:
-            if rec.odoo_prod_template_id.public_categ_ids and rec.odoo_prod_template_id.public_categ_ids.magento_prod_categ_ids:
-                rec.category_ids = rec.odoo_prod_template_id.public_categ_ids.magento_prod_categ_ids.filtered(
+            public_categs = rec.odoo_prod_template_id.public_categ_ids
+            if public_categs and public_categs.magento_prod_categ_ids:
+                rec.category_ids = public_categs.magento_prod_categ_ids.filtered(
                     lambda x: x.instance_id == rec.magento_instance_id
                 ).ids
             else:
@@ -1037,6 +1038,7 @@ class MagentoConfigurableProduct(models.Model):
 
                 if product_price:
                     data["product"]["price"] = product_price
+                    data["product"]["status"] = 1
                 else:
                     data["product"]["price"] = data["product"]["status"] = 0
                     if not text:

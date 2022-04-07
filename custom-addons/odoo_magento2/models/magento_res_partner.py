@@ -271,8 +271,8 @@ class MagentoCustomerGroups(models.Model):
     group_name = fields.Char("Magento Group Name")
     active = fields.Boolean("Active", default=True)
     magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance')
-    magento_website_ids = fields.Many2many("magento.website", string="Magento Website")
-    pricelist_id = fields.Many2one('product.pricelist', string="Pricelist", help="Price list related to customer group")
+    # magento_website_ids = fields.Many2many("magento.website", string="Magento Website")
+    # pricelist_id = fields.Many2one('product.pricelist', string="Pricelist", help="Price list related to customer group")
 
     def get_customer_group(self, magento_instance, customer_group_id, customer_group_name):
         group_id = self.search([('group_id', '=', customer_group_id),

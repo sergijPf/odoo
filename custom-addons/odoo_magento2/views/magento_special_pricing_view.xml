@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_magento_special_pricing_tree" model="ir.ui.view">
+        <field name="name">magento.special.pricing.tree</field>
+        <field name="model">magento.special.pricing</field>
+        <field name="arch" type="xml">
+            <tree string="Magento Advanced Pricing" decoration-warning="is_special_price">
+                <field name="magento_instance_id"/>
+                <field name="website_id"/>
+                <field name="name"/>
+                <field name="applied_on"/>
+                <field name="is_special_price" invisible="1"/>
+                <field name="fixed_price" attrs="{'invisible': [('price_type', '=', 'discount')]}"/>
+                <field name="percent_price" attrs="{'invisible': [('price_type', '=', 'fixed')]}"/>
+                <field name="price_type"/>
+                <field name="price_from"/>
+                <field name="price_to"/>
+                <field name="customer_group_id"/>
+                <field name="export_status" widget="badge" readonly="1"
+                       decoration-success="export_status == 'exported'"
+                       decoration-danger="export_status == 'error'"
+                       decoration-muted="export_status == 'not_exported'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_magento_special_pricing_form" model="ir.ui.view">
+        <field name="name">magento.special.pricing.form</field>
+        <field name="model">magento.special.pricing</field>
+        <field name="arch" type="xml">
+            <form string="Magento Advanced Pricing" duplicate="1">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <field name="active" invisible="1"/>
+                        <button class="oe_stat_button"
+                                name="toggle_active" icon="fa-lock"
+                                type="object" attrs="{'invisible': [('active','=',False)]}">
+                            <span class="o_stat_text" style="color:#2dab2d">Active</span>
+                        </button>
+                        <button class="oe_stat_button"
+                                name="toggle_active" icon="fa-unlock"
+                                type="object" attrs="{'invisible': [('active','=',True)]}">
+                            <span class="o_stat_text" style="color:#da3434">Archived</span>
+                        </button>
+                        <button class="oe_stat_button" name="export_adv_prices" context="{'single_req': True}"
+                                icon="fa-external-link-square" type="object"
+                                attrs="{'invisible': [('export_status','=','exported')]}">
+                            <span class="o_stat_text" style="color:#2dab2d" >
+                                <b>Export To Magento</b>
+                            </span>
+                        </button>
+                        <button class="oe_stat_button" name="delete_in_magento"
+                                icon="fa-remove" type="object"
+                                attrs="{'invisible': [('export_status','=','not_exported')]}">
+                            <span class="o_stat_text" style="color:#da3434">
+                                <b>Delete in Magento</b>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" required="1"
+                                   placeholder="Special Pricing Name"/>
+                        </h1>
+                        <div>
+                            <h3>
+                                <field name="export_status" widget="badge" readonly="1"
+                                       decoration-success="export_status == 'exported'"
+                                       decoration-danger="export_status == 'error'"
+                                       decoration-muted="export_status == 'not_exported'"/>
+                            </h3>
+                        </div>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="magento_instance_id"
+                                   attrs="{'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="applied_on"
+                                   attrs="{'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="prod_category_ids" widget="many2many_tags"
+                                   attrs="{'invisible': [('applied_on', '!=', '2_product_category')],
+                                   'required': [('applied_on', '=', '2_product_category')],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="config_product_ids" widget="many2many_tags"
+                                   attrs="{'invisible': [('applied_on', '!=', '1_product_config')],
+                                   'required': [('applied_on', '=', '1_product_config')],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="simple_product_ids" widget="many2many_tags"
+                                   attrs="{'invisible': [('applied_on', '!=', '0_product_simple')],
+                                    'required': [('applied_on', '=', '0_product_simple')],
+                                    'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="store_id"
+                                   attrs="{'required': ['|', ('is_special_price', '=', True), ('price_type', '=', 'fixed')],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="website_id" readonly="1"/>
+                            <field name="customer_group_id"
+                                   attrs="{'invisible': [('is_special_price', '=', True)],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                        </group>
+                        <group>
+                            <field name="is_special_price"
+                                   attrs="{'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="min_qty"
+                                   attrs="{'invisible': [('is_special_price', '=', True)],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="fixed_price"
+                                   attrs="{'invisible': [('price_type', '=', 'discount')],
+                                   'required': ['|', ('is_special_price', '=', True), ('price_type', '=', 'fixed')],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="percent_price"
+                                   attrs="{'invisible': ['|', ('is_special_price', '=', True), ('price_type', '=', 'fixed')],
+                                   'required': [('price_type', '=', 'discount')],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="price_type"
+                                   attrs="{'invisible': [('is_special_price', '=', True)],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="price_from"
+                                   attrs="{'invisible': [('is_special_price', '=', False)],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                            <field name="price_to"
+                                   attrs="{'invisible': [('is_special_price', '=', False)],
+                                   'readonly': [('export_status', '=', 'exported')]}"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="magento_special_pricing_search_view" model="ir.ui.view">
+        <field name="name">magento.special.pricing.search.view</field>
+        <field name="model">magento.special.pricing</field>
+        <field name="arch" type="xml">
+            <search string="Magento Advanced Pricing">
+                <field name="magento_instance_id" readonly="1"/>
+                <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="Instance" string="Magento Instance" context="{'group_by' : 'magento_instance_id'}"/>
+                    <filter name="Storeview" string="Magento storeview" context="{'group_by' : 'store_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="magento_special_pricing_action" model="ir.actions.act_window">
+            <field name="name">Magento Advanced Pricing</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">magento.special.pricing</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_magento_special_pricing_tree"/>
+    </record>
+
+    <menuitem id="menu_item_magento_special_pricing" name="Advanced Pricing"
+        parent="odoo_magento2.menu_product_details" sequence="5"
+        action="magento_special_pricing_action"/>
+</odoo>
