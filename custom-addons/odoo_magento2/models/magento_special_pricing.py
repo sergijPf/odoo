@@ -59,13 +59,20 @@ class MagentoSpecialPricing(models.Model):
             inst_products = simple_prod_obj.search([('magento_instance_id', '=', instance.id)])
 
             for rec in adv_prices:
+                response = []
                 products = self.get_related_simple_products(rec, inst_products, simple_prod_obj)
                 data_prices, api_url = self.prepare_data_to_export(products, False)
 
-                try:
-                    response = req(instance, api_url, 'POST', {"prices": data_prices})
-                except Exception as err:
-                    response = err
+                # Magento max export of 20 at once
+                count = (len(data_prices) // 20) + 1
+                for c in range(count):
+                    try:
+                        res = req(instance, api_url, 'POST', {"prices": data_prices[c*(20):20*(c+1)]})
+                        if res and type(res) is list:
+                            response += res
+                    except Exception as err:
+                        print(err)
+                        return
 
                 if not response:
                     self.export_status = 'exported'
@@ -119,15 +126,23 @@ class MagentoSpecialPricing(models.Model):
 
     def delete_in_magento(self):
         self.ensure_one()
+
         simple_prod_obj = self.env['magento.product.product']
         inst_products = simple_prod_obj.search([('magento_instance_id', '=', self.magento_instance_id.id)])
         products = self.get_related_simple_products(self, inst_products, simple_prod_obj)
         data_prices, api_url = self.prepare_data_to_export(products, True)
+        response = []
 
-        try:
-            response = req(self.magento_instance_id, api_url, 'POST', {"prices": data_prices})
-        except Exception as err:
-            response = err
+        # Magento max export of 20 at once
+        count = (len(data_prices) // 20) + 1
+        for c in range(count):
+            try:
+                res = req(self.magento_instance_id, api_url, 'POST', {"prices": data_prices[c * (20):20 * (c + 1)]})
+                if res and type(res) is list:
+                    response += res
+            except Exception as err:
+                print(err)
+                return
 
         if not response:
             self.export_status = 'not_exported'
