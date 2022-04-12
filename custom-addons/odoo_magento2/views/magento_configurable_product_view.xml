@@ -103,7 +103,7 @@
                                  </group>
                             </group>
                         </page>
-                        <page string="Export Log Details" name="magento_export_logs">
+                        <page string="Async Export Logs" name="magento_export_logs">
                             <field name="bulk_log_ids" readonly="1">
                                 <tree create="false" delete="false" edit="false">
                                     <field name="topic"/>

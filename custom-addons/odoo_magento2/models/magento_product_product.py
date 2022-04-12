@@ -22,8 +22,8 @@ class MagentoProductProduct(models.Model):
                                       copy=False)
     magento_website_ids = fields.Many2many('magento.website', string='Magento Product Websites', readonly=False,
                                            domain="[('magento_instance_id','=',magento_instance_id)]")
-    magento_sku = fields.Char(string="Magento Simple Product SKU")
-    magento_product_name = fields.Char(string="Magento Simple Product Name", related="odoo_product_id.name")
+    magento_sku = fields.Char(string="Simple Product SKU")
+    magento_product_name = fields.Char(string="Simple Product Name", related="odoo_product_id.name")
     active = fields.Boolean("Active", default=True)
     image_1920 = fields.Image(related="odoo_product_id.image_1920")
     thumbnail_image = fields.Image(string='Product Image')
@@ -36,7 +36,7 @@ class MagentoProductProduct(models.Model):
     company_id = fields.Many2one(related='odoo_product_id.company_id')
     uom_id = fields.Many2one(related='odoo_product_id.uom_id')
     magento_conf_product_id = fields.Many2one('magento.configurable.product', string='Magento Configurable Product')
-    magento_conf_prod_sku = fields.Char('Magento Config.Product SKU', related='magento_conf_product_id.magento_sku')
+    magento_conf_prod_sku = fields.Char('Config.Product SKU', related='magento_conf_product_id.magento_sku')
     prod_category_ids = fields.Many2many(related='magento_conf_product_id.category_ids')
     inventory_category_id = fields.Many2one(string='Odoo product category', related='odoo_product_id.categ_id')
     x_magento_name = fields.Char(string='Product Name for Magento', compute="_compute_simpl_product_name")
@@ -56,6 +56,15 @@ class MagentoProductProduct(models.Model):
                              compute="_compute_available_qty")
     bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs",
                                     help="Logs of async (via RabbitMQ) export of products to Magento")
+    special_pricing_ids = fields.Many2many(comodel_name='magento.special.pricing',
+                                           relation='simple_product_special_price_rel',
+                                           column1='special_pricing_id', column2='simple_product_id',
+                                           string='Magento Spec. Prices')
+    price_ids = fields.Many2many(comodel_name='magento.special.pricing', relation='product_price_rel',
+                                 column1='price_id', column2='product_id', string='Special Prices')
+    base_prices = fields.Char(string="Base Prices:", help="Product base prices for each website",
+                              compute="_compute_base_prices")
+    error_log_ids = fields.One2many('magento.product.log.book', 'magento_product_id', string="Error Logs")
 
     _sql_constraints = [('_magento_product_unique_constraint',
                          'unique(magento_sku,magento_instance_id,magento_product_id)',
@@ -101,15 +110,37 @@ class MagentoProductProduct(models.Model):
             qty = sum([sq_obj._get_available_quantity(prod.odoo_product_id, loc) for loc in locations])
             prod.qty_avail = qty if qty > 0.0 else 0
 
-    def view_odoo_product(self):
-        if self.odoo_product_id:
+    def _compute_base_prices(self):
+        for rec in self:
+            instance = rec.magento_instance_id
+            base_price = ""
+
+            if instance.catalog_price_scope == 'website':
+                for website in instance.magento_website_ids:
+                    if website.pricelist_id:
+                        price_and_rule = website.pricelist_id.get_product_price_rule(rec.odoo_product_id, 1.0, False)
+                        price = 0 if price_and_rule[1] is False else price_and_rule[0]
+                        base_price += "" if not price else \
+                            f"[{website.name} - {price}{website.pricelist_id.currency_id.name}]   "
+
+            elif instance.catalog_price_scope == 'global' and instance.pricelist_id:
+                price_and_rule = instance.pricelist_id.get_product_price_rule(rec.odoo_product_id, 1.0, False)
+                price = 0 if price_and_rule[1] is False else price_and_rule[0]
+                base_price = "" if not price else f"[{price} {instance.pricelist_id.currency_id.name}] "
+
+            rec.base_prices = base_price
+
+    def view_error_logs(self):
+        domain = [('magento_instance_id', '=', self.magento_instance_id.id), ('magento_product_id', '=', self.id)]
+
+        if self.error_log_ids:
             return {
-                'name': 'Odoo Product',
+                'name': 'Product export errors',
                 'type': 'ir.actions.act_window',
-                'res_model': PRODUCT_PRODUCT,
+                'res_model': 'magento.product.log.book',
                 'view_type': 'form',
                 'view_mode': 'tree,form',
-                'domain': [('id', '=', self.odoo_product_id.id)],
+                'domain': domain
             }
 
     def export_products_stock_to_magento(self, instance):
@@ -200,7 +231,7 @@ class MagentoProductProduct(models.Model):
             conf_sku = ml_simp_products[prod]['conf_sku']
 
             if conf_sku and ml_conf_products[conf_sku]['log_message']:
-                text = "Configurable Product is not ok. Please check it first. \n"
+                text = "Configurable Product is not ok. Please check it first. "
                 ml_simp_products[prod]['log_message'] += text
                 ml_simp_products[prod]['to_export'] = False
                 continue
@@ -236,12 +267,9 @@ class MagentoProductProduct(models.Model):
 
                         ml_simp_products[prod]['to_export'] = False
 
-                        # delete error messages if any
-                        domain = [('magento_product_id', '=', export_prod.id)]
-                        self.env['magento.product.log.book'].search(domain).write({
-                            'magento_log_message': '',
-                            'magento_log_message_conf': ''
-                        })
+                        if export_prod.error_log_ids:
+                            export_prod.error_log_ids.sudo().unlink()
+
                     else:
                         ml_simp_products[prod]['magento_status'] = 'need_to_link'
                 elif ml_simp_products[prod]['magento_status'] == 'in_magento':
@@ -316,7 +344,7 @@ class MagentoProductProduct(models.Model):
             prod_attrs = {a.x_attribute_name: a.x_attribute_value for a in prod.product_attribute_ids}
 
             if ml_conf_products[conf_sku]['log_message']:
-                text = "Configurable product is not ok. Please check it first. \n"
+                text = "Configurable product is not ok. Please check it first. "
                 ml_simp_products[prod_sku]['log_message'] += text
                 continue
 
@@ -441,9 +469,9 @@ class MagentoProductProduct(models.Model):
                                 config_product_sku, prod_attr_magento[at][0]
                             )
                             res = req(magento_instance, api_url, 'DELETE')
-                        except Exception:
-                            text = "Error while unlinking Assign Attribute of %s Config.Product " \
-                                   "in Magento.\n" % config_product_sku
+                        except Exception as err:
+                            text = ("Error while unlinking Assign Attribute of %s Config.Product " \
+                                   "in Magento. " % config_product_sku) + str(err)
                             ml_simp_products[product.magento_sku]['log_message'] += text
                     if res is True:
                         # update magento conf.product options list (without removed option)
@@ -470,9 +498,9 @@ class MagentoProductProduct(models.Model):
                         try:
                             api_url = '/V1/configurable-products/%s/options' % config_product_sku
                             req(magento_instance, api_url, 'POST', data)
-                        except Exception:
-                            txt = "Error while assigning product attribute option to %s Config.Product " \
-                                  "in Magento.\n " % config_product_sku
+                        except Exception as err:
+                            txt = ("Error while assigning product attribute option to %s Config.Product in Magento. "
+                                   % config_product_sku) + str(err)
                             ml_simp_products[product.magento_sku]['log_message'] += txt
                         # update conf.product dict with new conf.product option
                         ml_conf_products[config_product_sku]['magento_conf_prod_options'].append({
@@ -509,9 +537,9 @@ class MagentoProductProduct(models.Model):
                 ml_simp_products[product.magento_sku]['magento_status'] = 'in_magento'
             elif res.get('message'):
                 raise
-        except Exception:
-            text = "Error while linking %s to %s Configurable Product in Magento.\n " % \
-                   (simple_product_sku, config_product_sku)
+        except Exception as err:
+            text = ("Error while linking %s to %s Configurable Product in Magento.\n " %
+                    (simple_product_sku, config_product_sku)) + str(err)
             ml_simp_products[simple_product_sku]['log_message'] += text
 
     def export_single_simple_product_to_magento(self, magento_instance, product, ml_simp_products, attr_sets, method):
@@ -548,8 +576,8 @@ class MagentoProductProduct(models.Model):
             api_url = '/all/V1/products' if method == 'POST' else '/all/V1/products/%s' % product.magento_sku
             response = req(magento_instance, api_url, method, data)
         except Exception as err:
-            text = ("Error while new Simple Product creation in Magento:" if method == 'POST' else \
-                "Error while Simple Product update in Magento:") + str(err)
+            text = ("Error while new Simple Product creation in Magento: " if method == 'POST' else
+                    "Error while Simple Product update in Magento: ") + str(err)
             ml_simp_products[product.magento_sku]['log_message'] += text
             return {}
 
@@ -562,7 +590,7 @@ class MagentoProductProduct(models.Model):
                 ml_simp_products[product.magento_sku]['magento_status'] = 'need_to_link'
 
             if method == "POST":
-                product.magento_conf_product_id.process_products_website_info_export(
+                product.magento_conf_product_id.link_product_with_websites_in_magento(
                     magento_instance, ml_simp_products, product.magento_sku, response
                 )
 
@@ -638,9 +666,9 @@ class MagentoProductProduct(models.Model):
         try:
             api_url = '/all/async/bulk/V1/products'
             response = req(magento_instance, api_url, method, data)
-        except Exception:
-            text = "Error while asynchronously Simple Products %s in Magento.\n" % (
-                'creation' if method == 'POST' else "update")
+        except Exception as err:
+            text = ("Error while asynchronously Simple Products %s in Magento: " % (
+                'creation' if method == 'POST' else "update")) + str(err)
             for prod in odoo_products:
                 ml_simp_products[prod.magento_sku]['log_message'] += text
             return False
@@ -692,7 +720,7 @@ class MagentoProductProduct(models.Model):
                 #     })
 
         if method == "POST" and product_websites:
-            res = conf_prod_obj.process_product_website_data_export_in_bulk(
+            res = conf_prod_obj.link_product_with_websites_in_magento_in_bulk(
                 magento_instance, product_websites, [s.magento_sku for s in odoo_products], ml_simp_products
             )
             if not res.get('errors', True):
@@ -717,8 +745,8 @@ class MagentoProductProduct(models.Model):
         try:
             api_url = '/all/async/bulk/V1/products/bySku/media/byEntryId'
             req(magento_instance, api_url, 'DELETE', remove_images)
-        except Exception:
-            text = "Error while async Product Images remove from Magento. \n"
+        except Exception as err:
+            text = "Error while async Product Images remove from Magento. " + str(err)
             for sku in {img["sku"] for img in remove_images}:
                 ml_products[sku]['force_update'] = True
                 ml_products[sku]['log_message'] += text
@@ -768,8 +796,8 @@ class MagentoProductProduct(models.Model):
             try:
                 api_url = '/async/bulk/V1/configurable-products/bySku/options'
                 response = req(magento_instance, api_url, 'POST', data)
-            except Exception:
-                text = "Error while asynchronously assign product attributes to Configurable Product in Magento.\n"
+            except Exception as e:
+                text = "Error while async assign product attributes to Configurable Product in Magento. " + str(e)
                 for prod in odoo_products:
                     ml_simp_products[prod.magento_sku]['log_message'] += text
                 return False
@@ -806,9 +834,9 @@ class MagentoProductProduct(models.Model):
             try:
                 api_url = '/async/bulk/V1/configurable-products/bySku/child'
                 res = req(magento_instance, api_url, 'POST', data)
-            except Exception:
+            except Exception as e:
                 res = {}
-                text = "Error while asynchronously linking Simple to Configurable Product in Magento.\n"
+                text = "Error while asynchronously linking Simple to Configurable Product in Magento. " + str(e)
                 for prod in odoo_products:
                     ml_simp_products[prod.magento_sku]['log_message'] += text
             
@@ -821,12 +849,12 @@ class MagentoProductProduct(models.Model):
                 })
                 odoo_products.write({'bulk_log_ids': [(4, log_id.id)]})
 
-    def process_simple_prod_storeview_data_export_in_bulk(self, magento_instance, odoo_products, data, ml_products):
-        magento_storeviews = [(w, w.store_view_ids) for w in magento_instance.magento_website_ids]
+    def process_simple_prod_storeview_data_export_in_bulk(self, instance, odoo_products, data, ml_products):
+        magento_storeviews = [(w, w.store_view_ids) for w in instance.magento_website_ids]
 
-        if magento_instance.catalog_price_scope == 'global':
-            if not len(magento_instance.pricelist_id):
-                text = "There are no pricelist(s) defined for '%s' instance.\n" % magento_instance.name
+        if instance.catalog_price_scope == 'global':
+            if not len(instance.pricelist_id):
+                text = "There are no pricelist(s) defined for '%s' instance.\n" % instance.name
                 for product in data:
                     ml_products[product['sku']]['log_message'] += text
                 return
@@ -838,7 +866,7 @@ class MagentoProductProduct(models.Model):
                 product_price = 0
                 sku = prod['product']['sku']
                 product = odoo_products.search([('magento_sku', '=', sku),
-                                                ('magento_instance_id', '=', magento_instance.id)], limit=1)
+                                                ('magento_instance_id', '=', instance.id)], limit=1)
                 prod = {
                     'product': {
                         'name': product.with_context(lang=lang_code).odoo_product_id.name + ' ' +
@@ -850,9 +878,11 @@ class MagentoProductProduct(models.Model):
                     }
                 }
 
-                if magento_instance.catalog_price_scope == 'global':
-                    product_price = magento_instance.pricelist_id.get_product_price(product.odoo_product_id, 1.0, False)
-                elif magento_instance.catalog_price_scope == 'website':
+                if instance.catalog_price_scope == 'global':
+                    price_and_rule = instance.pricelist_id.get_product_price_rule(product.odoo_product_id, 1.0, False)
+                    product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
+
+                elif instance.catalog_price_scope == 'website':
                     if not len(view[0].pricelist_id):
                         text = "There are no pricelist defined for '%s' website.\n" % view[0].name
                         ml_products[sku]['log_message'] += text
@@ -862,6 +892,7 @@ class MagentoProductProduct(models.Model):
                                     "for '%s' website.\n" % (view[0].pricelist_id.name, view[0].name)
                             ml_products[sku]['log_message'] += text
                             break
+
                         price_and_rule = view[0].pricelist_id.get_product_price_rule(product.odoo_product_id, 1.0, False)
                         product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
 
@@ -878,10 +909,11 @@ class MagentoProductProduct(models.Model):
 
             try:
                 api_url = '/%s/async/bulk/V1/products' % view[1].magento_storeview_code
-                res = req(magento_instance, api_url, 'PUT', data_lst)
-            except Exception:
+                res = req(instance, api_url, 'PUT', data_lst)
+            except Exception as e:
                 for product in data:
-                    text = "Error while exporting products data to '%s' store view.\n" % view[1].magento_storeview_code
+                    text = ("Error while exporting products data to '%s' store view.\n" %
+                            view[1].magento_storeview_code) + str(e)
                     ml_products[product['product']['sku']]['log_message'] += text
                 break
 
@@ -892,7 +924,7 @@ class MagentoProductProduct(models.Model):
                 })
                 prod_list = [p['product']['sku'] for p in data]
                 odoo_products.filtered(
-                    lambda x: x.magento_sku in prod_list and x.magento_instance_id == magento_instance
+                    lambda x: x.magento_sku in prod_list and x.magento_instance_id == instance
                 ).write({'bulk_log_ids': [(4, log_id.id)]})
 
     def check_product_attribute_values_combination_already_exist(self, ml_conf_products, conf_sku, simp_prod_attr,
@@ -962,6 +994,19 @@ class MagentoProductProduct(models.Model):
                 'active': False,
                 'magento_website_ids': [(5, 0, 0)]
             })
+
+    def save_error_message_to_log_book(self, simp_log_message, conf_log_message):
+        self.ensure_one()
+        vals = {
+            'magento_log_message': simp_log_message,
+            'magento_log_message_conf': conf_log_message
+        }
+
+        if self.error_log_ids:
+            self.error_log_ids.write(vals)
+        else:
+            vals.update({'magento_product_id': self.id})
+            self.error_log_ids.create(vals)
 
     def export_adv_product_prices(self, instances):
         prices_log_obj = self.env['magento.prices.log.book']

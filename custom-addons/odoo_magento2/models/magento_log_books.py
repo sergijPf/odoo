@@ -8,9 +8,9 @@ class MagentoProductLogBook(models.Model):
     _description = 'Product Log Book'
     _rec_name = 'magento_sku'
 
-    magento_log_message = fields.Char(string="Product Error Messages")
+    magento_log_message = fields.Char(string="Simple Product Error Messages")
     magento_log_message_conf = fields.Char(string="Config.Product Error Messages")
-    magento_product_id = fields.Many2one('magento.product.product', 'Magento Product', ondelete="cascade")
+    magento_product_id = fields.Many2one('magento.product.product', 'Simple Product', ondelete="cascade")
     magento_conf_prod_id = fields.Many2one(related="magento_product_id.magento_conf_product_id", string="Conf.Product")
     magento_sku = fields.Char(related="magento_product_id.magento_sku")
     magento_instance_id = fields.Many2one(related="magento_product_id.magento_instance_id")

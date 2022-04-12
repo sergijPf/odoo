@@ -44,11 +44,12 @@
                         <button class="oe_stat_button" name="delete_in_magento" icon="fa-remove" type="object"
                                 attrs="{'invisible': [('magento_product_id','in',['', False, None])]}"
                                 modifiers="{}" options="{}">
-                            <span class="o_stat_text" style="color:#da3434" modifiers="{}">
-                                Delete in Magento
-                            </span>
+                            <span class="o_stat_text" style="color:#da3434">Delete in Magento</span>
                         </button>
-                        <button string="Odoo Product" type="object" name="view_odoo_product"  class="oe_stat_button" icon="fa-chain" />
+                        <button class="oe_stat_button" name="view_error_logs" icon="fa-warning" type="object"
+                                attrs="{'invisible': [('magento_status', '!=', 'log_error')]}">
+                                <span class="o_stat_text" style="color:#da3434">Errors</span>
+                        </button>
                     </div>
                     <widget name="web_ribbon" text="In Magento" attrs="{'invisible': [('magento_status', '!=', 'in_magento')]}"/>
                     <widget name="web_ribbon" title="Deleted" bg_color="bg-danger" attrs="{'invisible': [('magento_status', '!=', 'deleted')]}"/>
@@ -84,7 +85,7 @@
                                            decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
                                            decoration-danger="magento_status == 'log_error'"
                                            modifiers="{'readonly':true}"/>
-                                    <field name="magento_export_date" readonly="1"/>
+                                     <field name="magento_export_date" readonly="1"/>
                                 </group>
                                  <group string="Product Images" name="magento_product_images">
                                      <field name="product_image_ids" class="o_website_sale_image_list"
@@ -92,7 +93,30 @@
                                  </group>
                              </group>
                         </page>
-                        <page string="Export Log Details" name="magento_export_logs">
+                        <page string="Pricing Details" name="price_details">
+                            <group>
+                                <field name="base_prices"/>
+                            </group>
+
+                            <label for="price_ids" string="Special Prices:"/>
+                            <field name="price_ids" readonly="1">
+                                <tree>
+                                    <field name="website_id"/>
+                                    <field name="price_type"/>
+                                    <field name="is_special_price"/>
+                                    <field name="fixed_price"/>
+                                    <field name="percent_price"/>
+                                    <field name="customer_group_id"/>
+                                    <field name="price_from"/>
+                                    <field name="price_to"/>
+                                    <field name="export_status" widget="badge" readonly="1"
+                                       decoration-success="export_status == 'exported'"
+                                       decoration-danger="export_status == 'error'"
+                                       decoration-muted="export_status == 'not_exported'"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Async Export Logs" name="magento_export_logs">
                             <field name="bulk_log_ids" readonly="1">
                                 <tree create="false" delete="false" edit="false">
                                     <field name="topic"/>

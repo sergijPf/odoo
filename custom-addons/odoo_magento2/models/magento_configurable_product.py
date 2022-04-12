@@ -128,7 +128,7 @@ class MagentoConfigurableProduct(models.Model):
             api_url = '/V1/products/%s' % self.magento_sku
             response = req(self.magento_instance_id, api_url, 'DELETE')
         except Exception as err:
-            raise UserError("Error while deleting product in Magento. " + str(err))
+            raise UserError("Error while delete product in Magento. " + str(err))
 
         if response is True:
             self.write({
@@ -393,9 +393,9 @@ class MagentoConfigurableProduct(models.Model):
             api_url = '/V1/products?%s' % search_criteria
             try:
                 response = req(magento_instance, api_url)
-            except Exception:
+            except Exception as e:
                 for prod in magento_sku_list[cur_page:step * (1 + cnt)]:
-                    text = "Error while requesting product from Magento.\n"
+                    text = "Error while requesting product from Magento. " + str(e)
                     ml_products_dict[prod]['log_message'] += text
                 cur_page += step
                 continue
@@ -513,35 +513,36 @@ class MagentoConfigurableProduct(models.Model):
         :param export_products: Magento Layer's Odoo Product to be exported
         """
         for s_prod in ml_simp_products:
-            simple_product_obj = export_products.filtered(lambda prod: prod.magento_sku == s_prod)
+            simple_product = export_products.filtered(lambda prod: prod.magento_sku == s_prod)
             conf_sku = ml_simp_products[s_prod]['conf_sku']
 
             if ml_simp_products[s_prod]['log_message']:
                 ml_simp_products[s_prod]['magento_status'] = 'log_error'
-                self.save_error_message_to_log_book(
+                simple_product.save_error_message_to_log_book(
                     ml_simp_products[s_prod]['log_message'],
-                    ml_conf_products.get(conf_sku, {}).get('log_message', ''),
-                    simple_product_obj.id
+                    ml_conf_products.get(conf_sku, {}).get('log_message', '')
                 )
+            elif simple_product.error_log_ids:
+                simple_product.error_log_ids.sudo().unlink()
 
             if ml_simp_products[s_prod]['magento_status'] != 'in_magento' and \
                     ml_conf_products[conf_sku]['magento_status'] == 'in_magento':
                 ml_conf_products[conf_sku]['magento_status'] = 'update_needed'
 
-            values = self.prepare_data_before_save(ml_simp_products, s_prod, simple_product_obj, magento_websites)
-            simple_product_obj.write(values)
+            values = self.prepare_data_to_save(ml_simp_products, s_prod, simple_product, magento_websites)
+            simple_product.write(values)
 
         for c_prod in ml_conf_products:
-            conf_product_obj = ml_conf_products[c_prod]['conf_object']
+            conf_product = ml_conf_products[c_prod]['conf_object']
 
             if ml_conf_products[c_prod]['log_message']:
                 ml_conf_products[c_prod]['magento_status'] = 'log_error'
 
-            values = self.prepare_data_before_save(ml_conf_products, c_prod, conf_product_obj, magento_websites)
-            conf_product_obj.write(values)
+            values = self.prepare_data_to_save(ml_conf_products, c_prod, conf_product, magento_websites)
+            conf_product.write(values)
 
     @staticmethod
-    def prepare_data_before_save(ml_products, prod_sku, odoo_product, websites):
+    def prepare_data_to_save(ml_products, prod_sku, odoo_product, websites):
         mag_prod_websites = ml_products[prod_sku].get('magento_website_ids', [])
         odoo_websites = {str(p.magento_website_id) for p in odoo_product.magento_website_ids}
         values = {'magento_status': ml_products[prod_sku]['magento_status']}
@@ -572,18 +573,6 @@ class MagentoConfigurableProduct(models.Model):
             values.update({'force_update': True})
 
         return values
-
-    def save_error_message_to_log_book(self, simp_log_message, conf_log_message, product_id):
-        vals = {
-            'magento_log_message': simp_log_message,
-            'magento_log_message_conf': conf_log_message
-        }
-        log_book = self.env['magento.product.log.book'].search([('magento_product_id', '=', product_id)])
-        if not len(log_book):
-            vals.update({'magento_product_id': product_id})
-            log_book.create(vals)
-        else:
-            log_book.write(vals)
 
     def process_configurable_products_create_or_update(self, instance, ml_conf_products, attr_sets, async_export):
         new_conf_products = []
@@ -793,7 +782,7 @@ class MagentoConfigurableProduct(models.Model):
 
         if response.get('sku'):
             if method == "POST":
-                self.process_products_website_info_export(magento_instance, ml_conf_products, prod_sku, response)
+                self.link_product_with_websites_in_magento(magento_instance, ml_conf_products, prod_sku, response)
             self.process_storeview_data_export(magento_instance, conf_product, ml_conf_products, prod_sku, data,
                                                attr_sets, True)
 
@@ -849,10 +838,10 @@ class MagentoConfigurableProduct(models.Model):
         try:
             api_url = '/all/async/bulk/V1/products'
             response = req(magento_instance, api_url, 'POST', data)
-        except Exception:
+        except Exception as e:
             for prod in new_conf_products:
                 text = "Error while new Configurable Products creation in Magento. " \
-                       "Please check if RabbitMQ works properly.\n"
+                       "Please check RabbitMQ works properly. " + str(e)
                 ml_conf_products[prod]['log_message'] += text
             return
 
@@ -891,8 +880,8 @@ class MagentoConfigurableProduct(models.Model):
                     #     thumb_images.update({prod: [(config_prod.id, '', config_prod.image_256)]})
 
             if product_websites:
-                res = self.process_product_website_data_export_in_bulk(magento_instance, product_websites,
-                                                                       new_conf_products, ml_conf_products)
+                res = self.link_product_with_websites_in_magento_in_bulk(magento_instance, product_websites,
+                                                                         new_conf_products, ml_conf_products)
                 if not res.get('errors', True):
                     log_id = self.bulk_log_ids.create({
                         'bulk_uuid': res.get("bulk_uuid"),
@@ -984,7 +973,7 @@ class MagentoConfigurableProduct(models.Model):
             })
 
     @staticmethod
-    def process_products_website_info_export(magento_instance, ml_products, prod_sku, product, method="POST"):
+    def link_product_with_websites_in_magento(magento_instance, ml_products, prod_sku, product, method="POST"):
         website_ids = []
         data = {"productWebsiteLink": {"sku": prod_sku}}
 
@@ -995,8 +984,8 @@ class MagentoConfigurableProduct(models.Model):
                 res = req(magento_instance, api_url, method, data)
                 if res is True:
                     website_ids.append(site.magento_website_id)
-            except Exception:
-                text = "Error while adding website to product in Magento.\n"
+            except Exception as e:
+                text = "Error while adding website to product in Magento. " + str(e)
                 ml_products[prod_sku]['log_message'] += text
 
         if website_ids:
@@ -1047,8 +1036,8 @@ class MagentoConfigurableProduct(models.Model):
             try:
                 api_url = '/%s/V1/products/%s' % (view[1].magento_storeview_code, prod_sku)
                 req(magento_instance, api_url, 'PUT', data)
-            except Exception:
-                text = "Error while exporting product's data to '%s' store view.\n" % view[1].magento_storeview_code
+            except Exception as e:
+                text = ("Error while exporting product data to '%s' storeview. " % view[1].magento_storeview_code) + str(e)
                 break
 
         if text:
@@ -1105,9 +1094,9 @@ class MagentoConfigurableProduct(models.Model):
             try:
                 api_url = '/all/V1/products/%s/media' % prod_sku
                 req(magento_instance, api_url, 'POST', images)
-            except Exception:
+            except Exception as e:
                 ml_products[prod_sku]['force_update'] = True
-                text = "Error while Product (%s) Images export to Magento.\n" % str(role)
+                text = ("Error while Product (%s) Images export to Magento. " % str(role)) + str(e)
                 ml_products[prod_sku]['log_message'] += text
 
     @staticmethod
@@ -1116,18 +1105,18 @@ class MagentoConfigurableProduct(models.Model):
             try:
                 api_url = '/all/V1/products/%s/media/%s' % (magento_sku, _id)
                 req(magento_instance, api_url, 'DELETE')
-            except Exception:
+            except Exception as e:
                 ml_products[magento_sku]['force_update'] = True
-                text = "Error while Product Images remove from Magento. \n"
+                text = "Error while Product Images remove from Magento. " + str(e)
                 ml_products[magento_sku]['log_message'] += text
 
     @staticmethod
-    def process_product_website_data_export_in_bulk(magento_instance, product_websites, product_list, ml_products):
+    def link_product_with_websites_in_magento_in_bulk(magento_instance, product_websites, product_list, ml_products):
         try:
-            api_url = '/async/bulk/V1/products/bySku/websites'
+            api_url = '/all/async/bulk/V1/products/bySku/websites'
             res = req(magento_instance, api_url, 'POST', product_websites)
-        except Exception:
-            text = "Error while assigning website(s) in bulk to product in Magento"
+        except Exception as e:
+            text = "Error while assigning website(s) in bulk to product in Magento. " + str(e)
             for prod_sku in product_list:
                 ml_products[prod_sku]['log_message'] += text
             return {}
@@ -1147,6 +1136,7 @@ class MagentoConfigurableProduct(models.Model):
                 self.add_translatable_conf_product_attributes(
                     custom_attributes, conf_prod, attr_sets[conf_prod.magento_attr_set]['attributes'], lang_code
                 )
+
                 prod = {
                     'product': {
                         'name': str(conf_prod.with_context(lang=lang_code).odoo_prod_template_id.name).upper(),
@@ -1159,9 +1149,9 @@ class MagentoConfigurableProduct(models.Model):
             try:
                 api_url = '/%s/async/bulk/V1/products' % storeview_code
                 res = req(magento_instance, api_url, 'PUT', data_lst)
-            except Exception:
+            except Exception as e:
                 for product in data:
-                    text = "Error while exporting products' data to '%s' store view.\n" % storeview_code
+                    text = ("Error while exporting products' data to '%s' store view.\n" % storeview_code) + str(e)
                     ml_conf_products[product['product']['sku']]['log_message'] += text
                 break
 
@@ -1190,8 +1180,8 @@ class MagentoConfigurableProduct(models.Model):
             try:
                 api_url = '/all/async/bulk/V1/products/bySku/media'
                 req(magento_instance, api_url, 'POST', imgs)
-            except Exception:
-                text = "Error while Product Images export to Magento in bulk. \n"
+            except Exception as e:
+                text = "Error while Product Images export to Magento in bulk. " + str(e)
                 for sku in {i["sku"] for i in imgs}:
                     if not ml_simp_products[sku]['log_message']:
                         ml_simp_products[sku]['force_update'] = True

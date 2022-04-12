@@ -10,8 +10,8 @@
                 <field name="magento_conf_prod_id"/>
                 <field name="magento_log_message"/>
                 <field name="magento_log_message_conf"/>
-                <filter string="Product error" name="prod_log" domain="[('magento_log_message', '!=', '')]"/>
-                <filter string="Configurable Product error" name="conf_prod_log"
+                <filter string="Simple Product errors" name="prod_log" domain="[('magento_log_message', '!=', '')]"/>
+                <filter string="Config. Product errors" name="conf_prod_log"
                         domain="[('magento_log_message_conf', '!=', '')]"/>
                 <filter string="Error to Export" name="error_to_export"
                         domain="[('magento_status', '=', 'log_error')]"/>
@@ -32,6 +32,7 @@
                 <field name="magento_sku" string="Product SKU"/>
                 <field name="magento_log_message"/>
                 <field name="magento_log_message_conf"/>
+                <field name="magento_export_date" string="Export Date"/>
                 <field name="magento_status"
                        decoration-success="magento_status == 'in_magento'"
                        decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
@@ -60,8 +61,10 @@
                             <field name="magento_instance_id"/>
                             <field name="magento_sku"/>
                             <field name="magento_product_id"/>
+                        </group>
+                        <group>
                             <field name="magento_status"/>
-                            <field name="magento_export_date" string="Current Product Last Export Date" readonly="1"/>
+                            <field name="magento_export_date" string="Product Export Date" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
@@ -84,8 +87,7 @@
         <field name="view_id" ref="view_magento_exported_products_log_book_tree"/>
         <field name="search_view_id" ref="view_exported_magento_product_log_book_filter"/>
         <field name="context">
-            {'search_default_error_to_export':1,
-            'form_view_ref' : 'odoo_magento2.view_magento_exported_products_log_book_form'}
+            {'form_view_ref' : 'odoo_magento2.view_magento_exported_products_log_book_form'}
         </field>
         <field name="help" type="html">
             <div class="oe_empty_magento_instance">
@@ -93,7 +95,7 @@
                 <br/>
                 <br/>
                 <p>
-                    <b>There is No Data yet...</b>
+                    <b>There is no data yet...</b>
                 </p>
             </div>
         </field>
@@ -107,5 +109,4 @@
               name="Products"
               parent="odoo_magento2.menu_products_log_details"
               action="action_show_log_messages_of_exported_products"/>
-
 </odoo>

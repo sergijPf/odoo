@@ -31,6 +31,8 @@
             <form string="Magento Advanced Pricing" duplicate="1">
                 <sheet>
                     <div class="oe_button_box" name="button_box">
+                        <button string="Simple Products" type="object" icon="fa-bars"
+                                name="view_simple_products" class="oe_stat_button"/>
                         <field name="active" invisible="1"/>
                         <button class="oe_stat_button"
                                 name="toggle_active" icon="fa-lock"

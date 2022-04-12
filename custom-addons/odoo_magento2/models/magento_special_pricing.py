@@ -3,7 +3,7 @@
 import re
 
 from datetime import datetime
-from odoo import fields, models
+from odoo import fields, models, api
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
@@ -23,11 +23,16 @@ class MagentoSpecialPricing(models.Model):
         ('0_product_simple', 'Simple product')
     ], string="Applied on", help="Price list applied on scope", required=True)
     prod_category_ids = fields.Many2many('magento.product.category', string='Magento Product Category', copy=False,
-                                        domain="[('instance_id','=',magento_instance_id)]")
+                                         domain="[('instance_id','=',magento_instance_id)]")
     config_product_ids = fields.Many2many('magento.configurable.product', string='Magento Config. Product', copy=False,
-                                         domain="[('magento_instance_id','=',magento_instance_id)]")
-    simple_product_ids = fields.Many2many('magento.product.product', string='Magento Simple Product', copy=False,
-                                         domain="[('magento_instance_id','=',magento_instance_id)]")
+                                          domain="[('magento_instance_id','=',magento_instance_id)]")
+    simple_product_ids = fields.Many2many(comodel_name='magento.product.product', relation='simple_product_special_price_rel',
+                                          column1='simple_product_id', column2='special_pricing_id',
+                                          string='Magento Simp Product', copy=False,
+                                          domain="[('magento_instance_id','=',magento_instance_id)]")
+    product_ids = fields.Many2many(comodel_name='magento.product.product', relation='product_price_rel',
+                                   column1='product_id', column2='price_id', string='Magento Products',
+                                   compute="_compute_products", store=True)
     min_qty = fields.Float("Min.quantity", default=1)
     is_special_price = fields.Boolean("Is special price?")
     fixed_price = fields.Float("Special Price", copy=False)
@@ -49,19 +54,43 @@ class MagentoSpecialPricing(models.Model):
     ], string='Export Status', help='The status of Product Advanced Pricing export to Magento ',
         default='not_exported', copy=False)
 
+    @api.depends('applied_on', 'prod_category_ids', 'config_product_ids', 'simple_product_ids')
+    def _compute_products(self):
+        for rec in self:
+            rec.product_ids = rec.get_related_simple_products()
+
+    def get_related_simple_products(self):
+        products = self.env['magento.product.product']
+        inst_products = products.search([('magento_instance_id', '=', self.magento_instance_id.id)])
+
+        if self.applied_on == '3_global':
+            products = inst_products
+        elif self.applied_on == '2_product_category':
+            for categ in self.prod_category_ids:
+                products += inst_products.browse([p.id for p in inst_products if categ in p.prod_category_ids])
+        elif self.applied_on == '1_product_config':
+            products = inst_products.filtered(lambda x: x.magento_conf_product_id in self.config_product_ids)
+        else:
+            products = self.simple_product_ids
+
+        return products
+
+    def toggle_active(self):
+        for rec in self:
+            if rec.export_status == 'exported':
+                raise UserError("Please delete special price in Magento first (by clicking 'Delete in Magento' button)")
+        return super(MagentoSpecialPricing, self).toggle_active()
+
     def export_adv_prices(self):
         all_records = self if self.env.context.get('single_req') else self.search([])
-        simple_prod_obj = self.env['magento.product.product']
         all_records.active = True
 
         for instance in {i.magento_instance_id for i in all_records}:
             adv_prices = all_records.filtered(lambda x: x.magento_instance_id.id == instance.id)
-            inst_products = simple_prod_obj.search([('magento_instance_id', '=', instance.id)])
 
             for rec in adv_prices:
                 response = []
-                products = self.get_related_simple_products(rec, inst_products, simple_prod_obj)
-                data_prices, api_url = self.prepare_data_to_export(products, False)
+                data_prices, api_url = rec.prepare_data_to_export(False)
 
                 # Magento max export of 20 at once
                 count = (len(data_prices) // 20) + 1
@@ -75,28 +104,13 @@ class MagentoSpecialPricing(models.Model):
                         return
 
                 if not response:
-                    self.export_status = 'exported'
+                    rec.export_status = 'exported'
                 else:
-                    self.log_error(response)
+                    rec.log_error(response)
 
         return True
 
-    def get_related_simple_products(self, price_record, inst_products, simple_prod_obj):
-        if price_record.applied_on == '3_global':
-            products = inst_products
-        elif price_record.applied_on == '2_product_category':
-            products = simple_prod_obj
-            for categ in price_record.prod_category_ids:
-                products += inst_products.browse([p.id for p in inst_products if categ in p.prod_category_ids])
-        elif price_record.applied_on == '1_product_config':
-            products = inst_products.filtered(lambda x: x.magento_conf_product_id in price_record.config_product_ids)
-        else:
-            # price.applied_on equal to '0_product_simple'
-            products = price_record.simple_product_ids
-
-        return products
-
-    def prepare_data_to_export(self, products, is_deletion):
+    def prepare_data_to_export(self, is_deletion):
         data_prices = []
         if self.is_special_price:
             store_id = self.store_id
@@ -118,7 +132,7 @@ class MagentoSpecialPricing(models.Model):
                 "quantity": self.min_qty if self.min_qty else 1
             }
 
-        for prod in products:
+        for prod in self.product_ids:
             price_item.update({"sku": prod.magento_sku})
             data_prices.append(price_item.copy())
 
@@ -127,10 +141,7 @@ class MagentoSpecialPricing(models.Model):
     def delete_in_magento(self):
         self.ensure_one()
 
-        simple_prod_obj = self.env['magento.product.product']
-        inst_products = simple_prod_obj.search([('magento_instance_id', '=', self.magento_instance_id.id)])
-        products = self.get_related_simple_products(self, inst_products, simple_prod_obj)
-        data_prices, api_url = self.prepare_data_to_export(products, True)
+        data_prices, api_url = self.prepare_data_to_export(True)
         response = []
 
         # Magento max export of 20 at once
@@ -163,8 +174,14 @@ class MagentoSpecialPricing(models.Model):
         head, _sep, tail = message.rpartition(old_txt)
         return head + new_txt + tail
 
-    def toggle_active(self):
-        for rec in self:
-            if rec.export_status == 'exported':
-                raise UserError("Please delete special price in Magento first (by clicking 'Delete in Magento' button)")
-        return super(MagentoSpecialPricing, self).toggle_active()
+    def view_simple_products(self):
+        if self.product_ids:
+            return {
+                'name': 'Simple Products',
+                'type': 'ir.actions.act_window',
+                'res_model': 'magento.product.product',
+                'view_type': 'form',
+                'view_mode': 'tree,form',
+                'domain': [('magento_instance_id', '=', self.magento_instance_id.id),
+                           ('id', 'in', self.product_ids.mapped('id'))],
+            }

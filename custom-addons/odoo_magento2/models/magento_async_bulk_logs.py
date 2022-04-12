@@ -56,8 +56,8 @@ class MagentoAsyncBulkLogs(models.Model):
         try:
             api_url = '/V1/bulk/%s/detailed-status' % self.bulk_uuid
             response = req(instance, api_url)
-        except Exception:
-            raise UserError("Error while requesting Magento data!")
+        except Exception as e:
+            raise UserError("Error while requesting Magento data!" + str(e))
 
         return response
 
