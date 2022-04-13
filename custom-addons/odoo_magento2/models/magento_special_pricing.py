@@ -26,7 +26,8 @@ class MagentoSpecialPricing(models.Model):
                                          domain="[('instance_id','=',magento_instance_id)]")
     config_product_ids = fields.Many2many('magento.configurable.product', string='Magento Config. Product', copy=False,
                                           domain="[('magento_instance_id','=',magento_instance_id)]")
-    simple_product_ids = fields.Many2many(comodel_name='magento.product.product', relation='simple_product_special_price_rel',
+    simple_product_ids = fields.Many2many(comodel_name='magento.product.product',
+                                          relation='simple_product_special_price_rel',
                                           column1='simple_product_id', column2='special_pricing_id',
                                           string='Magento Simp Product', copy=False,
                                           domain="[('magento_instance_id','=',magento_instance_id)]")
@@ -92,11 +93,11 @@ class MagentoSpecialPricing(models.Model):
                 response = []
                 data_prices, api_url = rec.prepare_data_to_export(False)
 
-                # Magento max export of 20 at once
+                # Magento allows max export of 20 at once
                 count = (len(data_prices) // 20) + 1
                 for c in range(count):
                     try:
-                        res = req(instance, api_url, 'POST', {"prices": data_prices[c*(20):20*(c+1)]})
+                        res = req(instance, api_url, 'POST', {"prices": data_prices[c*20:20*(c+1)]})
                         if res and type(res) is list:
                             response += res
                     except Exception as err:
@@ -106,6 +107,7 @@ class MagentoSpecialPricing(models.Model):
                 if not response:
                     rec.export_status = 'exported'
                 else:
+                    self.export_status = 'error'
                     rec.log_error(response)
 
         return True
@@ -148,7 +150,7 @@ class MagentoSpecialPricing(models.Model):
         count = (len(data_prices) // 20) + 1
         for c in range(count):
             try:
-                res = req(self.magento_instance_id, api_url, 'POST', {"prices": data_prices[c * (20):20 * (c + 1)]})
+                res = req(self.magento_instance_id, api_url, 'POST', {"prices": data_prices[c * 20:20 * (c + 1)]})
                 if res and type(res) is list:
                     response += res
             except Exception as err:
@@ -158,10 +160,10 @@ class MagentoSpecialPricing(models.Model):
         if not response:
             self.export_status = 'not_exported'
         else:
+            self.export_status = 'error'
             self.log_error(response)
 
     def log_error(self, response):
-        self.export_status = 'error'
         for resp in response:
             message = resp.get('message')
             params = resp.get('parameters')
@@ -170,7 +172,8 @@ class MagentoSpecialPricing(models.Model):
 
             print(message)
 
-    def replace_last(self, message, old_txt, new_txt):
+    @staticmethod
+    def replace_last(message, old_txt, new_txt):
         head, _sep, tail = message.rpartition(old_txt)
         return head + new_txt + tail
 

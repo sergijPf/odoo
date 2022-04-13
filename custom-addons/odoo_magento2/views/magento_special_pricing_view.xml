@@ -45,15 +45,15 @@
                             <span class="o_stat_text" style="color:#da3434">Archived</span>
                         </button>
                         <button class="oe_stat_button" name="export_adv_prices" context="{'single_req': True}"
-                                icon="fa-external-link-square" type="object"
-                                attrs="{'invisible': [('export_status','=','exported')]}">
+                                icon="fa-external-link-square" type="object">
+<!--                                attrs="{'invisible': [('export_status','=','exported')]}">-->
                             <span class="o_stat_text" style="color:#2dab2d" >
                                 <b>Export To Magento</b>
                             </span>
                         </button>
                         <button class="oe_stat_button" name="delete_in_magento"
-                                icon="fa-remove" type="object"
-                                attrs="{'invisible': [('export_status','=','not_exported')]}">
+                                icon="fa-remove" type="object">
+<!--                                attrs="{'invisible': [('export_status','=','not_exported')]}">-->
                             <span class="o_stat_text" style="color:#da3434">
                                 <b>Delete in Magento</b>
                             </span>

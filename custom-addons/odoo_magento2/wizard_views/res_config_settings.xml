@@ -36,24 +36,23 @@
                             <div class="col-12 col-lg-6 o_setting_box">
                                 <div class="o_setting_right_pane">
                                     <label for="catalog_price_scope" string="Catalog price scope"/>
-                                    <field name="catalog_price_scope"  class="oe_inline"
-                                           attrs="{'required':[('magento_instance_id','!=', False)]}"  readonly="1"/>
+                                    <field name="catalog_price_scope"  class="oe_inline" readonly="1"/>
                                     <div class="text-muted" id="sale_coupon">
-                                        Scope of Price in Magento
+                                        Scope of Price can be selected in Magento and should be 'website'.
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-lg-6 o_setting_box">
-                                <div class="o_setting_right_pane"
-                                     attrs="{'invisible': [('catalog_price_scope', '=', 'website')]}">
-                                    <label for="pricelist_id" string="Pricelist" />
-                                    <field name="pricelist_id"  class="oe_inline"
-                                           attrs="{'required':[('magento_instance_id','!=', False), ('catalog_price_scope', '!=', 'website')]}" />
-                                    <div class="text-muted" id="sale_coupon">
-                                        Product price will be taken/set from this pricelist if Catalog Price Scope is global
-                                    </div>
-                                </div>
-                            </div>
+<!--                            <div class="col-12 col-lg-6 o_setting_box">-->
+<!--                                <div class="o_setting_right_pane"-->
+<!--                                     attrs="{'invisible': [('catalog_price_scope', '=', 'website')]}">-->
+<!--                                    <label for="pricelist_id" string="Pricelist" />-->
+<!--                                    <field name="pricelist_id"  class="oe_inline"-->
+<!--                                           attrs="{'required':[('magento_instance_id','!=', False), ('catalog_price_scope', '!=', 'website')]}" />-->
+<!--                                    <div class="text-muted" id="sale_coupon">-->
+<!--                                        Product price will be taken/set from this pricelist if Catalog Price Scope is global-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
                         </div>
 
                         <h2 style="font-size:25px;background-color:#e9ecef;"

@@ -40,13 +40,15 @@ class MagentoImportExport(models.TransientModel):
         elif self.operations == 'export_invoice_information':
             self.env['account.move'].export_invoices_to_magento(instances)
         elif self.operations == 'export_adv_product_prices':
-            if not self.env['magento.special.pricing'].export_adv_prices():
-                return {
-                    'name': 'Product Advanced Prices Export Logs',
-                    'view_mode': 'tree,form',
-                    'res_model': 'magento.prices.log.book',
-                    'type': 'ir.actions.act_window'
-                }
+            self.env['magento.product.product'].export_product_prices_to_magento(instances)
+
+            # if not self.env['magento.special.pricing'].export_adv_prices():
+            #     return {
+            #         'name': 'Product Advanced Prices Export Logs',
+            #         'view_mode': 'tree,form',
+            #         'res_model': 'magento.prices.log.book',
+            #         'type': 'ir.actions.act_window'
+            #     }
         elif self.operations == 'export_product_stock':
             if not self.export_product_stock_operation(instances):
                 return {

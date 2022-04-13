@@ -92,6 +92,7 @@
                                     <field name="magento_export_date" readonly="1"
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"/>
                                     <br/>
+                                    <field name="force_update"/>
                                     <field name="magento_attr_set" required="1"/>
                                     <field name="category_ids"
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"

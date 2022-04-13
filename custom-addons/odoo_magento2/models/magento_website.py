@@ -9,7 +9,7 @@ class MagentoWebsite(models.Model):
 
     name = fields.Char(string="Website Name", required=True, readonly=True)
     magento_instance_id = fields.Many2one('magento.instance', 'Instance', ondelete="cascade")
-    catalog_price_scope = fields.Selection(related="magento_instance_id.catalog_price_scope", store=True, readonly=True)
+    catalog_price_scope = fields.Selection(related="magento_instance_id.catalog_price_scope", readonly=True)
     magento_website_id = fields.Char(string="Magento Website Id", help="Website Id generated in Magento")
     pricelist_id = fields.Many2one('product.pricelist', string="Pricelist",
                                    help="Product Price is set in selected Pricelist if Catalog Price Scope is Website")
