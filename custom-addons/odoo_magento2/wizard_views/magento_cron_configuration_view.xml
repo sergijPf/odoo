@@ -28,27 +28,82 @@
                                             </h6>
                                         </span>
                                         <div class="text-muted">
-                                            If Ticked, System will Export Product Stock in magento.
+                                            If Ticked, System will Export Product Stock to Magento.
                                         </div>
                                         <br/>
                                         <div class="o_onboard_cron_settings"
                                              attrs="{'invisible': [('auto_export_product_stock', '=', False)]}">
-                                            <field name="export_product_stock_interval_number"
-                                                   placeholder="Interval Number"
-                                                   attrs="{'required': [('auto_export_product_stock', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_product_stock_interval_type"
-                                                   placeholder="Interval Type"
-                                                   attrs="{'required': [('auto_export_product_stock', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_product_stock_next_execution"
-                                                   placeholder="Next Execution Date"
-                                                   attrs="{'required': [('auto_export_product_stock', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_product_stock_user_id"
-                                                   placeholder="Responsible User"
-                                                   attrs="{'required': [('auto_export_product_stock', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <group>
+                                                <group>
+                                                    <field name="export_product_stock_interval_number"
+                                                           placeholder="Interval Number"
+                                                           attrs="{'required': [('auto_export_product_stock', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                    <field name="export_product_stock_interval_type"
+                                                           placeholder="Interval Type"
+                                                           attrs="{'required': [('auto_export_product_stock', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                </group>
+                                                <group>
+                                                    <field name="export_product_stock_next_execution"
+                                                           placeholder="Next Execution Date"
+                                                           attrs="{'required': [('auto_export_product_stock', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                    <field name="export_product_stock_user_id"
+                                                           placeholder="Responsible User"
+                                                           attrs="{'required': [('auto_export_product_stock', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                </group>
+                                            </group>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </group>
+                    <group>
+                        <div class="o_setting_left_pane">
+                            <div class="row mt16 o_settings_container o_onboard_padding">
+                                <div class="ol-12 o_setting_box o_onboard_setting_box">
+                                    <div class="o_setting_left_pane">
+                                        <field name="auto_export_product_prices" widget="boolean_toggle"
+                                               class="o_onboard_boolean_toggle"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <span>
+                                            <h6>
+                                                <label for="auto_export_product_prices"
+                                                       string="Auto Export product Prices ?"/>
+                                            </h6>
+                                        </span>
+                                        <div class="text-muted">
+                                            If Ticked, System will Export Product Prices to Magento.
+                                        </div>
+                                        <br/>
+                                        <div class="o_onboard_cron_settings"
+                                             attrs="{'invisible': [('auto_export_product_prices', '=', False)]}">
+                                            <group>
+                                                <group>
+                                                    <field name="export_product_prices_interval_number"
+                                                           placeholder="Interval Number"
+                                                           attrs="{'required': [('auto_export_product_prices', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                    <field name="export_product_prices_interval_type"
+                                                           placeholder="Interval Type"
+                                                           attrs="{'required': [('auto_export_product_prices', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                </group>
+                                                <group>
+                                                    <field name="export_product_prices_next_execution"
+                                                           placeholder="Next Execution Date"
+                                                           attrs="{'required': [('auto_export_product_prices', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                    <field name="export_product_prices_user_id"
+                                                           placeholder="Responsible User"
+                                                           attrs="{'required': [('auto_export_product_prices', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                </group>
+                                            </group>
                                         </div>
                                     </div>
                                 </div>
@@ -77,22 +132,28 @@
                                         <br/>
                                         <div class="o_onboard_cron_settings"
                                          attrs="{'invisible': [('auto_export_invoice', '=', False)]}">
-                                            <field name="export_invoice_interval_number"
-                                                   placeholder="Interval Number"
-                                                   attrs="{'required': [('auto_export_invoice', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_invoice_interval_type"
-                                                   placeholder="Interval Type"
-                                                   attrs="{'required': [('auto_export_invoice', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_invoice_next_execution"
-                                                   placeholder="Next Execution Date"
-                                                   attrs="{'required': [('auto_export_invoice', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_invoice_user_id"
-                                                   placeholder="Responsible User"
-                                                   attrs="{'required': [('auto_export_invoice', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <group>
+                                                <group>
+                                                    <field name="export_invoice_interval_number"
+                                                           placeholder="Interval Number"
+                                                           attrs="{'required': [('auto_export_invoice', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                    <field name="export_invoice_interval_type"
+                                                           placeholder="Interval Type"
+                                                           attrs="{'required': [('auto_export_invoice', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                </group>
+                                                <group>
+                                                    <field name="export_invoice_next_execution"
+                                                           placeholder="Next Execution Date"
+                                                           attrs="{'required': [('auto_export_invoice', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                    <field name="export_invoice_user_id"
+                                                           placeholder="Responsible User"
+                                                           attrs="{'required': [('auto_export_invoice', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                </group>
+                                            </group>
                                         </div>
                                     </div>
                                 </div>
@@ -120,22 +181,28 @@
                                         <br/>
                                         <div class="o_onboard_cron_settings"
                                          attrs="{'invisible': [('auto_export_shipment_order_status', '=', False)]}">
-                                            <field name="export_shipment_order_status_interval_number"
-                                                   placeholder="Interval Number"
-                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_shipment_order_status_interval_type"
-                                                   placeholder="Interval Type"
-                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_shipment_order_status_next_execution"
-                                                   placeholder="Next Execution Date"
-                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
-                                            <field name="export_shipment_order_status_user_id"
-                                                   placeholder="Responsible User"
-                                                   attrs="{'required': [('auto_export_shipment_order_status', '=', True),
-                                                   ('magento_instance_id','!=',False)]}"/>
+                                            <group>
+                                                <group>
+                                                    <field name="export_shipment_order_status_interval_number"
+                                                           placeholder="Interval Number"
+                                                           attrs="{'required': [('auto_export_shipment_order_status', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                    <field name="export_shipment_order_status_interval_type"
+                                                           placeholder="Interval Type"
+                                                           attrs="{'required': [('auto_export_shipment_order_status', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                </group>
+                                                <group>
+                                                    <field name="export_shipment_order_status_next_execution"
+                                                           placeholder="Next Execution Date"
+                                                           attrs="{'required': [('auto_export_shipment_order_status', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                    <field name="export_shipment_order_status_user_id"
+                                                           placeholder="Responsible User"
+                                                           attrs="{'required': [('auto_export_shipment_order_status', '=', True),
+                                                           ('magento_instance_id','!=',False)]}"/>
+                                                </group>
+                                            </group>
                                         </div>
                                     </div>
                                 </div>

@@ -135,7 +135,7 @@ class StockPicking(models.Model):
                     'effect': {
                         'fadeout': 'slow',
                         'message': "Process Completed Successfully!",
-                        'img_url': '/web/static/src/img/smile.svg',
+                        'img_url': '/web/static/img/smile.svg',
                         'type': 'rainbow_man',
                     }
                 }

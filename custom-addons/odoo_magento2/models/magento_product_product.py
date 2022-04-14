@@ -118,8 +118,7 @@ class MagentoProductProduct(models.Model):
             if instance.catalog_price_scope == 'website':
                 for website in instance.magento_website_ids:
                     if website.pricelist_id:
-                        price_and_rule = website.pricelist_id.get_product_price_rule(rec.odoo_product_id, 1.0, False)
-                        price = 0 if price_and_rule[1] is False else price_and_rule[0]
+                        price = self.get_product_price_for_website(website, rec.odoo_product_id)
                         base_price += "" if not price else \
                             f"[{website.name} - {price}{website.pricelist_id.currency_id.name}]   "
 
@@ -200,22 +199,47 @@ class MagentoProductProduct(models.Model):
         if log_book_rec:
             log_book_rec.write({'active': False})
 
-    def export_product_prices_to_magento(self, instance):
+    def export_product_prices_to_magento(self, instances):
+        for instance in instances:
+            res = []
+            special_prices_obj = self.env['magento.special.pricing']
+
+            base_prices, tier_prices, special_prices = self.prepare_product_prices_data_to_export(instance)
+
+            if base_prices:
+                api_url = "/all/V1/products/base-prices"
+                res += special_prices_obj.call_export_product_price_api(instance, base_prices, api_url)
+
+            if tier_prices:
+                api_url = "/all/V1/products/tier-prices"
+                res += special_prices_obj.call_export_product_price_api(instance, tier_prices, api_url)
+
+            for store_code in special_prices:
+                api_url = "/%s/V1/products/special-price" % store_code
+                res += special_prices_obj.call_export_product_price_api(instance, special_prices[store_code], api_url)
+
+            if tier_prices or special_prices:
+                special_prices_obj.search([('magento_instance_id', '=', instance.id)]).export_status = 'exported'
+
+            if res:
+                special_prices_obj.log_price_errors(instance, res, 'Mass export of prices')
+                return True
+
+    def prepare_product_prices_data_to_export(self, instance):
         base_prices = []
         tier_prices = []
         special_prices = {}
-        products_range = self.search([('magento_instance_id', '=', instance.id),
-                                      ('magento_status', '=', 'in_magento')])
+        date_format = MAGENTO_DATETIME_FORMAT
+        products_range = self.search([('magento_instance_id', '=', instance.id), ('magento_status', '=', 'in_magento')])
 
         for website in instance.magento_website_ids:
             pricelist = website.pricelist_id
-            storeview_id = website.store_view_ids.magento_storeview_id
-            store_code = website.store_view_ids.magento_storeview_code or 'all'
+            storeview_id = website.store_view_ids[0].magento_storeview_id
+            store_code = website.store_view_ids[0].magento_storeview_code or 'all'
 
             if pricelist and (pricelist.currency_id.id == website.magento_base_currency.id) and storeview_id:
                 for product in products_range:
-                    price_and_rule = pricelist.get_product_price_rule(product.odoo_product_id, 1.0, False)
-                    product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
+                    product_price = self.get_product_price_for_website(website, product.odoo_product_id)
 
                     if product_price:
                         base_prices.append({
@@ -239,8 +263,8 @@ class MagentoProductProduct(models.Model):
                             "sku": product.magento_sku,
                             "price": price.fixed_price,
                             "store_id": storeview_id,
-                            "price_from": datetime.strftime(price.price_from, '%Y-%m-%d %H:%M:%S') if price.price_from else "",
-                            "price_to": datetime.strftime(price.price_to, '%Y-%m-%d %H:%M:%S') if price.price_to else ""
+                            "price_from": datetime.strftime(price.price_from, date_format) if price.price_from else "",
+                            "price_to": datetime.strftime(price.price_to, date_format) if price.price_to else ""
                         }
 
                         if special_prices.get(store_code):
@@ -248,40 +272,7 @@ class MagentoProductProduct(models.Model):
                         else:
                             special_prices.update({store_code: [item]})
 
-        if base_prices:
-            api_url = "/all/V1/products/base-prices"
-            self.call_export_product_price_api_and_log_result(instance, base_prices, api_url)
-
-        if tier_prices:
-            api_url = "/all/V1/products/tier-prices"
-            self.call_export_product_price_api_and_log_result(instance, tier_prices, api_url)
-
-        for store_code in special_prices:
-            api_url = "/%s/V1/products/special-price" % store_code
-            self.call_export_product_price_api_and_log_result(instance, special_prices[store_code], api_url)
-
-    def call_export_product_price_api_and_log_result(self, instance, price_list, api_url):
-        spec_prices_obj = self.env['magento.special.pricing']
-        failed = []
-        count = (len(price_list) // 20) + 1
-
-        for c in range(count):
-            response = []
-            list_extract = price_list[c * 20:20 * (c + 1)]
-            try:
-                response = req(instance, api_url, 'POST', {"prices": list_extract})
-            except Exception as error:
-                for p in list_extract:
-                    response.append({'message': str(error) + ' for %sku', 'parameters': [p['sku']]})
-
-            if type(response) is list:
-                failed += response
-            else:
-                for p in list_extract:
-                    failed.append({'message': str(response) + ' for %sku', 'parameters': [p['sku']]})
-
-        if failed:
-            spec_prices_obj.log_error(failed)
+        return base_prices, tier_prices, special_prices
 
     @staticmethod
     def update_simple_product_dict_with_magento_data(magento_product, ml_simp_products_dict):
@@ -633,15 +624,14 @@ class MagentoProductProduct(models.Model):
     def process_storeview_data_export(self, instance, product, ml_products, prod_sku, data):
         product_price = 0
         text = ''
-        magento_storeviews = [(w, w.store_view_ids) for w in instance.magento_website_ids]
 
         if instance.catalog_price_scope == 'global':
             text += "Catalog Price Scope has to changed to 'website' in Magento. "
 
         else:
-            for website, storeview in magento_storeviews:
-                storeview_code = storeview.magento_storeview_code
-                lang_code = storeview.lang_id.code
+            for website in instance.magento_website_ids:
+                storeview_code = website.store_view_ids[0].magento_storeview_code
+                lang_code = website.store_view_ids[0].lang_id.code
                 data["product"]["name"] = product.with_context(lang=lang_code).odoo_product_id.name + ' ' + \
                                           ' '.join(product.product_attribute_ids.mapped('x_attribute_value'))
 
@@ -650,8 +640,7 @@ class MagentoProductProduct(models.Model):
                         text += "Pricelist '%s' currency is different than Magento base currency " \
                                 "for '%s' website.\n" % (website.pricelist_id.name, website.name)
                         break
-                    price_and_rule = website.pricelist_id.get_product_price_rule(product.odoo_product_id, 1.0, False)
-                    product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
+                    product_price = self.get_product_price_for_website(website, product.odoo_product_id)
                 else:
                     text += "There are no pricelist defined for '%s' website.\n" % website.name
 
@@ -815,18 +804,16 @@ class MagentoProductProduct(models.Model):
         #                                                   'product.template', True)
 
     def process_simple_prod_storeview_data_export_in_bulk(self, instance, odoo_products, data, ml_products):
-        magento_storeviews = [(w, w.store_view_ids) for w in instance.magento_website_ids]
-
         if instance.catalog_price_scope == 'global':
             text = "Catalog Price Scope has to be 'website' in Magento for '%s' instance. " % instance.name
             for product in data:
                 ml_products[product['sku']]['log_message'] += text
             return
 
-        for website, storeview in magento_storeviews:
+        for website in instance.magento_website_ids:
             data_lst = []
-            storeview_code = storeview.magento_storeview_code
-            lang_code = storeview.lang_id.code
+            storeview_code = website.store_view_ids[0].magento_storeview_code
+            lang_code = website.store_view_ids[0].lang_id.code
 
             for prod in data:
                 product_price = 0
@@ -853,8 +840,7 @@ class MagentoProductProduct(models.Model):
                         ml_products[sku]['log_message'] += text
                         break
 
-                    price_and_rule = website.pricelist_id.get_product_price_rule(product.odoo_product_id, 1.0, False)
-                    product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
+                    product_price = self.get_product_price_for_website(website, product.odoo_product_id)
 
                 if product_price:
                     new_prod["product"]["price"] = product_price
@@ -1028,6 +1014,12 @@ class MagentoProductProduct(models.Model):
                 attr_dict.update({self.to_upper(attrs.x_attribute_name): self.to_upper(attrs.x_attribute_value)})
         return attr_dict
 
+    def get_product_price_for_website(self, website, product):
+        price_and_rule = website.pricelist_id.get_product_price_rule(product, 1.0, False)
+
+        return 0 if price_and_rule[1] is False else price_and_rule[0]
+
+
     def delete_in_magento(self):
         self.ensure_one()
 
@@ -1069,29 +1061,7 @@ class MagentoProductProduct(models.Model):
             magento_storeviews = [(w, w.store_view_ids) for w in instance.magento_website_ids]
             self.clean_old_log_records(instance, prices_log_obj)
 
-            if instance.catalog_price_scope == 'global':
-                if not len(instance.pricelist_id):
-                    raise UserError("There are no pricelist(s) defined for '%s' instance.\n" % instance.name)
-                else:
-                    for view in magento_storeviews:
-                        for product in self.search([
-                            ('magento_instance_id', '=', instance.id),
-                            ('magento_status', 'in', ['in_magento', 'need_to_link', 'update_needed'])
-                        ]):
-                            product_price = instance.pricelist_id.get_product_price(product.odoo_product_id, 1.0, False)
-                            if product_price:
-                                data["prices"].append({
-                                    "price": product_price,
-                                    "store_id": view[1].magento_storeview_id,
-                                    "sku": product.magento_sku
-                                })
-                            else:
-                                is_error = True
-                                text = "Product Price is not defined for %s instance and %s store view" % (
-                                    instance.name, view[1].name)
-                                self.create_price_export_log(instance, view[1], prices_log_obj, batch_code,
-                                                             product.magento_sku, text)
-            elif instance.catalog_price_scope == 'website':
+            if instance.catalog_price_scope == 'website':
                 for view in magento_storeviews:
                     pricelist = view[0].pricelist_id
                     if not len(pricelist):
@@ -1149,21 +1119,6 @@ class MagentoProductProduct(models.Model):
             "magento_sku": sku,
             "log_message": text
         })
-
-    @staticmethod
-    def format_error_log(result):
-        text = ""
-        for err in result:
-            cnt = 0
-            mess = str(err.get("message", ""))
-            param = err.get("parameters", [])
-            while mess.find("%") >= 0:
-                ind = mess.find("%")
-                ind2 = mess.find(" ", ind) if mess.find(" ", ind) >= 0 else len(mess)
-                mess = mess.replace(mess[ind:ind2], param[cnt] if len(param) > cnt else "")
-                cnt += 1
-            text += mess + "\n"
-        return text
 
     @staticmethod
     def to_upper(val):

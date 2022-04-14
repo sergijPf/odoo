@@ -72,13 +72,20 @@ class MagentoStockLogBook(models.Model):
 class MagentoPricesLogBook(models.Model):
     _name = 'magento.prices.log.book'
     _description = 'Magento Product Prices Export Log Book'
-    _rec_name = 'magento_sku'
+    _rec_name = "batch"
     _order = "create_date desc"
 
     magento_instance_id = fields.Many2one('magento.instance', string="Magento Instance")
-    magento_storeview_id = fields.Many2one('magento.storeview', string="Magento Storeview")
-    storeview_name = fields.Char(related='magento_storeview_id.name', string="Magento Storeview Name")
-    magento_sku = fields.Char("Magento sku")
-    log_message = fields.Char(string="Price Export Messages")
+    prices_log_book_lines = fields.One2many('magento.prices.log.book.lines', 'prices_log_book_id', string="Log book lines")
     batch = fields.Char(string="Export batch")
-    active = fields.Boolean("Active", default=True)
+    source = fields.Char("Export source")
+
+
+class MagentoPricesLogBookLines(models.Model):
+    _name = 'magento.prices.log.book.lines'
+    _description = 'Magento Product Prices Export Log Book Lines'
+    _rec_name = "batch"
+
+    log_message = fields.Char(string="Price Export Messages")
+    prices_log_book_id = fields.Many2one('magento.prices.log.book', string='Log book')
+    batch = fields.Char(related="prices_log_book_id.batch")

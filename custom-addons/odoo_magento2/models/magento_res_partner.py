@@ -118,7 +118,7 @@ class MagentoResPartner(models.Model):
                 'effect': {
                     'fadeout': 'slow',
                     'message': " 'Export to Magento' Process Completed Successfully! {}".format(""),
-                    'img_url': '/web/static/src/img/smile.svg',
+                    'img_url': '/web/static/img/smile.svg',
                     'type': 'rainbow_man',
                 }
             }

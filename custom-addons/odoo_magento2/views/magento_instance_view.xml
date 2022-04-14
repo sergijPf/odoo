@@ -126,7 +126,7 @@
     </record>
 
     <menuitem id="menu_magento_root" name="Magento" sequence="200"
-        web_icon="odoo_magento2/static/description/icon.png"  groups="odoo_magento2.group_magento_user"/>
+        web_icon="odoo_magento2,static/description/icon.png"  groups="odoo_magento2.group_magento_user"/>
 
     <menuitem id="menu_configuration_root" parent="menu_magento_root"
         name="Configuration" sequence="10" groups="odoo_magento2.group_magento_manager"/>

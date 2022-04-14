@@ -19,17 +19,15 @@ class MagentoImportExport(models.TransientModel):
     magento_instance_ids = fields.Many2many('magento.instance', string="Magento Instances")
     magento_website_id = fields.Many2one('magento.website', string="Magento Website")
     operations = fields.Selection([
-        ('export_shipment_information', 'Export Shipment Information'),
-        ('export_invoice_information', 'Export Invoice Information'),
-        ('export_adv_product_prices', 'Export Advanced Prices'),
+        ('export_shipment_information', 'Export Shipment Info'),
+        ('export_invoice_information', 'Export Invoice Info'),
+        ('export_product_prices', 'Export Product Base and Advanced Prices'),
         ('export_product_stock', 'Export Product Stock')
     ], string='Import/ Export Operations', help='Import/ Export Operations')
     start_date = fields.Datetime(string="From Date")
     end_date = fields.Datetime("To Date")
 
     def execute(self):
-        message = ''
-
         if self.magento_instance_ids:
             instances = self.magento_instance_ids
         else:
@@ -39,18 +37,16 @@ class MagentoImportExport(models.TransientModel):
             self.env['stock.picking'].export_shipments_to_magento(instances)
         elif self.operations == 'export_invoice_information':
             self.env['account.move'].export_invoices_to_magento(instances)
-        elif self.operations == 'export_adv_product_prices':
-            self.env['magento.product.product'].export_product_prices_to_magento(instances)
-
-            # if not self.env['magento.special.pricing'].export_adv_prices():
-            #     return {
-            #         'name': 'Product Advanced Prices Export Logs',
-            #         'view_mode': 'tree,form',
-            #         'res_model': 'magento.prices.log.book',
-            #         'type': 'ir.actions.act_window'
-            #     }
+        elif self.operations == 'export_product_prices':
+            if self.env['magento.product.product'].export_product_prices_to_magento(instances):
+                return {
+                    'name': 'Product Prices Export Logs',
+                    'view_mode': 'tree,form',
+                    'res_model': 'magento.prices.log.book',
+                    'type': 'ir.actions.act_window'
+                }
         elif self.operations == 'export_product_stock':
-            if not self.export_product_stock_operation(instances):
+            if self.export_product_stock_operation(instances):
                 return {
                     'name': 'Product Stock Export Logs',
                     'view_mode': 'tree,form',
@@ -63,17 +59,17 @@ class MagentoImportExport(models.TransientModel):
         return {
             'effect': {
                 'fadeout': 'slow',
-                'message': " {} Process Completed Successfully! {}".format(title[0], message),
-                'img_url': '/web/static/src/img/smile.svg',
+                'message': " {} Process Completed Successfully!".format(title[0]),
+                'img_url': '/web/static/img/smile.svg',
                 'type': 'rainbow_man',
             }
         }
 
     def export_product_stock_operation(self, instances):
-        res = True
+        res = False
         for instance in instances:
             if not self.env[MAGENTO_PRODUCT_PRODUCT].export_products_stock_to_magento(instance):
-                res = False
+                res = True
             instance.last_update_stock_time = datetime.now()
 
         return res
@@ -93,7 +89,7 @@ class MagentoImportExport(models.TransientModel):
             'effect': {
                 'fadeout': 'slow',
                 'message': " 'Export to Magento Layer' process completed successfully! {}".format(""),
-                'img_url': '/web/static/src/img/smile.svg',
+                'img_url': '/web/static/img/smile.svg',
                 'type': 'rainbow_man',
             }
         }
@@ -198,7 +194,7 @@ class MagentoImportExport(models.TransientModel):
                 'effect': {
                     'fadeout': 'slow',
                     'message': " 'Export in Magento Layer' Process Completed Successfully! {}".format(""),
-                    'img_url': '/web/static/src/img/smile.svg',
+                    'img_url': '/web/static/img/smile.svg',
                     'type': 'rainbow_man',
                 }
             }

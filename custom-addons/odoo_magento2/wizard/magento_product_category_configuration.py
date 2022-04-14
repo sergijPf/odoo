@@ -50,7 +50,7 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
             'effect': {
                 'fadeout': 'slow',
                 'message': "Product Categories were successfully created/updated in Magento and in Magento Layer!",
-                'img_url': '/web/static/src/img/smile.svg',
+                'img_url': '/web/static/img/smile.svg',
                 'type': 'rainbow_man',
             }
         }

@@ -109,10 +109,7 @@
                                     <field name="customer_group_id"/>
                                     <field name="price_from"/>
                                     <field name="price_to"/>
-                                    <field name="export_status" widget="badge" readonly="1"
-                                       decoration-success="export_status == 'exported'"
-                                       decoration-danger="export_status == 'error'"
-                                       decoration-muted="export_status == 'not_exported'"/>
+                                    <field name="export_status"/>
                                 </tree>
                             </field>
                         </page>

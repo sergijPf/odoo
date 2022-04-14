@@ -45,6 +45,7 @@ class MagentoInstance(models.Model):
     invoice_done_notify_customer = fields.Boolean(string="Invoices Done Notify customer", default=False,
                                                   help="Send email while export invoice")
     auto_export_product_stock = fields.Boolean(string='Auto Export Product Stock?')
+    auto_export_product_prices = fields.Boolean(string='Auto Export Product Prices?')
     auto_export_invoice = fields.Boolean(string='Auto Export Invoice?')
     auto_export_shipment_order_status = fields.Boolean(string='Auto Export Shipment Information?')
     payment_method_ids = fields.One2many("magento.payment.method", "magento_instance_id", "Payment Methods in Magento")
@@ -71,9 +72,18 @@ class MagentoInstance(models.Model):
         magento_instance_id = args.get('magento_instance_id')
 
         if magento_instance_id:
-            instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
+            instance = self.browse(magento_instance_id)
             self.env['magento.product.product'].export_products_stock_to_magento(instance)
             instance.last_update_stock_time = datetime.now()
+
+    @api.model
+    def _scheduler_update_product_prices(self, args=None):
+        args = {} if args is None else args
+        magento_instance_id = args.get('magento_instance_id')
+
+        if magento_instance_id:
+            instance = self.browse(magento_instance_id)
+            self.env['magento.product.product'].export_product_prices_to_magento(instance)
 
     @api.model
     def _scheduler_update_order_status(self, args=None):
@@ -156,7 +166,7 @@ class MagentoInstance(models.Model):
                 'effect': {
                     'fadeout': 'slow',
                     'message': "Connection Test Succeeded! Everything seems properly set up!",
-                    'img_url': '/web/static/src/img/smile.svg',
+                    'img_url': '/web/static/img/smile.svg',
                     'type': 'rainbow_man',
                 }
             }
@@ -218,29 +228,28 @@ class MagentoInstance(models.Model):
         except Exception as err:
             raise UserError(err)
 
-        for storeview_data in storeview_configs:
-            magento_storeview_id = str(storeview_data.get('id'))
+        for store_data in storeview_configs:
+            magento_storeview_id = str(store_data.get('id'))
             if magento_storeview_id != "0":
                 website = self.magento_website_ids.filtered(
-                    lambda x: x.magento_website_id == str(storeview_data.get('website_id')))
-                storeview = website.store_view_ids.filtered(
-                    lambda x: x.magento_storeview_id == magento_storeview_id)
+                    lambda x: x.magento_website_id == str(store_data.get('website_id')))
+                storeview = website.store_view_ids.filtered(lambda x: x.magento_storeview_id == magento_storeview_id)
 
-                self.update_currency_for_website(storeview_data, website)
+                self.update_currency_for_website(store_data, website)
 
                 if not storeview:
-                    name, language = self.get_store_view_language_and_name(stores, magento_storeview_id, storeview_data)
+                    name, language = self.get_store_view_language_and_name(stores, magento_storeview_id, store_data)
                     storeview_obj.create({
                         'name': name,
                         'magento_website_id': website.id,
                         'magento_storeview_id': magento_storeview_id,
                         'magento_instance_id': self.id,
                         'lang_id': language.id if language else False,
-                        'magento_storeview_code': storeview_data.get('code')
+                        'magento_storeview_code': store_data.get('code')
                     })
                 else:
                     storeview.write({
-                        'magento_storeview_code': storeview_data.get('code')
+                        'magento_storeview_code': store_data.get('code')
                     })
 
     def update_currency_for_website(self, storeview_data, website):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import re
+import pytz
 
 from datetime import datetime
 from odoo import fields, models, api
@@ -50,7 +50,6 @@ class MagentoSpecialPricing(models.Model):
     active = fields.Boolean("Active", default=True)
     export_status = fields.Selection([
         ('not_exported', 'not Exported'),
-        ('error', "Error"),
         ('exported', 'Exported')
     ], string='Export Status', help='The status of Product Advanced Pricing export to Magento ',
         default='not_exported', copy=False)
@@ -78,42 +77,39 @@ class MagentoSpecialPricing(models.Model):
 
     def toggle_active(self):
         for rec in self:
-            if rec.export_status == 'exported':
+            if rec.active and rec.export_status == 'exported':
                 raise UserError("Please delete special price in Magento first (by clicking 'Delete in Magento' button)")
         return super(MagentoSpecialPricing, self).toggle_active()
 
-    def export_adv_prices(self):
-        all_records = self if self.env.context.get('single_req') else self.search([])
-        all_records.active = True
+    def process_advanced_prices_export(self):
+        self.ensure_one()
+        is_deletion = self.env.context.get('delete', False)
 
-        for instance in {i.magento_instance_id for i in all_records}:
-            adv_prices = all_records.filtered(lambda x: x.magento_instance_id.id == instance.id)
+        if is_deletion and self.export_status == 'not_exported':
+            raise UserError("This special pricing cannot be deleted in Magento as it wasn't exported yet to Magento.")
 
-            for rec in adv_prices:
-                response = []
-                data_prices, api_url = rec.prepare_data_to_export(False)
+        instance = self.magento_instance_id
+        self.active = not is_deletion
 
-                # Magento allows max export of 20 at once
-                count = (len(data_prices) // 20) + 1
-                for c in range(count):
-                    try:
-                        res = req(instance, api_url, 'POST', {"prices": data_prices[c*20:20*(c+1)]})
-                        if res and type(res) is list:
-                            response += res
-                    except Exception as err:
-                        print(err)
-                        return
+        data_list, api_url = self.prepare_data_to_export(is_deletion)
+        result = self.call_export_product_price_api(instance, data_list, api_url)
 
-                if not response:
-                    rec.export_status = 'exported'
-                else:
-                    self.export_status = 'error'
-                    rec.log_error(response)
+        self.export_status = 'not_exported' if is_deletion else 'exported'
 
-        return True
+        if result:
+            text = 'Advanced prices %s - %s' % ('deletion' if is_deletion else 'export', self.name)
+            self.log_price_errors(instance, result, text)
+
+            return {
+                'name': 'Product Prices Export Logs',
+                'view_mode': 'tree,form',
+                'res_model': 'magento.prices.log.book',
+                'type': 'ir.actions.act_window'
+            }
 
     def prepare_data_to_export(self, is_deletion):
         data_prices = []
+
         if self.is_special_price:
             store_id = self.store_id
             store_code = store_id.magento_storeview_code if store_id else 'all'
@@ -140,37 +136,49 @@ class MagentoSpecialPricing(models.Model):
 
         return data_prices, api_url
 
-    def delete_in_magento(self):
-        self.ensure_one()
+    def call_export_product_price_api(self, instance, data_list, api_url):
+        failed = []
+        count = (len(data_list) // 20) + 1
 
-        data_prices, api_url = self.prepare_data_to_export(True)
-        response = []
-
-        # Magento max export of 20 at once
-        count = (len(data_prices) // 20) + 1
         for c in range(count):
+            response = []
+            list_extract = data_list[c * 20:20 * (c + 1)]  # Magento max allowed export of 20 items at once
+
             try:
-                res = req(self.magento_instance_id, api_url, 'POST', {"prices": data_prices[c * 20:20 * (c + 1)]})
-                if res and type(res) is list:
-                    response += res
-            except Exception as err:
-                print(err)
-                return
+                response = req(instance, api_url, 'POST', {"prices": list_extract})
+            except Exception as error:
+                for item in list_extract:
+                    response.append({'message': str(error) + ' for %sku', 'parameters': [item['sku']]})
 
-        if not response:
-            self.export_status = 'not_exported'
-        else:
-            self.export_status = 'error'
-            self.log_error(response)
+            if type(response) is list:
+                failed += response
+            else:
+                for item in list_extract:
+                    failed.append({'message': str(response) + ' for %sku', 'parameters': [item['sku']]})
 
-    def log_error(self, response):
+        return failed
+
+    def log_price_errors(self, instance, response, source):
+        tz = pytz.timezone('Europe/Warsaw')
+        batch_code = datetime.now(tz).strftime("%Y-%b-%d %H:%M:%S")
+        prices_log_book_lines = self.env['magento.prices.log.book.lines']
+
+        log_book = self.env['magento.prices.log.book'].create({
+            "magento_instance_id": instance.id,
+            "batch": batch_code,
+            "source": source
+        })
+
         for resp in response:
             message = resp.get('message')
             params = resp.get('parameters')
             for p in reversed(params):
                 message = self.replace_last(message, '%', f"'{p}' ")
 
-            print(message)
+            prices_log_book_lines.create({
+                'log_message': message,
+                'prices_log_book_id': log_book.id
+            })
 
     @staticmethod
     def replace_last(message, old_txt, new_txt):
