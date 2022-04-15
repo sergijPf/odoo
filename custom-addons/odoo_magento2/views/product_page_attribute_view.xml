@@ -54,7 +54,8 @@
             <search string="Product Page Attributes search view">
                 <field name="categ_group_id"/>
                 <group expand="0" string="Group By">
-                    <filter name="Attribute Category" string="Attribute Category"/>
+                    <filter name="group_by_category" string="Attribute Category"
+                            context="{'group_by': 'categ_group_id'}"/>
                 </group>
             </search>
         </field>

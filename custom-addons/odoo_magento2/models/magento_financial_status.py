@@ -52,5 +52,3 @@ class MagentoFinancialStatusEpt(models.Model):
                 'financial_status': financial_status,
                 'payment_term_id': payment_term_id.id
             })
-
-        return True

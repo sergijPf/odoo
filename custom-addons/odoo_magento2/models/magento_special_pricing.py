@@ -50,6 +50,7 @@ class MagentoSpecialPricing(models.Model):
     active = fields.Boolean("Active", default=True)
     export_status = fields.Selection([
         ('not_exported', 'not Exported'),
+        ('error', 'Error'),
         ('exported', 'Exported')
     ], string='Export Status', help='The status of Product Advanced Pricing export to Magento ',
         default='not_exported', copy=False)
@@ -94,17 +95,30 @@ class MagentoSpecialPricing(models.Model):
         data_list, api_url = self.prepare_data_to_export(is_deletion)
         result = self.call_export_product_price_api(instance, data_list, api_url)
 
-        self.export_status = 'not_exported' if is_deletion else 'exported'
+        source = '%s - %s' % ('Deletion' if is_deletion else 'Export', self.name)
 
         if result:
-            text = 'Advanced prices %s - %s' % ('deletion' if is_deletion else 'export', self.name)
-            self.log_price_errors(instance, result, text)
+            self.export_status = 'error'
+            self.log_price_errors(instance, result, source)
 
             return {
-                'name': 'Product Prices Export Logs',
+                'name': 'Product Prices Export Error Logs',
                 'view_mode': 'tree,form',
                 'res_model': 'magento.prices.log.book',
                 'type': 'ir.actions.act_window'
+            }
+        else:
+            self.export_status = 'not_exported' if is_deletion else 'exported'
+
+            self.remove_log_errors(instance, source)
+
+            return {
+                'effect': {
+                    'fadeout': 'slow',
+                    'message': "Price was successfully %s!" % ('deleted' if is_deletion else 'exported'),
+                    'img_url': '/web/static/img/smile.svg',
+                    'type': 'rainbow_man',
+                }
             }
 
     def prepare_data_to_export(self, is_deletion):
@@ -170,8 +184,13 @@ class MagentoSpecialPricing(models.Model):
         })
 
         for resp in response:
-            message = resp.get('message')
-            params = resp.get('parameters')
+            if type(resp) is not dict:
+                message = str(resp)
+                params = []
+            else:
+                message = resp.get('message')
+                params = resp.get('parameters')
+
             for p in reversed(params):
                 message = self.replace_last(message, '%', f"'{p}' ")
 
@@ -184,6 +203,17 @@ class MagentoSpecialPricing(models.Model):
     def replace_last(message, old_txt, new_txt):
         head, _sep, tail = message.rpartition(old_txt)
         return head + new_txt + tail
+
+    def remove_log_errors(self, instance, source):
+        logs = self.env['magento.prices.log.book'].with_context(active_test=False).search([
+            ('magento_instance_id', '=', instance.id),
+            ('source', '=', source)
+        ])
+
+        if logs:
+            logs.sudo().unlink()
+
+        self.env['magento.product.product'].clean_old_log_records(instance, self.env['magento.prices.log.book'])
 
     def view_simple_products(self):
         if self.product_ids:

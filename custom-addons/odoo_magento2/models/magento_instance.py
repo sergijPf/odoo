@@ -181,6 +181,15 @@ class MagentoInstance(models.Model):
         self.shipping_method_ids.import_delivery_method(self)
         self.env['magento.financial.status'].create_financial_status(self, 'not_paid')
 
+        return {
+            'effect': {
+                'fadeout': 'slow',
+                'message': "Data synchronized Successfully! Everything seems to be ok!",
+                'img_url': '/web/static/img/smile.svg',
+                'type': 'rainbow_man',
+            }
+        }
+
     def make_currencies_active(self):
         try:
             url = '/V1/directory/currency'

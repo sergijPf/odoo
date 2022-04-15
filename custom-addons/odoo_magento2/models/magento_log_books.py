@@ -65,20 +65,33 @@ class MagentoStockLogBook(models.Model):
 
     magento_instance_id = fields.Many2one('magento.instance', string="Magento Instance")
     batch = fields.Char(string="Export batch")
-    log_message = fields.Char(string="Stock Export Messages")
+    result = fields.Char(string="Stock Export Result")
+    log_book_line_ids = fields.One2many('magento.stock.log.book.lines', 'stock_log_book_id')
     active = fields.Boolean("Active", default=True)
+
+
+class MagentoStockLogBookLines(models.Model):
+    _name = 'magento.stock.log.book.lines'
+    _description = 'Stock Export Log Book Lines'
+    _rec_name = 'batch'
+
+    log_message = fields.Char(string="Stock Export Error Messages")
+    code = fields.Char(string="Result Code")
+    stock_log_book_id = fields.Many2one('magento.stock.log.book', string='Stock log book', ondelete='cascade')
+    batch = fields.Char(related="stock_log_book_id.batch")
 
 
 class MagentoPricesLogBook(models.Model):
     _name = 'magento.prices.log.book'
     _description = 'Magento Product Prices Export Log Book'
-    _rec_name = "batch"
+    _rec_name = "source"
     _order = "create_date desc"
 
     magento_instance_id = fields.Many2one('magento.instance', string="Magento Instance")
     prices_log_book_lines = fields.One2many('magento.prices.log.book.lines', 'prices_log_book_id', string="Log book lines")
     batch = fields.Char(string="Export batch")
     source = fields.Char("Export source")
+    active = fields.Boolean('Active', default=True)
 
 
 class MagentoPricesLogBookLines(models.Model):
@@ -87,5 +100,5 @@ class MagentoPricesLogBookLines(models.Model):
     _rec_name = "batch"
 
     log_message = fields.Char(string="Price Export Messages")
-    prices_log_book_id = fields.Many2one('magento.prices.log.book', string='Log book')
+    prices_log_book_id = fields.Many2one('magento.prices.log.book', string='Log book', ondelete='cascade')
     batch = fields.Char(related="prices_log_book_id.batch")

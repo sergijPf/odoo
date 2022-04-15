@@ -40,7 +40,7 @@ class MagentoImportExport(models.TransientModel):
         elif self.operations == 'export_product_prices':
             if self.env['magento.product.product'].export_product_prices_to_magento(instances):
                 return {
-                    'name': 'Product Prices Export Logs',
+                    'name': 'Product Prices Export Error Logs',
                     'view_mode': 'tree,form',
                     'res_model': 'magento.prices.log.book',
                     'type': 'ir.actions.act_window'

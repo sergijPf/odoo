@@ -139,65 +139,67 @@ class MagentoProductProduct(models.Model):
 
     def export_products_stock_to_magento(self, instance):
         stock_data = []
-        instance_products = self.search([('magento_instance_id', '=', instance.id)])
+        products_range = self.search([('magento_instance_id', '=', instance.id), ('magento_status', '=', 'in_magento')])
 
-        for product in instance_products:
+        for product in products_range:
             stock_data.append({'sku': product.magento_sku, 'qty': product.qty_avail, 'is_in_stock': 1})
 
         if stock_data:
-            data = {'skuData': stock_data}
-            return self.call_export_product_stock_api_and_log_result(instance, data)
+            result = self.call_export_product_stock_api(instance, stock_data)
+            return self.log_stock_export_result(instance, result)
 
-    def call_export_product_stock_api_and_log_result(self, instance, data):
+    def call_export_product_stock_api(self, instance, stock_data):
+        result = []
+        api_url = "/V1/product/updatestock"
+        count = (len(stock_data) // 20) + 1
+
+        for c in range(count):
+            response = []
+            list_extract = stock_data[c * 20:20 * (c + 1)]  # Magento max allowed export of 20 items at once
+            try:
+                response = req(instance, api_url, 'PUT', {"skuData": list_extract})
+            except Exception as error:
+                for item in list_extract:
+                    response.append({'message': (str(item['sku']) + str(error)), 'code': '999'})
+
+            if type(response) is list:
+                result += response
+            else:
+                for item in list_extract:
+                    result.append({'message': (str(item['sku']) + str(response)), 'code': '999'})
+
+        return result
+
+    def log_stock_export_result(self, instance, result):
         is_error = False
-        stock_log_book_obj = self.env['magento.stock.log.book']
+        stock_log_book_lines = self.env['magento.stock.log.book.lines']
         tz = pytz.timezone('Europe/Warsaw')
-        logbook_rec = {
+        stock_log_book = self.env['magento.stock.log.book']
+
+        self.clean_old_log_records(instance, stock_log_book)
+
+        log_book_rec = stock_log_book.create({
             'magento_instance_id': instance.id,
             'batch': datetime.now(tz).strftime("%Y-%b-%d %H:%M:%S"),
-            'log_message': ''
-        }
+            'result': 'Errors'
+        })
 
-        self.clean_old_log_records(instance, stock_log_book_obj)
+        for res in result:
+            item = res if type(res) is dict else {'message': str(res), 'code': '999'}
 
-        try:
-            api_url = "/V1/product/updatestock"
-            response = req(instance, api_url, 'PUT', data)
-        except Exception as error:
-            logbook_rec.update({"log_message": "Error while Export product stock " + str(error)})
-            stock_log_book_obj.create(logbook_rec)
-            return False
-
-        if response:
-            for resp in response:
-                if resp.get('code', False) != '200':
-                    is_error = True
-                    logbook_rec.update({"log_message": resp.get('message', resp)})
-                    stock_log_book_obj.create(logbook_rec)
+            if item.get('code', False) != '200':
+                is_error = True
+                stock_log_book_lines.create({
+                    'stock_log_book_id': log_book_rec.id,
+                    'log_message': item.get('message', 'Message is missed'),
+                    'code': item.get('code', '000')
+                })
 
         if is_error:
             return False
         else:
-            logbook_rec.update({"log_message": "Successfully Exported"})
-            stock_log_book_obj.create(logbook_rec)
+            log_book_rec.write({"result": "Successfully Exported"})
             return True
-
-    @staticmethod
-    def clean_old_log_records(instance, log_book_obj):
-        # remove all records older than 30 days
-        log_book_rec = log_book_obj.with_context(active_test=False).search([
-            ('create_date', '<', datetime.today() - timedelta(days=30))
-        ])
-        if log_book_rec:
-            log_book_rec.sudo().unlink()
-
-        # archive all previous records older than 7 days
-        log_book_rec = log_book_rec.search([
-            ('magento_instance_id', '=', instance.id),
-            ('create_date', '<', datetime.today() - timedelta(days=7))
-        ])
-        if log_book_rec:
-            log_book_rec.write({'active': False})
 
     def export_product_prices_to_magento(self, instances):
         for instance in instances:
@@ -222,8 +224,11 @@ class MagentoProductProduct(models.Model):
                 special_prices_obj.search([('magento_instance_id', '=', instance.id)]).export_status = 'exported'
 
             if res:
-                special_prices_obj.log_price_errors(instance, res, 'Mass export of prices')
+                special_prices_obj.log_price_errors(instance, res, 'Mass Export')
                 return True
+            else:
+                special_prices_obj.remove_log_errors(instance, 'Mass Export')
+                return False
 
     def prepare_product_prices_data_to_export(self, instance):
         base_prices = []
@@ -1019,7 +1024,6 @@ class MagentoProductProduct(models.Model):
 
         return 0 if price_and_rule[1] is False else price_and_rule[0]
 
-
     def delete_in_magento(self):
         self.ensure_one()
 
@@ -1050,75 +1054,22 @@ class MagentoProductProduct(models.Model):
             vals.update({'magento_product_id': self.id})
             self.error_log_ids.create(vals)
 
-    def export_adv_product_prices(self, instances):
-        prices_log_obj = self.env['magento.prices.log.book']
-        is_error = False
-        tz = pytz.timezone('Europe/Warsaw')
-        batch_code = datetime.now(tz).strftime("%Y-%b-%d %H:%M:%S")
-
-        for instance in instances:
-            data = {"prices": []}
-            magento_storeviews = [(w, w.store_view_ids) for w in instance.magento_website_ids]
-            self.clean_old_log_records(instance, prices_log_obj)
-
-            if instance.catalog_price_scope == 'website':
-                for view in magento_storeviews:
-                    pricelist = view[0].pricelist_id
-                    if not len(pricelist):
-                        raise UserError("There are no pricelist defined for '%s' website.\n" % view[0].name)
-                    else:
-                        if view[0].magento_base_currency.id != pricelist.currency_id.id:
-                            text = "Pricelist '%s' currency is different than Magento base currency " \
-                                   "for '%s' website.\n" % (pricelist.name, view[0].name)
-                            raise UserError(text)
-
-                        for product in self.search([
-                            ('magento_instance_id', '=', instance.id),
-                            ('magento_status', 'in', ['in_magento', 'need_to_link', 'update_needed'])
-                        ]):
-                            price_and_rule = pricelist.get_product_price_rule(product.odoo_product_id, 1.0, False)
-                            # check if public price applied (rule = False), and not specific one from website's pricelist
-                            product_price = 0 if price_and_rule[1] is False else price_and_rule[0]
-                            if product_price:
-                                data["prices"].append({
-                                    "price": product_price,
-                                    "store_id": view[1].magento_storeview_id,
-                                    "sku": product.magento_sku
-                                })
-                            else:
-                                is_error = True
-                                text = "Product Price is not defined for %s instance and %s store view" % (
-                                    instance.name, view[1].name)
-                                self.create_price_export_log(instance, view[1], prices_log_obj, batch_code,
-                                                             product.magento_sku, text)
-
-            # process export to magento
-            if data["prices"]:
-                try:
-                    api_url = '/V1/products/base-prices'
-                    res = req(instance, api_url, 'POST', data)
-                    if res:
-                        is_error = True
-                        text = self.format_error_log(res)
-                        self.create_price_export_log(instance, False, prices_log_obj, batch_code, "", text)
-                except Exception:
-                    text = "Error while exporting product prices to '%s' magento instance.\n" % instance.name
-                    raise UserError(text)
-
-            if not is_error:
-                self.create_price_export_log(instance, False, prices_log_obj, batch_code, "", "Successfully Exported")
-
-        return False if is_error else True
-
     @staticmethod
-    def create_price_export_log(instance, view, prices_log_obj, batch_code, sku, text):
-        prices_log_obj.create({
-            "magento_instance_id": instance.id,
-            "magento_storeview_id": view.id if view else False,
-            "batch": batch_code,
-            "magento_sku": sku,
-            "log_message": text
-        })
+    def clean_old_log_records(instance, log_book_obj):
+        # remove all records older than 30 days
+        log_book_rec = log_book_obj.with_context(active_test=False).search([
+            ('create_date', '<', datetime.today() - timedelta(days=30))
+        ])
+        if log_book_rec:
+            log_book_rec.sudo().unlink()
+
+        # archive all previous records older than 7 days
+        log_book_rec = log_book_rec.search([
+            ('magento_instance_id', '=', instance.id),
+            ('create_date', '<', datetime.today() - timedelta(days=7))
+        ])
+        if log_book_rec:
+            log_book_rec.write({'active': False})
 
     @staticmethod
     def to_upper(val):

@@ -5,8 +5,8 @@
         <field name="model">magento.prices.log.book</field>
         <field name="arch" type="xml">
             <search string="Product Prices Export Log Book">
+                <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
                 <field name="magento_instance_id"/>
-                <field name="batch"/>
                 <group expand="1" string="Group By">
                     <filter string="Instances" name="group_by_instance"
                             context="{'group_by': 'magento_instance_id'}"/>
@@ -53,7 +53,7 @@
     </record>
 
     <record id="action_show_log_messages_of_prices_export" model="ir.actions.act_window">
-        <field name="name">Product Prices Export Logs</field>
+        <field name="name">Product Prices Export Error Logs</field>
         <field name="res_model">magento.prices.log.book</field>
         <field name="view_mode">tree,form</field>
         <field name="view_id" ref="view_magento_prices_export_log_book_tree"/>
