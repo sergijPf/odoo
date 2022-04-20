@@ -45,12 +45,12 @@ class MagentoConfigurableProduct(models.Model):
     do_not_create_flag = fields.Boolean(related="odoo_prod_template_id.x_magento_no_create",
                                         string="Don't create Product in Magento")
     x_magento_assign_attr_ids = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
-                                                 compute="_compute_config_attributes")
+                                                 compute="_compute_config_attributes", store=True)
     x_magento_single_attr_ids = fields.Many2many('product.template.attribute.line',
                                                  string="Single Attribute(s) of Config.Product",
                                                  compute="_compute_single_attributes_of_configurable")
-    x_magento_main_config_attr_id = fields.Many2one('product.attribute', string="Main conf.Attribute",
-                                                    compute="_compute_main_config_attribute")
+    x_magento_main_config_attr = fields.Char(string="Main Conf.Attribute", compute="_compute_main_config_attribute",
+                                             store=True)
     magento_export_date = fields.Datetime(string="Last Export Date", help="Config.Product last Export Date to Magento")
     force_update = fields.Boolean(string="Force export", help="Force run of Configurable Product Export", default=False)
     simple_product_ids = fields.One2many('magento.product.product', 'magento_conf_product_id', 'Magento Products',
@@ -64,9 +64,21 @@ class MagentoConfigurableProduct(models.Model):
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_config_attributes(self):
+        relative_size_attr = self.env['product.attribute'].search([('name', '=', 'relative size')])
+        if not relative_size_attr:
+            relative_size_attr = self.env['product.attribute'].create({'name': 'relative size'})
+
         for rec in self:
-            rec.x_magento_assign_attr_ids = rec.odoo_prod_template_id.attribute_line_ids.filtered(
+            prod_attr_lines = rec.odoo_prod_template_id.attribute_line_ids
+            rec.x_magento_assign_attr_ids = prod_attr_lines.filtered(
                 lambda x: x.magento_config and not x.attribute_id.is_ignored_in_magento).attribute_id
+
+            # add additional size attribute if needed to cover required functionality
+            conf_size_attr = rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'size_N')
+            conf_size_attr_vals = prod_attr_lines.filtered(lambda x: x.attribute_id.name == 'size_N').value_ids
+
+            if conf_size_attr and all([a.find(' - ') >= 0 for a in conf_size_attr_vals.mapped('name')]):
+                rec.x_magento_assign_attr_ids = [(4, relative_size_attr.id)]
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_single_attributes_of_configurable(self):
@@ -77,8 +89,12 @@ class MagentoConfigurableProduct(models.Model):
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_main_config_attribute(self):
         for rec in self:
-            rec.x_magento_main_config_attr_id = rec.odoo_prod_template_id.attribute_line_ids.filtered(
-                lambda x: x.magento_config and x.main_conf_attr).attribute_id or False
+            rec.x_magento_main_config_attr = rec.odoo_prod_template_id.attribute_line_ids.filtered(
+                lambda x: x.magento_config and x.main_conf_attr).with_context(lang='en_US').attribute_id.name or ''
+
+            if rec.x_magento_main_config_attr == 'size_N' and \
+                    rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'relative size'):
+                rec.x_magento_main_config_attr = 'relative size'
 
     @api.depends('odoo_prod_template_id.public_categ_ids')
     def _compute_config_product_categories(self):
@@ -145,9 +161,11 @@ class MagentoConfigurableProduct(models.Model):
         The main method to process Products Export to Magento. The Product Templates are treated as
         Configurable Products and Odoo Product Variants as Simple Products in Magento
         """
-        async_export = True if is_cron else self.env.context.get("async_export", False)
-        async_export and self.check_async_export_can_be_processed()
         active_products = self.search([]).mapped("id") if is_cron else (self._context.get("active_ids", []) or self.id)
+        async_export = True if is_cron else self.env.context.get("async_export", False)
+
+        self.check_async_export_can_be_processed() if async_export else self.check_direct_export_can_be_processed(active_products)
+
         products_to_export = self.browse(active_products)
         products_dict = {i.magento_instance_id: {} for i in products_to_export}
 
@@ -198,6 +216,10 @@ class MagentoConfigurableProduct(models.Model):
         if latest_bulk_log and latest_bulk_log.check_bulk_log_status():
             raise UserError("There are some API requests still processing by RabbitMQ. "
                             "Please wait a bit until it completes or run Direct Export.")
+
+    def check_direct_export_can_be_processed(self, active_prods):
+        if len(active_prods) > 10:
+            raise UserError("You can't export directly more than 10 products at once. Please use async export instead.")
 
     def check_conf_attributes_can_be_configurable(self, magento_instance, conf_attributes, attr_sets):
         avail_attributes = {}
@@ -740,6 +762,7 @@ class MagentoConfigurableProduct(models.Model):
                 "visibility": 2,  # Catalog
                 "custom_attributes": custom_attributes,
                 "extension_attributes": {
+                    "stock_item": {"is_in_stock": "true"},
                     "category_links": [{"position": 0, "category_id": cat_id} for cat_id in categ_list]
                 }
             }
@@ -804,6 +827,7 @@ class MagentoConfigurableProduct(models.Model):
                     "type_id": "configurable",
                     "custom_attributes": custom_attributes,
                     "extension_attributes": {
+                        "stock_item": {"is_in_stock": "true"},
                         "category_links": [{"position": 0, "category_id": cat_id} for cat_id in categ_list]
                     }
                 }
@@ -879,8 +903,8 @@ class MagentoConfigurableProduct(models.Model):
         self.add_translatable_conf_product_attributes(custom_attributes, conf_product, available_attributes, lang_code)
 
         # add main config attribute if any
-        if conf_product.x_magento_main_config_attr_id:
-            main_attr_name = self.to_upper(conf_product.with_context(lang='en_US').x_magento_main_config_attr_id.name)
+        if conf_product.x_magento_main_config_attr:
+            main_attr_name = self.to_upper(conf_product.x_magento_main_config_attr)
             custom_attributes.append({
                 "attribute_code": 'main_config_attribute',
                 "value": available_attributes[main_attr_name]['attribute_code']

@@ -8,10 +8,6 @@ from odoo.http import request
 class Binary(http.Controller):
     @http.route('/web_magento_place_order', csrf=False, auth="public", type="json")
     def place_order(self):
-        """
-        This method will create new order in Odoo
-        :return: True/False
-        """
         data = json.loads(request.httprequest.data)
         magento_url = data.get('url', False)
         magento_instance = request.env['magento.instance'].sudo().search([
@@ -26,12 +22,6 @@ class Binary(http.Controller):
 
     @http.route('/web_magento_order_cancel', csrf=False, auth="public", type="http")
     def cancel_order(self, **kwargs):
-        """
-        Call method while cancel order from the Magento and
-        Cancel order webhook is enabled from the magento configuration
-        :param kwargs:
-        :return: True/False
-        """
         order_id = kwargs.get('order_id', False)
         magento_url = kwargs.get('url', False)
         magento_instance = request.env['magento.instance'].sudo().search([

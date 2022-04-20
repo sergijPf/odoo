@@ -20,7 +20,7 @@
                                         Magento Layer in Odoo</b>
                                 </p>
                                 <p>
-                                    <b>2. If "To Update Existed" checkbox is checked, it'll update Product Category
+                                    <b>2. If "To Update Existed only" checkbox is checked, it'll update Product Category
                                         Names for each website of already exported Categories in Magento. </b>
                                 </p>
                             </p>

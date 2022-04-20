@@ -75,18 +75,20 @@ class MagentoProductProduct(models.Model):
             rec.x_magento_name = rec.with_context(lang='en_US').magento_product_name + ' ' +\
                                  ' '.join(rec.product_attribute_ids.mapped('x_attribute_value'))
 
-    @api.depends('ptav_ids')
+    @api.depends('ptav_ids', 'ptav_ids.product_attribute_value_id.attribute_id.is_ignored_in_magento')
     def _compute_product_attributes(self):
         self.product_attribute_ids.sudo().unlink()
+
+        # add additional size attribute if needed to cover required functionality
         for rec in self:
             for attr in rec.ptav_ids:
                 attr_val = attr.with_context(lang='en_US').product_attribute_value_id
                 if not attr_val.attribute_id.is_ignored_in_magento:
                     value = attr_val.name
                     if attr.attribute_line_id.magento_config and attr_val.attribute_id.name == "size_N":
-                        sep = value.find('-')
+                        sep = value.find(' - ')
                         if sep >= 0:
-                            vals = value.split('-', 1)
+                            vals = value.split(' - ', 1)
                             value = vals[1].strip()
 
                             rec.product_attribute_ids.create({
@@ -123,6 +125,15 @@ class MagentoProductProduct(models.Model):
                             f"[{website.name} - {price}{website.pricelist_id.currency_id.name}]   "
 
             rec.base_prices = base_price
+
+    def unlink(self):
+        to_reject = []
+        [to_reject.append(prod.magento_sku) for prod in self if prod.magento_product_id]
+
+        if to_reject:
+            raise UserError("You can't remove these Product(s) until they are in Magento: %s" % str(to_reject))
+
+        return super(MagentoProductProduct, self).unlink()
 
     def view_error_logs(self):
         domain = [('magento_instance_id', '=', self.magento_instance_id.id), ('magento_product_id', '=', self.id)]
@@ -593,7 +604,7 @@ class MagentoProductProduct(models.Model):
         if method == 'POST':
             data["product"].update({"sku": product.magento_sku})
             data["product"]["extension_attributes"]["stock_item"].update({
-                "qty": product.qty_avail,
+                "qty": product.qty_avail + 500,
                 "is_in_stock": "true"
             })
 
@@ -721,7 +732,7 @@ class MagentoProductProduct(models.Model):
                         "type_id": "simple",
                         "weight": prod.odoo_product_id.weight,
                         "extension_attributes": {
-                            "stock_item": {"qty": prod.qty_avail, "is_in_stock": "true"} if method == 'POST' else {}
+                            "stock_item": {"qty": prod.qty_avail + 500, "is_in_stock": "true"} if method == 'POST' else {}
                         },
                         "custom_attributes": custom_attributes
                     }
@@ -1032,6 +1043,7 @@ class MagentoProductProduct(models.Model):
             response = req(self.magento_instance_id, api_url, 'DELETE')
         except Exception as err:
             raise UserError("Error while deleting product in Magento. " + str(err))
+
         if response is True:
             self.write({
                 'magento_status': 'deleted',
