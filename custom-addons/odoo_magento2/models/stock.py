@@ -8,9 +8,6 @@ STOCK_PICKING = 'stock.picking'
 
 
 class StockPicking(models.Model):
-    """
-    Describes methods for Export shipment information.
-    """
     _inherit = STOCK_PICKING
     _description = 'Stock Picking'
 
@@ -196,16 +193,9 @@ class StockPicking(models.Model):
 
 
 class StockMove(models.Model):
-    """
-    Describes Magento order stock picking values
-    """
     _inherit = 'stock.move'
 
     def _get_new_picking_values(self):
-        """
-        We need this method to set our custom fields in Stock Picking
-        :return:
-        """
         res = super(StockMove, self)._get_new_picking_values()
         sale_order = self.group_id.sale_id
         sale_line_id = sale_order.order_line

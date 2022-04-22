@@ -604,7 +604,7 @@ class MagentoProductProduct(models.Model):
         if method == 'POST':
             data["product"].update({"sku": product.magento_sku})
             data["product"]["extension_attributes"]["stock_item"].update({
-                "qty": product.qty_avail + 500,
+                "qty": product.qty_avail + 500, # to remove 500
                 "is_in_stock": "true"
             })
 
@@ -648,6 +648,9 @@ class MagentoProductProduct(models.Model):
             for website in instance.magento_website_ids:
                 storeview_code = website.store_view_ids[0].magento_storeview_code
                 lang_code = website.store_view_ids[0].lang_id.code
+                ### probably data need to be removed (after check)
+                data = {'product': {'name': '', "price": 0, "status": 1}}
+                #
                 data["product"]["name"] = product.with_context(lang=lang_code).odoo_product_id.name + ' ' + \
                                           ' '.join(product.product_attribute_ids.mapped('x_attribute_value'))
 
@@ -658,7 +661,7 @@ class MagentoProductProduct(models.Model):
                         break
                     product_price = self.get_product_price_for_website(website, product.odoo_product_id)
                 else:
-                    text += "There are no pricelist defined for '%s' website.\n" % website.name
+                    text += "There are no pricelist defined for '%s' website. " % website.name
 
                 if product_price:
                     data["product"]["price"] = product_price
@@ -732,7 +735,7 @@ class MagentoProductProduct(models.Model):
                         "type_id": "simple",
                         "weight": prod.odoo_product_id.weight,
                         "extension_attributes": {
-                            "stock_item": {"qty": prod.qty_avail + 500, "is_in_stock": "true"} if method == 'POST' else {}
+                            "stock_item": {"qty": prod.qty_avail + 500, "is_in_stock": "true"} if method == 'POST' else {} # to remove 500
                         },
                         "custom_attributes": custom_attributes
                     }
@@ -746,7 +749,7 @@ class MagentoProductProduct(models.Model):
             response = req(instance, api_url, method, data)
         except Exception as err:
             text = ("Error while asynchronously Simple Products %s in Magento: " % (
-                'creation' if method == 'POST' else "update")) + str(err)
+                'create' if method == 'POST' else "update")) + str(err)
             for prod in odoo_products:
                 ml_simp_products[prod.magento_sku]['log_message'] += text
             return False
@@ -759,9 +762,10 @@ class MagentoProductProduct(models.Model):
             'topic': 'Product Export'
         })
 
+        datetime_stamp = datetime.now()
         for prod in odoo_products:
             img_update = False
-            ml_simp_products[prod.magento_sku]['export_date_to_magento'] = datetime.now()
+            ml_simp_products[prod.magento_sku]['export_date_to_magento'] = datetime_stamp
             ml_simp_products[prod.magento_sku]['magento_status'] = 'in_process'
             prod.write({'bulk_log_ids': [(6, 0, [log_id.id])]})
 
@@ -842,7 +846,7 @@ class MagentoProductProduct(models.Model):
                         'sku': sku,
                         "status": 1,
                         'price': 0,
-                        'custom_attributes': prod['product']["custom_attributes"].copy()
+                        # 'custom_attributes': prod['product']["custom_attributes"].copy() ### check if still needed
                     }
                 }
 

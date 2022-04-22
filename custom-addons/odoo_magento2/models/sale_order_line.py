@@ -4,15 +4,9 @@ from odoo import models, fields
 
 
 class SaleOrderLine(models.Model):
-    """
-    Describes Sale order line
-    """
     _inherit = 'sale.order.line'
 
-    magento_sale_order_line_ref = fields.Char(
-        string="Magento Sale Order Line Reference",
-        help="Magento Sale Order Line Reference"
-    )
+    magento_sale_order_line_ref = fields.Char(string="SO line ref.", help="Magento Sale Order Line Reference")
 
     def create_sale_order_line(self, vals):
         """
@@ -45,12 +39,6 @@ class SaleOrderLine(models.Model):
 
     @staticmethod
     def calculate_order_item_price(tax_calculation_method, item):
-        """
-        Calculate order item price based on tax calculation method configurations
-        :param tax_calculation_method: Tax calculation method (Including/ Excluding)
-        :param item: order item received from Magento
-        :return: order item price
-        """
         if tax_calculation_method == 'including_tax':
             price = item.get('parent_item').get('price_incl_tax') if "parent_item" in item else item.get(
                 'price_incl_tax')
@@ -62,14 +50,6 @@ class SaleOrderLine(models.Model):
         return item_price
 
     def create_sale_order_line_vals(self, order_line_dict, price_unit, odoo_product, magento_order):
-        """
-        Create Sale Order Line Values
-        :param order_line_dict:  Magento sale order line object
-        :param price_unit: price unit object
-        :param odoo_product: odoo product object
-        :param magento_order: Magento order object
-        :return:
-        """
         order_qty = float(order_line_dict.get('qty_ordered', 1.0))
         magento_sale_order_line_ref = order_line_dict.get('parent_item_id') or order_line_dict.get('item_id')
         order_line_vals = {
@@ -88,7 +68,7 @@ class SaleOrderLine(models.Model):
         })
         return order_line_vals
 
-    def magento_create_sale_order_line_adj(self, magento_instance, sales_order, magento_order):
+    def magento_create_sale_order_line(self, magento_instance, sales_order, magento_order):
         magento_product = self.env['magento.product.product']
         magento_order_lines = sales_order.get('items')
         store_id = sales_order.get('store_id')

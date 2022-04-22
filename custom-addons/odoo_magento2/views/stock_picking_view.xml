@@ -20,8 +20,8 @@
                         <group>
                             <field name="is_magento_picking" invisible="1"/>
                             <field name="magento_instance_id" readonly="1"/>
-                            <field name="magento_shipping_id"/>
-                            <field name="is_exported_to_magento"/>
+                            <field name="magento_shipping_id" readonly="1"/>
+                            <field name="is_exported_to_magento" readonly="1"/>
                         </group>
                     </page>
                 </xpath>

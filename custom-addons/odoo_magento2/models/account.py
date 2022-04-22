@@ -30,15 +30,14 @@ class AccountTaxCode(models.Model):
 class AccountFiscalPosition(models.Model):
     _inherit = 'account.fiscal.position'
 
-    origin_country_ = fields.Many2one('res.country', string='Origin Country',
-                                      help="Warehouse country based on sales order warehouse country system will "
-                                           "apply fiscal position")
+    origin_country = fields.Many2one(
+        'res.country',
+        string='Origin Country',
+        help="Warehouse country based on sales order warehouse country system will apply fiscal position"
+    )
 
     @api.model
     def _get_fpos_by_region(self, country_id=False, state_id=False, zipcode=False, vat_required=False):
-        """
-        Inherited this method for selecting fiscal position based on warehouse (origin country).
-        """
         origin_country_id = self._context.get('origin_country_', False)
         if not origin_country_id:
             return super(AccountFiscalPosition, self)._get_fpos_by_region(country_id=country_id, state_id=state_id,
@@ -52,7 +51,7 @@ class AccountFiscalPosition(models.Model):
         if not country_id:
             return False
         base_domain = [('vat_required', '=', vat_required), ('company_id', 'in', [self.env.company.id, False]),
-                       ('origin_country_', 'in', [origin_country_id, False])]
+                       ('origin_country', 'in', [origin_country_id, False])]
         null_state_dom = state_domain = [('state_ids', '=', False)]
         null_zip_dom = zip_domain = [('zip_from', '=', False), ('zip_to', '=', False)]
         null_country_dom = [('country_id', '=', False), ('country_group_id', '=', False)]

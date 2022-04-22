@@ -22,7 +22,6 @@
         </field>
     </record>
 
-    <!-- Inherited Form View Section -->
     <record id="inherited_account_invoice_form_view" model="ir.ui.view">
         <field name="name">inherited.account.move.form</field>
         <field name="model">account.move</field>
@@ -49,7 +48,6 @@
         </field>
     </record>
 
-    <!-- Inherited Search View Section -->
     <record id="magento_view_account_invoice_filter" model="ir.ui.view">
         <field name="name">account.move.search</field>
         <field name="model">account.move</field>

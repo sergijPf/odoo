@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Form view of sale auto workflow -->
     <record id="financial_status_process_view_form" model="ir.ui.view">
         <field name="name">financial_status_form_view</field>
         <field name="model">magento.financial.status</field>
@@ -25,7 +24,6 @@
         </field>
     </record>
 
-    <!--Tree view of sale auto workflow -->
     <record id="magento_financial_status_process_view_tree" model="ir.ui.view">
         <field name="name">financial_status_tree_view</field>
         <field name="model">magento.financial.status</field>
@@ -39,18 +37,16 @@
                        domain="[('magento_instance_id','=',magento_instance_id)]"/>
                 <field name="payment_term_id" required="1"/>
                 <field name="auto_workflow_id" required="1"/>
-                <field name="financial_status" string="Magento 2 Finance Status" required="1"/>
+                <field name="financial_status" string="Magento Finance Status" required="1"/>
             </tree>
         </field>
     </record>
 
-    <!--Search view of payment gateway-->
     <record id="view_magento_financial_status_search" model="ir.ui.view">
         <field name="name">magento.financial.status.filter</field>
         <field name="model">magento.financial.status</field>
         <field name="arch" type="xml">
             <search string="Filter Payment Method Wise">
-                <field name="payment_method_id"/>
                 <separator/>
                 <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
                 <separator/>
@@ -58,19 +54,19 @@
                 <group expand="0" string="Group By">
                     <filter string="Instance" name="group_by_instance"
                             context="{'group_by': 'magento_instance_id'}"/>
+                    <filter string="Finance status" name="group_by_fin_status"
+                        context="{'group_by': 'financial_status'}"/>
                 </group>
             </search>
         </field>
     </record>
 
-    <!--Action of sale auto workflow -->
     <record id="act_magento_financial_status_form" model="ir.actions.act_window">
         <field name="name">Financial Status</field>
         <field name="res_model">magento.financial.status</field>
         <field name="view_mode">tree,form</field>
     </record>
 
-    <!--Menu of Financial Status -->
     <menuitem action="act_magento_financial_status_form" id="menu_action_financial_status_form"
               parent="odoo_magento2.menu_instance_details" sequence="3"/>
 

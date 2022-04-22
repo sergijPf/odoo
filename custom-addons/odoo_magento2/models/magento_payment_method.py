@@ -15,12 +15,11 @@ class MagentoPaymentMethod(models.Model):
     def _default_company_id(self):
         return self.env.company
 
-    magento_instance_id = fields.Many2one('magento.instance', 'Instance', ondelete="cascade",
-                                          help="This field relocates magento instance")
-    payment_method_code = fields.Char(string='Payments Method Code', help='Payment Method Code')
-    payment_method_name = fields.Char(string='Payments Method Name', help='Payment Method Name')
+    magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', ondelete="cascade")
+    payment_method_code = fields.Char(string='Payments Method Code', help="Code received from Magento")
+    payment_method_name = fields.Char(string='Payments Method Name')
     payment_term_id = fields.Many2one('account.payment.term', string='Payment Term',
-                                      help="Default payment term of a sale order using this method.")
+                                      help="Payment term to be used while Sales Order processing")
     magento_workflow_process_id = fields.Many2one('sale.workflow.process', string='Automatic Workflow',
                                                   help="Auto workflow for imported orders")
     company_id = fields.Many2one('res.company', 'Company', default=_default_company_id, help="Magento Company Id.")
@@ -29,16 +28,16 @@ class MagentoPaymentMethod(models.Model):
         ('in_payment_paid', 'In-Payment/Paid')
     ], string='Create Invoice on action',
         help="Should the invoice be created in Magento when it is validated or when it is In-Payment/Paid in odoo?\n"
-             "If it's blank then invoice will not exported in Magento for this Payment Method.")
+             "If it's blank then invoice will not be exported in Magento for this Payment Method.")
     import_rule = fields.Selection([
         ('always', 'Always'),
         ('never', 'Never'),
         ('paid', 'Paid')
     ], string="Import Rules", default='always', required=True,
-        help="Import Rule for Sale Order.\n \n "
-             "[Always] : This Payment Method's Order will always import\n "
-             "[Paid]: If Order is Paid On Magento then Order will import \n "
-             "[Never] : This Payment Method Order will never be imported \n ")
+        help="Import Rule for Sale Order.\n "
+             "[Always] : This Payment Method's Order will always be imported\n "
+             "[Paid]: If Order is Paid On Magento then Order will be imported\n "
+             "[Never] : This Payment Method Order will never be imported\n ")
     active = fields.Boolean(string="Status", default=True)
 
     _sql_constraints = [('unique_payment_method_code', 'unique(magento_instance_id,payment_method_code)',

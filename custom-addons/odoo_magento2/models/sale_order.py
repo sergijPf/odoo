@@ -9,68 +9,58 @@ SALE_ORDER_LINE = 'sale.order.line'
 
 
 class SaleOrder(models.Model):
-    """
-    Describes fields and methods for create/ update sale order
-    """
     _inherit = 'sale.order'
 
-    def _get_magento_order_status(self):
-        """
-        Compute updated_in_magento of order from the pickings.
-        """
-        for order in self:
-            if order.magento_instance_id:
-                pickings = order.picking_ids.filtered(lambda x: x.state != "cancel")
-                stock_moves = order.order_line.move_ids.filtered(lambda x: not x.picking_id and x.state == 'done')
-                if pickings:
-                    outgoing_picking = pickings.filtered(
-                        lambda x: x.location_dest_id.usage == "customer")
-                    if all(outgoing_picking.mapped("is_exported_to_magento")):
-                        order.updated_in_magento = True
-                        continue
-                if stock_moves:
-                    order.updated_in_magento = True
-                    continue
-                order.updated_in_magento = False
-                continue
-            order.updated_in_magento = False
+    # def _get_magento_order_status(self):
+    #     for order in self:
+    #         if order.magento_instance_id:
+    #             pickings = order.picking_ids.filtered(lambda x: x.state != "cancel")
+    #             if pickings:
+    #                 outgoing_picking = pickings.filtered(lambda x: x.location_dest_id.usage == "customer")
+    #                 if all(outgoing_picking.mapped("is_exported_to_magento")):
+    #                     order.updated_in_magento = True
+    #                     continue
+    #
+    #             stock_moves = order.order_line.move_ids.filtered(lambda x: not x.picking_id and x.state == 'done')
+    #             if stock_moves:
+    #                 order.updated_in_magento = True
+    #                 continue
+    #             order.updated_in_magento = False
+    #             continue
+    #         order.updated_in_magento = False
+    #
+    # def _search_magento_order_ids(self, operator, value):
+    #     query = """select so.id from stock_picking sp
+    #                 inner join sale_order so on so.procurement_group_id=sp.group_id
+    #                 inner join stock_location on stock_location.id=sp.location_dest_id and stock_location.usage='customer'
+    #                 where sp.is_exported_to_magento %s true and sp.state != 'cancel'
+    #                 """ % operator
+    #     if operator == '=':
+    #         query += """union all
+    #                 select so.id from sale_order as so
+    #                 inner join sale_order_line as sl on sl.order_id = so.id
+    #                 inner join stock_move as sm on sm.sale_line_id = sl.id
+    #                 where sm.picking_id is NULL and sm.state = 'done' and so.magento_instance_id notnull"""
+    #     self._cr.execute(query)
+    #     results = self._cr.fetchall()
+    #     order_ids = []
+    #     for result_tuple in results:
+    #         order_ids.append(result_tuple[0])
+    #     order_ids = list(set(order_ids))
+    #     return [('id', 'in', order_ids)]
 
-    def _search_magento_order_ids(self, operator, value):
-        query = """select so.id from stock_picking sp
-                    inner join sale_order so on so.procurement_group_id=sp.group_id                   
-                    inner join stock_location on stock_location.id=sp.location_dest_id and stock_location.usage='customer'
-                    where sp.is_exported_to_magento %s true and sp.state != 'cancel'
-                    """ % operator
-        if operator == '=':
-            query += """union all
-                    select so.id from sale_order as so
-                    inner join sale_order_line as sl on sl.order_id = so.id
-                    inner join stock_move as sm on sm.sale_line_id = sl.id
-                    where sm.picking_id is NULL and sm.state = 'done' and so.magento_instance_id notnull"""
-        self._cr.execute(query)
-        results = self._cr.fetchall()
-        order_ids = []
-        for result_tuple in results:
-            order_ids.append(result_tuple[0])
-        order_ids = list(set(order_ids))
-        return [('id', 'in', order_ids)]
-
-    magento_instance_id = fields.Many2one('magento.instance', string="Instance",
-                                          help="This field relocates Magento Instance")
-    magento_order_id = fields.Char(string="Magento order Ids", help="Magento Order Id")
-    magento_website_id = fields.Many2one("magento.website", string="Magento Website", help="Magento Website")
-    magento_order_reference = fields.Char(string="Magento Orders Reference", help="Magento Order Reference")
-    store_id = fields.Many2one('magento.storeview', string="Magento Storeview", help="Magento_store_view")
-    is_exported_to_magento_shipment_status = fields.Boolean(string="Is Order exported to Shipment Status",
-                                                            help="Is exported to Shipment Status")
-    magento_payment_method_id = fields.Many2one('magento.payment.method', string="Magento Payment Method",
-                                                help="Magento Payment Method")
-    magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Magento Shipping Method",
-                                                 help="Magento Shipping Method")
-    order_transaction_id = fields.Char(string="Magento Orders Transaction ID", help="Magento Orders Transaction ID")
-    updated_in_magento = fields.Boolean(string="Order fulfilled in magento", compute="_get_magento_order_status",
-                                        search="_search_magento_order_ids", copy=False)
-    magento_carrier_name = fields.Char(compute="_carrier_name", string="Magento Carrier Name")
+    magento_instance_id = fields.Many2one('magento.instance', string="Magento Instance")
+    magento_order_id = fields.Char(string="Order Id")
+    magento_website_id = fields.Many2one("magento.website", string="Magento Website")
+    magento_order_reference = fields.Char(string="Magento Order Ref.", help="Order Reference in Magento")
+    store_id = fields.Many2one('magento.storeview', string="Magento Storeview")
+    # is_exported_to_magento_shipment_status = fields.Boolean(string="Is Order exported to Shipment Status")
+    magento_payment_method_id = fields.Many2one('magento.payment.method', string="Payment Method")
+    magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Shipping Method")
+    order_transaction_id = fields.Char(string="Order Transaction ID", help="Magento Order Transaction ID")
+    # updated_in_magento = fields.Boolean(string="Order fulfilled in magento", compute="_get_magento_order_status",
+    #                                     search="_search_magento_order_ids", copy=False)
+    magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
     magento_order_log_book_ids = fields.One2many('magento.orders.log.book', 'sale_order_id', "Log Error Messages")
     auto_workflow_process_id = fields.Many2one("sale.workflow.process", string="Workflow Process", copy=False)
     moves_count = fields.Integer(compute="_compute_stock_move", string="Stock Move", store=False,
@@ -82,30 +72,54 @@ class SaleOrder(models.Model):
                          'unique(magento_order_id,magento_instance_id,magento_order_reference)',
                          "Magento order must be unique")]
 
+    @api.depends('magento_shipping_method_id')
+    def _compute_magento_carrier_name(self):
+        for record in self:
+            record.magento_carrier_name = str(record.magento_shipping_method_id.magento_carrier_title) + ' / ' + \
+                                          str(record.magento_shipping_method_id.carrier_label)
+
     def _compute_stock_move(self):
-        """
-        Find all stock moves associated with the order.
-        """
-        self.moves_count = self.env["stock.move"].search_count([("picking_id", "=", False),
-                                                                ("sale_line_id", "in", self.order_line.ids)])
+        stock_move_obj = self.env["stock.move"]
+        for rec in self:
+            rec.moves_count = stock_move_obj.search_count([("picking_id", "=", False),
+                                                           ("sale_line_id", "in", self.order_line.ids)])
 
     @api.onchange('partner_shipping_id', 'partner_id')
     def onchange_partner_shipping_id(self):
-        """
-        Inherited method for setting fiscal position by warehouse.
-        """
         res = super(SaleOrder, self).onchange_partner_shipping_id()
-        fiscal_position = self.get_fiscal_position_by_warehouse()
-        self.fiscal_position_id = fiscal_position
+        self.fiscal_position_id = self.get_fiscal_position_by_warehouse()
+
         return res
 
-    @api.onchange('warehouse_id')
-    def onchange_warehouse_id(self):
-        """
-        This method for sets fiscal position, when warehouse is changed.
-        """
-        fiscal_position = self.get_fiscal_position_by_warehouse()
-        self.fiscal_position_id = fiscal_position
+    def get_fiscal_position_by_warehouse(self):
+        fiscal_pos = self.fiscal_position_id
+        partner = self.partner_id
+        wh = self.warehouse_id
+
+        # if warehouse and self.partner_id:
+        if wh and partner and partner.allow_search_fiscal_based_on_origin_warehouse:
+            wh_partner = wh.partner_id
+            wh_company_partner = wh.company_id.partner_id
+
+            orig_cntry = wh_partner and wh_partner.country_id and wh_partner.country_id.id or False
+            orig_cntry = orig_cntry or (wh_company_partner.country_id and wh_company_partner.country_id.id or False)
+
+            fiscal_pos = self.env['account.fiscal.position'].with_context({'origin_country': orig_cntry}).\
+                with_company(wh.company_id.id).get_fiscal_position(partner.id, self.partner_shipping_id.id)
+
+        return fiscal_pos
+
+    def action_view_stock_move_(self):
+        stock_move_obj = self.env['stock.move']
+        move_ids = stock_move_obj.search([('picking_id', '=', False), ('sale_line_id', 'in', self.order_line.ids)]).ids
+        action = {
+            'domain': "[('id', 'in', " + str(move_ids) + " )]",
+            'name': 'Order Stock Move',
+            'view_mode': 'tree,form',
+            'res_model': 'stock.move',
+            'type': 'ir.actions.act_window',
+        }
+        return action
 
     def create_sales_order_vals(self, vals):
         """
@@ -159,54 +173,6 @@ class SaleOrder(models.Model):
         })
         return order_vals
 
-    def get_fiscal_position_by_warehouse(self):
-        """
-        This method will give fiscal position from warehouse.
-        """
-        fiscal_position = self.fiscal_position_id
-        warehouse = self.warehouse_id
-
-        # if warehouse and self.partner_id:
-        if warehouse and self.partner_id and self.partner_id.allow_search_fiscal_based_on_origin_warehouse:
-            origin_country_id = warehouse.partner_id and warehouse.partner_id.country_id and \
-                                warehouse.partner_id.country_id.id or False
-            origin_country_id = origin_country_id or (warehouse.company_id.partner_id.country_id
-                                                      and warehouse.company_id.partner_id.country_id.id or False)
-            fiscal_position = self.env['account.fiscal.position'].with_context({
-                'origin_country_': origin_country_id}).with_company(
-                    warehouse.company_id.id).get_fiscal_position(self.partner_id.id, self.partner_shipping_id.id)
-
-        return fiscal_position
-
-    def action_view_stock_move_(self):
-        """
-        List all stock moves which is associated with the Order.
-        """
-        stock_move_obj = self.env['stock.move']
-        move_ids = stock_move_obj.search([('picking_id', '=', False), ('sale_line_id', 'in', self.order_line.ids)]).ids
-        action = {
-            'domain': "[('id', 'in', " + str(move_ids) + " )]",
-            'name': 'Order Stock Move',
-            'view_mode': 'tree,form',
-            'res_model': 'stock.move',
-            'type': 'ir.actions.act_window',
-        }
-        return action
-
-    def validate_sales_order(self):
-        """
-        This function validate sales order and write date_order same as previous date because Odoo changes date_order
-        to current date in action confirm process.
-        Added invalidate_cache line to resolve the issue of PO line description while product route has dropship and
-        multi languages active in Odoo.
-        """
-        self.ensure_one()
-        date_order = self.date_order
-        self.env['product.product'].invalidate_cache(fnames=['display_name'])
-        self.action_confirm()
-        self.write({'date_order': date_order})
-        return True
-
     def process_orders_and_invoices(self):
         """
         This method will confirm sale orders, create and paid related invoices.
@@ -227,6 +193,20 @@ class SaleOrder(models.Model):
             order.validate_invoice(work_flow_process_record)
         return True
 
+    def validate_sales_order(self):
+        """
+        This function validate sales order and write date_order same as previous date because Odoo changes date_order
+        to current date in action confirm process.
+        Added invalidate_cache line to resolve the issue of PO line description while product route has dropship and
+        multi languages active in Odoo.
+        """
+        self.ensure_one()
+        date_order = self.date_order
+        self.env['product.product'].invalidate_cache(fnames=['display_name'])
+        self.action_confirm()
+        self.write({'date_order': date_order})
+        return True
+
     def validate_invoice(self, work_flow_process_record):
         """
         This method will create invoices, validate it and register payment it, according to the configuration in
@@ -244,30 +224,23 @@ class SaleOrder(models.Model):
         return True
 
     def cancel_order_from_magento_by_webhook(self):
-        """
-        This method will be called while sale order cancellation from Magento
-        """
         try:
             super(SaleOrder, self).action_cancel()
             self.is_canceled_in_magento = True
         except Exception as error:
             order_ref = self.magento_order_reference
             instance = self.magento_instance_id
-            log_errors = self.env['magento.orders.log.book'].search([
-                ('magento_instance_id', '=', instance.id),
-                ('magento_order_ref', '=', order_ref)
-            ])
             message = "Error to cancel the order via Magento admin: " + str(error)
-            self.log_order_import_error(log_errors, order_ref, instance, self.magento_website_id, message)
+
+            self.log_order_import_error(order_ref, instance, self.magento_website_id, message)
+
             return False
 
         return True
 
     def cancel_order_in_magento(self):
-        """
-        This method use for cancel order in magento.
-        """
         magento_order_id = self.magento_order_id
+
         if magento_order_id:
             try:
                 api_url = '/V1/orders/%s/cancel' % magento_order_id
@@ -278,11 +251,6 @@ class SaleOrder(models.Model):
                 raise UserError("Error while requesting order cancellation in Magento!")
 
     def _prepare_invoice(self):
-        """
-        This method is used for set necessary value(is_exported_to_magento, magento_instance_id)
-         to the invoice.
-        :return:
-        """
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
 
         if self.auto_workflow_process_id:
@@ -297,121 +265,67 @@ class SaleOrder(models.Model):
             })
         return invoice_vals
 
-    def process_sale_order_workflow_based_on_status(self):
-        """
-        Call sale order workflow based on magento order status
-        """
-        message = self.auto_workflow_process_id.auto_workflow_process(self.auto_workflow_process_id.id, [self.id])
-        return message if message else ''
-
-    @staticmethod
-    def check_discount_has_tax_included_and_percent(sales_order):
-        """
-        Check order tax applied is including/ excluding and tax percent
-        :param sales_order: response received from order.
-        :return: True/False
-        """
-        is_tax_included = True
-        tax_percent = False
-        extension_attributes = sales_order.get('extension_attributes')
-        if extension_attributes and "apply_discount_on_prices" in extension_attributes:
-            if extension_attributes.get('apply_discount_on_prices', False) == 'excluding_tax':
-                is_tax_included = False
-        for order_items in sales_order.get('items'):
-            tax_percent = order_items.get('tax_percent', False)
-            break
-        return is_tax_included, tax_percent
-
-    @staticmethod
-    def check_shipping_has_tax_included_and_percent(extension_attributes):
-        """
-        Check order tax applied is including/ excluding and tax percent.
-        :param extension_attributes: extension attributes received from order.
-        :return: True/False
-        """
-        is_tax_included = True
-        tax_percent = False
-        if "apply_shipping_on_prices" in extension_attributes:
-            apply_shipping_on_prices = extension_attributes.get('apply_shipping_on_prices')
-            if apply_shipping_on_prices == 'excluding_tax':
-                is_tax_included = False
-        if "item_applied_taxes" in extension_attributes:
-            for order_res in extension_attributes.get("item_applied_taxes"):
-                if order_res.get('type') == "shipping" and order_res.get('applied_taxes'):
-                    shipping_tax_dict = order_res.get('applied_taxes')[0]
-                    if shipping_tax_dict:
-                        tax_percent = shipping_tax_dict.get('percent')
-        return is_tax_included, tax_percent
-
-    def _carrier_name(self):
-        """"
-        Computes full Magento Carrier Name
-        :return:
-        """
-        for record in self:
-            record.magento_carrier_name = str(record.magento_shipping_method_id.magento_carrier_title) + ' / ' + \
-                                          str(record.magento_shipping_method_id.carrier_label)
-
     def process_sales_order_creation(self, magento_instance, sales_order):
         order_ref = sales_order.get('increment_id')
-        payment_method = sales_order.get('payment').get('method')
+        payment_method = sales_order.get('payment', {}).get('method')
         order_lines = sales_order.get('items')
 
         magento_order = self.search([
             ('magento_instance_id', '=', magento_instance.id),
             ('magento_order_reference', '=', order_ref)
         ])
-        log_errors = self.env['magento.orders.log.book'].search([
-            ('magento_instance_id', '=', magento_instance.id),
-            ('magento_order_ref', '=', order_ref)
-        ])
-
         storeview_id = self.env['magento.storeview'].search([
             ('magento_instance_id', '=', magento_instance.id),
             ('magento_storeview_id', '=', str(sales_order.get('store_id')))
         ], limit=1)
+
         if not storeview_id:
             message = 'Magento Order Storeview not found in Odoo. Please synch the Instance Metadata.'
-            self.log_order_import_error(log_errors, order_ref, magento_instance, False, message)
+            self.log_order_import_error(order_ref, magento_instance, False, message)
             return False
 
         website = storeview_id.magento_website_id
 
-        message = self.check_magento_payment_method_configuration_adj(magento_instance, sales_order, payment_method)
+        message = self.check_magento_payment_method_configuration(magento_instance, sales_order, payment_method)
         if message:
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
+            self.log_order_import_error(order_ref, magento_instance, website, message)
             return False
 
-        message = self.check_magento_shipping_method_adj(magento_instance, sales_order)
+        message = self.check_magento_shipping_method(magento_instance, sales_order)
         if message:
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
+            self.log_order_import_error(order_ref, magento_instance, website, message)
             return False
 
         message = self.check_pricelist_for_order(sales_order, website)
         if message:
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
+            self.log_order_import_error(order_ref, magento_instance, website, message)
             return False
 
         odoo_partner, magento_partner, message = self.env['res.partner'].process_customer_creation_or_update(
             magento_instance, sales_order, website
         )
         if message:
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
+            self.log_order_import_error(order_ref, magento_instance, website, message)
             return False
 
         message = self.check_products_exist_and_prices(magento_instance, order_lines, website, odoo_partner)
         if message:
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
+            self.log_order_import_error(order_ref, magento_instance, website, message)
             return False
 
         order_values, message = self.prepare_sales_order_values(magento_instance, website, sales_order, odoo_partner)
         if message:
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
+            self.log_order_import_error(order_ref, magento_instance, website, message)
             return False
 
         # check if order exist or create new
         if magento_order:
-            if log_errors.filtered(lambda x: not x.processing_error):
+            log_book_rec = self.env['magento.orders.log.book'].search([
+                ('magento_instance_id', '=', magento_instance.id),
+                ('magento_order_ref', '=', order_ref)
+            ])
+
+            if log_book_rec.filtered(lambda x: not x.processing_error):
                 magento_order.write(order_values)
             else:
                 return True
@@ -419,63 +333,72 @@ class SaleOrder(models.Model):
             try:
                 magento_order = self.create(order_values)
             except Exception as e:
-                message = e
+                message = str(e)
 
         if not magento_order:
             message = "Error while creating sales order in Magento: " + str(message)
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
+            self.log_order_import_error(order_ref, magento_instance, website, message)
             return False
 
-        message = self.create_magento_sale_order_line_adj(magento_instance, sales_order, magento_order)
+        message = self.create_magento_sale_order_line(magento_instance, sales_order, magento_order)
         if message:
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message)
+            self.log_order_import_error(order_ref, magento_instance, website, message)
             return False
 
         message = magento_order.process_sale_order_workflow_based_on_status()
         if message:
             message = "Error to process order: " + str(message)
-            self.log_order_import_error(log_errors, order_ref, magento_instance, website, message, True)
+            self.log_order_import_error(order_ref, magento_instance, website, message, True)
             return False
 
-        # will archive log errors if any
-        if log_errors:
-            log_errors.write({'active': False})
+        log_book_rec = self.env['magento.orders.log.book'].search([
+            ('magento_instance_id', '=', magento_instance.id),
+            ('magento_order_ref', '=', order_ref)
+        ])
+
+        if log_book_rec:
+            log_book_rec.write({'active': False})
 
         return True
 
-    def check_magento_payment_method_configuration_adj(self, magento_instance, sales_order, payment_method):
+    def check_magento_payment_method_configuration(self, magento_instance, sales_order, payment_method):
         message = ''
-        order_ref = sales_order['increment_id']
-        amount_paid = sales_order.get('payment').get('amount_paid', False)
+        order_ref = sales_order.get('increment_id')
+        amount_paid = sales_order.get('payment', {}).get('amount_paid', 0)
         payment_option = magento_instance.payment_method_ids.filtered(lambda x: x.payment_method_code == payment_method)
+
         if not payment_option:
             return "Payment method %s is not found in Magento Layer. " \
                    "Please synchronize Instance Metadata" % payment_method
         import_rule = payment_option.import_rule
 
-        workflow_config, financial_status_name = self.search_order_financial_status_adj(magento_instance, sales_order,
-                                                                                        payment_option)
+        workflow_config, financial_status_name = self.search_order_financial_status(magento_instance, sales_order,
+                                                                                    payment_option)
         if not workflow_config:
             message = "- Automatic order process workflow configuration not found for this order %s. \n -" \
                       " System tries to find the workflow based on combination of Payment Gateway (such as" \
-                      " Bank Transfer etc.) and Financial Status(such as Pending Orders, Completed Orders etc.).\n" \
-                      "- In this order, Payment Gateway is %s and Financial Status is %s.\n " \
+                      " Bank Transfer etc.) and Financial Status(such as Pending Orders, Processing Orders etc.).\n" \
+                      "- For current Sales Order: Payment Gateway is %s and Financial Status is %s.\n " \
                       "- You can configure the Automatic order process workflow under the menu Magento >> Configuration" \
-                      " >> Financial Status." % (sales_order.get('increment_id'), payment_method,
-                                                financial_status_name)
+                      " >> Financial Status." % (sales_order.get('increment_id'), payment_method, financial_status_name)
+
         elif not workflow_config.auto_workflow_id and financial_status_name != "":
             message = "Order %s was not proceeded due to auto workflow configuration not found for payment method - %s " \
                       "and financial status - %s" % (order_ref, payment_method, financial_status_name)
+
         elif not workflow_config.payment_term_id and financial_status_name != "":
             message = "Order %s skipped due to Payment Term not found in payment method - %s and financial status -" \
                       "%s" % (order_ref, payment_method, financial_status_name)
+
         elif import_rule == 'never':
             message = "Orders with payment method %s have the rule never to be imported." % payment_method
+
         elif not amount_paid and import_rule == 'paid':
             message = "Order '%s' has not been paid yet, So order will be imported later" % order_ref
+
         return message
 
-    def check_magento_shipping_method_adj(self, magento_instance, sales_order):
+    def check_magento_shipping_method(self, magento_instance, sales_order):
         message = ""
         magento_carrier = False
         order_reference = sales_order.get('increment_id')
@@ -570,8 +493,8 @@ class SaleOrder(models.Model):
             return {}, ("Warehouse is not set for the %s website.\n Please configure it from Magento Instance >> "
                        "Magento Website >> Select Website.") % website.name
 
-        financial_status, financial_status_name = self.search_order_financial_status_adj(magento_instance, sales_order,
-                                                                                         payment_option)
+        financial_status, financial_status_name = self.search_order_financial_status(magento_instance, sales_order,
+                                                                                     payment_option)
         workflow_process_id = financial_status.auto_workflow_id
         payment_term_id = financial_status.payment_term_id
 
@@ -609,7 +532,7 @@ class SaleOrder(models.Model):
             'auto_workflow_process_id': workflow_process_id.id,
             'magento_payment_method_id': payment_option.id,
             'magento_shipping_method_id': shipping_carrier.id,
-            'is_exported_to_magento_shipment_status': False,
+            # 'is_exported_to_magento_shipment_status': False,
             'magento_order_id': sales_order.get('entity_id'),
             'magento_order_reference': sales_order.get('increment_id')
         })
@@ -620,40 +543,46 @@ class SaleOrder(models.Model):
 
         return order_values, ''
 
-    def create_magento_sale_order_line_adj(self, instance, sales_order, magento_order):
-        if not self.env[SALE_ORDER_LINE].magento_create_sale_order_line_adj(instance, sales_order, magento_order):
+    def create_magento_sale_order_line(self, instance, sales_order, magento_order):
+        if not self.env[SALE_ORDER_LINE].magento_create_sale_order_line(instance, sales_order, magento_order):
             return "Error while creating Product Sales Order lines"
         else:
-            message = self.create_shipping_order_line_adj(sales_order, magento_order)
+            message = self.create_shipping_order_line(sales_order, magento_order)
             if message:
                 return message
             else:
-                return self.create_discount_order_line_adj(sales_order, magento_order)
+                return self.create_discount_order_line(sales_order, magento_order)
 
-    def search_order_financial_status_adj(self, magento_instance, sales_order, payment_option):
-        is_invoiced = sales_order.get('payment').get('amount_paid') or False
-        financial_status_code, financial_status_name = self.get_magento_financial_status_adj(
-            sales_order.get('status'), is_invoiced
-        )
+    def process_sale_order_workflow_based_on_status(self):
+        message = self.auto_workflow_process_id.auto_workflow_process(self.auto_workflow_process_id.id, [self.id])
+
+        return message if message else ''
+
+    def search_order_financial_status(self, magento_instance, sales_order, payment_option):
+        is_invoiced = True if sales_order.get('payment', {}).get('amount_paid') else False
+        status_code, status_name = self.get_magento_financial_status(sales_order.get('status'), is_invoiced)
+
         workflow_config = self.env['magento.financial.status'].search(
             [('magento_instance_id', '=', magento_instance.id),
              ('payment_method_id', '=', payment_option.id),
-             ('financial_status', '=', financial_status_code)])
+             ('financial_status', '=', status_code)])
 
-        return workflow_config, financial_status_name
+        return workflow_config, status_name
 
     @staticmethod
-    def get_magento_financial_status_adj(order_status, is_invoiced):
-        financial_status_code = financial_status_name = ''
-        if order_status == "pending":
-            financial_status_code = 'not_paid'
-            financial_status_name = 'Pending Orders'
-        elif order_status == "processing" and is_invoiced:
-            financial_status_code = 'processing_paid'
-            financial_status_name = 'Processing orders with Invoice'
-        return financial_status_code, financial_status_name
+    def get_magento_financial_status(order_status, is_invoiced):
+        status_code = status_name = ''
 
-    def create_shipping_order_line_adj(self, sales_order, magento_order):
+        if order_status == "pending":
+            status_code = 'not_paid'
+            status_name = 'Pending Orders'
+        elif order_status == "processing" and is_invoiced:
+            status_code = 'processing_paid'
+            status_name = 'Processing orders with paid invoice'
+
+        return status_code, status_name
+
+    def create_shipping_order_line(self, sales_order, magento_order):
         sale_order_line_obj = self.env[SALE_ORDER_LINE]
         shipping_amount_incl = float(sales_order.get('shipping_incl_tax', 0.0))
         shipping_amount_excl = float(sales_order.get('shipping_amount', 0.0))
@@ -697,7 +626,23 @@ class SaleOrder(models.Model):
 
         return ''
 
-    def create_discount_order_line_adj(self, sales_order, magento_order):
+    @staticmethod
+    def check_shipping_has_tax_included_and_percent(extension_attributes):
+        is_tax_included = True
+        tax_percent = False
+        if "apply_shipping_on_prices" in extension_attributes:
+            apply_shipping_on_prices = extension_attributes.get('apply_shipping_on_prices')
+            if apply_shipping_on_prices == 'excluding_tax':
+                is_tax_included = False
+        if "item_applied_taxes" in extension_attributes:
+            for order_res in extension_attributes.get("item_applied_taxes"):
+                if order_res.get('type') == "shipping" and order_res.get('applied_taxes'):
+                    shipping_tax_dict = order_res.get('applied_taxes')[0]
+                    if shipping_tax_dict:
+                        tax_percent = shipping_tax_dict.get('percent')
+        return is_tax_included, tax_percent
+
+    def create_discount_order_line(self, sales_order, magento_order):
         sale_order_line_obj = self.env[SALE_ORDER_LINE]
         account_tax_obj = self.env['account.tax']
         discount_amount = float(sales_order.get('discount_amount') or 0.0) or False
@@ -737,17 +682,38 @@ class SaleOrder(models.Model):
 
         return ''
 
-    def log_order_import_error(self, log_errors, order_ref, instance, website, message, processing_error=False):
+    @staticmethod
+    def check_discount_has_tax_included_and_percent(sales_order):
+        is_tax_included = True
+        tax_percent = False
+        extension_attributes = sales_order.get('extension_attributes')
+        if extension_attributes and "apply_discount_on_prices" in extension_attributes:
+            if extension_attributes.get('apply_discount_on_prices', False) == 'excluding_tax':
+                is_tax_included = False
+        for order_items in sales_order.get('items'):
+            tax_percent = order_items.get('tax_percent', False)
+            break
+
+        return is_tax_included, tax_percent
+
+    def log_order_import_error(self, order_ref, instance, website, message, error_to_process=False):
+        log_book_rec = self.env['magento.orders.log.book'].search([
+            ('magento_instance_id', '=', instance.id),
+            ('magento_order_ref', '=', order_ref)
+        ])
+
         data = {
             'sale_order_id': self.id,
-            'processing_error': processing_error,
-            'magento_order_ref': order_ref,
-            'magento_instance_id': instance.id,
-            'magento_website_id': website and website.id,
+            'processing_error': error_to_process,
+            'magento_website_id': website.id if website else False,
             'log_message': message
         }
 
-        if log_errors:
-            log_errors.write(data)
+        if log_book_rec:
+            log_book_rec.write(data)
         else:
-            log_errors.create(data)
+            data.update({
+                'magento_order_ref': order_ref,
+                'magento_instance_id': instance.id,
+            })
+            log_book_rec.create(data)

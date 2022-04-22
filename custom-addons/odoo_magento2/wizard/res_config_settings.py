@@ -30,10 +30,10 @@ class ResConfigSettings(models.TransientModel):
                                                      "orders.")
     invoice_done_notify_customer = fields.Boolean(string="Invoices Done Notify customer", default=False,
                                                   help="while export invoice send email to the customer")
-    import_magento_order_status_ids = fields.Many2many(
-        'import.magento.order.status', 'magento_config_settings_order_status_rel', 'magento_config_id', 'status_id',
-        "Import Order Status", help="Select order status in which you want to import the orders from Magento to Odoo."
-    )
+    # import_magento_order_status_ids = fields.Many2many(
+    #     'import.magento.order.status', 'magento_config_settings_order_status_rel', 'magento_config_id', 'status_id',
+    #     "Import Order Status", help="Select order status in which you want to import the orders from Magento to Odoo."
+    # )
     magento_website_pricelist_id = fields.Many2one(
         'product.pricelist', string="Magento Pricelist",
         help="Product price will be taken/set from this pricelist if Catalog Price Scope is website"
@@ -58,7 +58,7 @@ class ResConfigSettings(models.TransientModel):
                 'catalog_price_scope': instance_id.catalog_price_scope,
                 'pricelist_id': instance_id.pricelist_id.id if instance_id.pricelist_id else False,
                 'invoice_done_notify_customer': instance_id.invoice_done_notify_customer,
-                'import_magento_order_status_ids': instance_id.import_magento_order_status_ids.ids,
+                # 'import_magento_order_status_ids': instance_id.import_magento_order_status_ids.ids,
             })
         else:
             self.magento_instance_id = False
@@ -120,6 +120,6 @@ class ResConfigSettings(models.TransientModel):
             'catalog_price_scope': magento_instance.catalog_price_scope if magento_instance else False,
             'pricelist_id': self.pricelist_id.id if self.pricelist_id else False,
             'invoice_done_notify_customer': self.invoice_done_notify_customer,
-            'import_magento_order_status_ids': [(6, 0, self.import_magento_order_status_ids.ids)]
+            # 'import_magento_order_status_ids': [(6, 0, self.import_magento_order_status_ids.ids)]
         })
         magento_instance.write(values)

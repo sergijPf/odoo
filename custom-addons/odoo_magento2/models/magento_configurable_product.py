@@ -161,7 +161,7 @@ class MagentoConfigurableProduct(models.Model):
         The main method to process Products Export to Magento. The Product Templates are treated as
         Configurable Products and Odoo Product Variants as Simple Products in Magento
         """
-        active_products = self.search([]).mapped("id") if is_cron else (self._context.get("active_ids", []) or self.id)
+        active_products = self.search([]).mapped("id") if is_cron else (self._context.get("active_ids", []) or [self.id])
         async_export = True if is_cron else self.env.context.get("async_export", False)
 
         self.check_async_export_can_be_processed() if async_export else self.check_direct_export_can_be_processed(active_products)
@@ -847,6 +847,7 @@ class MagentoConfigurableProduct(models.Model):
             product_websites = []
             prod_media = {}
             # thumb_images = {}
+            datetime_stamp = datetime.now()
             log_id = self.bulk_log_ids.create({
                 'bulk_uuid': response.get("bulk_uuid"),
                 'topic': 'Product Export'
@@ -854,7 +855,7 @@ class MagentoConfigurableProduct(models.Model):
 
             for prod in new_conf_products:
                 conf_product = ml_conf_products[prod]['conf_object']
-                ml_conf_products[prod]['export_date_to_magento'] = datetime.now()
+                ml_conf_products[prod]['export_date_to_magento'] = datetime_stamp
                 ml_conf_products[prod]['magento_status'] = 'in_process'
                 conf_product.write({'bulk_log_ids': [(6, 0, [log_id.id])]})
 
@@ -902,12 +903,17 @@ class MagentoConfigurableProduct(models.Model):
 
         self.add_translatable_conf_product_attributes(custom_attributes, conf_product, available_attributes, lang_code)
 
-        # add main config attribute if any
+        # add main config attribute
         if conf_product.x_magento_main_config_attr:
             main_attr_name = self.to_upper(conf_product.x_magento_main_config_attr)
             custom_attributes.append({
                 "attribute_code": 'main_config_attribute',
                 "value": available_attributes[main_attr_name]['attribute_code']
+            })
+        else:
+            custom_attributes.append({
+                "attribute_code": 'main_config_attribute',
+                "value": ""
             })
 
         # add single attributes specific to conf.product

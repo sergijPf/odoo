@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="account.view_account_position_form"/>
         <field name="arch" type="xml">
             <field name="country_id" position="before">
-                <field name="origin_country_"/>
+                <field name="origin_country"/>
             </field>
         </field>
     </record>

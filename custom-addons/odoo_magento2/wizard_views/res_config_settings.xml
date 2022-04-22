@@ -60,24 +60,24 @@
                             Order
                         </h2>
                         <div class="row mt16 o_settings_container" attrs="{'invisible': [('magento_instance_id', '=', False)]}">
-                            <div class="col-12 col-lg-6 o_setting_box">
-                                <div class="o_setting_right_pane">
-                                    <label for="import_magento_order_status_ids"/>
-                                    <div class="text-muted">
-                                        Select order status which you want to import in odoo
-                                    </div>
-                                    <div class="content-group">
-                                        <div class="mt16">
-                                            <field name="import_magento_order_status_ids"
-                                                   widget="many2many_tags"
-                                                   attrs="{'required':[('magento_instance_id','!=',False)]}"
-                                                   options="{'no_create':True,'no_create_edit': True}"
-                                                   class="oe_inline"/>
-                                        </div>
-                                    </div>
+<!--                            <div class="col-12 col-lg-6 o_setting_box">-->
+<!--                                <div class="o_setting_right_pane">-->
+<!--                                    <label for="import_magento_order_status_ids"/>-->
+<!--                                    <div class="text-muted">-->
+<!--                                        Select order status which you want to import in odoo-->
+<!--                                    </div>-->
+<!--                                    <div class="content-group">-->
+<!--                                        <div class="mt16">-->
+<!--                                            <field name="import_magento_order_status_ids"-->
+<!--                                                   widget="many2many_tags"-->
+<!--                                                   attrs="{'required':[('magento_instance_id','!=',False)]}"-->
+<!--                                                   options="{'no_create':True,'no_create_edit': True}"-->
+<!--                                                   class="oe_inline"/>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
 
-                                </div>
-                            </div>
+<!--                                </div>-->
+<!--                            </div>-->
                             <div class="col-12 col-lg-6 o_setting_box">
                                 <div class="o_setting_left_pane">
                                     <field name="invoice_done_notify_customer" widget="boolean_toggle"/>
