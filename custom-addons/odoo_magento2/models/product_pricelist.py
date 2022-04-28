@@ -15,9 +15,6 @@ class ProductPricelistItem(models.Model):
 
         for instance in magento_instances:
             valid_for_magento = False
-            # if instance.catalog_price_scope == 'global':
-            #     if instance.pricelist_id and instance.pricelist_id.id == vals.get('pricelist_id'):
-            #         valid_for_magento = True
             if instance.catalog_price_scope == 'website':
                 for website in instance.magento_website_ids:
                     if website.pricelist_id and website.pricelist_id.id == vals.get('pricelist_id'):
@@ -60,9 +57,6 @@ class ProductPricelistItem(models.Model):
         magento_instances = self.env['magento.instance'].search([])
         for instance in magento_instances:
             valid_for_magento = False
-            # if instance.catalog_price_scope == 'global':
-            #     if instance.pricelist_id.id == self.pricelist_id.id:
-            #         valid_for_magento = True
             if instance.catalog_price_scope == 'website':
                 for website in instance.magento_website_ids:
                     if website.pricelist_id.id == self.pricelist_id.id:

@@ -16,7 +16,6 @@
                         </group>
                         <group>
                             <field name="import_rule"/>
-                            <field name="magento_workflow_process_id"/>
                             <field name="payment_term_id"/>
                         </group>
                     </group>
@@ -66,7 +65,7 @@
     </record>
 
     <record id="act_auto_payment_method_form" model="ir.actions.act_window">
-        <field name="name">Auto Invoice Workflow </field>
+        <field name="name">Auto Orders Workflow</field>
         <field name="res_model">sale.workflow.process</field>
         <field name="view_mode">tree,form</field>
     </record>
@@ -75,5 +74,5 @@
               parent="odoo_magento2.menu_instance_details" sequence="4"/>
 
     <menuitem action="act_auto_payment_method_form" id="menu_action_auto_payment_method_form"
-              parent="odoo_magento2.menu_instance_details" sequence="2"/>
+              parent="odoo_magento2.menu_instance_details" sequence="5"/>
 </odoo>

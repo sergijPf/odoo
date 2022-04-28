@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
-
-MAGENTO_RES_PARTNER = 'magento.res.partner'
+from odoo import models, fields
 
 
 class ResPartner(models.Model):
@@ -10,30 +8,18 @@ class ResPartner(models.Model):
 
     is_magento_customer = fields.Boolean(string="Is Magento Customer?",
                                          help="Used for identified that the customer is imported from Magento store.")
-    magento_res_partner_ids = fields.One2many(MAGENTO_RES_PARTNER, "partner_id", string='Magento Customers')
-    allow_search_fiscal_based_on_origin_warehouse = fields.Boolean("Search fiscal based on origin warehouse?",
-                                                                   default=False)
+    magento_res_partner_ids = fields.One2many('magento.res.partner', "partner_id", string='Magento Customers')
 
-    @api.model
-    def create(self, vals):
-        """
-        Inherited for calling onchange method.
-        We got issue of not setting the gst_treatment field automatically of Indian accounting and same field is
-        required and readonly in Sale order.
-        """
-        partner = super(ResPartner, self).create(vals)
-        partner._onchange_country_id()
-        return partner
-
-    def process_customer_creation_or_update(self, magento_instance, customer_dict, website):
+    def process_customer_creation_or_update(self, instance, customer_dict, website):
         message = ""
         odoo_partner = self.get_odoo_customer(customer_dict, website)
+
         if not odoo_partner:
-            message = 'Error while Magento Customer creation in Odoo'
+            message = 'Error while Magento Customer creation in Odoo.'
             return False, False, message
 
-        magento_partner = self.env[MAGENTO_RES_PARTNER].get_magento_customer(
-            magento_instance, customer_dict, odoo_partner, website
+        magento_partner = self.env['magento.res.partner'].get_magento_customer_from_magento_layer(
+            instance, customer_dict, odoo_partner, website
         )
         if not magento_partner:
             message = 'Error while Magento Customer creation in Magento Layer'

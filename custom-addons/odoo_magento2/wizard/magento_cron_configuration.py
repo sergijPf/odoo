@@ -30,27 +30,27 @@ class MagentoCronConfiguration(models.TransientModel):
                                           readonly=True)
     # product stock
     auto_export_product_stock = fields.Boolean(string='Auto Product Stock Export?')
-    export_product_stock_interval_number = fields.Integer('Export interval',
+    export_product_stock_interval_number = fields.Integer('Stock export interval',
                                                           help="Export product stock every x interval.", default=1)
-    export_product_stock_interval_type = fields.Selection(INTERVALS, string='Interval unit')
-    export_product_stock_next_execution = fields.Datetime(string='Next execution')
-    export_product_stock_user_id = fields.Many2one(RES_USERS, string='Responsible user',
+    export_product_stock_interval_type = fields.Selection(INTERVALS, string='Stock interval unit')
+    export_product_stock_next_execution = fields.Datetime(string='Stock next execution')
+    export_product_stock_user_id = fields.Many2one(RES_USERS, string='Stock responsible user',
                                                    help="Responsible user for Product Stock export")
     # product prices
     auto_export_product_prices = fields.Boolean(string='Auto Product Prices Export?')
-    export_product_prices_interval_number = fields.Integer('Export interval',
+    export_product_prices_interval_number = fields.Integer('Prices export interval',
                                                            help="Export product prices every x interval.", default=1)
-    export_product_prices_interval_type = fields.Selection(INTERVALS, string='Interval unit')
-    export_product_prices_next_execution = fields.Datetime(string='Next execution')
-    export_product_prices_user_id = fields.Many2one(RES_USERS, string='Responsible user',
+    export_product_prices_interval_type = fields.Selection(INTERVALS, string='Prices interval unit')
+    export_product_prices_next_execution = fields.Datetime(string='Prices next execution')
+    export_product_prices_user_id = fields.Many2one(RES_USERS, string='Prices responsible user',
                                                     help="Responsible user for Product Prices export")
     # invoices
     auto_export_invoice = fields.Boolean('Auto Invoice Export?')
-    export_invoice_interval_number = fields.Integer(string='Export interval',
+    export_invoice_interval_number = fields.Integer(string='Invoice export interval',
                                                     help="Export Invoice every x interval.", default=1)
-    export_invoice_interval_type = fields.Selection(INTERVALS, string='Interval unit')
-    export_invoice_next_execution = fields.Datetime(string='Next execution')
-    export_invoice_user_id = fields.Many2one(RES_USERS, string='Responsible user',
+    export_invoice_interval_type = fields.Selection(INTERVALS, string='Invoice interval unit')
+    export_invoice_next_execution = fields.Datetime(string='Invoice next execution')
+    export_invoice_user_id = fields.Many2one(RES_USERS, string='Invoice responsible user',
                                              help="Responsible user for Invoice export")
     # shipment order statuses
     auto_export_shipment_order_status = fields.Boolean(string='Auto Shipment Info Export?')

@@ -20,5 +20,3 @@ class MagentoStoreview(models.Model):
     sale_prefix = fields.Char("Sale Order Prefix", help="A prefix put before the name of imported sales orders.\n "
                                                         "For example, if the prefix is 'mag-', the sales order"
                                                         " 100000692 in Magento, will be named 'mag-100000692' in ERP.")
-    is_use_odoo_order_sequence = fields.Boolean("Is Use Odoo Order Sequences?", default=False,
-                                                help="If checked, Odoo Order Sequence is used")

@@ -22,11 +22,6 @@ class MagentoWebsite(models.Model):
                                             help="Magento Website Base Currency")
     active = fields.Boolean(string="Status", default=True)
     color = fields.Integer(string='Color Index')
-    tax_calculation_method = fields.Selection([
-        ('excluding_tax', 'Excluding Tax'),
-        ('including_tax', 'Including Tax')
-    ], "Tax Calculation Method", help="This indicates whether product prices received from Magento is included tax or "
-                                      "not, when import sale order from Magento", default="including_tax")
 
     def write(self, vals):
         if 'pricelist_id' in vals and self.pricelist_id.id != vals['pricelist_id']:

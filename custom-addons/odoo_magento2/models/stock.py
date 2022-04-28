@@ -178,7 +178,8 @@ class StockPicking(models.Model):
 
             if work_flow_process_record and delivery_lines and work_flow_process_record.create_invoice and \
                     picking.picking_type_id.code == 'outgoing':
-                order.validate_invoice(work_flow_process_record)
+                if work_flow_process_record.create_invoice:
+                    order.validate_invoice()
         return result
 
     def send_to_shipper(self):

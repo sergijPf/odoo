@@ -16,6 +16,7 @@ class AccountTaxCode(models.Model):
              ('amount', '<=', rate + 0.001)])
         if tax_ids:
             return tax_ids[0]
+
         # try to find a tax with less precision
         tax_ids = self.with_context(active_test=False).search(
             [('price_include', '=', is_tax_included),
@@ -24,6 +25,7 @@ class AccountTaxCode(models.Model):
              ('amount', '<=', rate + 0.01)])
         if tax_ids:
             return tax_ids[0]
+
         return False
 
 

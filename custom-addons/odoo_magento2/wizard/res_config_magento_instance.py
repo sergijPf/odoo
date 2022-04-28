@@ -12,8 +12,6 @@ class ResConfigMagentoInstance(models.TransientModel):
     magento_url = fields.Char(string='Magento URLs', required=True)
     access_token = fields.Char("Magento Access Token", help="Set Access token: Magento >> System >> Integrations")
     company_id = fields.Many2one('res.company', string='Magento Company')
-    is_use_odoo_order_sequence = fields.Boolean("Use Odoo Order Sequences?", default=False,
-                                                help="If checked, Odoo Order Sequence is used")
     magento_verify_ssl = fields.Boolean(string="Verify SSL", default=False, help="Check if your Magento site is "
                                                                                  "using SSL certificate")
 

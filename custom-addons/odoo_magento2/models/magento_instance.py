@@ -51,14 +51,9 @@ class MagentoInstance(models.Model):
     payment_method_ids = fields.One2many("magento.payment.method", "magento_instance_id", "Payment Methods in Magento")
     shipping_method_ids = fields.One2many("magento.delivery.carrier", "magento_instance_id",
                                           string="Shipping Methods in Magento")
-    # import_magento_order_status_ids = fields.Many2many(
-    #     'import.magento.order.status', 'magento_instance_order_status_rel', 'magento_instance_id', 'order_status_id',
-    #     string="Import Order Status", default=_default_order_status,
-    #     help="Select order status in which you want to import the orders from Magento to Odoo.")
     magento_verify_ssl = fields.Boolean(string="Verify SSL", default=False,
                                         help="Check this if your Magento site is using SSL certificate")
     active = fields.Boolean(string="Status", default=True)
-    color = fields.Integer(string='Color Index')
     cron_count = fields.Integer("Scheduler Count", compute="_compute_get_scheduler_list")
 
     def _compute_get_scheduler_list(self):
@@ -177,9 +172,8 @@ class MagentoInstance(models.Model):
         self.sync_website()
         self.sync_storeview()
         self.sync_customer_groups()
-        self.payment_method_ids.import_payment_method(self)
-        self.shipping_method_ids.import_delivery_method(self)
-        # self.env['magento.financial.status'].create_financial_status(self)
+        self.payment_method_ids.import_payment_methods(self)
+        self.shipping_method_ids.import_delivery_methods(self)
 
         return {
             'effect': {

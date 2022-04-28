@@ -25,7 +25,6 @@ class MagentoOrdersLogBook(models.Model):
     _rec_name = 'magento_order_ref'
 
     active = fields.Boolean("Active", default=True)
-    processing_error = fields.Boolean("Error to process order", default=False)
     log_message = fields.Char(string="Error Message")
     sale_order_id = fields.Many2one('sale.order', string='Odoo Order', ondelete="cascade")
     magento_order_ref = fields.Char(string="Magento Order Ref.")

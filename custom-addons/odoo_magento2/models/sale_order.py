@@ -4,9 +4,6 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
-MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-SALE_ORDER_LINE = 'sale.order.line'
-
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
@@ -54,7 +51,6 @@ class SaleOrder(models.Model):
     magento_website_id = fields.Many2one("magento.website", string="Magento Website")
     magento_order_reference = fields.Char(string="Magento Order Ref.", help="Order Reference in Magento")
     store_id = fields.Many2one('magento.storeview', string="Magento Storeview")
-    # is_exported_to_magento_shipment_status = fields.Boolean(string="Is Order exported to Shipment Status")
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Payment Method")
     magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Shipping Method")
     order_transaction_id = fields.Char(string="Order Transaction ID", help="Magento Order Transaction ID")
@@ -84,31 +80,6 @@ class SaleOrder(models.Model):
             rec.moves_count = stock_move_obj.search_count([("picking_id", "=", False),
                                                            ("sale_line_id", "in", self.order_line.ids)])
 
-    @api.onchange('partner_shipping_id', 'partner_id')
-    def onchange_partner_shipping_id(self):
-        res = super(SaleOrder, self).onchange_partner_shipping_id()
-        self.fiscal_position_id = self.get_fiscal_position_by_warehouse()
-
-        return res
-
-    def get_fiscal_position_by_warehouse(self):
-        fiscal_pos = self.fiscal_position_id
-        partner = self.partner_id
-        wh = self.warehouse_id
-
-        # if warehouse and self.partner_id:
-        if wh and partner and partner.allow_search_fiscal_based_on_origin_warehouse:
-            wh_partner = wh.partner_id
-            wh_company_partner = wh.company_id.partner_id
-
-            orig_cntry = wh_partner and wh_partner.country_id and wh_partner.country_id.id or False
-            orig_cntry = orig_cntry or (wh_company_partner.country_id and wh_company_partner.country_id.id or False)
-
-            fiscal_pos = self.env['account.fiscal.position'].with_context({'origin_country': orig_cntry}).\
-                with_company(wh.company_id.id).get_fiscal_position(partner.id, self.partner_shipping_id.id)
-
-        return fiscal_pos
-
     def action_view_stock_move_(self):
         stock_move_obj = self.env['stock.move']
         move_ids = stock_move_obj.search([('picking_id', '=', False), ('sale_line_id', 'in', self.order_line.ids)]).ids
@@ -121,107 +92,34 @@ class SaleOrder(models.Model):
         }
         return action
 
-    def create_sales_order_vals(self, vals):
-        """
-        Pass Dictionary
-        vals = {'company_id':company_id,'partner_id':partner_id,
-        'partner_invoice_id':partner_invoice_id,
-        'partner_shipping_id':partner_shipping_id,'warehouse_id':warehouse_id,
-        'company_id':company_id,
-        'picking_policy':picking_policy,'date_order':date_order,'pricelist_id':pricelist_id,
-        'payment_term_id':payment_term_id,'fiscal_position_id':fiscal_position_id,
-        'invoice_policy':invoice_policy,'team_id':team_id,'client_order_ref':client_order_ref,
-        'carrier_id':carrier_id,'invoice_shipping_on_delivery':invoice_shipping_on_delivery}
-        required data in vals :- partner_id,partner_invoice_id,partner_shipping_id,company_id,warehouse_id,
-        picking_policy,date_order
-        """
-        sale_order = self.env['sale.order']
-        order_vals = {
-            'company_id': vals.get('company_id', False),
-            'partner_id': vals.get('partner_id', False),
-            'partner_invoice_id': vals.get('partner_invoice_id', False),
-            'partner_shipping_id': vals.get('partner_shipping_id', False),
-            'warehouse_id': vals.get('warehouse_id', False),
-        }
-
-        new_record = sale_order.new(order_vals)
-        # Return Pricelist- Payment terms- Invoice address- Delivery address
-        new_record.onchange_partner_id()
-        order_vals = sale_order._convert_to_write({name: new_record[name] for name in new_record._cache})
-
-        # Return Fiscal Position
-        order_vals.update({'partner_shipping_id': vals.get('partner_shipping_id', False)})
-        new_record = sale_order.new(order_vals)
-        new_record.onchange_partner_shipping_id()
-        order_vals = sale_order._convert_to_write({name: new_record[name] for name in new_record._cache})
-
-        fpos = order_vals.get('fiscal_position_id') or vals.get('fiscal_position_id', False)
-        order_vals.update({
-            'company_id': vals.get('company_id', False),
-            'picking_policy': vals.get('picking_policy'),
-            'partner_invoice_id': vals.get('partner_invoice_id', False),
-            'partner_id': vals.get('partner_id', False),
-            'partner_shipping_id': vals.get('partner_shipping_id', False),
-            'date_order': vals.get('date_order', False),
-            'state': 'draft',
-            'pricelist_id': vals.get('pricelist_id', False),
-            'fiscal_position_id': fpos,
-            'payment_term_id': vals.get('payment_term_id', False),
-            'team_id': vals.get('team_id', False),
-            'client_order_ref': vals.get('client_order_ref', ''),
-            'carrier_id': vals.get('carrier_id', False)
-        })
-        return order_vals
-
     def process_orders_and_invoices(self):
-        """
-        This method will confirm sale orders, create and paid related invoices.
-        """
         for order in self:
             work_flow_process_record = order.auto_workflow_process_id
 
-            if order.invoice_status and order.invoice_status == 'invoiced':
+            if order.invoice_status == 'invoiced':
                 continue
             if work_flow_process_record.validate_order:
                 order.validate_sales_order()
 
-            order_lines = order.mapped('order_line').filtered(lambda l: l.product_id.invoice_policy == 'order')
-            if not order_lines.filtered(lambda l: l.product_id.type == 'product') and len(order.order_line) != len(
-                    order_lines.filtered(lambda l: l.product_id.type in ['service', 'consu'])):
-                continue
-
-            order.validate_invoice(work_flow_process_record)
-        return True
+            if work_flow_process_record.create_invoice:
+                order.validate_invoice()
 
     def validate_sales_order(self):
-        """
-        This function validate sales order and write date_order same as previous date because Odoo changes date_order
-        to current date in action confirm process.
-        Added invalidate_cache line to resolve the issue of PO line description while product route has dropship and
-        multi languages active in Odoo.
-        """
         self.ensure_one()
+
         date_order = self.date_order
-        self.env['product.product'].invalidate_cache(fnames=['display_name'])
+
         self.action_confirm()
         self.write({'date_order': date_order})
-        return True
 
-    def validate_invoice(self, work_flow_process_record):
-        """
-        This method will create invoices, validate it and register payment it, according to the configuration in
-        workflow sets in quotation
-        :param work_flow_process_record:
-        :return: It will return boolean.
-        """
+    def validate_invoice(self):
         self.ensure_one()
-        if work_flow_process_record.create_invoice:
-            invoices = self._create_invoices()
-            # validate invoices
-            for invoice in invoices:
-                invoice.action_post()
 
-        return True
+        invoices = self._create_invoices()
+
+        # confirm invoices
+        for invoice in invoices:
+            invoice.action_post()
 
     def cancel_order_from_magento_by_webhook(self):
         try:
@@ -231,8 +129,12 @@ class SaleOrder(models.Model):
             order_ref = self.magento_order_reference
             instance = self.magento_instance_id
             message = "Error to cancel the order via Magento admin: " + str(error)
+            so_log_book_rec = self.env['magento.orders.log.book'].with_context(active_test=False).search([
+                ('magento_instance_id', '=', instance.id),
+                ('magento_order_ref', '=', order_ref)
+            ])
 
-            self.log_order_import_error(order_ref, instance, self.magento_website_id, message)
+            self.log_order_import_error(so_log_book_rec, order_ref, instance, self.magento_website_id, message)
 
             return False
 
@@ -253,11 +155,12 @@ class SaleOrder(models.Model):
     def _prepare_invoice(self):
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
 
-        if self.auto_workflow_process_id:
+        if self.auto_workflow_process_id and self.auto_workflow_process_id.sale_journal_id:
             invoice_vals.update({'journal_id': self.auto_workflow_process_id.sale_journal_id.id})
 
         if self.magento_payment_method_id:
             invoice_vals['magento_payment_method_id'] = self.magento_payment_method_id.id
+
         if self.magento_instance_id:
             invoice_vals.update({
                 'magento_instance_id': self.magento_instance_id.id,
@@ -267,68 +170,42 @@ class SaleOrder(models.Model):
 
     def process_sales_order_creation(self, magento_instance, sales_order):
         order_ref = sales_order.get('increment_id')
-        payment_method = sales_order.get('payment', {}).get('method')
-        order_lines = sales_order.get('items')
-
+        so_log_book_rec = self.env['magento.orders.log.book'].with_context(active_test=False).search([
+            ('magento_instance_id', '=', magento_instance.id),
+            ('magento_order_ref', '=', order_ref)
+        ])
         magento_order = self.search([
             ('magento_instance_id', '=', magento_instance.id),
             ('magento_order_reference', '=', order_ref)
         ])
-        storeview_id = self.env['magento.storeview'].search([
-            ('magento_instance_id', '=', magento_instance.id),
-            ('magento_storeview_id', '=', str(sales_order.get('store_id')))
-        ], limit=1)
-
-        if not storeview_id:
-            message = 'Magento Order Storeview not found in Odoo. Please synch the Instance Metadata.'
-            self.log_order_import_error(order_ref, magento_instance, False, message)
-            return False
-
-        website = storeview_id.magento_website_id
-
-        message = self.check_magento_payment_method_configuration(magento_instance, sales_order, payment_method)
-        if message:
-            self.log_order_import_error(order_ref, magento_instance, website, message)
-            return False
-
-        message = self.check_magento_shipping_method(magento_instance, sales_order)
-        if message:
-            self.log_order_import_error(order_ref, magento_instance, website, message)
-            return False
-
-        message = self.check_pricelist_for_order(sales_order, website)
-        if message:
-            self.log_order_import_error(order_ref, magento_instance, website, message)
-            return False
-
-        odoo_partner, magento_partner, message = self.env['res.partner'].process_customer_creation_or_update(
-            magento_instance, sales_order, website
+        storeview = magento_instance.magento_website_ids.store_view_ids.filtered(
+            lambda x: x.magento_storeview_id == str(sales_order.get('store_id'))
         )
+        if not storeview:
+            message = "Magento Order's Storeview not found in Odoo. Please synch the Instance Metadata."
+            self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, False, message)
+            return False
+        else:
+            storeview = storeview[0]
+
+        website = storeview.magento_website_id
+
+        auto_workflow, odoo_partner, message = self.check_sales_order_data(magento_instance, sales_order, website)
         if message:
-            self.log_order_import_error(order_ref, magento_instance, website, message)
+            self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
             return False
 
-        message = self.check_products_exist_and_prices(magento_instance, order_lines, website, odoo_partner)
-        if message:
-            self.log_order_import_error(order_ref, magento_instance, website, message)
-            return False
+        order_values, message = self.prepare_and_generate_sales_order_values(
+            magento_instance, website, sales_order, odoo_partner, auto_workflow
+        )
 
-        order_values, message = self.prepare_sales_order_values(magento_instance, website, sales_order, odoo_partner)
         if message:
-            self.log_order_import_error(order_ref, magento_instance, website, message)
+            self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
             return False
 
         # check if order exist or create new
         if magento_order:
-            log_book_rec = self.env['magento.orders.log.book'].search([
-                ('magento_instance_id', '=', magento_instance.id),
-                ('magento_order_ref', '=', order_ref)
-            ])
-
-            if log_book_rec.filtered(lambda x: not x.processing_error):
                 magento_order.write(order_values)
-            else:
-                return True
         else:
             try:
                 magento_order = self.create(order_values)
@@ -337,106 +214,125 @@ class SaleOrder(models.Model):
 
         if not magento_order:
             message = "Error while creating sales order in Magento: " + str(message)
-            self.log_order_import_error(order_ref, magento_instance, website, message)
+            self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
             return False
 
-        message = self.create_magento_sale_order_line(magento_instance, sales_order, magento_order)
+        message = magento_order.create_magento_sales_order_lines(magento_instance, sales_order, magento_order)
         if message:
-            self.log_order_import_error(order_ref, magento_instance, website, message)
+            self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
             return False
 
-        message = magento_order.process_sale_order_workflow_based_on_status()
-        if message:
-            message = "Error to process order: " + str(message)
-            self.log_order_import_error(order_ref, magento_instance, website, message, True)
-            return False
+        auto_workflow = magento_order.auto_workflow_process_id
+        if auto_workflow:
+            auto_workflow.auto_workflow_process([magento_order.id])
 
-        log_book_rec = self.env['magento.orders.log.book'].search([
-            ('magento_instance_id', '=', magento_instance.id),
-            ('magento_order_ref', '=', order_ref)
-        ])
-
-        if log_book_rec:
-            log_book_rec.write({'active': False})
+        if so_log_book_rec:
+            so_log_book_rec.write({'active': False})
 
         return True
 
-    def check_magento_payment_method_configuration(self, magento_instance, sales_order, payment_method):
-        message = ''
+    def check_sales_order_data(self, instance, sales_order, website):
+        order_lines = sales_order.get('items')
+        payment_method = sales_order.get('payment', {}).get('method')
+        odoo_partner = False
+        allowed_flow, message = self.check_payment_method_and_order_flow_configurations(instance, sales_order,
+                                                                                        payment_method)
+        if message:
+            return allowed_flow, odoo_partner, message
+
+        message = self.check_magento_shipping_method(instance, sales_order)
+        if message:
+            return allowed_flow, odoo_partner, message
+
+        message = self.check_pricelist_and_currency_of_sales_order(sales_order, website)
+        if message:
+            return allowed_flow, odoo_partner, message
+
+        odoo_partner, magento_partner, message = self.env['res.partner'].process_customer_creation_or_update(
+            instance, sales_order, website
+        )
+        if message:
+            return allowed_flow, odoo_partner, message
+
+        message = self.check_products_exist_and_prices(instance, order_lines, website)
+
+        return allowed_flow, odoo_partner, message
+
+    def check_payment_method_and_order_flow_configurations(self, instance, sales_order, payment_method):
         order_ref = sales_order.get('increment_id')
         amount_paid = sales_order.get('payment', {}).get('amount_paid', 0)
-        payment_option = magento_instance.payment_method_ids.filtered(lambda x: x.payment_method_code == payment_method)
+        order_status = sales_order.get('status')
+        payment_option = instance.payment_method_ids.filtered(lambda x: x.payment_method_code == payment_method)
 
         if not payment_option:
-            return "Payment method %s is not found in Magento Layer. " \
-                   "Please synchronize Instance Metadata" % payment_method
+            return False, "Payment method %s is not found in Magento Layer. Please synchronize Instance " \
+                          "Metadata" % payment_method
+
+        allowed_flow = self.env['magento.financial.status'].search([
+            ('magento_instance_id', '=', instance.id),
+            ('payment_method_id', '=', payment_option.id),
+            ('financial_status', '=', order_status)
+        ])
+
+        if not allowed_flow:
+            return  False, "- Automatic 'Order Process Workflow' configuration not found for this order. \n -" \
+                           " System tries to find the workflow based on combination of Payment Method (such as PayPal, " \
+                           "P24 etc.) and Order's Financial Status(such as Pending, Processing Orders etc.).\n " \
+                           "- For current Sales Order: Payment Method is '%s' and Order's Financial Status is '%s'.\n  " \
+                           "- You can configure the Automatic Order Process Workflow under the menu Magento >> " \
+                           "Configuration >> Orders Processing Gateway." % (payment_option.payment_method_name,
+                                                                            order_status)
+
+        if not allowed_flow.auto_workflow_id:
+            return False, "Order %s was not proceeded due to missed Auto Order Workflow configuration for payment " \
+                          " method - %s and order's financial status - %s" % (order_ref, payment_method, order_status)
+
         import_rule = payment_option.import_rule
 
-        workflow_config, financial_status_name = self.search_order_financial_status(magento_instance, sales_order,
-                                                                                    payment_option)
-        if not workflow_config:
-            message = "- Automatic order process workflow configuration not found for this order %s. \n -" \
-                      " System tries to find the workflow based on combination of Payment Gateway (such as" \
-                      " Bank Transfer etc.) and Financial Status(such as Pending Orders, Processing Orders etc.).\n" \
-                      "- For current Sales Order: Payment Gateway is %s and Financial Status is %s.\n " \
-                      "- You can configure the Automatic order process workflow under the menu Magento >> Configuration" \
-                      " >> Financial Status." % (sales_order.get('increment_id'), payment_method, financial_status_name)
-
-        elif not workflow_config.auto_workflow_id and financial_status_name != "":
-            message = "Order %s was not proceeded due to auto workflow configuration not found for payment method - %s " \
-                      "and financial status - %s" % (order_ref, payment_method, financial_status_name)
-
-        elif not workflow_config.payment_term_id and financial_status_name != "":
-            message = "Order %s skipped due to Payment Term not found in payment method - %s and financial status -" \
-                      "%s" % (order_ref, payment_method, financial_status_name)
-
-        elif import_rule == 'never':
-            message = "Orders with payment method %s have the rule never to be imported." % payment_method
-
+        if import_rule == 'never':
+            return False, "Orders with payment method %s have the rule never to be imported." % payment_method
         elif not amount_paid and import_rule == 'paid':
-            message = "Order '%s' has not been paid yet, So order will be imported later" % order_ref
+            return False, "Order '%s' hasn't been paid yet. Thus, it'll be imported after payment is done." % order_ref
 
-        return message
+        return allowed_flow, ''
 
     def check_magento_shipping_method(self, magento_instance, sales_order):
-        message = ""
-        magento_carrier = False
-        order_reference = sales_order.get('increment_id')
+        order_ref = sales_order.get('increment_id')
         shipping = sales_order.get('extension_attributes').get('shipping_assignments')
         shipping_method = shipping[0].get('shipping').get('method') or False
+
         if not shipping_method:
-            message = "Delivery method is not found in Order %s" % order_reference
-        else:
-            magento_carrier = magento_instance.shipping_method_ids.filtered(lambda x: x.carrier_code == shipping_method)
-            if not magento_carrier:
-                message = "Order %s has failed to proceed due to shipping %s not found in Delivery Methods" % (
-                    order_reference, shipping_method)
+            return "Delivery method is not found in Order - %s." % order_ref
 
-        if magento_carrier:
-            delivery_carrier = magento_carrier.delivery_carrier_ids.filtered(
-                lambda x: x.magento_carrier_code == shipping_method
-            )
-            if not delivery_carrier:
+        mag_deliv_carrier = magento_instance.shipping_method_ids.filtered(lambda x: x.carrier_code == shipping_method)
+        if not mag_deliv_carrier:
+            return "Order %s has failed to proceed due to shipping method - %s wasn't found within Magento " \
+                   "Delivery Methods. Please synchronize Instance Metadata." % (order_ref, shipping_method)
+
+        odoo_delivery_carrier = mag_deliv_carrier.delivery_carrier_ids
+        delivery_carrier = odoo_delivery_carrier[0] if odoo_delivery_carrier else False
+        if not delivery_carrier:
+            try:
                 product = self.env.ref('odoo_magento2.product_product_shipping')
-                try:
-                    self.env["delivery.carrier"].create({
-                        'name': magento_carrier.carrier_label or magento_carrier.magento_carrier_title,
-                        'product_id': product.id,
-                        'magento_carrier': magento_carrier.id
-                    })
-                except Exception as err:
-                    message = "Error while creating new delivery carrier: " + str(err)
+                self.env["delivery.carrier"].create({
+                    'name': mag_deliv_carrier.magento_carrier or mag_deliv_carrier.magento_carrier_title,
+                    'product_id': product.id,
+                    'magento_carrier': mag_deliv_carrier.id
+                })
+            except Exception as err:
+                return "Error while new Delivery Method creation in Odoo: %s. Please create it manually and link " \
+                       "'Magento Delivery Carrier' field with %s shipping method code. " % (str(err), shipping_method)
 
-        return message
+        return ''
 
-    def check_products_exist_and_prices(self, magento_instance, order_lines, website, odoo_partner):
+    def check_products_exist_and_prices(self, magento_instance, order_lines, website):
         message = ""
 
         for order_item in order_lines:
             prod_sku = order_item.get('sku')
-            if order_item.get('product_type') != 'simple':
-                message = "%s product type is not supported for the product with %s sku" % (
-                    order_item.get('product_type'), prod_sku)
+            prod_type = order_item.get('product_type')
+            if prod_type != 'simple':
+                message = "%s product type is not supported for the product with %s sku" % (prod_type, prod_sku)
                 break
 
             # Check the ordered product exist in the magento layer or not.
@@ -444,269 +340,120 @@ class SaleOrder(models.Model):
                 ('magento_instance_id', '=', magento_instance.id), ('magento_sku', '=', prod_sku)
             ], limit=1)
             if not magento_product:
-                message = "Product with sku '%s' is missed in magento layer in Odoo" % prod_sku
+                message = "Product with sku '%s' doesn't exist in magento layer in Odoo" % prod_sku
                 break
 
-            # check if product prices are the same
-            odoo_price = website.pricelist_id.get_product_price(
-                magento_product.odoo_product_id,
-                order_item.get('qty_invoiced', 1),
-                odoo_partner
-            )
+            # check if product prices are ok
+            odoo_product = magento_product.odoo_product_id
+            odoo_base_price = self.env['magento.product.product'].get_product_price_for_website(website, odoo_product)
+            order_base_price = order_item.get('original_price')
 
-            if odoo_price != order_item.get('price'):
-                message = "Product prices are not matched: Odoo price - %s and Magento price - %s" % (
-                    odoo_price, order_item.get('price')
-                )
+            if odoo_base_price != order_base_price:
+                message = "Product's base prices do not match: Odoo price - %s and " \
+                          "Magento price - %s" % (odoo_base_price, order_base_price)
                 break
 
         return message
 
-    def check_pricelist_for_order(self, sales_order, website):
-        message = ""
-        order_currency = sales_order.get('order_currency_code')
-
+    def check_pricelist_and_currency_of_sales_order(self, sales_order, website):
         if website.pricelist_id:
-            if order_currency != website.pricelist_id.currency_id.name:
-                message = "Order currency in Magento %s and Price list currency in Odoo %s do not match." % (
-                    order_currency, website.pricelist_id.currency_id.name)
+            order_currency = sales_order.get('order_currency_code')
+            pricelist_currency = website.pricelist_id.currency_id.name
+
+            if order_currency != pricelist_currency:
+                return "Order currency - %s and Price list currency in Odoo %s do not match." % (order_currency,
+                                                                                                 pricelist_currency)
         else:
-            message = "%s website is missing Price list to be defined in Magento Configurations in Odoo" % (
-                website.name)
+            return "%s website is missing Price list to be defined in Instance Configurations in Odoo" % (website.name)
 
-        return message
+        return ''
 
-    def prepare_sales_order_values(self, magento_instance, website, sales_order, odoo_partner):
+    def prepare_and_generate_sales_order_values(self, instance, website, sales_order, odoo_partner, auto_workflow):
+        if not website.warehouse_id:
+            return {}, ("Warehouse is not set for the %s website.\n Please configure it first: Settings >> "
+                        "Magento Websites. ") % website.name
+
+        so_increment_id = sales_order.get('increment_id', '')
+        workflow_process_id = auto_workflow.auto_workflow_id
+        payment_term_id = auto_workflow.payment_term_id
         shipping = sales_order.get('extension_attributes').get('shipping_assignments')
         shipping_method = shipping[0].get('shipping').get('method')
-        shipping_carrier = magento_instance.shipping_method_ids.filtered(lambda x: x.carrier_code == shipping_method)
-        delivery_method = shipping_carrier.delivery_carrier_ids.filtered(
+
+        mag_deliv_carrier = instance.shipping_method_ids.filtered(
+            lambda x: x.carrier_code == shipping_method
+        )
+        odoo_delivery_carrier = mag_deliv_carrier.delivery_carrier_ids.filtered(
             lambda x: x.magento_carrier_code == shipping_method
         )
-        payment_option = magento_instance.payment_method_ids.filtered(
+        payment_method = instance.payment_method_ids.filtered(
             lambda x: x.payment_method_code == sales_order.get('payment').get('method')
         )
-        store_view = magento_instance.magento_website_ids.store_view_ids.filtered(
+        store_view = instance.magento_website_ids.store_view_ids.filtered(
             lambda x: x.magento_storeview_id == str(sales_order.get('store_id'))
         )
-        if not website.warehouse_id.id:
-            return {}, ("Warehouse is not set for the %s website.\n Please configure it from Magento Instance >> "
-                       "Magento Website >> Select Website.") % website.name
-
-        financial_status, financial_status_name = self.search_order_financial_status(magento_instance, sales_order,
-                                                                                     payment_option)
-        workflow_process_id = financial_status.auto_workflow_id
-        payment_term_id = financial_status.payment_term_id
-
-        # get Odoo's invoice and delivery partners(addresses)
         invoice_partner = odoo_partner.magento_res_partner_ids.filtered(
-            lambda x: x.magento_instance_id == magento_instance).customer_address_ids.filtered(
+            lambda x: x.magento_instance_id == instance).customer_address_ids.filtered(
             lambda y: y.magento_customer_address_id == str(sales_order.get("billing_address").get("entity_id"))
         ).odoo_partner_id
         shipping_partner = odoo_partner.magento_res_partner_ids.filtered(
-            lambda x: x.magento_instance_id == magento_instance).customer_address_ids.filtered(
+            lambda x: x.magento_instance_id == instance).customer_address_ids.filtered(
             lambda y: y.magento_customer_address_id == str(shipping[0].get('shipping').get('address').get("entity_id"))
         ).odoo_partner_id
 
         order_vals = {
-            'company_id': magento_instance.company_id.id,
+            'client_order_ref': so_increment_id,
+            'state': 'draft',
+            'date_order': sales_order.get('created_at', False),
             'partner_id': odoo_partner.id,
             'partner_invoice_id': invoice_partner.id,
             'partner_shipping_id': shipping_partner.id,
-            'warehouse_id': website.warehouse_id.id,
-            'picking_policy': workflow_process_id and workflow_process_id.picking_policy or False,
-            'date_order': sales_order.get('created_at', False),
             'pricelist_id': website.pricelist_id.id,
-            'team_id': store_view and store_view.team_id and store_view.team_id.id or False,
-            'payment_term_id': payment_term_id and payment_term_id.id or False,
-            'carrier_id': delivery_method and delivery_method.id or False,
-            'client_order_ref': sales_order.get('increment_id')
+            'company_id': instance.company_id.id,
+            'team_id': store_view.team_id.id if store_view and store_view.team_id else False,
+            'picking_policy': workflow_process_id and workflow_process_id.picking_policy or False,
+            'warehouse_id': website.warehouse_id.id,
+            'carrier_id': odoo_delivery_carrier.id if odoo_delivery_carrier else False
         }
-
-        order_values = self.create_sales_order_vals(order_vals)
-
-        order_values.update({
-            'magento_instance_id': magento_instance.id,
+        order_vals = self.pre_generate_sales_order_values(order_vals)
+        order_vals.update({
+            'name': "%s%s" % (store_view and store_view.sale_prefix or '', so_increment_id),
+            'magento_instance_id': instance.id,
             'magento_website_id': website.id,
+            'payment_term_id': payment_term_id.id if payment_term_id else False,
             'store_id': store_view.id if store_view else False,
             'auto_workflow_process_id': workflow_process_id.id,
-            'magento_payment_method_id': payment_option.id,
-            'magento_shipping_method_id': shipping_carrier.id,
-            # 'is_exported_to_magento_shipment_status': False,
+            'magento_payment_method_id': payment_method.id,
+            'magento_shipping_method_id': mag_deliv_carrier.id,
             'magento_order_id': sales_order.get('entity_id'),
-            'magento_order_reference': sales_order.get('increment_id')
+            'magento_order_reference': so_increment_id
         })
 
-        if store_view and not store_view.is_use_odoo_order_sequence:
-            name = "%s%s" % (store_view and store_view.sale_prefix or '', sales_order.get('increment_id'))
-            order_values.update({"name": name})
+        return order_vals, ''
 
-        return order_values, ''
+    def pre_generate_sales_order_values(self, vals):
+        sale_order = self.env['sale.order']
 
-    def create_magento_sale_order_line(self, instance, sales_order, magento_order):
-        if not self.env[SALE_ORDER_LINE].magento_create_sale_order_line(instance, sales_order, magento_order):
-            return "Error while creating Product Sales Order lines"
-        else:
-            message = self.create_shipping_order_line(sales_order, magento_order)
-            if message:
-                return message
-            else:
-                return self.create_discount_order_line(sales_order, magento_order)
+        new_record = sale_order.new(vals)
+        new_record.onchange_partner_id()
+        new_record.onchange_partner_shipping_id() # updates fiscal position
 
-    def process_sale_order_workflow_based_on_status(self):
-        message = self.auto_workflow_process_id.auto_workflow_process(self.auto_workflow_process_id.id, [self.id])
+        return sale_order._convert_to_write(new_record._cache)
 
-        return message if message else ''
+    def create_magento_sales_order_lines(self, instance, sales_order, magento_order):
+        sales_order_line = self.env['sale.order.line']
 
-    def search_order_financial_status(self, magento_instance, sales_order, payment_option):
-        is_invoiced = True if sales_order.get('payment', {}).get('amount_paid') else False
-        status_code, status_name = self.get_magento_financial_status(sales_order.get('status'), is_invoiced)
+        message = sales_order_line.create_product_sales_order_line(instance, sales_order, magento_order)
+        if message:
+            return message
 
-        workflow_config = self.env['magento.financial.status'].search(
-            [('magento_instance_id', '=', magento_instance.id),
-             ('payment_method_id', '=', payment_option.id),
-             ('financial_status', '=', status_code)])
+        return sales_order_line.create_shipping_sales_order_line(sales_order, magento_order)
 
-        return workflow_config, status_name
-
-    @staticmethod
-    def get_magento_financial_status(order_status, is_invoiced):
-        status_code = status_name = ''
-
-        if order_status == "pending":
-            status_code = 'not_paid'
-            status_name = 'Pending Orders'
-        elif order_status == "processing" and is_invoiced:
-            status_code = 'processing_paid'
-            status_name = 'Processing orders with paid invoice'
-
-        return status_code, status_name
-
-    def create_shipping_order_line(self, sales_order, magento_order):
-        sale_order_line_obj = self.env[SALE_ORDER_LINE]
-        shipping_amount_incl = float(sales_order.get('shipping_incl_tax', 0.0))
-        shipping_amount_excl = float(sales_order.get('shipping_amount', 0.0))
-
-        if shipping_amount_incl or shipping_amount_excl:
-            account_tax_obj = self.env['account.tax']
-            shipping_product = self.env.ref('odoo_magento2.product_product_shipping')
-            tax_id = False
-            extension_attributes = sales_order.get('extension_attributes')
-            is_tax_included, tax_percent = self.check_shipping_has_tax_included_and_percent(extension_attributes)
-            price = shipping_amount_incl if is_tax_included else shipping_amount_excl
-            shipping_line = sale_order_line_obj.create_sale_order_line_vals(
-                sales_order, price, shipping_product, magento_order
-            )
-            if tax_percent:
-                tax_id = account_tax_obj.get_tax_from_rate(rate=float(tax_percent), is_tax_included=is_tax_included)
-                if tax_id and not tax_id.active:
-                    return "Shipping Line: The system unable to find the tax '%s'.\n" \
-                           "Please check if the Tax is archived?." % tax_id.name
-                if not tax_id:
-                    name = '%s %% ' % tax_percent
-                    tax_id = account_tax_obj.sudo().create({
-                        'name': name,
-                        'description': name,
-                        'amount_type': 'percent',
-                        'price_include': is_tax_included,
-                        'amount': float(tax_percent),
-                        'type_tax_use': 'sale',
-                    })
-            if tax_id:
-                shipping_line.update({
-                    'tax_id': [(6, 0, tax_id.ids)]
-                })
-            try:
-                line = sale_order_line_obj.create(shipping_line)
-            except Exception as e:
-                return 'Error creating shipping order line: ' + str(e)
-
-            if not line:
-                return "Error creating shipping order line."
-
-        return ''
-
-    @staticmethod
-    def check_shipping_has_tax_included_and_percent(extension_attributes):
-        is_tax_included = True
-        tax_percent = False
-        if "apply_shipping_on_prices" in extension_attributes:
-            apply_shipping_on_prices = extension_attributes.get('apply_shipping_on_prices')
-            if apply_shipping_on_prices == 'excluding_tax':
-                is_tax_included = False
-        if "item_applied_taxes" in extension_attributes:
-            for order_res in extension_attributes.get("item_applied_taxes"):
-                if order_res.get('type') == "shipping" and order_res.get('applied_taxes'):
-                    shipping_tax_dict = order_res.get('applied_taxes')[0]
-                    if shipping_tax_dict:
-                        tax_percent = shipping_tax_dict.get('percent')
-        return is_tax_included, tax_percent
-
-    def create_discount_order_line(self, sales_order, magento_order):
-        sale_order_line_obj = self.env[SALE_ORDER_LINE]
-        account_tax_obj = self.env['account.tax']
-        discount_amount = float(sales_order.get('discount_amount') or 0.0) or False
-        if discount_amount:
-            tax_id = False
-            discount_product = self.env.ref('odoo_magento2.magento_product_product_discount')
-            discount_line = sale_order_line_obj.create_sale_order_line_vals(
-                sales_order, discount_amount, discount_product, magento_order
-            )
-            is_tax_included, tax_percent = self.check_discount_has_tax_included_and_percent(sales_order)
-            if tax_percent:
-                tax_id = account_tax_obj.get_tax_from_rate(rate=float(tax_percent), is_tax_included=is_tax_included)
-                if tax_id and not tax_id.active:
-                    return "Discount Line: The system unable to find the tax '%s'.\n" \
-                           "Please check if the Tax is archived?." % tax_id.name
-                if not tax_id:
-                    name = '%s %% ' % tax_percent
-                    tax_id = account_tax_obj.sudo().create({
-                        'name': name,
-                        'description': name,
-                        'amount_type': 'percent',
-                        'price_include': is_tax_included,
-                        'amount': float(tax_percent),
-                        'type_tax_use': 'sale',
-                    })
-            if tax_id:
-                discount_line.update({
-                    'tax_id': [(6, 0, tax_id.ids)]
-                })
-            try:
-                line = sale_order_line_obj.create(discount_line)
-            except Exception as e:
-                return 'Error creating discount order line:' + str(e)
-
-            if not line:
-                return 'Error creating discount order line'
-
-        return ''
-
-    @staticmethod
-    def check_discount_has_tax_included_and_percent(sales_order):
-        is_tax_included = True
-        tax_percent = False
-        extension_attributes = sales_order.get('extension_attributes')
-        if extension_attributes and "apply_discount_on_prices" in extension_attributes:
-            if extension_attributes.get('apply_discount_on_prices', False) == 'excluding_tax':
-                is_tax_included = False
-        for order_items in sales_order.get('items'):
-            tax_percent = order_items.get('tax_percent', False)
-            break
-
-        return is_tax_included, tax_percent
-
-    def log_order_import_error(self, order_ref, instance, website, message, error_to_process=False):
-        log_book_rec = self.env['magento.orders.log.book'].search([
-            ('magento_instance_id', '=', instance.id),
-            ('magento_order_ref', '=', order_ref)
-        ])
-
+    def log_order_import_error(self, log_book_rec, order_ref, instance, website, message):
         data = {
             'sale_order_id': self.id,
-            'processing_error': error_to_process,
             'magento_website_id': website.id if website else False,
-            'log_message': message
+            'log_message': message,
+            'active': True
         }
 
         if log_book_rec:

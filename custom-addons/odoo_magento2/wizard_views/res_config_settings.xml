@@ -42,17 +42,6 @@
                                     </div>
                                 </div>
                             </div>
-<!--                            <div class="col-12 col-lg-6 o_setting_box">-->
-<!--                                <div class="o_setting_right_pane"-->
-<!--                                     attrs="{'invisible': [('catalog_price_scope', '=', 'website')]}">-->
-<!--                                    <label for="pricelist_id" string="Pricelist" />-->
-<!--                                    <field name="pricelist_id"  class="oe_inline"-->
-<!--                                           attrs="{'required':[('magento_instance_id','!=', False), ('catalog_price_scope', '!=', 'website')]}" />-->
-<!--                                    <div class="text-muted" id="sale_coupon">-->
-<!--                                        Product price will be taken/set from this pricelist if Catalog Price Scope is global-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
                         </div>
 
                         <h2 style="font-size:25px;background-color:#e9ecef;"
@@ -60,24 +49,6 @@
                             Order
                         </h2>
                         <div class="row mt16 o_settings_container" attrs="{'invisible': [('magento_instance_id', '=', False)]}">
-<!--                            <div class="col-12 col-lg-6 o_setting_box">-->
-<!--                                <div class="o_setting_right_pane">-->
-<!--                                    <label for="import_magento_order_status_ids"/>-->
-<!--                                    <div class="text-muted">-->
-<!--                                        Select order status which you want to import in odoo-->
-<!--                                    </div>-->
-<!--                                    <div class="content-group">-->
-<!--                                        <div class="mt16">-->
-<!--                                            <field name="import_magento_order_status_ids"-->
-<!--                                                   widget="many2many_tags"-->
-<!--                                                   attrs="{'required':[('magento_instance_id','!=',False)]}"-->
-<!--                                                   options="{'no_create':True,'no_create_edit': True}"-->
-<!--                                                   class="oe_inline"/>-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-
-<!--                                </div>-->
-<!--                            </div>-->
                             <div class="col-12 col-lg-6 o_setting_box">
                                 <div class="o_setting_left_pane">
                                     <field name="invoice_done_notify_customer" widget="boolean_toggle"/>
@@ -166,16 +137,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-lg-6 o_setting_box">
-                                    <div class="o_setting_right_pane">
-                                        <label for="tax_calculation_method" string="Tax Calculation Method"/>
-                                        <field name="tax_calculation_method" class="oe_inline" widget="selection"/>
-                                        <div class="text-muted">
-                                            This indicates whether product prices received from Magento is
-                                            including tax or excluding tax, when import sale order from Magento
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -234,18 +195,6 @@
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6 o_setting_box">
-                                    <div class="o_setting_left_pane">
-                                        <field name="is_use_odoo_order_sequence" widget="boolean_toggle"/>
-                                    </div>
-                                    <div class="o_setting_right_pane">
-                                        <label for="is_use_odoo_order_sequence" string="Use Odoo Default Sequences?"/>
-                                        <div class="text-muted" id="sale_coupon">
-                                            If checked,it will use odoo order sequences while import order from magento.
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-lg-6 o_setting_box"
-                                     attrs="{'invisible':[('is_use_odoo_order_sequence','=',True)]}">
                                     <div class="o_setting_right_pane">
                                         <label for="magento_sale_prefix"/>
                                         <field name="magento_sale_prefix"  class="oe_inline"/>

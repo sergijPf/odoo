@@ -7,29 +7,8 @@
             <tree string="Magento Customer Groups" create="false" delete="false">
                 <field name="group_id"/>
                 <field name="group_name"/>
-<!--                <field name="pricelist_id"/>-->
-<!--                <field name="magento_website_ids" widget="many2many_tags"/>-->
                 <field name="magento_instance_id"/>
             </tree>
-        </field>
-    </record>
-
-    <record id="view_magento_customer_groups_form" model="ir.ui.view">
-        <field name="name">magento.customer.groups.form</field>
-        <field name="model">magento.customer.groups</field>
-        <field name="arch" type="xml">
-            <form string="Magento Customer Groups" create="false" delete="false">
-                <sheet>
-                    <group>
-                        <field name="magento_instance_id" readonly="1"/>
-                        <field name="group_id" readonly="1"/>
-                        <field name="group_name" readonly="1"/>
-<!--                                <field name="magento_website_ids" widget="many2many_tags"-->
-<!--                                       domain="[('magento_instance_id', '=', magento_instance_id)]"/>-->
-<!--                                <field name="pricelist_id"/>-->
-                    </group>
-                </sheet>
-            </form>
         </field>
     </record>
 
@@ -51,7 +30,7 @@
         <field name="name">Customer Groups</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">magento.customer.groups</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">tree</field>
         <field name="view_id" ref="view_magento_customer_groups_tree"/>
         <field name="help" type="html">
             <p>
@@ -64,10 +43,7 @@
         </field>
     </record>
 
-    <menuitem id="menu_customer_details" name="Customer"
-        sequence="6" parent="odoo_magento2.menu_magento_catalog_parent"/>
-
     <menuitem id="menu_item_magento_customer_groups" name="Customer Groups"
-        parent="odoo_magento2.menu_customer_details" sequence="7"
-        action="magento_customer_groups_action"/>
+              parent="odoo_magento2.menu_customer_details" sequence="3"
+              action="magento_customer_groups_action"/>
 </odoo>

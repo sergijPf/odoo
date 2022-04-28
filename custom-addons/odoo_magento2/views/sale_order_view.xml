@@ -1,19 +1,5 @@
 <?xml version="1.0" ?>
 <odoo>
-    <record model="ir.ui.view" id="sale_form_inherit_view">
-        <field name="name">sale.form.inherit.view</field>
-        <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_order_form" />
-        <field name="arch" type="xml">
-            <xpath expr="//header" position="inside">
-                <field name="is_canceled_in_magento" invisible="1"/>
-                <button name="cancel_order_in_magento" type="object" string="Cancel In Magento"
-                        attrs="{'invisible' : ['|', '|', ('magento_instance_id','=',False),
-                         ('state','!=','cancel'), ('is_canceled_in_magento','=',True)]}"/>
-            </xpath>
-        </field>
-    </record>
-
     <record id="magento_view_order_form" model="ir.ui.view">
         <field name="name">odoo_magento2.view_order_form</field>
         <field name="model">sale.order</field>
@@ -22,6 +8,11 @@
             <field name="fiscal_position_id" options="{'no_create': True}" position="after">
                 <field name="auto_workflow_process_id"/>
             </field>
+            <xpath expr="//header" position="inside">
+                <button name="cancel_order_in_magento" type="object" string="Cancel In Magento"
+                        attrs="{'invisible' : ['|', '|', ('magento_instance_id','=',False),
+                         ('state','!=','cancel'), ('is_canceled_in_magento','=',True)]}"/>
+            </xpath>
             <xpath expr="//button[@name='action_view_invoice']" position="before">
                 <button type="object" name="action_view_stock_move_" class="oe_stat_button"
                         icon="fa-truck"
@@ -39,6 +30,8 @@
                             <field name="magento_order_id" readonly="1"/>
                             <field name="magento_website_id" readonly="1"/>
                             <field name="magento_order_reference" readonly="1"/>
+                            <field name="is_canceled_in_magento" readonly="1"
+                                   attrs="{'invisible': [('is_canceled_in_magento','!=',True)]}"/>
 <!--                            <field name="updated_in_magento" readonly="1"/>-->
                         </group>
                         <group>
@@ -53,17 +46,6 @@
             </xpath>
         </field>
     </record>
-
-<!--    <record id="sale_order_view_tree" model="ir.ui.view">-->
-<!--        <field name="name">sale.order.view.tree</field>-->
-<!--        <field name="model">sale.order</field>-->
-<!--        <field name="inherit_id" ref="sale.view_order_tree" />-->
-<!--        <field name="arch" type="xml">-->
-<!--            <field name="state" position="after">-->
-<!--                <field name="magento_payment_method_id" />-->
-<!--            </field>-->
-<!--        </field>-->
-<!--    </record>-->
 
     <record id="sale_order_tree_view" model="ir.ui.view">
         <field name="name">magento.sale.order.tree.view</field>
@@ -135,17 +117,18 @@
         <field name="search_view_id" ref="sale_order_filter_view"/>
     </record>
 
+    <menuitem id="menu_magento_sales_and_customer" name="Sales"
+              parent="odoo_magento2.menu_magento_root" sequence="4"/>
+
     <menuitem id="menu_item_parent_sale_order" name="Orders"
-        parent="odoo_magento2.menu_magento_sales_and_customer" sequence="2"/>
+              parent="odoo_magento2.menu_magento_sales_and_customer" sequence="2"/>
 
     <menuitem id="magento_menu_item_sales_quotations" name="Quotations"
-        parent="odoo_magento2.menu_item_parent_sale_order"
-        action="magento_action_sales_quotations"
-        sequence="9"/>
+              parent="odoo_magento2.menu_item_parent_sale_order"
+              action="magento_action_sales_quotations" sequence="9"/>
 
     <menuitem id="magento_menu_item_sales_order" name="Orders"
-        parent="odoo_magento2.menu_item_parent_sale_order"
-        action="magento_action_sales_order"
-        sequence="10"/>
+              parent="odoo_magento2.menu_item_parent_sale_order"
+              action="magento_action_sales_order" sequence="10"/>
 
 </odoo>

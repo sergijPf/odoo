@@ -15,14 +15,16 @@ class MagentoPaymentMethod(models.Model):
     def _default_company_id(self):
         return self.env.company
 
+    def _default_payment_term(self):
+        payment_term = self.env.ref("account.account_payment_term_immediate")
+        return payment_term.id if payment_term else False
+
     magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', ondelete="cascade")
     payment_method_code = fields.Char(string='Payments Method Code', help="Code received from Magento")
     payment_method_name = fields.Char(string='Payments Method Name')
-    payment_term_id = fields.Many2one('account.payment.term', string='Payment Term',
-                                      help="Payment term to be used while Sales Order processing")
-    magento_workflow_process_id = fields.Many2one('sale.workflow.process', string='Automatic Workflow',
-                                                  help="Auto workflow for imported orders")
     company_id = fields.Many2one('res.company', 'Company', default=_default_company_id, help="Magento Company Id.")
+    payment_term_id = fields.Many2one('account.payment.term', string='Payment Term', default=_default_payment_term,
+                                      help="Payment term to be used while Sales Order processing")
     create_invoice_on = fields.Selection([
         ('open', 'Validate'),
         ('in_payment_paid', 'In-Payment/Paid')
@@ -44,7 +46,7 @@ class MagentoPaymentMethod(models.Model):
                          'This payment method code is already exist')]
 
     @staticmethod
-    def import_payment_method(instance):
+    def import_payment_methods(instance):
         try:
             url = '/V1/paymentmethod'
             payment_methods = req(instance, url)

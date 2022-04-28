@@ -18,9 +18,9 @@ class Binary(http.Controller):
             return 'false'
         res = request.env['sale.order'].sudo().process_sales_order_creation(magento_instance, data)
 
-        raise
+        return 'false'
 
-        return 'true' if res else 'false'
+        # return 'true' if res else 'false'
 
     @http.route('/web_magento_order_cancel', csrf=False, auth="public", type="http")
     def cancel_order(self, **kwargs):

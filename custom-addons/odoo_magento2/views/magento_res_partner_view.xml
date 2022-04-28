@@ -47,12 +47,12 @@
             <field name="model">magento.res.partner</field>
             <field name="arch" type="xml">
                 <tree string="Magento Customers" create="false" edit="false">
-                    <header>
-                        <button name="export_to_magento"
-                                string="Export to Magento"
-                                type="object"
-                                class="btn btn-info ml-3"/>
-                    </header>
+<!--                    <header>-->
+<!--                        <button name="export_customers_to_magento"-->
+<!--                                string="Export to Magento"-->
+<!--                                type="object"-->
+<!--                                class="btn btn-info ml-3"/>-->
+<!--                    </header>-->
                     <field name="name"/>
                     <field name="email"/>
                     <field name="phone"/>
@@ -108,13 +108,10 @@
             </field>
         </record>
 
-        <menuitem id="menu_magento_sales_and_customer" name="Sales"
-            parent="odoo_magento2.menu_magento_root" sequence="4"/>
-
-        <menuitem id="menu_item_parent_customer" name="Customers"
-            parent="odoo_magento2.menu_magento_sales_and_customer" sequence="10"/>
+        <menuitem id="menu_customer_details" name="Customers"
+                  sequence="6" parent="odoo_magento2.menu_magento_catalog_parent"/>
 
         <menuitem id="menu_item_magento_customer" name="Customers"
-            parent="odoo_magento2.menu_item_parent_customer" sequence="2"
-            action="action_magento_res_partner" />
+                  parent="odoo_magento2.menu_customer_details" sequence="2"
+                  action="action_magento_res_partner"/>
 </odoo>

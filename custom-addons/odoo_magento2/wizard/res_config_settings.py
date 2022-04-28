@@ -25,26 +25,13 @@ class ResConfigSettings(models.TransientModel):
     ], string="Magento Catalog Price Scope", help="Scope of Price in Magento", default='website')
     pricelist_id = fields.Many2one('product.pricelist', "Pricelist", help="Product price will be taken/set from this "
                                                                           "pricelist if Catalog Price Scope is global")
-    is_use_odoo_order_sequence = fields.Boolean("Use Odoo Order Sequences?", default=False,
-                                                help="If checked, Odoo Order Sequence is used when import and create "
-                                                     "orders.")
     invoice_done_notify_customer = fields.Boolean(string="Invoices Done Notify customer", default=False,
                                                   help="while export invoice send email to the customer")
-    # import_magento_order_status_ids = fields.Many2many(
-    #     'import.magento.order.status', 'magento_config_settings_order_status_rel', 'magento_config_id', 'status_id',
-    #     "Import Order Status", help="Select order status in which you want to import the orders from Magento to Odoo."
-    # )
     magento_website_pricelist_id = fields.Many2one(
         'product.pricelist', string="Magento Pricelist",
         help="Product price will be taken/set from this pricelist if Catalog Price Scope is website"
     )
     magento_url = fields.Char(string='Magento URLs', required=False, help="URL of Magento")
-    tax_calculation_method = fields.Selection([
-        ('excluding_tax', 'Excluding Tax'),
-        ('including_tax', 'Including Tax')], "Tax Calculation Method", default="including_tax",
-        help="This indicates whether product prices received from Magento is including tax or excluding tax,"
-             " when import sale order from Magento"
-    )
 
     @api.onchange('magento_instance_id')
     def onchange_magento_instance_id(self):
@@ -57,8 +44,7 @@ class ResConfigSettings(models.TransientModel):
                 'location_ids': [(6, 0, instance_id.location_ids.ids)] if instance_id.location_ids else False,
                 'catalog_price_scope': instance_id.catalog_price_scope,
                 'pricelist_id': instance_id.pricelist_id.id if instance_id.pricelist_id else False,
-                'invoice_done_notify_customer': instance_id.invoice_done_notify_customer,
-                # 'import_magento_order_status_ids': instance_id.import_magento_order_status_ids.ids,
+                'invoice_done_notify_customer': instance_id.invoice_done_notify_customer
             })
         else:
             self.magento_instance_id = False
@@ -73,18 +59,16 @@ class ResConfigSettings(models.TransientModel):
                 self.magento_website_pricelist_id = website_id.pricelist_id.id
             if website_id.warehouse_id:
                 self.magento_website_warehouse_id = website_id.warehouse_id.id
-            self.tax_calculation_method = website_id.tax_calculation_method
 
     @api.onchange('magento_storeview_id')
     def onchange_magento_storeview_id(self):
         storeview_id = self.magento_storeview_id
-        self.is_use_odoo_order_sequence = self.magento_team_id = False
+        self.magento_team_id = False
         self.magento_sale_prefix = ''
 
         if storeview_id:
             self.magento_team_id = storeview_id.team_id.id if storeview_id.team_id else False
             self.magento_sale_prefix = storeview_id.sale_prefix
-            self.is_use_odoo_order_sequence = storeview_id.is_use_odoo_order_sequence
 
     def execute(self):
         instance = self.magento_instance_id
@@ -100,15 +84,13 @@ class ResConfigSettings(models.TransientModel):
 
         if self.magento_website_id:
             self.magento_website_id.write({
-                'warehouse_id': self.magento_website_warehouse_id.id if self.magento_website_warehouse_id else False,
-                'tax_calculation_method': self.tax_calculation_method,
+                'warehouse_id': self.magento_website_warehouse_id.id if self.magento_website_warehouse_id else False
             })
 
         if self.magento_storeview_id:
             self.magento_storeview_id.write({
                 'team_id': self.magento_team_id,
-                'sale_prefix': self.magento_sale_prefix,
-                'is_use_odoo_order_sequence': self.is_use_odoo_order_sequence
+                'sale_prefix': self.magento_sale_prefix
             })
 
         return res
@@ -119,7 +101,6 @@ class ResConfigSettings(models.TransientModel):
             'location_ids': [(6, 0, self.location_ids.ids)] if self.location_ids else False,
             'catalog_price_scope': magento_instance.catalog_price_scope if magento_instance else False,
             'pricelist_id': self.pricelist_id.id if self.pricelist_id else False,
-            'invoice_done_notify_customer': self.invoice_done_notify_customer,
-            # 'import_magento_order_status_ids': [(6, 0, self.import_magento_order_status_ids.ids)]
+            'invoice_done_notify_customer': self.invoice_done_notify_customer
         })
         magento_instance.write(values)

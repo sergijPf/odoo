@@ -1034,8 +1034,8 @@ class MagentoProductProduct(models.Model):
                 attr_dict.update({self.to_upper(attrs.x_attribute_name): self.to_upper(attrs.x_attribute_value)})
         return attr_dict
 
-    def get_product_price_for_website(self, website, product):
-        price_and_rule = website.pricelist_id.get_product_price_rule(product, 1.0, False)
+    def get_product_price_for_website(self, website, product, qty=1):
+        price_and_rule = website.pricelist_id.get_product_price_rule(product, qty, False)
 
         return 0 if price_and_rule[1] is False else price_and_rule[0]
 

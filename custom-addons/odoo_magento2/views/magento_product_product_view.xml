@@ -249,12 +249,13 @@
         </field>
     </record>
 
-    <menuitem id="menu_magento_catalog_parent" name="Catalog" parent="odoo_magento2.menu_magento_root" sequence="3"/>
+    <menuitem id="menu_magento_catalog_parent" name="Catalog"
+              parent="odoo_magento2.menu_magento_root" sequence="3"/>
 
     <menuitem id="menu_product_details" name="Products"
-            sequence="1" parent="odoo_magento2.menu_magento_catalog_parent"/>
+              sequence="1" parent="odoo_magento2.menu_magento_catalog_parent"/>
 
     <menuitem id="menu_item_magento_product_variants" name="Simple Products"
-        parent="odoo_magento2.menu_product_details" sequence="3"
-        action="magento_product_normal_action_sell"/>
+              parent="odoo_magento2.menu_product_details" sequence="3"
+              action="magento_product_normal_action_sell"/>
 </odoo>

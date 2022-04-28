@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="magento_delivery_carrier_tree_view" model="ir.ui.view">
+        <field name="name">magento.delivery.carrier.tree.view</field>
+        <field name="model">magento.delivery.carrier</field>
+        <field name="arch" type="xml">
+            <tree create="0">
+                <field name="magento_instance_id" class="oe_inline" />
+                <field name="carrier_label" string="Label" class="oe_inline"/>
+                <field name="magento_carrier_title" string="Title" class="oe_inline"/>
+                <field name="carrier_code" string="Code" class="oe_inline"/>
+            </tree>
+        </field>
+    </record>
+
     <record id="view_magento_delivery_carrier_form" model="ir.ui.view">
         <field name="name">magento.delivery.carrier.form</field>
         <field name="model">delivery.carrier</field>
@@ -47,5 +60,5 @@
     </record>
 
     <menuitem action="action_delivery_method_magento" id="menu_action_delivery_methods"
-              parent="odoo_magento2.menu_instance_details" sequence="5"/>
+              parent="odoo_magento2.menu_instance_details" sequence="3"/>
 </odoo>

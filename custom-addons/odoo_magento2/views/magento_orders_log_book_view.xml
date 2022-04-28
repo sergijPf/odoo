@@ -22,8 +22,7 @@
         <field name="name">Magento Orders Log Book Tree</field>
         <field name="model">magento.orders.log.book</field>
         <field name="arch" type="xml">
-            <tree create="0" delete="0"  decoration-danger="active and not processing_error">
-                <field name="processing_error" invisible="1"/>
+            <tree create="0" delete="0">
                 <field name="active" invisible="1"/>
                 <field name="magento_instance_id"/>
                 <field name="magento_website_id"/>
@@ -77,7 +76,7 @@
     </record>
 
     <menuitem id="menu_magento_log" parent="menu_magento_root"
-                  name="Logs" sequence="9" />
+              name="Logs" sequence="9" />
 
     <menuitem id="menu_order_log_details" name="Orders info"
             sequence="5" parent="odoo_magento2.menu_magento_log"/>

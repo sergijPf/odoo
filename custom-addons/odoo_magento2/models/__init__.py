@@ -12,7 +12,6 @@ from . import sale_order
 from . import sale_order_line
 from . import res_partner
 from . import stock
-# from . import import_magento_order_status
 from . import account
 from . import magento_financial_status
 from . import magento_res_partner

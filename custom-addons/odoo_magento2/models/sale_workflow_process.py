@@ -26,8 +26,6 @@ class SaleWorkflowProcess(models.Model):
         ('direct', 'Deliver each product when available'),
         ('one', 'Deliver all products at once')
     ], string='Shipping Policy', default="one")
-    # magento_order_type = fields.Many2one('import.magento.order.status', string='Magento Order Status',
-    #                                      help="Select order status for that you want to create auto workflow.")
 
     @api.onchange("validate_order")
     def onchange_validate_order(self):
@@ -35,16 +33,12 @@ class SaleWorkflowProcess(models.Model):
             self.create_invoice = False
 
     @api.model
-    def auto_workflow_process(self, auto_workflow_process_id=False, order_ids=[]):
+    def auto_workflow_process(self, order_ids=[]):
         """
         This method will find draft sale orders which are not having invoices yet, confirmed it and done the payment
-        according to the auto invoice workflow configured in sale order
-        :param auto_workflow_process_id: auto workflow process id
-        :param order_ids: ids of sale orders
+        according to configured 'auto order workflow' settings
         """
-        sale_order_obj = self.env['sale.order']
-
-        workflow_process_recs = self.search([]) if not auto_workflow_process_id else self.browse(auto_workflow_process_id)
+        workflow_process_recs = self if self else self.search([])
 
         if not order_ids:
             domain = [('auto_workflow_process_id', 'in', workflow_process_recs.ids),
@@ -54,11 +48,11 @@ class SaleWorkflowProcess(models.Model):
             domain = [('auto_workflow_process_id', 'in', workflow_process_recs.ids),
                       ('id', 'in', order_ids)]
 
-        orders = sale_order_obj.search(domain)
+        orders = self.env['sale.order'].search(domain)
 
         try:
             orders.process_orders_and_invoices()
-        except Exception as err:
-            return err
+        except Exception as e:
+            return False
 
-        return ''
+        return True
