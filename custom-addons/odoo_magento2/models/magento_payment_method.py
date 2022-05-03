@@ -15,22 +15,10 @@ class MagentoPaymentMethod(models.Model):
     def _default_company_id(self):
         return self.env.company
 
-    def _default_payment_term(self):
-        payment_term = self.env.ref("account.account_payment_term_immediate")
-        return payment_term.id if payment_term else False
-
     magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', ondelete="cascade")
     payment_method_code = fields.Char(string='Payments Method Code', help="Code received from Magento")
     payment_method_name = fields.Char(string='Payments Method Name')
     company_id = fields.Many2one('res.company', 'Company', default=_default_company_id, help="Magento Company Id.")
-    payment_term_id = fields.Many2one('account.payment.term', string='Payment Term', default=_default_payment_term,
-                                      help="Payment term to be used while Sales Order processing")
-    create_invoice_on = fields.Selection([
-        ('open', 'Validate'),
-        ('in_payment_paid', 'In-Payment/Paid')
-    ], string='Create Invoice on action',
-        help="Should the invoice be created in Magento when it is validated or when it is In-Payment/Paid in odoo?\n"
-             "If it's blank then invoice will not be exported in Magento for this Payment Method.")
     import_rule = fields.Selection([
         ('always', 'Always'),
         ('never', 'Never'),

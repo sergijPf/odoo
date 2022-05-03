@@ -35,17 +35,17 @@ class SaleWorkflowProcess(models.Model):
     @api.model
     def auto_workflow_process(self, order_ids=[]):
         """
-        This method will find draft sale orders which are not having invoices yet, confirmed it and done the payment
-        according to configured 'auto order workflow' settings
+        This method will find draft sale orders which are not having invoices yet, confirmed it according to
+        configured 'order auto workflow' settings
         """
-        workflow_process_recs = self if self else self.search([])
+        workflow_process = self if self else self.search([])
 
         if not order_ids:
-            domain = [('auto_workflow_process_id', 'in', workflow_process_recs.ids),
+            domain = [('auto_workflow_process_id', 'in', workflow_process.ids),
                       ('state', 'not in', ('done', 'cancel', 'sale')),
                       ('invoice_status', '!=', 'invoiced')]
         else:
-            domain = [('auto_workflow_process_id', 'in', workflow_process_recs.ids),
+            domain = [('auto_workflow_process_id', 'in', workflow_process.ids),
                       ('id', 'in', order_ids)]
 
         orders = self.env['sale.order'].search(domain)
@@ -53,6 +53,4 @@ class SaleWorkflowProcess(models.Model):
         try:
             orders.process_orders_and_invoices()
         except Exception as e:
-            return False
-
-        return True
+            return str(e)

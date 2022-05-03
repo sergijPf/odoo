@@ -29,7 +29,7 @@ class MagentoResPartner(models.Model):
         ('exported', 'Exported')
     ], string="Import/Export status")
 
-    def get_magento_customer_from_magento_layer(self, instance, customer_dict, odoo_partner, website):
+    def get_magento_res_partner(self, instance, customer_dict, odoo_partner, website):
         group_id = str(customer_dict.get("customer_group_id"))
         group_name = customer_dict.get("customer_group_name", '')
         billing_address = customer_dict.get("billing_address")
@@ -40,50 +40,49 @@ class MagentoResPartner(models.Model):
 
         if customer_rec:
             customer_group_rec = customer_rec.customer_group_id
+            customer_addresses = customer_rec.customer_address_ids
+
             if str(customer_group_rec.group_id) != str(group_id):
                 customer_rec.write({
                     'customer_group_id': customer_group_rec.get_customer_group(instance, group_id, group_name).id
                 })
 
             # check customer billing address(magento layer) / invoice address(odoo) exist
-            b_entity_id = str(billing_address.get('entity_id'))
-            if not customer_rec.customer_address_ids.filtered(lambda x: x.magento_customer_address_id == b_entity_id and
-                                                                        x.address_type == 'billing'):
-                customer_rec.customer_address_ids.create_and_link_customer_address(
+            b_address_id = str(billing_address.get('customer_address_id'))
+
+            if not customer_addresses.filtered(
+                    lambda x: x.magento_customer_address_id == b_address_id and x.address_type == 'billing'):
+                customer_addresses.create_customers_address(
                     billing_address, customer_rec, odoo_partner, 'billing'
                 )
             # check customer shipping addresses(magento_layer) / delivery address(odoo) exist
             for address in delivery_addresses:
                 addr = address.get('shipping', {}).get('address', {})
-                s_entity_id = str(addr.get('entity_id'))
-                if not customer_rec.customer_address_ids.filtered(lambda x: x.magento_customer_address_id == s_entity_id and
-                                                                            x.address_type == 'shipping'):
-                    customer_rec.customer_address_ids.create_and_link_customer_address(
+                s_address_id = str(addr.get('customer_address_id'))
+
+                if not customer_addresses.filtered(
+                        lambda x: x.magento_customer_address_id == s_address_id and x.address_type == 'shipping'):
+                    customer_addresses.create_customers_address(
                         addr, customer_rec, odoo_partner, 'shipping'
                     )
         else:
             group_id_in_ml = self.customer_group_id.get_customer_group(instance, group_id, group_name)
 
-            try:
-                customer_rec = self.create({
-                    'magento_customer_id': customer_id,
-                    "customer_group_id": group_id_in_ml.id,
-                    'partner_id': odoo_partner.id,
-                    'magento_instance_id': instance.id,
-                    'status': 'imported',
-                    'magento_website_id':  website.id
-                })
-            except Exception:
-                return
+            customer_rec = self.create({
+                'magento_customer_id': customer_id,
+                "customer_group_id": group_id_in_ml.id,
+                'partner_id': odoo_partner.id,
+                'magento_instance_id': instance.id,
+                'status': 'imported',
+                'magento_website_id':  website.id
+            })
+            customer_addresses = customer_rec.customer_address_ids
 
-            customer_rec.customer_address_ids.create_and_link_customer_address(
-                billing_address, customer_rec, odoo_partner, 'billing'
-            )
+            customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner, 'billing')
+
             for address in delivery_addresses:
                 addr = address.get('shipping', {}).get('address', {})
-                customer_rec.customer_address_ids.create_and_link_customer_address(
-                    addr, customer_rec, odoo_partner, 'shipping'
-                )
+                customer_addresses.create_customers_address(addr, customer_rec, odoo_partner, 'shipping')
 
         return customer_rec
     #
@@ -187,7 +186,7 @@ class MagentoCustomerAddresses(models.Model):
     street2 = fields.Char(related="odoo_partner_id.street2", string="Street2")
     zip = fields.Char(related="odoo_partner_id.zip", string="Postcode *")
 
-    def create_and_link_customer_address(self, address_dict, magento_customer, odoo_partner, addr_type):
+    def create_customers_address(self, address_dict, magento_customer, odoo_partner, addr_type):
         country_code = address_dict.get('country_id')
         country = self.env['res.country'].search(['|', ('code', '=', country_code),
                                                   ('name', '=ilike', country_code)], limit=1)
@@ -216,15 +215,11 @@ class MagentoCustomerAddresses(models.Model):
         })
 
         # create address in magento layer
-        address_id = self.create({
+        self.create({
             'address_type': addr_type,
-            'magento_customer_address_id': address_dict.get('entity_id'),
+            'magento_customer_address_id': address_dict.get('customer_address_id'),
             'customer_id': magento_customer.id,
             'odoo_partner_id': odoo_address.id
-        })
-
-        magento_customer.write({
-            'customer_address_ids': [(4, address_id.id)]
         })
 
     @staticmethod

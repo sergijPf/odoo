@@ -5,9 +5,6 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <field name="fiscal_position_id" options="{'no_create': True}" position="after">
-                <field name="auto_workflow_process_id"/>
-            </field>
             <xpath expr="//header" position="inside">
                 <button name="cancel_order_in_magento" type="object" string="Cancel In Magento"
                         attrs="{'invisible' : ['|', '|', ('magento_instance_id','=',False),

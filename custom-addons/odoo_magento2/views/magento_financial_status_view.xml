@@ -1,29 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-<!--    <record id="financial_status_process_view_form" model="ir.ui.view">-->
-<!--        <field name="name">financial_status_form_view</field>-->
-<!--        <field name="model">magento.financial.status</field>-->
-<!--        <field eval="16" name="priority"/>-->
-<!--        <field name="arch" type="xml">-->
-<!--            <form name="magento_financial_status_form" string="magento_financial_status_process">-->
-<!--                <group>-->
-<!--                    <group>-->
-<!--                        <field name="auto_workflow_id" required="1"/>-->
-<!--                        <field name="magento_instance_id" required="1"-->
-<!--                               options="{'no_create':True,'no_create_edit': True}"-->
-<!--                               domain="[('active','=',True)]"/>-->
-<!--                        <field name="payment_method_id" required="1"-->
-<!--                               domain="[('magento_instance_id','=',magento_instance_id)]"/>-->
-<!--                    </group>-->
-<!--                    <group>-->
-<!--                        <field name="financial_status" required="1"/>-->
-<!--&lt;!&ndash;                        <field name="payment_term_id" required="1"/>&ndash;&gt;-->
-<!--                    </group>-->
-<!--                </group>-->
-<!--            </form>-->
-<!--        </field>-->
-<!--    </record>-->
-
     <record id="magento_financial_status_process_view_tree" model="ir.ui.view">
         <field name="name">financial_status_tree_view</field>
         <field name="model">magento.financial.status</field>
@@ -35,7 +11,6 @@
                        domain="[('active','=',True)]"/>
                 <field name="payment_method_id" options="{'no_create':True}" required="1"
                        domain="[('magento_instance_id','=',magento_instance_id)]"/>
-<!--                <field name="payment_term_id" required="1"/>-->
                 <field name="auto_workflow_id" required="1"/>
                 <field name="financial_status" required="1"/>
             </tree>

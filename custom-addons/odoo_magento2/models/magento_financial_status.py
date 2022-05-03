@@ -11,7 +11,7 @@ class MagentoFinancialStatus(models.Model):
         ('pending', 'Pending Orders'),
         ('processing', 'Processing Orders')
     ], string="Magento Order Status", help="Allowed Orders to import with next statuses: pending, processing")
-    auto_workflow_id = fields.Many2one("sale.workflow.process", "Auto Order Workflow", ondelete="restrict")
+    auto_workflow_id = fields.Many2one("sale.workflow.process", "Order Auto Workflow", ondelete="restrict")
     payment_method_id = fields.Many2one("magento.payment.method", "Payment Method", ondelete="restrict")
     magento_instance_id = fields.Many2one("magento.instance", string="Magento Instance", ondelete="cascade")
     active = fields.Boolean("Active", default=True)

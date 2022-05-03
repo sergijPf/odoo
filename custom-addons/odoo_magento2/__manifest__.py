@@ -38,7 +38,6 @@
         'views/magento_customer_groups_view.xml',
         'views/magento_invoices_log_book_view.xml',
         'views/magento_shipments_log_book_view.xml',
-        'views/account_fiscal_position.xml',
         'views/stock_quant_package_view.xml',
         'views/sale_workflow_process_view.xml',
         'views/product_template_view.xml',
@@ -49,8 +48,7 @@
         'wizard_views/res_config_magento_instance.xml',
         'wizard_views/res_config_settings.xml',
         'wizard_views/magento_product_categories_configuration_view.xml',
-        'wizard_views/product_page_attributes_update_view.xml',
-        'wizard_views/magento_customer_group_update_view.xml'
+        'wizard_views/product_page_attributes_update_view.xml'
     ],
 
     'assets': {

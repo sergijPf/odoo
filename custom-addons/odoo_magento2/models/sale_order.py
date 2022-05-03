@@ -8,54 +8,15 @@ from ..python_library.api_request import req
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    # def _get_magento_order_status(self):
-    #     for order in self:
-    #         if order.magento_instance_id:
-    #             pickings = order.picking_ids.filtered(lambda x: x.state != "cancel")
-    #             if pickings:
-    #                 outgoing_picking = pickings.filtered(lambda x: x.location_dest_id.usage == "customer")
-    #                 if all(outgoing_picking.mapped("is_exported_to_magento")):
-    #                     order.updated_in_magento = True
-    #                     continue
-    #
-    #             stock_moves = order.order_line.move_ids.filtered(lambda x: not x.picking_id and x.state == 'done')
-    #             if stock_moves:
-    #                 order.updated_in_magento = True
-    #                 continue
-    #             order.updated_in_magento = False
-    #             continue
-    #         order.updated_in_magento = False
-    #
-    # def _search_magento_order_ids(self, operator, value):
-    #     query = """select so.id from stock_picking sp
-    #                 inner join sale_order so on so.procurement_group_id=sp.group_id
-    #                 inner join stock_location on stock_location.id=sp.location_dest_id and stock_location.usage='customer'
-    #                 where sp.is_exported_to_magento %s true and sp.state != 'cancel'
-    #                 """ % operator
-    #     if operator == '=':
-    #         query += """union all
-    #                 select so.id from sale_order as so
-    #                 inner join sale_order_line as sl on sl.order_id = so.id
-    #                 inner join stock_move as sm on sm.sale_line_id = sl.id
-    #                 where sm.picking_id is NULL and sm.state = 'done' and so.magento_instance_id notnull"""
-    #     self._cr.execute(query)
-    #     results = self._cr.fetchall()
-    #     order_ids = []
-    #     for result_tuple in results:
-    #         order_ids.append(result_tuple[0])
-    #     order_ids = list(set(order_ids))
-    #     return [('id', 'in', order_ids)]
-
     magento_instance_id = fields.Many2one('magento.instance', string="Magento Instance")
     magento_order_id = fields.Char(string="Order Id")
+    magento_order_status = fields.Char(string="Order Status")
     magento_website_id = fields.Many2one("magento.website", string="Magento Website")
     magento_order_reference = fields.Char(string="Magento Order Ref.", help="Order Reference in Magento")
     store_id = fields.Many2one('magento.storeview', string="Magento Storeview")
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Payment Method")
     magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Shipping Method")
     order_transaction_id = fields.Char(string="Order Transaction ID", help="Magento Order Transaction ID")
-    # updated_in_magento = fields.Boolean(string="Order fulfilled in magento", compute="_get_magento_order_status",
-    #                                     search="_search_magento_order_ids", copy=False)
     magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
     magento_order_log_book_ids = fields.One2many('magento.orders.log.book', 'sale_order_id', "Log Error Messages")
     auto_workflow_process_id = fields.Many2one("sale.workflow.process", string="Workflow Process", copy=False)
@@ -155,28 +116,29 @@ class SaleOrder(models.Model):
     def _prepare_invoice(self):
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
 
-        if self.auto_workflow_process_id and self.auto_workflow_process_id.sale_journal_id:
-            invoice_vals.update({'journal_id': self.auto_workflow_process_id.sale_journal_id.id})
-
-        if self.magento_payment_method_id:
-            invoice_vals['magento_payment_method_id'] = self.magento_payment_method_id.id
-
         if self.magento_instance_id:
-            invoice_vals.update({
-                'magento_instance_id': self.magento_instance_id.id,
-                'is_exported_to_magento': False
-            })
+            invoice_vals.update({'magento_instance_id': self.magento_instance_id.id})
+
+            if self.magento_order_status == 'processing':
+                invoice_vals.update({'is_in_magento': True})
+
+            if self.magento_payment_method_id:
+                invoice_vals['magento_payment_method_id'] = self.magento_payment_method_id.id
+
+            if self.auto_workflow_process_id and self.auto_workflow_process_id.sale_journal_id:
+                invoice_vals.update({'journal_id': self.auto_workflow_process_id.sale_journal_id.id})
+
         return invoice_vals
 
     def process_sales_order_creation(self, magento_instance, sales_order):
         order_ref = sales_order.get('increment_id')
-        so_log_book_rec = self.env['magento.orders.log.book'].with_context(active_test=False).search([
-            ('magento_instance_id', '=', magento_instance.id),
-            ('magento_order_ref', '=', order_ref)
-        ])
         magento_order = self.search([
             ('magento_instance_id', '=', magento_instance.id),
             ('magento_order_reference', '=', order_ref)
+        ])
+        so_log_book_rec = self.env['magento.orders.log.book'].with_context(active_test=False).search([
+            ('magento_instance_id', '=', magento_instance.id),
+            ('magento_order_ref', '=', order_ref)
         ])
         storeview = magento_instance.magento_website_ids.store_view_ids.filtered(
             lambda x: x.magento_storeview_id == str(sales_order.get('store_id'))
@@ -195,32 +157,26 @@ class SaleOrder(models.Model):
             self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
             return False
 
-        order_values, message = self.prepare_and_generate_sales_order_values(
+        order_values = self.prepare_and_generate_sales_order_values(
             magento_instance, website, sales_order, odoo_partner, auto_workflow
         )
 
-        if message:
-            self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
-            return False
-
-        # check if order exist or create new
-        if magento_order:
-                magento_order.write(order_values)
-        else:
+        # proceed order creation/update
+        if not magento_order or magento_order.state in ['draft', 'sent']:
             try:
-                magento_order = self.create(order_values)
+                if magento_order:
+                    magento_order.write(order_values)
+                else:
+                    magento_order = self.create(order_values)
             except Exception as e:
-                message = str(e)
+                message = "Error while creating/updating sales order in Magento: " + str(e)
+                self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
+                return False
 
-        if not magento_order:
-            message = "Error while creating sales order in Magento: " + str(message)
-            self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
-            return False
-
-        message = magento_order.create_magento_sales_order_lines(magento_instance, sales_order, magento_order)
-        if message:
-            self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
-            return False
+            message = magento_order.create_magento_sales_order_lines(magento_instance, sales_order, magento_order)
+            if message:
+                self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
+                return False
 
         auto_workflow = magento_order.auto_workflow_process_id
         if auto_workflow:
@@ -235,8 +191,10 @@ class SaleOrder(models.Model):
         order_lines = sales_order.get('items')
         payment_method = sales_order.get('payment', {}).get('method')
         odoo_partner = False
-        allowed_flow, message = self.check_payment_method_and_order_flow_configurations(instance, sales_order,
-                                                                                        payment_method)
+
+        allowed_flow, message = self.check_payment_method_and_order_flow_configurations(
+            instance, sales_order, payment_method
+        )
         if message:
             return allowed_flow, odoo_partner, message
 
@@ -244,11 +202,15 @@ class SaleOrder(models.Model):
         if message:
             return allowed_flow, odoo_partner, message
 
+        if not website.warehouse_id:
+            return allowed_flow, odoo_partner, ("Warehouse is not set for the %s website.\n Please configure it first: "
+                        "Settings >> Magento Websites. ") % website.name
+
         message = self.check_pricelist_and_currency_of_sales_order(sales_order, website)
         if message:
             return allowed_flow, odoo_partner, message
 
-        odoo_partner, magento_partner, message = self.env['res.partner'].process_customer_creation_or_update(
+        odoo_partner, magento_partner, message = self.env['res.partner'].check_customer_and_addresses_exist(
             instance, sales_order, website
         )
         if message:
@@ -284,7 +246,7 @@ class SaleOrder(models.Model):
                                                                             order_status)
 
         if not allowed_flow.auto_workflow_id:
-            return False, "Order %s was not proceeded due to missed Auto Order Workflow configuration for payment " \
+            return False, "Order %s was not proceeded due to missed Order Auto Workflow configuration for payment " \
                           " method - %s and order's financial status - %s" % (order_ref, payment_method, order_status)
 
         import_rule = payment_option.import_rule
@@ -369,13 +331,8 @@ class SaleOrder(models.Model):
         return ''
 
     def prepare_and_generate_sales_order_values(self, instance, website, sales_order, odoo_partner, auto_workflow):
-        if not website.warehouse_id:
-            return {}, ("Warehouse is not set for the %s website.\n Please configure it first: Settings >> "
-                        "Magento Websites. ") % website.name
-
         so_increment_id = sales_order.get('increment_id', '')
         workflow_process_id = auto_workflow.auto_workflow_id
-        payment_term_id = auto_workflow.payment_term_id
         shipping = sales_order.get('extension_attributes').get('shipping_assignments')
         shipping_method = shipping[0].get('shipping').get('method')
 
@@ -414,30 +371,27 @@ class SaleOrder(models.Model):
             'warehouse_id': website.warehouse_id.id,
             'carrier_id': odoo_delivery_carrier.id if odoo_delivery_carrier else False
         }
-        order_vals = self.pre_generate_sales_order_values(order_vals)
+
+        sale_order = self.env['sale.order']
+        new_record = sale_order.new(order_vals)
+        new_record.onchange_partner_id()
+        new_record.onchange_partner_shipping_id()  # updates fiscal position
+        order_vals = sale_order._convert_to_write(new_record._cache)
+
         order_vals.update({
             'name': "%s%s" % (store_view and store_view.sale_prefix or '', so_increment_id),
             'magento_instance_id': instance.id,
             'magento_website_id': website.id,
-            'payment_term_id': payment_term_id.id if payment_term_id else False,
             'store_id': store_view.id if store_view else False,
             'auto_workflow_process_id': workflow_process_id.id,
             'magento_payment_method_id': payment_method.id,
             'magento_shipping_method_id': mag_deliv_carrier.id,
             'magento_order_id': sales_order.get('entity_id'),
+            'magento_order_status': sales_order.get('status'),
             'magento_order_reference': so_increment_id
         })
 
-        return order_vals, ''
-
-    def pre_generate_sales_order_values(self, vals):
-        sale_order = self.env['sale.order']
-
-        new_record = sale_order.new(vals)
-        new_record.onchange_partner_id()
-        new_record.onchange_partner_shipping_id() # updates fiscal position
-
-        return sale_order._convert_to_write(new_record._cache)
+        return order_vals
 
     def create_magento_sales_order_lines(self, instance, sales_order, magento_order):
         sales_order_line = self.env['sale.order.line']

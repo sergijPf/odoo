@@ -32,17 +32,17 @@
                 <button name="export_single_invoice_to_magento" string="Export Invoice To Magento"
                         type="object" class="oe_highlight"
                         attrs="{'invisible':['|','|','|',
+                        ('magento_instance_id','=',False),
+                        ('is_in_magento','=',True),
                         ('payment_state','not in',['in_payment', 'paid']),
-                        ('move_type','!=','out_invoice'),
-                        ('is_exported_to_magento','=',True),
-                        ('magento_instance_id','=',False)]}"/>
+                        ('move_type','!=','out_invoice')]}"/>
             </xpath>
-            <xpath expr="//page[@name='other_info']/group/group[@name='accounting_info_group']" position="after">
-                <group string="Magento" name="magento_info_group">
+            <xpath expr="//group[@id='other_tab_group']" position="inside">
+                <group string="Magento" name="magento_info_group"
+                       attrs="{'invisible':[('magento_instance_id','=',False)]}">
                     <field name="magento_instance_id" readonly="1"/>
-                    <field name="magento_invoice_id"/>
-                    <field name="magento_payment_method_id"/>
-                    <field name="is_exported_to_magento" readonly="1"/>
+                    <field name="magento_payment_method_id" readonly="1"/>
+                    <field name="is_in_magento" readonly="1"/>
                 </group>
             </xpath>
         </field>
@@ -59,7 +59,7 @@
         </field>
     </record>
 
-    <record id="action_magento_invoice_tree1" model="ir.actions.act_window" >
+    <record id="action_magento_invoice_tree" model="ir.actions.act_window" >
         <field name="name">Customer Invoices</field>
         <field name="res_model">account.move</field>
         <field name="view_mode">tree,form</field>
@@ -84,5 +84,5 @@
 
     <menuitem id="menu_magento_invoice" name="Invoices"
         parent="menu_invoice_details_parent" sequence="1"
-        action="action_magento_invoice_tree1"/>
+        action="action_magento_invoice_tree"/>
 </odoo>

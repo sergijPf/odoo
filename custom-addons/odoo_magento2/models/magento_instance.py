@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
+import secrets
+import string
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -40,7 +41,7 @@ class MagentoInstance(models.Model):
     ], string="Catalog Price Scopes", help="Scope of Price in Magento", default='website')
     pricelist_id = fields.Many2one('product.pricelist', "Pricelist", help="Product Price is set in selected Pricelist")
     access_token = fields.Char(string="Magento Access Token")
-    last_update_stock_time = fields.Datetime(string="Last Update Product Stock Time")
+    odoo_token = fields.Char(string="Odoo Auto-generated Token", help="Token to be used while Sale Orders import")
     company_id = fields.Many2one('res.company', string='Magento Company')
     invoice_done_notify_customer = fields.Boolean(string="Invoices Done Notify customer", default=False,
                                                   help="Send email while export invoice")
@@ -69,7 +70,6 @@ class MagentoInstance(models.Model):
         if magento_instance_id:
             instance = self.browse(magento_instance_id)
             self.env['magento.product.product'].export_products_stock_to_magento(instance)
-            instance.last_update_stock_time = datetime.now()
 
     @api.model
     def _scheduler_update_product_prices(self, args=None):
@@ -87,7 +87,7 @@ class MagentoInstance(models.Model):
 
         if magento_instance_id:
             instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
-            self.env['stock.picking'].export_shipments_to_magento(instance)
+            self.env['stock.picking'].export_shipments_to_magento(instance, True)
 
     @api.model
     def _scheduler_export_invoice(self, args=None):
@@ -96,7 +96,7 @@ class MagentoInstance(models.Model):
 
         if magento_instance_id:
             instance = self.env[MAGENTO_INSTANCE].browse(magento_instance_id)
-            self.env['account.move'].export_invoices_to_magento(instance)
+            self.env['account.move'].export_invoices_to_magento(instance, True)
 
     @staticmethod
     def _append_rest_suffix_to_url(location_url):
@@ -113,6 +113,18 @@ class MagentoInstance(models.Model):
             vals['magento_url'] = vals['magento_url'].rstrip('/')
 
         return super(MagentoInstance, self).write(vals)
+
+    def action_generate_token(self):
+        alphabet = string.ascii_letters + string.digits
+
+        while True:
+            token = ''.join(secrets.choice(alphabet) for i in range(30))
+            if (any(c.islower() for c in token)
+                    and any(c.isupper() for c in token)
+                    and sum(c.isdigit() for c in token) >= 3):
+                break
+
+        self.odoo_token = token
 
     def list_of_delivery_method(self):
         tree_view = self.env.ref('odoo_magento2.magento_delivery_carrier_tree_view').id

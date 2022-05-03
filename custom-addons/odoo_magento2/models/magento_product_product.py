@@ -213,6 +213,8 @@ class MagentoProductProduct(models.Model):
             return True
 
     def export_product_prices_to_magento(self, instances):
+        result = False
+
         for instance in instances:
             res = []
             special_prices_obj = self.env['magento.special.pricing']
@@ -236,10 +238,17 @@ class MagentoProductProduct(models.Model):
 
             if res:
                 special_prices_obj.log_price_errors(instance, res, 'Mass Export')
-                return True
+                result = True
             else:
                 special_prices_obj.remove_log_errors(instance, 'Mass Export')
-                return False
+
+        if result:
+            return {
+                'name': 'Product Prices Export Error Logs',
+                'view_mode': 'tree,form',
+                'res_model': 'magento.prices.log.book',
+                'type': 'ir.actions.act_window'
+            }
 
     def prepare_product_prices_data_to_export(self, instance):
         base_prices = []

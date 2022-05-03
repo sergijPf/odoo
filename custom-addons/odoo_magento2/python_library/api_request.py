@@ -18,8 +18,12 @@ def req(backend, path, method='GET', data=None, params=None):
     verify_ssl = backend.magento_verify_ssl
     api_url = '%s%s' % (location_url, path)
     headers = {
-        'Accept': '*/*', 'Content-Type': 'application/json',
-        'User-Agent': 'My User Agent 1.0', 'Authorization': 'Bearer %s' % backend.access_token}
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'User-Agent': 'My User Agent 1.0',
+        'Authorization': 'Bearer %s' % backend.access_token
+    }
+
     try:
         _logger.info('Data pass to Magento : %s', data)
         if verify_ssl:

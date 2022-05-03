@@ -11,18 +11,12 @@
                     </h1>
                     <group name="general">
                         <group name="config">
-                            <field name="payment_method_code" string="Payment Method Code" readonly="1"/>
                             <field name="company_id" string="Company"/>
-                        </group>
-                        <group>
-                            <field name="import_rule"/>
-                            <field name="payment_term_id"/>
-                        </group>
-                    </group>
-                    <group name="magento">
-                        <group>
                             <field name="magento_instance_id" required="1" options="{'no_create':True}"/>
-                            <field name="create_invoice_on" string="Create Invoice in Magento"/>
+                            <field name="payment_method_code" string="Payment Method Code"/>
+                        </group>
+                        <group name="inputs">
+                            <field name="import_rule"/>
                         </group>
                     </group>
                 </sheet>
@@ -65,7 +59,7 @@
     </record>
 
     <record id="act_auto_payment_method_form" model="ir.actions.act_window">
-        <field name="name">Auto Orders Workflow</field>
+        <field name="name">Orders Auto Workflow</field>
         <field name="res_model">sale.workflow.process</field>
         <field name="view_mode">tree,form</field>
     </record>

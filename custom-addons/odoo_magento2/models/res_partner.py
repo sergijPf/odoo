@@ -10,15 +10,15 @@ class ResPartner(models.Model):
                                          help="Used for identified that the customer is imported from Magento store.")
     magento_res_partner_ids = fields.One2many('magento.res.partner', "partner_id", string='Magento Customers')
 
-    def process_customer_creation_or_update(self, instance, customer_dict, website):
+    def check_customer_and_addresses_exist(self, instance, customer_dict, website):
         message = ""
-        odoo_partner = self.get_odoo_customer(customer_dict, website)
+        odoo_partner = self.get_odoo_res_partner(customer_dict, website)
 
         if not odoo_partner:
             message = 'Error while Magento Customer creation in Odoo.'
             return False, False, message
 
-        magento_partner = self.env['magento.res.partner'].get_magento_customer_from_magento_layer(
+        magento_partner = self.env['magento.res.partner'].get_magento_res_partner(
             instance, customer_dict, odoo_partner, website
         )
         if not magento_partner:
@@ -27,7 +27,7 @@ class ResPartner(models.Model):
 
         return odoo_partner, magento_partner, message
 
-    def get_odoo_customer(self, customer_dict, website):
+    def get_odoo_res_partner(self, customer_dict, website):
         customer_email = customer_dict.get("customer_email")
         odoo_partner = self.with_context(active_test=False).search([('email', '=', customer_email),
                                                                     ('type', '=', 'contact'),

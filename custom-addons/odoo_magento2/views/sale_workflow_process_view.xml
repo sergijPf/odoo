@@ -10,12 +10,9 @@
             <form string="sale_workflow_process">
                 <sheet>
                     <group>
-                        <group>
+                        <h3>
                             <field name="name" required="1"/>
-                        </group>
-                        <group>
-                            <field name="sale_journal_id" required="1"/>
-                        </group>
+                        </h3>
                     </group>
                     <group>
                         <group string="Workflow Option">
@@ -23,7 +20,8 @@
                             <field name="create_invoice" widget="boolean_toggle"
                                    attrs="{'invisible':[('validate_order','=',False)]}"/>
                         </group>
-                        <group string="Order Configuration">
+                        <group string="Order/Invoice Configuration">
+                            <field name="sale_journal_id" required="1"/>
                             <field name="picking_policy" required="1"/>
                         </group>
                     </group>

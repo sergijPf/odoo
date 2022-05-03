@@ -10,18 +10,19 @@
                     <button name="export_single_shipment_to_magento" string="Export Shipment to Magento"
                             type="object" class="oe_highlight"
                             attrs="{'invisible': ['|','|','|',
-                            ('magento_instance_id','=',False),
-                            ('state','!=','done'),
-                            ('is_exported_to_magento','=',True),
-                            ('is_shipment_exportable','=',False)]}"/>
+                             ('magento_instance_id','=',False),
+                             ('state','!=','done'),
+                             ('is_in_magento','=',True),
+                             ('is_shipment_exportable','=',False)]}"/>
                 </xpath>
                 <xpath expr="//notebook[last()]" position="inside">
-                    <page name="magento_info" string="Magento Info" attrs="{'invisible' : [('is_magento_picking','!=',True)]}">
+                    <page name="magento_info" string="Magento Info"
+                          attrs="{'invisible' : [('is_magento_picking','!=',True)]}">
                         <group>
                             <field name="is_magento_picking" invisible="1"/>
                             <field name="magento_instance_id" readonly="1"/>
                             <field name="magento_shipping_id" readonly="1"/>
-                            <field name="is_exported_to_magento" readonly="1"/>
+                            <field name="is_in_magento" readonly="1"/>
                         </group>
                     </page>
                 </xpath>
@@ -46,19 +47,18 @@
             </field>
         </record>
 
-        <!-- Inherited Search View Section -->
         <record id="magento_view_stock_picking_filter" model="ir.ui.view">
             <field name="name">stock.picking.search</field>
             <field name="model">stock.picking</field>
             <field name="inherit_id" ref="stock.view_picking_internal_search"/>
             <field name="arch" type="xml">
                 <xpath expr="//filter[@name='status']" position="after">
-                    <filter string="Magento Instances" name="magento_instance_id" domain="[]" context="{'group_by':'magento_instance_id'}" />
+                    <filter string="Magento Instances" name="magento_instance_id"
+                            context="{'group_by':'magento_instance_id'}" />
                 </xpath>
             </field>
         </record>
 
-        <!-- dashboard -->
         <record id="action_magento_stock_picking_tree" model="ir.actions.act_window">
             <field name="name">Delivery Orders</field>
             <field name="res_model">stock.picking</field>
@@ -83,39 +83,6 @@
                     </p>
                 </div>
             </field>
-        </record>
-
-        <record id="action_magento_picking_view_partially_available" model="ir.actions.act_window">
-            <field name="name">Delivery Orders</field>
-            <field name="res_model">stock.picking</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="view_mode">tree,form</field>
-            <field name="domain">[('is_magento_picking','=','True'),
-                ('state','=','partially_available'),
-                ('magento_instance_id','=',active_id)]</field>
-            <field name="search_view_id" ref="stock.view_picking_internal_search" />
-        </record>
-
-        <record id="action_magento_picking_view_assigned" model="ir.actions.act_window">
-            <field name="name">Delivery Orders</field>
-            <field name="res_model">stock.picking</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="view_mode">tree,form</field>
-            <field name="domain">[('is_magento_picking','=','True'),
-                ('state','=','assigned'),
-                ('magento_instance_id','=',active_id)]</field>
-            <field name="search_view_id" ref="stock.view_picking_internal_search" />
-        </record>
-
-        <record id="action_magento_picking_view_done" model="ir.actions.act_window">
-            <field name="name">Delivery Orders</field>
-            <field name="res_model">stock.picking</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="view_mode">tree,form</field>
-            <field name="domain">[('is_magento_picking','=','True'),
-                ('state','=','done'),
-                ('magento_instance_id','=',active_id)]</field>
-            <field name="search_view_id" ref="stock.view_picking_internal_search" />
         </record>
 
         <menuitem id="menu_transfer_details_parent" name="Delivery"
