@@ -8,16 +8,16 @@ from odoo.http import request
 class Binary(http.Controller):
     @http.route('/web_magento_place_order', csrf=False, auth="public", type="json")
     def place_order(self):
-        auth = request.httprequest.headers.get("Authorization", '')
+        auth = request.httprequest.headers.get("X-Access-Token", '')
         data = json.loads(request.httprequest.data)
         magento_instance = request.env['magento.instance'].sudo().search([
             ('magento_url', '=', data.get('url', '').rstrip('/'))
         ])
 
-        auth = 'Bearer 393eNsArxhD854k2dmzmkJqMjEFRFq' # to remove later
+        auth = '393eNsArxhD854k2dmzmkJqMjEFRFq' # to remove later
 
         if not magento_instance or not magento_instance.odoo_token  or not auth or \
-                magento_instance.odoo_token != auth.replace('Bearer ', '') or not data.get('items'):
+                magento_instance.odoo_token != auth or not data.get('items'):
             return False
 
         return request.env['sale.order'].sudo().process_sales_order_creation(magento_instance, data)
