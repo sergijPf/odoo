@@ -144,7 +144,7 @@ class SaleOrder(models.Model):
             lambda x: x.magento_storeview_id == str(sales_order.get('store_id'))
         )
         if not storeview:
-            message = "Magento Order's Storeview not found in Odoo. Please synch the Instance Metadata."
+            message = "Magento Storeview specified in Sales Order doesn't exist in Odoo. Need to synch Instance Metadata."
             self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, False, message)
             return False
         else:
