@@ -53,6 +53,9 @@ class MagentoAsyncBulkLogs(models.Model):
     def get_detailed_status_of_log(self):
         instance = self.magento_conf_product_ids.magento_instance_id or self.magento_product_ids.magento_instance_id
 
+        if not instance:
+            return False
+
         try:
             api_url = '/V1/bulk/%s/detailed-status' % self.bulk_uuid
             response = req(instance, api_url)

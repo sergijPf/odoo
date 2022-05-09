@@ -16,7 +16,7 @@ class SaleOrderLine(models.Model):
             sale_order_line = self.prepare_product_sales_order_line_vals(order_line, instance, order, extension_attrs)
 
             try:
-                line = self.create(sale_order_line)
+                line = self.with_context(tracking_disable=True).create(sale_order_line)
             except Exception as e:
                 return str(e)
 
@@ -45,7 +45,7 @@ class SaleOrderLine(models.Model):
             'product_uom_qty': float(order_line.get('qty_ordered', 1.0)),
             'product_uom': odoo_product.uom_id.id,
             'price_unit': order_line.get('original_price', 0.0),
-            'discount': (discount / original_price) * 100 if original_price and discount else 0,
+            'discount': round((discount / original_price) * 100, 2) if original_price and discount else 0,
             'tax_id': [(6, 0, [tax_id.id])] if tax_id else False,
             'state': 'draft',
             'magento_sale_order_line_ref': so_line_ref
@@ -104,7 +104,7 @@ class SaleOrderLine(models.Model):
                 'product_uom_qty': 1,
                 'product_uom': self.env.ref("uom.product_uom_unit").id,
                 'price_unit': amount_net,
-                'discount': (discount_amount / amount_net) * 100 if amount_net and discount_amount else 0,
+                'discount': round((discount_amount / amount_net) * 100, 2) if amount_net and discount_amount else 0,
                 'tax_id': [(6, 0, [tax_id.id])] if tax_id else False,
                 'state': 'draft'
             }
@@ -114,7 +114,7 @@ class SaleOrderLine(models.Model):
             sale_order_line = self._convert_to_write(new_order_line._cache)
 
             try:
-                line = self.create(sale_order_line)
+                line = self.with_context(tracking_disable=True).create(sale_order_line)
             except Exception as e:
                 return 'Error creating shipping order line: ' + str(e)
 

@@ -85,7 +85,7 @@ class MagentoProductProduct(models.Model):
                 attr_val = attr.with_context(lang='en_US').product_attribute_value_id
                 if not attr_val.attribute_id.is_ignored_in_magento:
                     value = attr_val.name
-                    if attr.attribute_line_id.magento_config and attr_val.attribute_id.name == "size_N":
+                    if attr.attribute_line_id.magento_config and attr_val.attribute_id.name == "size":
                         sep = value.find(' - ')
                         if sep >= 0:
                             vals = value.split(' - ', 1)
@@ -304,7 +304,7 @@ class MagentoProductProduct(models.Model):
         website_ids = magento_product.get("extension_attributes").get("website_ids")
         category_links = magento_product.get("extension_attributes").get("category_links", [])
 
-        ml_simp_products_dict[magento_product.get("sku")].update({
+        ml_simp_products_dict[str(magento_product.get("sku"))].update({
             'magento_type_id': magento_product.get('type_id'),
             'magento_prod_id': magento_product.get("id"),
             'magento_update_date': magento_product.get("updated_at"),
@@ -754,6 +754,7 @@ class MagentoProductProduct(models.Model):
             return False
 
         try:
+            datetime_stamp = datetime.now()
             api_url = '/all/async/bulk/V1/products'
             response = req(instance, api_url, method, data)
         except Exception as err:
@@ -771,7 +772,7 @@ class MagentoProductProduct(models.Model):
             'topic': 'Product Export'
         })
 
-        datetime_stamp = datetime.now()
+
         for prod in odoo_products:
             img_update = False
             ml_simp_products[prod.magento_sku]['export_date_to_magento'] = datetime_stamp

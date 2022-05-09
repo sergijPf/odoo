@@ -13,7 +13,7 @@
                         <group name="config">
                             <field name="company_id" string="Company"/>
                             <field name="magento_instance_id" required="1" options="{'no_create':True}"/>
-                            <field name="payment_method_code" string="Payment Method Code"/>
+                            <field name="payment_method_code" string="Payment Method Code" readonly="1"/>
                         </group>
                         <group name="inputs">
                             <field name="import_rule"/>

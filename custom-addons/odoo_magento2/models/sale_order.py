@@ -17,6 +17,7 @@ class SaleOrder(models.Model):
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Payment Method")
     magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Shipping Method")
     order_transaction_id = fields.Char(string="Order Transaction ID", help="Magento Order Transaction ID")
+    payment_transaction_id = fields.Char(string="Payment Transaction ID", help="Magento Payment System Transaction ID")
     magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
     magento_order_log_book_ids = fields.One2many('magento.orders.log.book', 'sale_order_id', "Log Error Messages")
     auto_workflow_process_id = fields.Many2one("sale.workflow.process", string="Workflow Process", copy=False)
@@ -165,9 +166,9 @@ class SaleOrder(models.Model):
         if not magento_order or magento_order.state in ['draft', 'sent']:
             try:
                 if magento_order:
-                    magento_order.write(order_values)
+                    magento_order.with_context(tracking_disable=True).write(order_values)
                 else:
-                    magento_order = self.create(order_values)
+                    magento_order = self.with_context(tracking_disable=True).create(order_values)
             except Exception as e:
                 message = "Error while creating/updating sales order in Magento: " + str(e)
                 self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
@@ -237,11 +238,11 @@ class SaleOrder(models.Model):
         ])
 
         if not allowed_flow:
-            return  False, "- Automatic 'Order Process Workflow' configuration not found for this order. \n -" \
+            return  False, "- Automatic 'Order Processing Workflow' configuration not found for this order. \n -" \
                            " System tries to find the workflow based on combination of Payment Method (such as PayPal, " \
                            "P24 etc.) and Order's Financial Status(such as Pending, Processing Orders etc.).\n " \
                            "- For current Sales Order: Payment Method is '%s' and Order's Financial Status is '%s'.\n  " \
-                           "- You can configure the Automatic Order Process Workflow under the menu Magento >> " \
+                           "- You can configure the Automatic Order Processing Workflow under the menu Magento >> " \
                            "Configuration >> Orders Processing Gateway." % (payment_option.payment_method_name,
                                                                             order_status)
 
@@ -335,6 +336,7 @@ class SaleOrder(models.Model):
         workflow_process_id = auto_workflow.auto_workflow_id
         shipping = sales_order.get('extension_attributes').get('shipping_assignments')
         shipping_method = shipping[0].get('shipping').get('method')
+        payment_term_id = self.env.ref("account.account_payment_term_immediate") or False
 
         mag_deliv_carrier = instance.shipping_method_ids.filtered(
             lambda x: x.carrier_code == shipping_method
@@ -364,12 +366,11 @@ class SaleOrder(models.Model):
             'partner_id': odoo_partner.id,
             'partner_invoice_id': invoice_partner.id,
             'partner_shipping_id': shipping_partner.id,
+            'payment_term_id': payment_term_id.id if payment_term_id else False,
             'pricelist_id': website.pricelist_id.id,
             'company_id': instance.company_id.id,
-            'team_id': store_view.team_id.id if store_view and store_view.team_id else False,
             'picking_policy': workflow_process_id and workflow_process_id.picking_policy or False,
-            'warehouse_id': website.warehouse_id.id,
-            'carrier_id': odoo_delivery_carrier.id if odoo_delivery_carrier else False
+            'warehouse_id': website.warehouse_id.id
         }
 
         sale_order = self.env['sale.order']
@@ -383,6 +384,9 @@ class SaleOrder(models.Model):
             'magento_instance_id': instance.id,
             'magento_website_id': website.id,
             'store_id': store_view.id if store_view else False,
+            'team_id': store_view.team_id.id if store_view and store_view.team_id else False,
+            'carrier_id': odoo_delivery_carrier.id if odoo_delivery_carrier else False,
+            'payment_transaction_id': sales_order.get('payment', {}).get('last_trans_id', False),
             'auto_workflow_process_id': workflow_process_id.id,
             'magento_payment_method_id': payment_method.id,
             'magento_shipping_method_id': mag_deliv_carrier.id,

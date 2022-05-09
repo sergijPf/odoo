@@ -11,7 +11,7 @@
                 <field name="commercial_partner_id" invisible="1"/>
                 <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                 <field name="invoice_partner_display_name" invisible="context.get('default_move_type') not in ('out_invoice', 'out_refund','out_receipt')" groups="base.group_user" string="Customer" />
-                <field name="invoice_user_id" string="Salesperson" />
+                <field name="invoice_user_id" string="Salesperson"/>
                 <field name="amount_total_signed" sum="Total"/>
                 <field name="currency_id" invisible="1"/>
                 <field name="company_currency_id" invisible="1"/>

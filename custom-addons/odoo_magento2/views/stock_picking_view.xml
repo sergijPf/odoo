@@ -7,7 +7,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//header/button[5]" position="after">
                     <field name="is_shipment_exportable" invisible="1"/>
-                    <button name="export_single_shipment_to_magento" string="Export Shipment to Magento"
+                    <button name="export_single_shipment_to_magento" string="Export to Magento"
                             type="object" class="oe_highlight"
                             attrs="{'invisible': ['|','|','|',
                              ('magento_instance_id','=',False),
@@ -17,7 +17,7 @@
                 </xpath>
                 <xpath expr="//notebook[last()]" position="inside">
                     <page name="magento_info" string="Magento Info"
-                          attrs="{'invisible' : [('is_magento_picking','!=',True)]}">
+                          attrs="{'invisible' : ['|', ('is_magento_picking','=',False), ('is_shipment_exportable','=',False)]}">
                         <group>
                             <field name="is_magento_picking" invisible="1"/>
                             <field name="magento_instance_id" readonly="1"/>

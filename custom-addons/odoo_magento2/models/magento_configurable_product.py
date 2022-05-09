@@ -74,8 +74,8 @@ class MagentoConfigurableProduct(models.Model):
                 lambda x: x.magento_config and not x.attribute_id.is_ignored_in_magento).attribute_id
 
             # add additional size attribute if needed to cover required functionality
-            conf_size_attr = rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'size_N')
-            conf_size_attr_vals = prod_attr_lines.filtered(lambda x: x.attribute_id.name == 'size_N').value_ids
+            conf_size_attr = rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'size')
+            conf_size_attr_vals = prod_attr_lines.filtered(lambda x: x.attribute_id.name == 'size').value_ids
 
             if conf_size_attr and all([a.find(' - ') >= 0 for a in conf_size_attr_vals.mapped('name')]):
                 rec.x_magento_assign_attr_ids = [(4, relative_size_attr.id)]
@@ -92,7 +92,7 @@ class MagentoConfigurableProduct(models.Model):
             rec.x_magento_main_config_attr = rec.odoo_prod_template_id.attribute_line_ids.filtered(
                 lambda x: x.magento_config and x.main_conf_attr).with_context(lang='en_US').attribute_id.name or ''
 
-            if rec.x_magento_main_config_attr == 'size_N' and \
+            if rec.x_magento_main_config_attr == 'size' and \
                     rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'relative size'):
                 rec.x_magento_main_config_attr = 'relative size'
 
@@ -268,7 +268,7 @@ class MagentoConfigurableProduct(models.Model):
 
         # process simple products update in Magento
         products_to_update = odoo_simp_prod.filtered(
-            lambda s: ml_simp_products_dict[s.magento_sku].get('magento_update_date', '') and
+            lambda s: ml_simp_products_dict[s.magento_sku].get('magento_update_date') and
                       not ml_simp_products_dict[s.magento_sku]['log_message']
         )
         odoo_simp_prod.process_simple_products_create_or_update(
@@ -277,7 +277,7 @@ class MagentoConfigurableProduct(models.Model):
 
         # process new simple product creation in Magento
         products_to_create = odoo_simp_prod.filtered(
-            lambda s: not ml_simp_products_dict[s.magento_sku].get('magento_update_date', '') and
+            lambda s: not ml_simp_products_dict[s.magento_sku].get('magento_update_date') and
                       not ml_simp_products_dict[s.magento_sku]['log_message']
         )
         odoo_simp_prod.process_simple_products_create_or_update(
@@ -360,7 +360,7 @@ class MagentoConfigurableProduct(models.Model):
         :return: Configurable and Simple products dictionary
         """
         products_dict_conf = {
-            c.magento_conf_prod_sku: {
+            str(c.magento_conf_prod_sku): {
                 'conf_object': c.magento_conf_product_id,
                 'config_attr': {
                     self.to_upper(a.name) for a in c.with_context(lang='en_US').magento_conf_product_id.x_magento_assign_attr_ids
@@ -376,8 +376,8 @@ class MagentoConfigurableProduct(models.Model):
 
         text = "Configurable Product is missing 'Magento Product SKU' field. \n"
         products_dict_simp = {
-            s.magento_sku: {
-                'conf_sku': s.magento_conf_prod_sku,
+            str(s.magento_sku): {
+                'conf_sku': str(s.magento_conf_prod_sku),
                 'log_message': '' if s.magento_conf_prod_sku else text,
                 'export_date_to_magento': s.magento_export_date,
                 'conf_attributes': s.get_product_conf_attributes_dict(),
@@ -394,7 +394,7 @@ class MagentoConfigurableProduct(models.Model):
     @staticmethod
     def get_products_from_magento(magento_instance, ml_products_dict):
         res = []
-        step = 50
+        step = 20
         cur_page = 0
         magento_sku_list = list(ml_products_dict)
         times = (len(magento_sku_list) // step) + (1 if len(magento_sku_list) % step else 0)
@@ -598,7 +598,7 @@ class MagentoConfigurableProduct(models.Model):
                 continue
 
             # update (PUT method) Conf.Product if it exists in Magento
-            if ml_conf_products[prod].get('magento_update_date', ''):
+            if ml_conf_products[prod].get('magento_update_date'):
                 if ml_conf_products[prod]['magento_type_id'] != 'configurable':
                     text = "Product with the following sku - \"%s\" already exists in Magento. " \
                            "And it's type is not Configurable.\n" % prod
@@ -834,6 +834,7 @@ class MagentoConfigurableProduct(models.Model):
             })
 
         try:
+            datetime_stamp = datetime.now()
             api_url = '/all/async/bulk/V1/products'
             response = req(magento_instance, api_url, 'POST', data)
         except Exception as e:
@@ -847,7 +848,7 @@ class MagentoConfigurableProduct(models.Model):
             product_websites = []
             prod_media = {}
             # thumb_images = {}
-            datetime_stamp = datetime.now()
+
             log_id = self.bulk_log_ids.create({
                 'bulk_uuid': response.get("bulk_uuid"),
                 'topic': 'Product Export'
@@ -956,7 +957,8 @@ class MagentoConfigurableProduct(models.Model):
 
         if conf_product.odoo_prod_template_id.website_description:
             value = conf_product.with_context(lang=lang_code).odoo_prod_template_id.website_description
-            self.add_to_custom_attributes_list(custom_attributes, 'description', value)
+            value_stripped = str(value).lstrip('<p>').rstrip('</p>')
+            self.add_to_custom_attributes_list(custom_attributes, 'description', value_stripped)
 
         for prod_attr in prod_attr_list:
             value = self.to_html_listitem(prod_attributes.filtered(lambda x: x.categ_group_id.id == prod_attr[1]),
@@ -1211,8 +1213,10 @@ class MagentoConfigurableProduct(models.Model):
 
     @staticmethod
     def to_html_listitem(attributes, lang_code):
-        lst = '<ul>'
+        lst = "<ul>"
         for attr in attributes.sorted('sequence'):
             if attr['attribute_value']:
-                lst += "<li>" + attr.with_context(lang=lang_code)['attribute_value'] + "</li>"
+                item = str(attr.with_context(lang=lang_code)['attribute_value']).lstrip('<p>').rstrip('</p>')
+                lst += "<li>" + item + "</li>"
+
         return lst + "</ul>"
