@@ -9,7 +9,6 @@ class ProductImage(models.Model):
     image_role = fields.Selection([
         ('small_image', "Small"),
         ('image', "Base"),
-        ('thumbnail', "Thumbnail"),
         ('swatch_image', "Swatch (Variants only)")
     ], string="Image role")
 

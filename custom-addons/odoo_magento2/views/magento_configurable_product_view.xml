@@ -24,15 +24,24 @@
                             type="object" class="btn btn-info ml-2"/>
                 </header>
                 <sheet>
-                    <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
-                    <field name="active" invisible="True" />
+                    <field name="id" invisible="1" readonly="1"/>
+                    <field name="active" invisible="1"/>
+                    <field name="sipmle_count_equal" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
+                        <button type="object" icon="fa-sitemap"
+                                name="get_list_of_product_variants"
+                                class="oe_stat_button"
+                                style="background-color: #f5b45f;"
+                                attrs="{'invisible': [('sipmle_count_equal','=',True)]}">
+                            <field string="Prod.Variants" name="product_variant_count"
+                                   widget="statinfo" id="product_variant_count"/>
+                        </button>
                         <button type="action" icon="fa-sitemap" class="oe_stat_button"
                                 name="%(odoo_magento2.action_get_simple_products)d">
-                            <field string="Simp.Products" name="product_variant_count"
-                                   widget="statinfo" modifiers="{'readonly':true}"
-                                   id="product_variant_count"/>
+                            <field string="Simp.Products" name="product_simple_count"
+                                   widget="statinfo" id="product_simple_count"/>
                         </button>
+
                         <button class="oe_stat_button"
                                 name="toggle_active" icon="fa-lock"
                                 type="object" attrs="{'invisible': [('active','=',False)]}">
@@ -122,7 +131,8 @@
         <field name="name">magento.configurable.product.tree</field>
         <field name="model">magento.configurable.product</field>
         <field name="arch" type="xml">
-            <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku">
+            <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku"
+                  decoration-warning="not sipmle_count_equal">
                 <header>
                     <button name="process_products_export_to_magento"
                             string="Process Export directly"
@@ -137,7 +147,8 @@
                 <field name="magento_website_ids" widget="many2many_tags"/>
                 <field name="magento_sku"/>
                 <field name="magento_product_name"/>
-                <field name="product_variant_count"/>
+                <field name="sipmle_count_equal" invisible="1"/>
+                <field name="product_simple_count"/>
                 <field name="magento_status" widget="badge" optional="show" on_change="1"
                        decoration-success="magento_status == 'in_magento'"
                        decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"

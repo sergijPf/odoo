@@ -93,32 +93,31 @@ class SaleOrderLine(models.Model):
         amount_net = float(sales_order.get('shipping_amount', 0.0))
         discount_amount = float(sales_order.get('shipping_discount_amount', 0.0))
 
-        if amount_net:
-            shipping_product = self.env.ref('odoo_magento2.product_product_shipping')
-            tax_id = self.get_account_tax_id(sales_order.get('extension_attributes'), 'shipping')
+        shipping_product = self.env.ref('odoo_magento2.product_product_shipping')
+        tax_id = self.get_account_tax_id(sales_order.get('extension_attributes'), 'shipping')
 
-            vals = {
-                'order_id': magento_order.id,
-                'product_id': shipping_product.id,
-                'name': 'Shipping cost',
-                'product_uom_qty': 1,
-                'product_uom': self.env.ref("uom.product_uom_unit").id,
-                'price_unit': amount_net,
-                'discount': round((discount_amount / amount_net) * 100, 2) if amount_net and discount_amount else 0,
-                'tax_id': [(6, 0, [tax_id.id])] if tax_id else False,
-                'state': 'draft'
-            }
+        vals = {
+            'order_id': magento_order.id,
+            'product_id': shipping_product.id,
+            'name': 'Shipping cost',
+            'product_uom_qty': 1,
+            'product_uom': self.env.ref("uom.product_uom_unit").id,
+            'price_unit': amount_net,
+            'discount': round((discount_amount / amount_net) * 100, 2) if amount_net and discount_amount else 0,
+            'tax_id': [(6, 0, [tax_id.id])] if tax_id else False,
+            'state': 'draft'
+        }
 
-            new_order_line = self.new(vals)
-            # new_order_line.product_id_change()
-            sale_order_line = self._convert_to_write(new_order_line._cache)
+        new_order_line = self.new(vals)
+        # new_order_line.product_id_change()
+        sale_order_line = self._convert_to_write(new_order_line._cache)
 
-            try:
-                line = self.with_context(tracking_disable=True).create(sale_order_line)
-            except Exception as e:
-                return 'Error creating shipping order line: ' + str(e)
+        try:
+            line = self.with_context(tracking_disable=True).create(sale_order_line)
+        except Exception as e:
+            return 'Error creating shipping order line: ' + str(e)
 
-            if not line:
-                return "Failed to create shipping order line. "
+        if not line:
+            return "Failed to create shipping order line. "
 
         return ''

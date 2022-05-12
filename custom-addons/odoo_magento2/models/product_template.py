@@ -50,8 +50,8 @@ class ProductTemplate(models.Model):
 class ProductTemplateAttributeLine(models.Model):
     _inherit = "product.template.attribute.line"
 
-    magento_config = fields.Boolean(string="Magento Config.Attribute", default=False)
-    main_conf_attr = fields.Boolean(string="Main Config.Attribute.", default=False)
+    magento_config = fields.Boolean(string="Magento Conf.Attribute", default=False)
+    main_conf_attr = fields.Boolean(string="Hover Attribute", help="Configurable Attribute to be visible while hovering a product", default=False)
     is_ignored = fields.Boolean(related="attribute_id.is_ignored_in_magento")
     create_variant = fields.Selection(related="attribute_id.create_variant")
     is_magento_config_prod = fields.Boolean(related="product_tmpl_id.is_magento_config")
@@ -65,7 +65,7 @@ class ProductTemplateAttributeLine(models.Model):
     @api.onchange('main_conf_attr')
     def onchange_magento_main_config_attribute(self):
         if self.main_conf_attr and len(self.product_tmpl_id.attribute_line_ids.filtered(lambda x: x.main_conf_attr)) > 1:
-            raise UserError("There is only one main configurable attribute allowed for Magento setup!")
+            raise UserError("There is only one 'hover' configurable attribute allowed!")
 
     @api.model
     def create(self, vals):
