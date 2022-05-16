@@ -51,7 +51,7 @@ class MagentoConfigurableProduct(models.Model):
                                              help="Configurable Attribute to be visible while hovering on Product",
                                              store=True)
     x_magento_single_attr_ids = fields.Many2many('product.template.attribute.line',
-                                                 string="Single Attribute(s) of Config.Product",
+                                                 string="Config.Product's Single Attribute(s)",
                                                  compute="_compute_single_attributes_of_configurable_product")
     magento_export_date = fields.Datetime(string="Last Export Date", help="Config.Product last Export Date to Magento")
     force_update = fields.Boolean(string="Force export", help="Force run of Configurable Product Export", default=False)
@@ -68,9 +68,9 @@ class MagentoConfigurableProduct(models.Model):
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_configurable_product_attributes(self):
-        relative_size_attr = self.env['product.attribute'].search([('name', '=', 'relative size')])
-        if not relative_size_attr:
-            relative_size_attr = self.env['product.attribute'].create({'name': 'relative size'})
+        # relative_size_attr = self.env['product.attribute'].search([('name', '=', 'relative size')])
+        # if not relative_size_attr:
+        #     relative_size_attr = self.env['product.attribute'].create({'name': 'relative size'})
 
         for rec in self:
             prod_attr_lines = rec.odoo_prod_template_id.attribute_line_ids
@@ -78,20 +78,20 @@ class MagentoConfigurableProduct(models.Model):
             ### recalculate config.attributes
             rec.x_magento_assign_attr_ids = prod_attr_lines.filtered(
                 lambda x: x.magento_config and not x.attribute_id.is_ignored_in_magento).attribute_id
-            # add additional size attribute if needed to cover required functionality
-            size_attr = rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'size')
-            size_attr_vals = prod_attr_lines.filtered(lambda x: x.attribute_id.name == 'size').value_ids
-
-            if size_attr and all([a.find(' - ') >= 0 for a in size_attr_vals.mapped('name')]):
-                rec.x_magento_assign_attr_ids = [(4, relative_size_attr.id)]
+            # # add additional size attribute if needed to cover required functionality
+            # size_attr = rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'size')
+            # size_attr_vals = prod_attr_lines.filtered(lambda x: x.attribute_id.name == 'size').value_ids
+            #
+            # if size_attr and all([a.find(' - ') >= 0 for a in size_attr_vals.mapped('name')]):
+            #     rec.x_magento_assign_attr_ids = [(4, relative_size_attr.id)]
 
             ### recalc main config.(hover) attr
             rec.x_magento_main_config_attr = prod_attr_lines.filtered(
                 lambda x: x.magento_config and x.main_conf_attr).with_context(lang='en_US').attribute_id.name or ''
 
-            if rec.x_magento_main_config_attr == 'size' and \
-                    rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'relative size'):
-                rec.x_magento_main_config_attr = 'relative size'
+            # if rec.x_magento_main_config_attr == 'size' and \
+            #         rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'relative size'):
+            #     rec.x_magento_main_config_attr = 'relative size'
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_single_attributes_of_configurable_product(self):
@@ -371,9 +371,6 @@ class MagentoConfigurableProduct(models.Model):
             except Exception:
                 response = []
 
-            # print(response)
-            # raise UserError("")
-
             if response:
                 [available_attributes.update({
                     self.to_upper(attr.get('default_frontend_label')): {
@@ -594,15 +591,15 @@ class MagentoConfigurableProduct(models.Model):
             self.to_upper(a.with_context(lang='en_US').categ_group_id.name) for a in pp_attrs if a.categ_group_id
         })
         single_attr_recs = self.with_context(lang='en_US').x_magento_single_attr_ids
-        single_attrs = {self.to_upper(a.attribute_id.name): a.value_ids.name for a in single_attr_recs}
+        # single_attrs = list({self.to_upper(a.attribute_id.name): a.value_ids.name for a in single_attr_recs}
+        single_attrs_list = list({self.to_upper(a.attribute_id.name) for a in single_attr_recs})
 
         # if conf_prod.odoo_prod_template_id.x_status:
         #     single_attrs.update({
         #         "PRODUCTLIFEPHASE": self.with_context(lang='en_US').odoo_prod_template_id.x_status
         #     })
 
-        missed_attrs = set(
-            list(config_attrs) + list(prod_page_attrs) + list(single_attrs.keys())).difference(magento_attributes)
+        missed_attrs = set(list(config_attrs) + prod_page_attrs + single_attrs_list).difference(magento_attributes)
         if missed_attrs:
             text = "Attribute(s) - '%s' have to be created and linked to relevant Attribute-set" \
                    " on Magento side. \n" % missed_attrs
@@ -617,19 +614,19 @@ class MagentoConfigurableProduct(models.Model):
             return False
 
         # check attribute options exist in Magento
-        for attr in single_attrs:
-            mag_attr = magento_attributes[attr]
-            attr_val = single_attrs[attr]
-            if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
-                res_id = single_attr_recs.filtered(lambda a: self.to_upper(a.attribute_id.name) == attr and
-                                                             self.to_upper(a.value_ids.name) == attr_val).value_ids or 0
-                _id, err = self.create_new_attribute_option_in_magento(
-                    instance, mag_attr['attribute_code'], attr_val, res_id
+        for attr in single_attr_recs:
+            attribute = self.to_upper(attr.attribute_id.name)
+            mag_attr = magento_attributes[attribute]
+            attr_val = attr.value_ids
+
+            if self.to_upper(attr_val.name) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
+                val_id, err = self.create_new_attribute_option_in_magento(
+                    instance, mag_attr['attribute_code'], attr_val.name, attr_val
                 )
                 if err:
                     ml_conf_products[sku]['log_message'] += err
                 else:
-                    mag_attr['options'].append({'label': attr_val.upper(), 'value': _id})
+                    mag_attr['options'].append({'label': attr_val.name.upper(), 'value': val_id})
 
         return True
 
@@ -685,16 +682,17 @@ class MagentoConfigurableProduct(models.Model):
 
         try:
             api_url = '/all/V1/products/attributes/%s/options' % attribute_code
-            res = req(magento_instance, api_url, 'POST', data)
+            val_id = req(magento_instance, api_url, 'POST', data)
+
             try:
-                _id = int(res[3:])
+                val_id = int(val_id)
             except Exception:
-                raise
+                raise "Attribute value ID has incompatible type."
         except Exception as e:
             return 0, "Error while new Product Attribute Option(Swatch) creation for %s Attribute: %s. " % \
                    (attribute_code, e)
 
-        return _id, ""
+        return str(val_id), ""
 
     def check_config_product_assign_attributes_match(self, magento_prod_attrs, prod_attr_odoo, avail_attributes):
         prod_attr_magento = {
@@ -869,17 +867,18 @@ class MagentoConfigurableProduct(models.Model):
         unique_attr = set(self.with_context(lang='en_US').x_magento_single_attr_ids.attribute_id.mapped('name'))
         for attr_name in unique_attr:
             value = ''
-            attr = available_attributes[self.to_upper(attr_name)]
-            for rec in self.with_context(lang='en_US').x_magento_single_attr_ids.filtered(
-                    lambda x: x.attribute_id.name == attr_name):
-                opt = next((o for o in attr['options'] if o.get('label') and
+            mag_attr = available_attributes[self.to_upper(attr_name)]
+            single_attr_recs = self.with_context(lang='en_US').x_magento_single_attr_ids.filtered(
+                lambda x: x.attribute_id.name == attr_name)
+            for rec in single_attr_recs:
+                opt = next((o for o in mag_attr['options'] if o.get('label') and
                             self.to_upper(o['label']) == self.to_upper(rec.value_ids.name)), {})
                 if opt:
-                    value = opt['value'] if not value else f"{value}, {opt['value']}"
+                    value = opt['value'] if not value else f"{value},{opt['value']}"
 
             if value:
                 custom_attributes.append({
-                    "attribute_code": attr['attribute_code'],
+                    "attribute_code": mag_attr['attribute_code'],
                     "value": value
                 })
 

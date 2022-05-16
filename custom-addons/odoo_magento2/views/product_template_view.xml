@@ -1,45 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
-        <record id="action_make_product_template_configurable">
-            <field name="name">Magento - Make as Configurable</field>
-            <field name="type">ir.actions.server</field>
-            <field name="model_id" ref="product.model_product_template"/>
-            <field name="binding_model_id" ref="product.model_product_template"/>
-            <field name="state">code</field>
-            <field name="code">records.make_configurable()</field>
-        </record>
+    <record id="action_make_product_template_configurable" model="ir.actions.server">
+        <field name="name">Magento - Make as Configurable</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="state">code</field>
+        <field name="code">records.make_configurable()</field>
+    </record>
 
-        <record id="product_template_only_form_inherit_view" model="ir.ui.view">
-            <field name="name">product_template_only_form_inherit_view</field>
-            <field name="model">product.template</field>
-            <field name="inherit_id" ref="product.product_template_only_form_view"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='website_ribbon_id']" position='after'>
-                    <field name="is_magento_config" groups="odoo_magento2.group_magento_user"/>
-                    <field name="x_magento_no_create" id="x_magento_no_create"
-                           groups="odoo_magento2.group_magento_user"
-                           attrs="{'invisible': [('is_magento_config', '!=', True)]}"/>
-                </xpath>
+    <record id="product_template_only_form_inherit_view" model="ir.ui.view">
+        <field name="name">product_template_only_form_inherit_view</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='website_ribbon_id']" position='after'>
+                <field name="is_magento_config" groups="odoo_magento2.group_magento_user"/>
+                <field name="x_magento_no_create" id="x_magento_no_create"
+                       groups="odoo_magento2.group_magento_user"
+                       attrs="{'invisible': [('is_magento_config', '!=', True)]}"/>
+            </xpath>
 
-                <xpath expr="//field[@name='attribute_line_ids']/tree/field[@name='value_ids']" position='after'>
-                    <field name="is_magento_config_prod" invisible="1"/>
-                    <field name="x_magento_no_create" invisible="1"/>
-                    <field name="is_ignored" invisible="1"/>
-                    <field name="create_variant" invisible="1"/>
-                    <field name="magento_config" widget="boolean_toggle"
-                           attrs="{'invisible': ['|', '|', '|', ('is_magento_config_prod', '!=', True),
-                                ('x_magento_no_create', '=', True), ('is_ignored', '=', True),
-                                ('create_variant', '=', 'no_variant')]}"
-                           groups="odoo_magento2.group_magento_user"/>
-                    <field name="main_conf_attr" groups="odoo_magento2.group_magento_user"
-                           attrs="{'invisible': ['|', '|', '|', '|', ('is_magento_config_prod', '!=', True),
-                                ('x_magento_no_create', '=', True), ('magento_config', '!=', True),
-                                ('is_ignored', '=', True), ('value_count', '=', 1)]}"/>
-                </xpath>
+            <xpath expr="//field[@name='attribute_line_ids']/tree/field[@name='value_ids']" position='after'>
+                <field name="is_magento_config_prod" invisible="1"/>
+                <field name="x_magento_no_create" invisible="1"/>
+                <field name="is_ignored" invisible="1"/>
+                <field name="create_variant" invisible="1"/>
+                <field name="magento_config" widget="boolean_toggle"
+                       attrs="{'invisible': ['|', '|', '|', ('is_magento_config_prod', '!=', True),
+                            ('x_magento_no_create', '=', True), ('is_ignored', '=', True),
+                            ('create_variant', '=', 'no_variant')]}"
+                       groups="odoo_magento2.group_magento_user"/>
+                <field name="main_conf_attr" groups="odoo_magento2.group_magento_user"
+                       attrs="{'invisible': ['|', '|', '|', '|', ('is_magento_config_prod', '!=', True),
+                            ('x_magento_no_create', '=', True), ('magento_config', '!=', True),
+                            ('is_ignored', '=', True), ('value_count', '=', 1)]}"/>
+            </xpath>
 
-            </field>
-        </record>
-
-    </data>
+        </field>
+    </record>
 </odoo>

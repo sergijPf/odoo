@@ -425,13 +425,13 @@ class MagentoProductProduct(models.Model):
                 else:
                     attr_val = prod_attrs[attr]
                     if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
-                        _id, err = prod.magento_conf_product_id.create_new_attribute_option_in_magento(
+                        val_id, err = prod.magento_conf_product_id.create_new_attribute_option_in_magento(
                             instance, mag_attr['attribute_code'], attr_val
                         )
                         if err:
                             ml_simp_products[prod_sku]['log_message'] += err
                         else:
-                            mag_attr['options'].append({'label': attr_val.upper(), 'value': _id})
+                            mag_attr['options'].append({'label': attr_val.upper(), 'value': val_id})
 
             if ml_simp_products[prod_sku]['log_message']:
                 continue
@@ -468,16 +468,15 @@ class MagentoProductProduct(models.Model):
 
         for attr_name in unique_attr:
             value = ''
-            attr = available_attributes.get(attr_name)
+            mag_attr = available_attributes.get(attr_name)
             for val in [v[1] for v in product_attributes if v[0] == attr_name]:
-                opt = next((o for o in attr['options'] if o.get('label') and
-                            self.to_upper(o['label']) == val), {})
+                opt = next((o for o in mag_attr['options'] if o.get('label') and self.to_upper(o['label']) == val), {})
                 if opt:
-                    value = opt['value'] if not value else value + ',' + opt['value']
+                    value = opt['value'] if not value else f"{value},{opt['value']}"
 
             if value:
                 custom_attributes.append({
-                    "attribute_code": attr['attribute_code'],
+                    "attribute_code": mag_attr['attribute_code'],
                     "value": value
                 })
 
