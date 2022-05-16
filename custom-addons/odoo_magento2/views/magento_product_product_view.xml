@@ -41,9 +41,9 @@
                                 type="object" attrs="{'invisible': [('active','=',True)]}">
                             <span class="o_stat_text" style="color:#da3434">Archived</span>
                         </button>
-                        <button class="oe_stat_button" name="delete_in_magento" icon="fa-remove" type="object"
-                                attrs="{'invisible': [('magento_product_id','in',['', False, None])]}"
-                                modifiers="{}" options="{}">
+                        <button class="oe_stat_button" name="delete_simple_product_in_magento"
+                                icon="fa-remove" type="object"
+                                attrs="{'invisible': [('magento_product_id','in',['', False, None])]}">
                             <span class="o_stat_text" style="color:#da3434">Delete in Magento</span>
                         </button>
                         <button class="oe_stat_button" name="view_error_logs" icon="fa-warning" type="object"

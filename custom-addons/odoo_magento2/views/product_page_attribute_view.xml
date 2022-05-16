@@ -40,7 +40,8 @@
                         <field name="name"/>
                         <field name="color" widget="color_picker"/>
                         <field name="sequence"/>
-                        <field name="attribute_value"/>
+                        <field name="attribute_value" placeholder="Enter HTML here"
+                               options="{'resizable':true, 'codeview':true}"/>
                     </group>
                 </sheet>
             </form>

@@ -78,7 +78,7 @@ class MagentoProductProduct(models.Model):
     def _compute_product_attributes(self):
         self.product_attribute_ids.sudo().unlink()
 
-        # add additional size attribute if needed to cover required functionality
+        # add additional 'relative size' attribute if needed, to cover specific behaviour for size attribute
         for rec in self:
             for attr in rec.ptav_ids:
                 attr_val = attr.with_context(lang='en_US').product_attribute_value_id
@@ -608,7 +608,7 @@ class MagentoProductProduct(models.Model):
         if method == 'POST':
             data["product"].update({"sku": magento_sku})
             data["product"]["extension_attributes"]["stock_item"].update({
-                "qty": self.qty_avail,
+                "qty": self.qty_avail + 100, # to remove +100
                 "is_in_stock": "true"
             })
 
@@ -630,7 +630,8 @@ class MagentoProductProduct(models.Model):
                 ml_simp_products[magento_sku]['magento_status'] = 'need_to_link'
 
             if method == "POST":
-                self.magento_conf_product_id.link_product_with_websites_in_magento(instance, ml_simp_products, response)
+                conf_prod_obj = self.magento_conf_product_id
+                conf_prod_obj.link_product_with_websites_in_magento(magento_sku, instance, ml_simp_products, response)
 
             self.process_storeview_data_export(instance, ml_simp_products)
 
@@ -747,7 +748,7 @@ class MagentoProductProduct(models.Model):
                         "type_id": "simple",
                         "weight": prod.odoo_product_id.weight,
                         "extension_attributes": {
-                            "stock_item": {"qty": prod.qty_avail, "is_in_stock": "true"} if method == 'POST' else {}
+                            "stock_item": {"qty": prod.qty_avail + 100, "is_in_stock": "true"} if method == 'POST' else {} # to remove +100
                         },
                         "custom_attributes": custom_attributes
                     }
@@ -1066,23 +1067,9 @@ class MagentoProductProduct(models.Model):
 
         return 0 if price_and_rule[1] is False else price_and_rule[0]
 
-    def delete_in_magento(self):
+    def delete_simple_product_in_magento(self):
         self.ensure_one()
-
-        try:
-            api_url = '/V1/products/%s' % self.magento_sku
-            response = req(self.magento_instance_id, api_url, 'DELETE')
-        except Exception as err:
-            raise UserError("Error while deleting product in Magento. " + str(err))
-
-        if response is True:
-            self.write({
-                'magento_status': 'deleted',
-                'magento_product_id': '',
-                'magento_export_date': '',
-                'active': False,
-                'magento_website_ids': [(5, 0, 0)]
-            })
+        self.magento_conf_product_id.delete_product_in_magento(self)
 
     def save_magento_products_info_to_database(self, magento_websites, ml_simp_products, ml_conf_products):
         for s_prod in ml_simp_products:

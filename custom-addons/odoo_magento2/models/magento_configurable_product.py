@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import json
+import json, re
+
 from datetime import datetime
 from odoo import fields, models, api
 from odoo.exceptions import UserError
@@ -45,12 +46,13 @@ class MagentoConfigurableProduct(models.Model):
     do_not_create_flag = fields.Boolean(related="odoo_prod_template_id.x_magento_no_create",
                                         string="Don't create Product in Magento")
     x_magento_assign_attr_ids = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
-                                                 compute="_compute_config_attributes", store=True)
+                                                 compute="_compute_configurable_product_attributes", store=True)
+    x_magento_main_config_attr = fields.Char(string="Hover Attribute", compute="_compute_configurable_product_attributes",
+                                             help="Configurable Attribute to be visible while hovering on Product",
+                                             store=True)
     x_magento_single_attr_ids = fields.Many2many('product.template.attribute.line',
                                                  string="Single Attribute(s) of Config.Product",
-                                                 compute="_compute_single_attributes_of_configurable")
-    x_magento_main_config_attr = fields.Char(string="Hover Attribute", compute="_compute_main_config_attribute", store=True,
-                                             help="Configurable Attribute to be visible while hovering on Product")
+                                                 compute="_compute_single_attributes_of_configurable_product")
     magento_export_date = fields.Datetime(string="Last Export Date", help="Config.Product last Export Date to Magento")
     force_update = fields.Boolean(string="Force export", help="Force run of Configurable Product Export", default=False)
     simple_product_ids = fields.One2many('magento.product.product', 'magento_conf_product_id', 'Magento Products',
@@ -65,38 +67,37 @@ class MagentoConfigurableProduct(models.Model):
                          "Magento Configurable Product SKU must be unique within Magento instance")]
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
-    def _compute_config_attributes(self):
+    def _compute_configurable_product_attributes(self):
         relative_size_attr = self.env['product.attribute'].search([('name', '=', 'relative size')])
         if not relative_size_attr:
             relative_size_attr = self.env['product.attribute'].create({'name': 'relative size'})
 
         for rec in self:
             prod_attr_lines = rec.odoo_prod_template_id.attribute_line_ids
+
+            ### recalculate config.attributes
             rec.x_magento_assign_attr_ids = prod_attr_lines.filtered(
                 lambda x: x.magento_config and not x.attribute_id.is_ignored_in_magento).attribute_id
-
             # add additional size attribute if needed to cover required functionality
-            conf_size_attr = rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'size')
-            conf_size_attr_vals = prod_attr_lines.filtered(lambda x: x.attribute_id.name == 'size').value_ids
+            size_attr = rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'size')
+            size_attr_vals = prod_attr_lines.filtered(lambda x: x.attribute_id.name == 'size').value_ids
 
-            if conf_size_attr and all([a.find(' - ') >= 0 for a in conf_size_attr_vals.mapped('name')]):
+            if size_attr and all([a.find(' - ') >= 0 for a in size_attr_vals.mapped('name')]):
                 rec.x_magento_assign_attr_ids = [(4, relative_size_attr.id)]
 
-    @api.depends('odoo_prod_template_id.attribute_line_ids')
-    def _compute_single_attributes_of_configurable(self):
-        for rec in self:
-            rec.x_magento_single_attr_ids = rec.odoo_prod_template_id.attribute_line_ids.filtered(
-                lambda x: not x.magento_config and not x.attribute_id.is_ignored_in_magento and len(x.value_ids) == 1)
-
-    @api.depends('odoo_prod_template_id.attribute_line_ids')
-    def _compute_main_config_attribute(self):
-        for rec in self:
-            rec.x_magento_main_config_attr = rec.odoo_prod_template_id.attribute_line_ids.filtered(
+            ### recalc main config.(hover) attr
+            rec.x_magento_main_config_attr = prod_attr_lines.filtered(
                 lambda x: x.magento_config and x.main_conf_attr).with_context(lang='en_US').attribute_id.name or ''
 
             if rec.x_magento_main_config_attr == 'size' and \
                     rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'relative size'):
                 rec.x_magento_main_config_attr = 'relative size'
+
+    @api.depends('odoo_prod_template_id.attribute_line_ids')
+    def _compute_single_attributes_of_configurable_product(self):
+        for rec in self:
+            rec.x_magento_single_attr_ids = rec.odoo_prod_template_id.attribute_line_ids.filtered(
+                lambda x: not x.magento_config and not x.attribute_id.is_ignored_in_magento and len(x.value_ids) == 1)
 
     @api.depends('odoo_prod_template_id.public_categ_ids')
     def _compute_config_product_categories(self):
@@ -155,26 +156,32 @@ class MagentoConfigurableProduct(models.Model):
             'domain': [("product_tmpl_id", "=", self.odoo_prod_template_id.id)]
         }
 
-    def delete_in_magento(self):
+    def delete_product_in_magento(self, simple_product=False):
         self.ensure_one()
-        related_simple_prods = self.simple_product_ids.with_context(active_test=False).filtered(
-            lambda x: x.magento_status != 'deleted')
-        if related_simple_prods:
-            raise UserError("You can't remove Config.Product until it has related (with statuses other than 'deleted')"
-                            " Simple Products: %s" % str([s.magento_sku for s in related_simple_prods]))
+
+        if not simple_product:
+            related_simple_prods = self.simple_product_ids.with_context(active_test=False).filtered(
+                lambda x: x.magento_product_id)
+
+            for simp_prod in related_simple_prods:
+                simp_prod.delete_simple_product_in_magento()
+
         try:
-            api_url = '/V1/products/%s' % self.magento_sku
-            response = req(self.magento_instance_id, api_url, 'DELETE')
+            magento_sku = simple_product.magento_sku if simple_product else self.magento_sku
+            instance = simple_product.magento_instance_id if simple_product else self.magento_instance_id
+
+            api_url = '/V1/products/%s' % magento_sku
+            response = req(instance, api_url, 'DELETE')
         except Exception as err:
             raise UserError("Error while delete product in Magento. " + str(err))
 
         if response is True:
-            self.write({
+            prod_rec = simple_product if simple_product else self
+            prod_rec.write({
                 'magento_status': 'deleted',
                 'magento_product_id': '',
                 'magento_export_date': '',
                 'force_update': False,
-                'active': False,
                 'magento_website_ids': [(5, 0, 0)]
             })
 
@@ -363,6 +370,9 @@ class MagentoConfigurableProduct(models.Model):
                 response = req(magento_instance, api_url)
             except Exception:
                 response = []
+
+            # print(response)
+            # raise UserError("")
 
             if response:
                 [available_attributes.update({
@@ -742,7 +752,7 @@ class MagentoConfigurableProduct(models.Model):
 
         if response.get('sku'):
             if method == "POST":
-                self.link_product_with_websites_in_magento(instance, ml_conf_products, response)
+                self.link_product_with_websites_in_magento(prod_sku, instance, ml_conf_products, response)
             self.process_storeview_data_export(instance, ml_conf_products, data, attr_sets)
 
             if self.odoo_prod_template_id:
@@ -865,7 +875,7 @@ class MagentoConfigurableProduct(models.Model):
                 opt = next((o for o in attr['options'] if o.get('label') and
                             self.to_upper(o['label']) == self.to_upper(rec.value_ids.name)), {})
                 if opt:
-                    value = opt['value'] if not value else value + ',' + opt['value']
+                    value = opt['value'] if not value else f"{value}, {opt['value']}"
 
             if value:
                 custom_attributes.append({
@@ -889,21 +899,33 @@ class MagentoConfigurableProduct(models.Model):
 
     def add_translatable_conf_product_attributes(self, custom_attributes, available_attributes, lang_code):
         prod_attributes = self.odoo_prod_template_id.categ_id.x_attribute_ids
-        prod_attr_list = list(
-            {(a.categ_group_id.name, a.categ_group_id.id) for a in prod_attributes if a.categ_group_id}
-        )
+        prod_attr_groups = prod_attributes.categ_group_id
 
         if self.odoo_prod_template_id.website_description:
             value = self.with_context(lang=lang_code).odoo_prod_template_id.website_description
-            value_stripped = str(value).lstrip('<p>').rstrip('</p>')
-            if value_stripped and value_stripped != 'br':
+            value_stripped = str(value).lstrip('<p>').rstrip('</p>').rstrip('<br>')
+            if value_stripped:
                 self.add_to_custom_attributes_list(custom_attributes, 'description', value_stripped)
 
-        for prod_attr in prod_attr_list:
-            value = self.to_html_listitem(prod_attributes.filtered(lambda x: x.categ_group_id.id == prod_attr[1]),
-                                          lang_code)
-            attr_code = available_attributes[self.to_upper(prod_attr[0])]['attribute_code']
-            self.add_to_custom_attributes_list(custom_attributes, attr_code, value)
+        for group in prod_attr_groups:
+            attr_name = group.with_context(lang='en_US').name
+            attr_code = available_attributes[self.to_upper(attr_name)]['attribute_code']
+
+            if attr_name == 'size table':
+                vals = ''
+                attr_vals = prod_attributes.filtered(lambda x: x.categ_group_id.name == group.name).sorted('sequence')
+
+                for attr in attr_vals:
+                    val = re.sub(re.compile('<p.*?><br></p>'), '', str(attr.attribute_value))
+                    if val:
+                        vals += val + '<br>'
+
+                value = vals
+            else:
+                value = self.to_html_listitem(prod_attributes.filtered(lambda x: x.categ_group_id.name == group.name), lang_code)
+
+            if value:
+                self.add_to_custom_attributes_list(custom_attributes, attr_code, value)
 
     def prepare_websites_and_images_data_to_export(self, instance, product_websites, prod_media):
         prod_sku = self.magento_sku
@@ -957,9 +979,9 @@ class MagentoConfigurableProduct(models.Model):
                 "value": attr_value
             })
 
-    def link_product_with_websites_in_magento(self, magento_instance, ml_products, product, method="POST"):
+    @staticmethod
+    def link_product_with_websites_in_magento(prod_sku, magento_instance, ml_products, product, method="POST"):
         website_ids = []
-        prod_sku = self.magento_sku
         data = {"productWebsiteLink": {"sku": prod_sku}}
 
         for site in magento_instance.magento_website_ids:
@@ -1206,8 +1228,8 @@ class MagentoConfigurableProduct(models.Model):
     def to_html_listitem(attributes, lang_code):
         lst = "<ul>"
         for attr in attributes.sorted('sequence'):
-            if attr['attribute_value']:
-                item = str(attr.with_context(lang=lang_code)['attribute_value']).lstrip('<p>').rstrip('</p>')
-                lst += "<li>" + item + "</li>"
+            val = str(attr.with_context(lang=lang_code).attribute_value).lstrip('<p>').rstrip('</p>').rstrip('<br>')
+            if val:
+                lst += "<li>" + val + "</li>"
 
         return lst + "</ul>"

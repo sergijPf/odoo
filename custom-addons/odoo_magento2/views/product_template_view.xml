@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <record id="action_make_product_template_configurable">
+            <field name="name">Magento - Make as Configurable</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="product.model_product_template"/>
+            <field name="binding_model_id" ref="product.model_product_template"/>
+            <field name="state">code</field>
+            <field name="code">records.make_configurable()</field>
+        </record>
+
         <record id="product_template_only_form_inherit_view" model="ir.ui.view">
             <field name="name">product_template_only_form_inherit_view</field>
             <field name="model">product.template</field>

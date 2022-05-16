@@ -46,6 +46,12 @@ class ProductTemplate(models.Model):
 
         return super(ProductTemplate, self).unlink()
 
+    def make_configurable(self):
+        for rec in self:
+            rec.is_magento_config = True
+            rec.attribute_line_ids.filtered(
+                lambda x: x.is_magento_config_prod and not x.is_ignored and len(x.value_ids) > 1 and not x.magento_config
+            ).magento_config = True
 
 class ProductTemplateAttributeLine(models.Model):
     _inherit = "product.template.attribute.line"
