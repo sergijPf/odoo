@@ -617,60 +617,69 @@ class MagentoConfigurableProduct(models.Model):
         for attr in single_attr_recs:
             attribute = self.to_upper(attr.attribute_id.name)
             mag_attr = magento_attributes[attribute]
-            attr_val = attr.value_ids
+            attr_val_rec = attr.value_ids
 
-            if self.to_upper(attr_val.name) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
+            if self.to_upper(attr_val_rec.name) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
                 val_id, err = self.create_new_attribute_option_in_magento(
-                    instance, mag_attr['attribute_code'], attr_val.name, attr_val
+                    instance, mag_attr['attribute_code'], attr_val_rec
                 )
                 if err:
                     ml_conf_products[sku]['log_message'] += err
                 else:
-                    mag_attr['options'].append({'label': attr_val.name.upper(), 'value': val_id})
+                    mag_attr['options'].append({'label': attr_val_rec.name.upper(), 'value': val_id})
 
         return True
 
-    def create_new_attribute_option_in_magento(self, magento_instance, attribute_code, attribute_option, res_id=0):
-        attachment = self.env['ir.attachment'].sudo().search([('res_field', '=', 'x_image'),
-                                                              ('res_model', '=', 'product.attribute.value'),
-                                                              ('res_id', '=', int(res_id.id) if res_id else 0)])
-
-        html_color = res_id.html_color if res_id and res_id.html_color and res_id.html_color[0] == '#' else ""
-        value = html_color if html_color else \
-            attachment.mimetype.replace("/", "_%s." % str(attachment.id)) if attachment else ""
-
-        if not html_color and attachment:
-            data = {
-                "entry": {
-                    'base64_encoded_data': res_id.x_image.decode('utf-8'),
-                    "type": attachment.mimetype,
-                    "name": value,
-                    "sub_folder": ""
-                }
-            }
-
-            try:
-                api_url = '/V1/products/attributes/swatch/upload'
-                req(magento_instance, api_url, 'POST', data)
-            except Exception as e:
-                return 0, "Error while Product Attribute Option(Swatch) Image upload for %s Attribute: %s\n" % \
-                       (attribute_code, e)
+    def create_new_attribute_option_in_magento(self, magento_instance, attribute_code, attribute_value):
+        store_labels = []
+        magento_storeviews = [w.store_view_ids for w in magento_instance.magento_website_ids]
+        is_string = True if isinstance(attribute_value, str) else False
 
         data = {
             "option": {
-                "label": str(attribute_option).upper(),
-                "value": ("/" if not html_color and attachment else "") + value,
+                "label": (attribute_value if is_string else str(attribute_value.name)).upper(),
+                "value": "",
                 "sort_order": 0,
                 "is_default": "false",
                 "store_labels": []
             }
         }
-        magento_storeviews = [w.store_view_ids for w in magento_instance.magento_website_ids]
 
-        if magento_storeviews:
-            store_labels = []
-            avail_translations = self.env['ir.translation'].search([('name', '=', 'product.attribute.value,name'),
-                                                                    ('res_id', '=', res_id.id if res_id else 0)])
+        if not is_string:
+            attachment_rec = self.env['ir.attachment'].sudo().search([
+                ('res_field', '=', 'x_image'),
+                ('res_model', '=', 'product.attribute.value'),
+                ('res_id', '=', attribute_value.id)
+            ])
+            color = attribute_value.html_color
+            html_color = color if color and color[0] == '#' else ""
+            attachment = attachment_rec.mimetype.replace("/", f"_{attachment_rec.id}.") if attachment_rec else ""
+            value = html_color if html_color else attachment
+
+            if not html_color and attachment_rec:
+                entry = {
+                    "entry": {
+                        'base64_encoded_data': attribute_value.x_image.decode('utf-8'),
+                        "type": attachment_rec.mimetype,
+                        "name": value,
+                        "sub_folder": ""
+                    }
+                }
+
+                try:
+                    api_url = '/V1/products/attributes/swatch/upload'
+                    req(magento_instance, api_url, 'POST', entry)
+                except Exception as e:
+                    return 0, "Error while Product Attribute Option(Swatch) Image upload for %s Attribute: %s\n" % \
+                           (attribute_code, e)
+
+            data['option']['value'] = ("/" if not html_color and attachment_rec else "") + value
+
+            avail_translations = self.env['ir.translation'].search([
+                ('name', '=', 'product.attribute.value,name'),
+                ('res_id', '=', attribute_value.id)
+            ])
+
             for view in magento_storeviews:
                 translated_label = ''
                 for item in avail_translations:
@@ -678,7 +687,8 @@ class MagentoConfigurableProduct(models.Model):
                         translated_label = str(item.value if item.value else item.src).upper()
                         break
                 store_labels.append({"store_id": view.magento_storeview_id, "label": translated_label})
-            data['option'].update({"store_labels": store_labels})
+
+            data['option']['store_labels'] = store_labels
 
         try:
             api_url = '/all/V1/products/attributes/%s/options' % attribute_code

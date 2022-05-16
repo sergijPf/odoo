@@ -425,8 +425,9 @@ class MagentoProductProduct(models.Model):
                 else:
                     attr_val = prod_attrs[attr]
                     if self.to_upper(attr_val) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
+                        attr_val_rec = prod.ptav_ids.product_attribute_value_id.filtered(lambda x: x.name == attr_val)
                         val_id, err = prod.magento_conf_product_id.create_new_attribute_option_in_magento(
-                            instance, mag_attr['attribute_code'], attr_val
+                            instance, mag_attr['attribute_code'], attr_val_rec or attr_val
                         )
                         if err:
                             ml_simp_products[prod_sku]['log_message'] += err
