@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record model="magento.product.label" id="new_collection">
+            <field name="name">New collection</field>
+        </record>
+        <record model="magento.product.label" id="award_winning">
+            <field name="name">Award winning</field>
+        </record>
+        <record model="magento.product.label" id="ambassadors">
+            <field name="name">Ambassadors</field>
+        </record>
+        <record model="magento.product.label" id="new_products">
+            <field name="name">New Products</field>
+        </record>
+    </data>
+</odoo>

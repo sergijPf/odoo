@@ -12,8 +12,8 @@ class MagentoAsyncBulkLogs(models.Model):
     _rec_name = 'bulk_uuid'
 
     bulk_uuid = fields.Char('Bulk ID')
-    magento_product_ids = fields.Many2many('magento.product.product', string="Magento Product")
-    magento_conf_product_ids = fields.Many2many('magento.configurable.product', string="Magento Conf.Product")
+    magento_product_ids = fields.Many2many('magento.product.product', string="Magento Product", ondelete='cascade')
+    magento_conf_product_ids = fields.Many2many('magento.configurable.product', string="Magento Conf.Product", ondelete='cascade')
     log_details_ids = fields.One2many('magento.async.bulk.log.details', 'bulk_log_id', 'Log details')
     topic = fields.Char(string="Related topic")
     is_conf_prod = fields.Boolean("Is configurable product?", compute="_check_if_config_or_not")
@@ -51,10 +51,11 @@ class MagentoAsyncBulkLogs(models.Model):
             })
 
     def get_detailed_status_of_log(self):
-        instance = self.magento_conf_product_ids.magento_instance_id or self.magento_product_ids.magento_instance_id
+        instance = self.with_context(active_test=False).magento_conf_product_ids.magento_instance_id or \
+                   self.with_context(active_test=False).magento_product_ids.magento_instance_id
 
         if not instance:
-            return False
+            return {}
 
         try:
             api_url = '/V1/bulk/%s/detailed-status' % self.bulk_uuid
@@ -62,11 +63,11 @@ class MagentoAsyncBulkLogs(models.Model):
         except Exception as e:
             raise UserError("Error while requesting Magento data!" + str(e))
 
-        return response
+        return response if isinstance(response, dict) else {}
 
     def check_bulk_log_status(self):
         response = self.get_detailed_status_of_log()
-        log_statuses = [i.get('status', 0) for i in response.get('operations_list', [])]
+        log_statuses = [i.get('status', 0) for i in response.get('operations_list', []) if i and isinstance(i, dict)]
 
         return True if 4 in log_statuses else False
 
@@ -81,7 +82,7 @@ class MagentoAsyncBulkLogDetails(models.Model):
     _name = 'magento.async.bulk.log.details'
     _description = 'Log Details of Async Export data to Magento'
 
-    bulk_log_id = fields.Many2one('magento.async.bulk.logs', string="Log bulk")
+    bulk_log_id = fields.Many2one('magento.async.bulk.logs', string="Log bulk", ondelete='cascade')
     log_line_id = fields.Char(string="Log line id")
     sku = fields.Char(string="Product SKU")
     result_message = fields.Char(string="Result Message")

@@ -31,9 +31,9 @@
                             ('create_variant', '=', 'no_variant')]}"
                        groups="odoo_magento2.group_magento_user"/>
                 <field name="main_conf_attr" groups="odoo_magento2.group_magento_user"
-                       attrs="{'invisible': ['|', '|', '|', '|', ('is_magento_config_prod', '!=', True),
+                       attrs="{'invisible': ['|', '|', '|', ('is_magento_config_prod', '!=', True),
                             ('x_magento_no_create', '=', True), ('magento_config', '!=', True),
-                            ('is_ignored', '=', True), ('value_count', '=', 1)]}"/>
+                            ('is_ignored', '=', True)]}"/>
             </xpath>
 
         </field>

@@ -17,11 +17,11 @@
                 <header>
                     <button name="process_products_export_to_magento"
                             string="Process Export directly"
-                            type="object" class="btn-primary"/>
+                            type="object" class="btn-secondary"/>
                     <button name="process_products_export_to_magento"
                             context="{'async_export': True}"
                             string="Process Export async (RabbitMQ)"
-                            type="object" class="btn btn-info ml-2"/>
+                            type="object" class="btn btn-primary ml-2"/>
                 </header>
                 <sheet>
                     <field name="id" invisible="1" readonly="1"/>
@@ -81,6 +81,10 @@
                                     <br/>
                                     <field name="x_magento_single_attr_ids" readonly="1" widget="many2many_tags"/>
                                     <field name="x_magento_main_config_attr" readonly="1"/>
+                                    <field name="related_product_ids" readonly="1" widget="many2many_tags"/>
+                                    <field name="category_ids"
+                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                           readonly="1" widget="many2many_tags"/>
                                 </group>
                                 <group name="magento_info" string="Magento Info">
                                     <field name="magento_instance_id" readonly="1"/>
@@ -103,9 +107,8 @@
                                     <br/>
                                     <field name="force_update"/>
                                     <field name="magento_attr_set" required="1"/>
-                                    <field name="category_ids"
-                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
-                                           readonly="1" widget="many2many_tags"/>
+                                    <field name="product_label_ids" widget="many2many_tags"
+                                           options="{'no_create':True, 'no_create_edit': True}"/>
                                 </group>
                                 <group string="Product Images" name="magento_product_images">
                                      <field name="product_image_ids" class="o_website_sale_image_list"
@@ -136,11 +139,11 @@
                 <header>
                     <button name="process_products_export_to_magento"
                             string="Process Export directly"
-                            type="object" class="btn-primary ml-2"/>
+                            type="object" class="btn-secondary ml-2"/>
                     <button name="process_products_export_to_magento"
                             context="{'async_export': True}"
                             string="Process Export async (RabbitMQ)"
-                            type="object" class="btn btn-info ml-2"/>
+                            type="object" class="btn btn-primary ml-2"/>
                 </header>
                 <field name="magento_instance_id"/>
                 <field name="magento_product_id" string="Magento Product ID"/>

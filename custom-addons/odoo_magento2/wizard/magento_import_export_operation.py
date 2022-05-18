@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import re
-from datetime import datetime
 from odoo.exceptions import UserError
 from odoo import fields, models, _
 
@@ -123,7 +121,7 @@ class MagentoImportExport(models.TransientModel):
                 'magento_instance_id': product_dict.get('instance_id'),
                 'odoo_prod_template_id': product.id,
                 'magento_sku': product.with_context(lang='en_US').name.replace(' - ', '_').replace('-', '_').
-                    replace('%', '').replace('#', '').replace('/', '').replace('  ', ' ').replace(' ', '_')
+                    replace('%', '').replace('#', '').replace('/', '').replace('&', '').replace('  ', ' ').replace(' ', '_')
             }
             conf_product = conf_product_obj.create(values)
         else:
@@ -174,97 +172,3 @@ class MagentoImportExport(models.TransientModel):
                     simple_prod.write({'active': True})
 
         return magento_sku_missing
-    ### check if need this
-    # def prepare_customers_for_export_to_magento(self):
-    #     active_ids = self._context.get("active_ids", [])
-    #     selection = self.env["res.partner"].browse(active_ids)
-    #     filt_customers = selection.filtered(lambda c: c.customer_rank == 1 and c.type == 'contact')
-    #
-    #     if not filt_customers:
-    #         raise UserError("It seems selected partners are not Customers or have different Address type than 'contact'")
-    #
-    #     failed_to_add = self.add_customers_to_magento_layer(filt_customers)
-    #
-    #     if failed_to_add:
-    #         raise UserError(_("Following Contacts missed or have incorrect email addresses and "
-    #                           "were not added to magento layer: %s") % str(failed_to_add))
-    #     else:
-    #         return {
-    #             'effect': {
-    #                 'fadeout': 'slow',
-    #                 'message': " 'Export in Magento Layer' Process Completed Successfully! {}".format(""),
-    #                 'img_url': '/web/static/img/smile.svg',
-    #                 'type': 'rainbow_man',
-    #             }
-    #         }
-    #
-    # def add_customers_to_magento_layer(self, odoo_customers):
-    #     failed_to_add = []
-    #
-    #     for instance in self.magento_instance_ids:
-    #         website = self.magento_website_id
-    #         if website.magento_instance_id.id != instance.id:
-    #             continue
-    #         for customer in odoo_customers:
-    #             if not self.check_email(customer.email):
-    #                 failed_to_add.append(customer.name)
-    #                 continue
-    #             elif not customer.magento_res_partner_ids or \
-    #                     instance not in customer.magento_res_partner_ids.mapped('magento_instance_id'):
-    #                 magento_customer = self.create_magento_customer_in_layer(customer, instance, website)
-    #             else:
-    #                 magento_customer = customer.magento_res_partner_ids.filtered(
-    #                     lambda i: i.magento_instance_id.id == instance.id)
-    #
-    #             # proceed with child partners, (contact - create new, invoice/delivery - create and link address),
-    #             # valid only for one iteration (doesn't use hierarchy)
-    #             for child in customer.child_ids:
-    #                 if child.type == 'invoice':
-    #                     self.create_and_link_customer_address(child, magento_customer, 'invoice')
-    #                 elif child.type == 'delivery':
-    #                     self.create_and_link_customer_address(child, magento_customer, 'delivery')
-    #
-    #     return failed_to_add
-    #
-    # def create_magento_customer_in_layer(self, customer, instance, website):
-    #     magento_partner_obj = self.env['magento.res.partner']
-    #     res = magento_partner_obj.create({
-    #         'partner_id': customer.id,
-    #         'magento_instance_id': instance.id,
-    #         'magento_website_id': website.id,
-    #         'status': 'to_export'
-    #     })
-    #
-    #     if res:
-    #         customer.is_magento_customer = True
-    #     return res
-    #
-    # def create_and_link_customer_address(self, odoo_partner, magento_customer, addr_type):
-    #     customer_address_obj = self.env['magento.customer.addresses']
-    #     if odoo_partner.id in magento_customer.customer_address_ids.mapped('odoo_partner_id').ids:
-    #         return
-    #
-    #     if addr_type == 'invoice':
-    #         _type = 'billing'
-    #     elif addr_type == 'delivery':
-    #         _type = 'shipping'
-    #     else:
-    #         return
-    #
-    #     # create address in magento layer
-    #     address_id = customer_address_obj.create({
-    #         'address_type': _type,
-    #         'customer_id': magento_customer.id,
-    #         'odoo_partner_id': odoo_partner.id
-    #     })
-    #
-    #     magento_customer.write({
-    #         'customer_address_ids': [(4, address_id.id)]
-    #     })
-    #
-    # @staticmethod
-    # def check_email(email):
-    #     regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-    #     if email and (re.fullmatch(regex, email)):
-    #         return True
-    #     return False

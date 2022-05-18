@@ -6,7 +6,7 @@ from odoo import models, fields, api
 class MagentoProductCategory(models.Model):
     _name = "magento.product.category"
     _description = "Magento Product Categories"
-    _rec_name = 'name'
+    _rec_name = 'complete_category_name'
 
     instance_id = fields.Many2one('magento.instance', 'Magento Instance', ondelete="cascade")
     magento_category = fields.Char(string="Magento ID")
@@ -27,19 +27,3 @@ class MagentoProductCategory(models.Model):
                                                                category.name)
             else:
                 category.complete_category_name = category.name
-
-
-class ProductCategory(models.Model):
-    _inherit = "product.category"
-
-    x_attribute_ids = fields.Many2many('product.page.attribute', 'product_category_ids',
-                                       string="Product Page attributes", help="Descriptive attributes for Product page")
-    product_template_ids = fields.One2many('product.template', 'categ_id')
-
-    def write(self, vals):
-        res = super(ProductCategory, self).write(vals)
-
-        if 'x_attribute_ids' in vals:
-            self.product_template_ids.magento_conf_prod_ids.force_update = True
-
-        return res

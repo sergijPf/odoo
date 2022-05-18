@@ -739,7 +739,6 @@ class MagentoProductProduct(models.Model):
                 data.append({
                     "product": {
                         "sku": prod.magento_sku,
-                        # "name": prod.magento_product_name,
                         "name": prod.x_magento_name,
                         "attribute_set_id": attr_sets[attribute_set]['id'],
                         "status": 1,  # Enabled(1) / Disabled(0)

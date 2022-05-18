@@ -1,7 +1,7 @@
 {
     # App information
     'name': "Smartino Magento2 connector",
-    'version': '15.0.8',
+    'version': '15.0.9',
     'category': 'Sales',
     'summary': 'Odoo - Magento2 Connector',
 
@@ -14,6 +14,7 @@
         'data/magento_data_cron.xml',
         'data/ecommerce_data.xml',
         'data/automatic_workflow_data_.xml',
+        'data/magento_product_labels.xml',
         'views/magento_instance_view.xml',
         'views/magento_website_view.xml',
         'views/magento_storeview_view.xml',

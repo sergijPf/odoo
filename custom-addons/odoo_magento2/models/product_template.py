@@ -25,11 +25,9 @@ class ProductTemplate(models.Model):
 
         if self.magento_conf_prod_ids and ('website_description' in vals or 'product_template_image_ids' in vals or
                                            'attribute_line_ids' in vals or 'x_magento_no_create' in vals or
-                                           'public_categ_ids' in vals or 'categ_id' in vals):
+                                           'public_categ_ids' in vals or 'categ_id' in vals or
+                                           'alternative_product_ids' in vals):
             self.magento_conf_prod_ids.force_update = True
-
-            if 'public_categ_ids' in vals:
-                self.magento_conf_prod_ids._compute_config_product_categories()
 
         return res
 
@@ -49,9 +47,9 @@ class ProductTemplate(models.Model):
     def make_configurable(self):
         for rec in self:
             rec.is_magento_config = True
-            rec.attribute_line_ids.filtered(
-                lambda x: x.is_magento_config_prod and not x.is_ignored and len(x.value_ids) > 1 and not x.magento_config
-            ).magento_config = True
+            for attr in rec.attribute_line_ids:
+                if attr.is_magento_config_prod and not attr.is_ignored and len(attr.value_ids) > 1 and not attr.magento_config:
+                    attr.magento_config = True
 
 class ProductTemplateAttributeLine(models.Model):
     _inherit = "product.template.attribute.line"
@@ -93,5 +91,21 @@ class ProductTemplateAttributeLine(models.Model):
                 raise UserError("Attribute with 'ignore for Magento' flag cannot be used as configurable!")
             else:
                 self.product_tmpl_id.magento_conf_prod_ids.force_update = True
+
+        return res
+
+
+class ProductCategory(models.Model):
+    _inherit = "product.category"
+
+    x_attribute_ids = fields.Many2many('product.page.attribute', 'product_category_ids',
+                                       string="Product Page attributes", help="Descriptive attributes for Product page")
+    product_template_ids = fields.One2many('product.template', 'categ_id')
+
+    def write(self, vals):
+        res = super(ProductCategory, self).write(vals)
+
+        if 'x_attribute_ids' in vals:
+            self.product_template_ids.magento_conf_prod_ids.force_update = True
 
         return res

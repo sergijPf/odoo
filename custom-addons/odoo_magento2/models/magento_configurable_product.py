@@ -61,6 +61,10 @@ class MagentoConfigurableProduct(models.Model):
     product_variant_count = fields.Integer('Simple Products #', related='odoo_prod_template_id.product_variant_count')
     sipmle_count_equal = fields.Boolean("Is product count equal?", compute='_compute_simple_and_variant_count_equal')
     bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs")
+    related_product_ids = fields.Many2many('magento.configurable.product', 'related_products_rel', 'src_id', 'dest_id',
+                                           string="Related Products", compute="_calculate_related_products", store=True)
+    product_label_ids = fields.Many2many("magento.product.label", string="Product Labels",
+                                         help="Product labels to be marked on Product on Magento's frontpage")
 
     _sql_constraints = [('_magento_conf_product_unique_constraint',
                          'unique(magento_sku,magento_instance_id)',
@@ -68,30 +72,14 @@ class MagentoConfigurableProduct(models.Model):
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_configurable_product_attributes(self):
-        # relative_size_attr = self.env['product.attribute'].search([('name', '=', 'relative size')])
-        # if not relative_size_attr:
-        #     relative_size_attr = self.env['product.attribute'].create({'name': 'relative size'})
-
         for rec in self:
             prod_attr_lines = rec.odoo_prod_template_id.attribute_line_ids
-
             ### recalculate config.attributes
             rec.x_magento_assign_attr_ids = prod_attr_lines.filtered(
                 lambda x: x.magento_config and not x.attribute_id.is_ignored_in_magento).attribute_id
-            # # add additional size attribute if needed to cover required functionality
-            # size_attr = rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'size')
-            # size_attr_vals = prod_attr_lines.filtered(lambda x: x.attribute_id.name == 'size').value_ids
-            #
-            # if size_attr and all([a.find(' - ') >= 0 for a in size_attr_vals.mapped('name')]):
-            #     rec.x_magento_assign_attr_ids = [(4, relative_size_attr.id)]
-
             ### recalc main config.(hover) attr
             rec.x_magento_main_config_attr = prod_attr_lines.filtered(
                 lambda x: x.magento_config and x.main_conf_attr).with_context(lang='en_US').attribute_id.name or ''
-
-            # if rec.x_magento_main_config_attr == 'size' and \
-            #         rec.x_magento_assign_attr_ids.filtered(lambda x: x.name == 'relative size'):
-            #     rec.x_magento_main_config_attr = 'relative size'
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_single_attributes_of_configurable_product(self):
@@ -121,8 +109,14 @@ class MagentoConfigurableProduct(models.Model):
         for rec in self:
             rec.sipmle_count_equal = True if rec.product_simple_count == rec.product_variant_count else False
 
+    @api.depends('odoo_prod_template_id.alternative_product_ids')
+    def _calculate_related_products(self):
+        for rec in self:
+            rec.related_product_ids = [(6, 0, rec.odoo_prod_template_id.alternative_product_ids.magento_conf_prod_ids.filtered(
+                lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and x.magento_product_id).ids)]
+
     def write(self, vals):
-        if 'magento_attr_set' in vals:
+        if 'magento_attr_set' in vals or 'product_label_ids' in vals:
             vals.update({'force_update': True})
 
         if 'active' in vals and self.simple_product_ids:
@@ -251,6 +245,71 @@ class MagentoConfigurableProduct(models.Model):
         if len(active_prods) > 10:
             raise UserError("You can't export directly more than 10 products at once. Please use async export instead.")
 
+    def create_attribute_sets_dict(self, magento_instance, attribute_sets):
+        """
+        Create Attribute-Sets dictionary for selected Products with Attribute ID and Attributes available in Magento
+        :param magento_instance: Magento Instance
+        :param attribute_sets: Python set of Product's 'Attribute-sets' defined for Config.Product
+        :return: Attribute sets dictionary
+        """
+        attr_sets = {}.fromkeys(attribute_sets, {})
+
+        for a_set in attr_sets:
+            attr_sets[a_set].update({
+                'id': self.get_id_of_attribute_set_by_name(magento_instance, a_set)
+            })
+            attr_sets[a_set].update({
+                'attributes': self.get_available_attributes_from_magento(magento_instance, a_set, attr_sets)
+            })
+        return attr_sets
+
+    @staticmethod
+    def get_id_of_attribute_set_by_name(magento_instance, attribute_set_name, magento_entity_id=4):
+        search_criteria = create_search_criteria({
+            'attribute_set_name': attribute_set_name,
+            'entity_type_id': magento_entity_id
+        })
+        query_string = Php.http_build_query(search_criteria)
+        api_url = '/V1/eav/attribute-sets/list?%s' % query_string
+        try:
+            response = req(magento_instance, api_url)
+        except Exception:
+            response = {}
+
+        if response.get('items'):
+            return response.get('items')[0].get('attribute_set_id')
+        return False
+
+    def get_available_attributes_from_magento(self, magento_instance, attribute_set_name, attr_sets):
+        """
+        Get available attributes and related options(swatches) from Magento
+        :param magento_instance: Instance of Magento
+        :param attribute_set_name: Attribute Set Name defined in Odoo Product's Category
+        :param attr_sets: Attribute-Set dictionary with unique data for selected products
+        :return: Available in Magento Attributes list and their options
+        """
+        attribute_set_id = attr_sets[attribute_set_name]['id']
+        available_attributes = {}
+
+        if attribute_set_id:
+            try:
+                api_url = '/all/V1/products/attribute-sets/%s/attributes' % attribute_set_id
+                response = req(magento_instance, api_url)
+            except Exception:
+                response = []
+
+            if response:
+                [available_attributes.update({
+                    self.to_upper(attr.get('default_frontend_label')): {
+                        'attribute_id': attr.get('attribute_id'),
+                        'attribute_code': attr.get('attribute_code'),
+                        'options': attr.get('options'),
+                        'can_be_configurable': True if attr.get('is_user_defined') else False
+                    }
+                }) for attr in response if attr.get('default_frontend_label')]
+
+        return available_attributes
+
     def check_conf_attributes_can_be_configurable(self, magento_instance, conf_attributes, attr_sets):
         avail_attributes = {}
 
@@ -318,71 +377,6 @@ class MagentoConfigurableProduct(models.Model):
             instance.magento_website_ids, ml_simp_products_dict, ml_conf_products_dict
         )
 
-    def create_attribute_sets_dict(self, magento_instance, attribute_sets):
-        """
-        Create Attribute-Sets dictionary for selected Products with Attribute ID and Attributes available in Magento
-        :param magento_instance: Magento Instance
-        :param attribute_sets: Python set of Product's 'Attribute-sets' defined for Config.Product
-        :return: Attribute sets dictionary
-        """
-        attr_sets = {}.fromkeys(attribute_sets, {})
-
-        for a_set in attr_sets:
-            attr_sets[a_set].update({
-                'id': self.get_id_of_attribute_set_by_name(magento_instance, a_set)
-            })
-            attr_sets[a_set].update({
-                'attributes': self.get_available_attributes_from_magento(magento_instance, a_set, attr_sets)
-            })
-        return attr_sets
-
-    @staticmethod
-    def get_id_of_attribute_set_by_name(magento_instance, attribute_set_name, magento_entity_id=4):
-        search_criteria = create_search_criteria({
-            'attribute_set_name': attribute_set_name,
-            'entity_type_id': magento_entity_id
-        })
-        query_string = Php.http_build_query(search_criteria)
-        api_url = '/V1/eav/attribute-sets/list?%s' % query_string
-        try:
-            response = req(magento_instance, api_url)
-        except Exception:
-            response = {}
-
-        if response.get('items'):
-            return response.get('items')[0].get('attribute_set_id')
-        return False
-
-    def get_available_attributes_from_magento(self, magento_instance, attribute_set_name, attr_sets):
-        """
-        Get available attributes and related options(swatches) from Magento
-        :param magento_instance: Instance of Magento
-        :param attribute_set_name: Attribute Set Name defined in Odoo Product's Category
-        :param attr_sets: Attribute-Set dictionary with unique data for selected products
-        :return: Available in Magento Attributes list and their options
-        """
-        attribute_set_id = attr_sets[attribute_set_name]['id']
-        available_attributes = {}
-
-        if attribute_set_id:
-            try:
-                api_url = '/all/V1/products/attribute-sets/%s/attributes' % attribute_set_id
-                response = req(magento_instance, api_url)
-            except Exception:
-                response = []
-
-            if response:
-                [available_attributes.update({
-                    self.to_upper(attr.get('default_frontend_label')): {
-                        'attribute_id': attr.get('attribute_id'),
-                        'attribute_code': attr.get('attribute_code'),
-                        'options': attr.get('options'),
-                        'can_be_configurable': True if attr.get('is_user_defined') else False
-                    }
-                }) for attr in response if attr.get('default_frontend_label')]
-
-        return available_attributes
-
     def create_products_metadata_dict(self, export_products):
         """
         Create dictionary which contains metadata for selected Configurable Products and related Simple Products
@@ -390,18 +384,16 @@ class MagentoConfigurableProduct(models.Model):
         :return: Configurable and Simple products dictionary
         """
         products_dict_conf = {
-            str(c.magento_conf_prod_sku): {
-                'conf_object': c.magento_conf_product_id,
-                'config_attr': {
-                    self.to_upper(a.name) for a in c.with_context(lang='en_US').magento_conf_product_id.x_magento_assign_attr_ids
-                },
+            str(c.magento_sku): {
+                'conf_object': c,
+                'config_attr': {self.to_upper(a.name) for a in c.with_context(lang='en_US').x_magento_assign_attr_ids},
                 'children': [],
-                'magento_status': c.magento_conf_product_id.magento_status,
+                'magento_status': c.magento_status,
                 'log_message': '',
-                'force_update': c.magento_conf_product_id.force_update,
-                'export_date_to_magento': c.magento_conf_product_id.magento_export_date,
-                'to_export': False if c.magento_conf_product_id.do_not_create_flag else True
-            } for c in export_products
+                'force_update': c.force_update,
+                'export_date_to_magento': c.magento_export_date,
+                'to_export': False if c.do_not_create_flag else True
+            } for c in export_products.magento_conf_product_id
         }
 
         text = "Configurable Product is missing 'Magento Product SKU' field. \n"
@@ -448,11 +440,32 @@ class MagentoConfigurableProduct(models.Model):
 
         return res
 
+    def update_conf_product_dict_with_magento_data(self, magento_prod, ml_conf_products_dict):
+        attr_opt = magento_prod.get("extension_attributes").get("configurable_product_options")
+        children = magento_prod.get("extension_attributes").get("configurable_product_links")
+        link_data = magento_prod.get("extension_attributes").get("configurable_product_link_data")
+        website_ids = magento_prod.get("extension_attributes").get("website_ids")
+        category_links = magento_prod.get("extension_attributes").get("category_links", [])
+
+        ml_conf_products_dict[magento_prod.get('sku')].update({
+            'magento_type_id': magento_prod.get('type_id'),
+            'magento_prod_id': magento_prod.get("id"),
+            'magento_attr_set_id': magento_prod.get("attribute_set_id"),
+            'magento_conf_prod_options': attr_opt,
+            'children': children,
+            'magento_website_ids': website_ids,
+            'category_links': [cat['category_id'] for cat in category_links],
+            'magento_configurable_product_link_data': self.convert_json_to_dict(link_data),
+            'media_gallery': [i['id'] for i in magento_prod.get("media_gallery_entries", []) if i],
+            'magento_update_date': magento_prod.get("updated_at")
+        })
+
     def check_config_products_need_to_be_exported(self, ml_conf_products, attr_sets):
         for prod in ml_conf_products:
             if ml_conf_products[prod]['log_message']:
                 ml_conf_products[prod]['to_export'] = False
                 continue
+
             conf_obj = ml_conf_products[prod]['conf_object']
             mag_attr_set = conf_obj.magento_attr_set
             prod_attr_set_id = attr_sets.get(mag_attr_set, {}).get('id')
@@ -502,7 +515,7 @@ class MagentoConfigurableProduct(models.Model):
                 if ml_conf_products[prod]['magento_type_id'] == 'configurable':
                     # check if product images need to be updated
                     magento_images = ml_conf_products[prod].get('media_gallery', [])
-                    tmp = 1 if not conf_obj.product_image_ids.filtered(lambda x: x.image_role == 'small_image') and conf_obj.image_1920 else 0
+                    tmp = 1 if (not conf_obj.product_image_ids.filtered(lambda x: x.image_role == 'small_image') and conf_obj.image_1920) else 0
 
                     if len(magento_images) != (len(conf_obj.product_image_ids) + (1 if conf_obj.image_1920 else 0) + tmp):
                         ml_conf_products[prod]['magento_status'] = 'update_needed'
@@ -520,26 +533,6 @@ class MagentoConfigurableProduct(models.Model):
                         ml_conf_products[prod]['magento_status'] = 'update_needed'
             elif ml_conf_products[prod]['magento_status'] not in ['log_error', 'in_process']:
                 ml_conf_products[prod]['magento_status'] = 'update_needed'
-
-    def update_conf_product_dict_with_magento_data(self, magento_prod, ml_conf_products_dict):
-        attr_opt = magento_prod.get("extension_attributes").get("configurable_product_options")
-        children = magento_prod.get("extension_attributes").get("configurable_product_links")
-        link_data = magento_prod.get("extension_attributes").get("configurable_product_link_data")
-        website_ids = magento_prod.get("extension_attributes").get("website_ids")
-        category_links = magento_prod.get("extension_attributes").get("category_links", [])
-
-        ml_conf_products_dict[magento_prod.get('sku')].update({
-            'magento_type_id': magento_prod.get('type_id'),
-            'magento_prod_id': magento_prod.get("id"),
-            'magento_attr_set_id': magento_prod.get("attribute_set_id"),
-            'magento_conf_prod_options': attr_opt,
-            'children': children,
-            'magento_website_ids': website_ids,
-            'category_links': [cat['category_id'] for cat in category_links],
-            'magento_configurable_product_link_data': self.convert_json_to_dict(link_data),
-            'media_gallery': [i['id'] for i in magento_prod.get("media_gallery_entries", []) if i],
-            'magento_update_date': magento_prod.get("updated_at")
-        })
 
     def process_configurable_products_create_or_update(self, instance, ml_conf_products, attr_sets, async_export):
         new_conf_prods_list = []
@@ -560,7 +553,7 @@ class MagentoConfigurableProduct(models.Model):
             if ml_conf_products[sku].get('magento_update_date'):
                 if ml_conf_products[sku]['magento_type_id'] != 'configurable':
                     text = "Product with the following sku - \"%s\" already exists in Magento. " \
-                           "And it's type is not Configurable.\n" % sku
+                           "And it's type is not Configurable. " % sku
                     ml_conf_products[sku]['log_message'] += text
                     continue
 
@@ -572,11 +565,11 @@ class MagentoConfigurableProduct(models.Model):
                     instance, ml_conf_products, attr_sets, check_config_attrs, 'PUT'
                 )
             else:
-                if not async_export:
-                    result = conf_prod.export_single_conf_product_to_magento(instance, ml_conf_products, attr_sets)
-                else:
+                if async_export:
                     result = False
                     new_conf_prods_list.append(sku)
+                else:
+                    result = conf_prod.export_single_conf_product_to_magento(instance, ml_conf_products, attr_sets)
 
             if result and isinstance(result, dict):
                 self.update_conf_product_dict_with_magento_data(result, ml_conf_products)
@@ -591,17 +584,17 @@ class MagentoConfigurableProduct(models.Model):
             self.to_upper(a.with_context(lang='en_US').categ_group_id.name) for a in pp_attrs if a.categ_group_id
         })
         single_attr_recs = self.with_context(lang='en_US').x_magento_single_attr_ids
-        # single_attrs = list({self.to_upper(a.attribute_id.name): a.value_ids.name for a in single_attr_recs}
         single_attrs_list = list({self.to_upper(a.attribute_id.name) for a in single_attr_recs})
+        product_label = ['PRODUCTLABELS'] if self.product_label_ids else []
 
-        # if conf_prod.odoo_prod_template_id.x_status:
+        # if self.odoo_prod_template_id.x_status:
         #     single_attrs.update({
         #         "PRODUCTLIFEPHASE": self.with_context(lang='en_US').odoo_prod_template_id.x_status
         #     })
 
-        missed_attrs = set(list(config_attrs) + prod_page_attrs + single_attrs_list).difference(magento_attributes)
+        missed_attrs = set(list(config_attrs) + prod_page_attrs + single_attrs_list + product_label).difference(magento_attributes)
         if missed_attrs:
-            text = "Attribute(s) - '%s' have to be created and linked to relevant Attribute-set" \
+            text = "Attribute(s) - '%s' have to be manually created and linked to relevant Attribute-set" \
                    " on Magento side. \n" % missed_attrs
             ml_conf_products[sku]['log_message'] += text
             return False
@@ -637,7 +630,7 @@ class MagentoConfigurableProduct(models.Model):
 
         data = {
             "option": {
-                "label": (attribute_value if is_string else str(attribute_value.name)).upper(),
+                "label": attribute_value if is_string else attribute_value.name,
                 "value": "",
                 "sort_order": 0,
                 "is_default": "false",
@@ -763,19 +756,18 @@ class MagentoConfigurableProduct(models.Model):
                 self.link_product_with_websites_in_magento(prod_sku, instance, ml_conf_products, response)
             self.process_storeview_data_export(instance, ml_conf_products, data, attr_sets)
 
-            if self.odoo_prod_template_id:
-                trigger = False
-                if method == "PUT":
-                    magento_images = ml_conf_products[prod_sku].get('media_gallery', [])
-                    tmp = 1 if not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image') and self.image_1920 else 0
+            trigger = False
+            if method == "PUT":
+                magento_images = ml_conf_products[prod_sku].get('media_gallery', [])
+                tmp = 1 if (not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image') and self.image_1920) else 0
 
-                    if len(magento_images) != (len(self.product_image_ids) + (1 if self.image_1920 else 0) + tmp):
-                        trigger = True
-                        if magento_images:
-                            self.remove_product_images_from_magento(instance, ml_conf_products, prod_sku)
+                if len(magento_images) != (len(self.product_image_ids) + (1 if self.image_1920 else 0) + tmp):
+                    trigger = True
+                    if magento_images:
+                        self.remove_product_images_from_magento(instance, ml_conf_products, prod_sku)
 
-                if method == "POST" or trigger:
-                    self.process_images_export_to_magento(instance, ml_conf_products)
+            if method == "POST" or trigger:
+                self.process_images_export_to_magento(instance, ml_conf_products)
 
             ml_conf_products[prod_sku]['export_date_to_magento'] = response.get("updated_at")
             ml_conf_products[prod_sku]['magento_status'] = 'in_magento'
@@ -861,17 +853,14 @@ class MagentoConfigurableProduct(models.Model):
         self.add_translatable_conf_product_attributes(custom_attributes, available_attributes, lang_code)
 
         # add main config attribute (hover attribute)
+        code = ''
         if self.x_magento_main_config_attr:
             main_attr_name = self.to_upper(self.x_magento_main_config_attr)
-            custom_attributes.append({
-                "attribute_code": 'main_config_attribute',
-                "value": available_attributes[main_attr_name]['attribute_code']
-            })
-        else:
-            custom_attributes.append({
-                "attribute_code": 'main_config_attribute',
-                "value": ""
-            })
+            code = available_attributes[main_attr_name]['attribute_code']
+        custom_attributes.append({
+            "attribute_code": 'main_config_attribute',
+            "value": code
+        })
 
         # add single attributes specific to conf.product
         unique_attr = set(self.with_context(lang='en_US').x_magento_single_attr_ids.attribute_id.mapped('name'))
@@ -891,6 +880,16 @@ class MagentoConfigurableProduct(models.Model):
                     "attribute_code": mag_attr['attribute_code'],
                     "value": value
                 })
+
+        # add product labels
+        val = ''
+        for label in self.product_label_ids:
+            val = f"{val},{label.name}" if val else label.name
+        attr = available_attributes["PRODUCTLABELS"]
+        custom_attributes.append({
+            "attribute_code": attr['attribute_code'],
+            "value": val
+        })
 
         # product life phase attribute
         # prod_status = conf_product.with_context(lang='en_US').odoo_prod_template_id.x_status
@@ -968,7 +967,7 @@ class MagentoConfigurableProduct(models.Model):
             ### Temporary solution of adding 'small_image' images if there is no (for testing purposes)
             if not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
                 attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', 'image_256'),
+                    ('res_field', '=', 'image_512'),
                     ('res_model', '=', 'product.template'),
                     ('res_id', '=', self.odoo_prod_template_id.id)
                 ])
@@ -1058,7 +1057,7 @@ class MagentoConfigurableProduct(models.Model):
             ### Temporary solution of adding 'small_image' images if there is no (for testing purposes)
             if not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
                 attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', 'image_256'),
+                    ('res_field', '=', 'image_512'),
                     ('res_model', '=', 'product.template'),
                     ('res_id', '=', self.odoo_prod_template_id.id)
                 ])
@@ -1100,9 +1099,9 @@ class MagentoConfigurableProduct(models.Model):
                 ml_products[prod_sku]['log_message'] += text
 
     def remove_product_images_from_magento(self, magento_instance, ml_products, magento_sku):
-        for _id in ml_products[magento_sku]['media_gallery']:
+        for img_id in ml_products[magento_sku]['media_gallery']:
             try:
-                api_url = '/all/V1/products/%s/media/%s' % (magento_sku, _id)
+                api_url = '/all/V1/products/%s/media/%s' % (magento_sku, img_id)
                 req(magento_instance, api_url, 'DELETE')
             except Exception as e:
                 ml_products[magento_sku]['force_update'] = True
@@ -1220,8 +1219,10 @@ class MagentoConfigurableProduct(models.Model):
         for prod in json_data:
             opt_dict = {}
             new_dict = json.loads(prod)
-            [opt_dict.update({self.to_upper(opt.get('label')): self.to_upper(opt.get('value'))}) for opt in new_dict.
-                get('simple_product_attribute')]
+            [opt_dict.update({
+                self.to_upper(opt.get('label')): self.to_upper(opt.get('value'))
+            }) for opt in new_dict.get('simple_product_attribute')]
+
             link_data_dict.update({new_dict['simple_product_sku']: opt_dict})
 
         return link_data_dict
@@ -1242,3 +1243,11 @@ class MagentoConfigurableProduct(models.Model):
                 lst += "<li>" + val + "</li>"
 
         return lst + "</ul>"
+
+
+class MagentoProductLabels(models.Model):
+    _name = 'magento.product.label'
+    _description = 'Magento Product Label'
+    _rec_name = 'name'
+
+    name = fields.Char("Name")
