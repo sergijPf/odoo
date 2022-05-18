@@ -10,17 +10,23 @@
             <form string="sale_workflow_process">
                 <sheet>
                     <group>
-                        <h3>
-                            <field name="name" required="1"/>
-                        </h3>
+                        <h3><field name="name" required="1"/></h3>
                     </group>
                     <group>
                         <group string="Workflow Option">
-                            <field name="validate_order" widget="boolean_toggle"/>
-                            <field name="create_invoice" widget="boolean_toggle"
+                            <field name="validate_order"/>
+                            <field name="create_invoice"
                                    attrs="{'invisible':[('validate_order','=',False)]}"/>
+                            <field name="register_payment"
+                                   attrs="{'invisible':[('validate_order','=',False)]}"/>
+                            <field name="invoice_date_is_order_date"
+                                   attrs="{'invisible':[('register_payment','=',False)]}"/>
                         </group>
                         <group string="Order/Invoice Configuration">
+                            <field name="journal_id"
+                                   attrs="{'invisible':[('register_payment','=',False)],'required':[('register_payment','!=',False)]}"/>
+                            <field name="inbound_payment_method_id"
+                                   attrs="{'invisible':[('register_payment','=',False)],'required':[('register_payment','!=',False)]}"/>
                             <field name="sale_journal_id" required="1"/>
                             <field name="picking_policy" required="1"/>
                         </group>
@@ -51,6 +57,8 @@
                 <field name="name"/>
                 <field name="validate_order"/>
                 <field name="create_invoice"/>
+                <field name="register_payment"/>
+                <field name="invoice_date_is_order_date"/>
             </tree>
         </field>
     </record>

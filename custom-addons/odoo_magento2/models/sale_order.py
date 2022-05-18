@@ -16,8 +16,9 @@ class SaleOrder(models.Model):
     store_id = fields.Many2one('magento.storeview', string="Magento Storeview")
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Payment Method")
     magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Shipping Method")
-    order_transaction_id = fields.Char(string="Order Transaction ID", help="Magento Order Transaction ID")
-    payment_transaction_id = fields.Char(string="Payment Transaction ID", help="Magento Payment System Transaction ID")
+    payment_transaction_id = fields.Char(string="Payment Transact. ID", help="Magento Payment System Transaction ID")
+    order_currency_code = fields.Char(string="Order Currency")
+    order_total_amount = fields.Float(string="Order Amount")
     magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
     magento_order_log_book_ids = fields.One2many('magento.orders.log.book', 'sale_order_id', "Log Error Messages")
     auto_workflow_process_id = fields.Many2one("sale.workflow.process", string="Workflow Process", copy=False)
@@ -56,32 +57,56 @@ class SaleOrder(models.Model):
 
     def process_orders_and_invoices(self):
         for order in self:
-            work_flow_process_record = order.auto_workflow_process_id
+            work_flow_process_rec = order.auto_workflow_process_id
 
             if order.invoice_status == 'invoiced':
                 continue
-            if work_flow_process_record.validate_order:
-                order.validate_sales_order()
 
-            if work_flow_process_record.create_invoice:
-                order.validate_invoice()
+            if work_flow_process_rec.validate_order:
+                date_order = order.date_order
+                order.action_confirm()
+                order.write({'date_order': date_order})
 
-    def validate_sales_order(self):
-        self.ensure_one()
+            if work_flow_process_rec.create_invoice:
+                invoice = self._create_invoices()
+                # confirm invoices
+                # for invoice in invoices:
+                #     invoice.action_post()
 
-        date_order = self.date_order
+            if work_flow_process_rec.register_payment:
+                vals = {
+                    'currency_id': order.currency_id.id,
+                    'payment_type': 'inbound',
+                    'partner_type': 'customer',
+                    'partner_id': order.partner_id.id,
+                    'date': order.date_order,
+                    'amount': order.order_total_amount,
+                    'journal_id': work_flow_process_rec.journal_id.id,
+                    'payment_method_id': work_flow_process_rec.inbound_payment_method_id.id,
 
-        self.action_confirm()
-        self.write({'date_order': date_order})
+                }
+                if work_flow_process_rec.create_invoice:
+                    vals.update({
+                        'ref': invoice.payment_reference,
+                        'amount': invoice.amount_residual
+                    })
 
-    def validate_invoice(self):
-        self.ensure_one()
+                payment_id = self.env['account.payment'].create(vals)
+                # payment_id.action_post()
+                # self.reconcile_payment(payment_id, invoice)
 
-        invoices = self._create_invoices()
-
-        # confirm invoices
-        for invoice in invoices:
-            invoice.action_post()
+    # def reconcile_payment(self, payment_id, invoice):
+    #     move_line_obj = self.env['account.move.line']
+    #     domain = [('account_internal_type', 'in', ('receivable', 'payable')),
+    #               ('reconciled', '=', False)]
+    #     line_ids = move_line_obj.search([('move_id', '=', invoice.id)])
+    #     to_reconcile = [line_ids.filtered(lambda line: line.account_internal_type == 'receivable')]
+    #
+    #     for payment, lines in zip([payment_id], to_reconcile):
+    #         payment_lines = payment.line_ids.filtered_domain(domain)
+    #         for account in payment_lines.account_id:
+    #             (payment_lines + lines).filtered_domain([('account_id', '=', account.id),
+    #                                                      ('reconciled', '=', False)]).reconcile()
 
     def cancel_order_from_magento_by_webhook(self):
         try:
@@ -388,6 +413,8 @@ class SaleOrder(models.Model):
             'payment_term_id': payment_term_id.id if payment_term_id else False,
             'payment_transaction_id': sales_order.get('payment', {}).get('last_trans_id', False),
             'auto_workflow_process_id': workflow_process_id.id,
+            'order_currency_code': sales_order.get("order_currency_code"),
+            'order_total_amount': sales_order.get("grand_total", 0),
             'magento_payment_method_id': payment_method.id,
             'magento_shipping_method_id': mag_deliv_carrier.id,
             'magento_order_id': sales_order.get('entity_id'),

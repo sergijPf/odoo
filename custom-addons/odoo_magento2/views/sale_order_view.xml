@@ -11,10 +11,6 @@
                          ('state','!=','cancel'), ('is_canceled_in_magento','=',True)]}"/>
             </xpath>
 
-            <xpath expr="//group[@name='sale_info']" position="inside">
-                <field name="payment_transaction_id" readonly="1"/>
-            </xpath>
-
             <xpath expr="//button[@name='action_view_invoice']" position="before">
                 <button type="object" name="action_view_stock_move_" class="oe_stat_button"
                         icon="fa-truck"
@@ -32,17 +28,20 @@
                             <field name="magento_instance_id" readonly="1"/>
                             <field name="magento_order_id" readonly="1"/>
                             <field name="magento_website_id" readonly="1"/>
+                            <field name="store_id" readonly="1"/>
                             <field name="magento_order_reference" readonly="1"/>
                             <field name="is_canceled_in_magento" readonly="1"
                                    attrs="{'invisible': [('is_canceled_in_magento','!=',True)]}"/>
 <!--                            <field name="updated_in_magento" readonly="1"/>-->
                         </group>
                         <group>
-                            <field name="store_id" readonly="1"/>
-                            <field name="magento_payment_method_id" readonly="1"/>
+                            <field name="auto_workflow_process_id" readonly="1"/>
                             <field name="magento_carrier_name" readonly="1"/>
-                            <field name="order_transaction_id" readonly="1"
-                                   attrs="{'invisible' : [('order_transaction_id','=',False)]}"/>
+                            <field name="magento_payment_method_id" readonly="1"/>
+                            <field name="payment_transaction_id" readonly="1"/>
+                            <field name="order_total_amount" readonly="1"/>
+                            <field name="order_currency_code" readonly="1"/>
+
                         </group>
                     </group>
                 </page>
