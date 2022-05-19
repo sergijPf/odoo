@@ -83,7 +83,7 @@ class MagentoProductProduct(models.Model):
                 attr_val = attr.with_context(lang='en_US').product_attribute_value_id
                 if not attr_val.attribute_id.is_ignored_in_magento:
                     value = attr_val.name
-                    if attr.attribute_line_id.magento_config and attr_val.attribute_id.name == "size":
+                    if attr_val.attribute_id.name == "size":
                         sep = value.find(' - ')
                         if sep >= 0:
                             vals = value.split(' - ', 1)

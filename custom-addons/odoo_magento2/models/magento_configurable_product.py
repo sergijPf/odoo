@@ -77,8 +77,9 @@ class MagentoConfigurableProduct(models.Model):
             rec.x_magento_assign_attr_ids = prod_attr_lines.filtered(
                 lambda x: x.magento_config and not x.attribute_id.is_ignored_in_magento).attribute_id
             ### recalc main config.(hover) attr
-            rec.x_magento_main_config_attr = prod_attr_lines.filtered(
-                lambda x: x.magento_config and x.main_conf_attr).with_context(lang='en_US').attribute_id.name or ''
+            line = prod_attr_lines.with_context(lang='en_US').filtered(lambda x: x.magento_config and x.main_conf_attr)
+            line = line[0] if len(line) > 1 else line
+            rec.x_magento_main_config_attr = line.attribute_id.name if line else ''
 
     @api.depends('odoo_prod_template_id.attribute_line_ids')
     def _compute_single_attributes_of_configurable_product(self):
@@ -908,11 +909,11 @@ class MagentoConfigurableProduct(models.Model):
         prod_attributes = self.odoo_prod_template_id.categ_id.x_attribute_ids
         prod_attr_groups = prod_attributes.categ_group_id
 
-        if self.odoo_prod_template_id.website_description:
-            value = self.with_context(lang=lang_code).odoo_prod_template_id.website_description
+        if self.odoo_prod_template_id.description_sale:
+            value = self.with_context(lang=lang_code).odoo_prod_template_id.description_sale
             value_stripped = str(value).lstrip('<p>').rstrip('</p>').rstrip('<br>')
             if value_stripped:
-                self.add_to_custom_attributes_list(custom_attributes, 'description', value_stripped)
+                self.add_to_custom_attributes_list(custom_attributes, 'short_description', value_stripped)
 
         for group in prod_attr_groups:
             attr_name = group.with_context(lang='en_US').name
@@ -1014,7 +1015,7 @@ class MagentoConfigurableProduct(models.Model):
             lang_code = storeview.lang_id.code
             storeview_code = storeview.magento_storeview_code
             prod_dict = data['product']
-            prod_dict['name'] = str(self.with_context(lang=lang_code).odoo_prod_template_id.name).upper()
+            prod_dict['name'] = self.with_context(lang=lang_code).odoo_prod_template_id.name
 
             self.add_translatable_conf_product_attributes(
                 prod_dict['custom_attributes'], attr_sets[self.magento_attr_set]['attributes'], lang_code
@@ -1138,7 +1139,7 @@ class MagentoConfigurableProduct(models.Model):
 
                 prod = {
                     'product': {
-                        'name': str(conf_prod.with_context(lang=lang_code).odoo_prod_template_id.name).upper(),
+                        'name': conf_prod.with_context(lang=lang_code).odoo_prod_template_id.name,
                         'sku': sku,
                         'custom_attributes': custom_attributes
                     }

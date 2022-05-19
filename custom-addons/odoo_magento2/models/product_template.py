@@ -16,14 +16,16 @@ class ProductTemplate(models.Model):
 
     @api.onchange('is_magento_config')
     def onchange_magento_config_check(self):
-        if self.magento_conf_prod_ids:
+        if self.is_magento_config and self.magento_conf_prod_ids:
             raise UserError("You're not able to uncheck it as there are already Configurable Product(s) "
                             "created in Magento Layer")
+        elif not self.is_magento_config:
+            self.attribute_line_ids.filtered(lambda a: a.magento_config).magento_config = False
 
     def write(self, vals):
         res = super(ProductTemplate, self).write(vals)
 
-        if self.magento_conf_prod_ids and ('website_description' in vals or 'product_template_image_ids' in vals or
+        if self.magento_conf_prod_ids and ('description_sale' in vals or 'product_template_image_ids' in vals or
                                            'attribute_line_ids' in vals or 'x_magento_no_create' in vals or
                                            'public_categ_ids' in vals or 'categ_id' in vals or
                                            'alternative_product_ids' in vals):
@@ -48,14 +50,18 @@ class ProductTemplate(models.Model):
         for rec in self:
             rec.is_magento_config = True
             for attr in rec.attribute_line_ids:
-                if attr.is_magento_config_prod and not attr.is_ignored and len(attr.value_ids) > 1 and not attr.magento_config:
+                if not attr.is_ignored and len(attr.value_ids) > 1 and not attr.magento_config:
                     attr.magento_config = True
+            if not rec.attribute_line_ids.filtered(lambda a: a.magento_config):
+                print(rec.attribute_line_ids.filtered(lambda a: not a.is_ignored)[-1])
+                rec.attribute_line_ids.filtered(lambda a: not a.is_ignored)[-1].magento_config = True
 
 class ProductTemplateAttributeLine(models.Model):
     _inherit = "product.template.attribute.line"
 
     magento_config = fields.Boolean(string="Magento Conf.Attribute", default=False)
-    main_conf_attr = fields.Boolean(string="Hover Attribute", help="Configurable Attribute to be visible while hovering a product", default=False)
+    main_conf_attr = fields.Boolean(string="Hover Attribute", help="Configurable Attribute to be visible while hovering a product",
+                                    default=False)
     is_ignored = fields.Boolean(related="attribute_id.is_ignored_in_magento")
     create_variant = fields.Selection(related="attribute_id.create_variant")
     is_magento_config_prod = fields.Boolean(related="product_tmpl_id.is_magento_config")
