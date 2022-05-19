@@ -10,7 +10,6 @@ from ..python_library.api_request import req, create_search_criteria
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 PRODUCTS_EXPORT_BATCH = 250
-IMG_SIZE = 'image_1024'
 MAX_SIZE_FOR_IMAGES = 2500000  # should be aligned with MYSQL - max_allowed_packet (currently 4M), !!! NOTE 4M is
                                # converted size and constant value is before convertion
 
@@ -721,7 +720,7 @@ class MagentoConfigurableProduct(models.Model):
 
         data = {
             "product": {
-                "name": str(self.magento_product_name).upper(),
+                "name": self.magento_product_name,
                 "attribute_set_id": attr_sets[self.magento_attr_set]['id'],
                 "type_id": "configurable",
                 "status": 1,  # Enabled (1) / Disabled (0)
@@ -787,7 +786,7 @@ class MagentoConfigurableProduct(models.Model):
             data.append({
                 "product": {
                     "sku": prod_sku,
-                    "name": str(conf_product.magento_product_name).upper(),
+                    "name": conf_product.magento_product_name,
                     "attribute_set_id": attr_sets[conf_product.magento_attr_set]['id'],
                     "status": 1,  # enabled / disabled
                     "visibility": 2,  # Catalog.
@@ -947,7 +946,7 @@ class MagentoConfigurableProduct(models.Model):
         # prepare images export
         for img in self.product_image_ids:
             attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', IMG_SIZE),
+                ('res_field', '=', instance.image_resolution or 'image_512'),
                 ('res_model', '=', 'product.image'),
                 ('res_id', '=', img.id)
             ])
@@ -967,7 +966,7 @@ class MagentoConfigurableProduct(models.Model):
             ### Temporary solution of adding 'small_image' images if there is no (for testing purposes)
             if not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
                 attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', 'image_512'),
+                    ('res_field', '=', instance.image_resolution or 'image_512'),
                     ('res_model', '=', 'product.template'),
                     ('res_id', '=', self.odoo_prod_template_id.id)
                 ])
@@ -1037,7 +1036,7 @@ class MagentoConfigurableProduct(models.Model):
 
         for img in self.product_image_ids:
             attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', IMG_SIZE),
+                ('res_field', '=', magento_instance.image_resolution or 'image_512'),
                 ('res_model', '=', 'product.image'),
                 ('res_id', '=', img.id)
             ])
@@ -1057,7 +1056,7 @@ class MagentoConfigurableProduct(models.Model):
             ### Temporary solution of adding 'small_image' images if there is no (for testing purposes)
             if not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
                 attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', 'image_512'),
+                    ('res_field', '=', magento_instance.image_resolution or 'image_512'),
                     ('res_model', '=', 'product.template'),
                     ('res_id', '=', self.odoo_prod_template_id.id)
                 ])

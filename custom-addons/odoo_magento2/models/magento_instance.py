@@ -56,6 +56,13 @@ class MagentoInstance(models.Model):
                                         help="Check this if your Magento site is using SSL certificate")
     active = fields.Boolean(string="Status", default=True)
     cron_count = fields.Integer("Scheduler Count", compute="_compute_get_scheduler_list")
+    image_resolution = fields.Selection([
+        ('image_1920', '1920px'),
+        ('image_1024', '1024px'),
+        ('image_512', '512px'),
+        ('image_256', '256px'),
+        ('image_128', '128px')
+    ], string="Image Resolution", default='image_512')
 
     def _compute_get_scheduler_list(self):
         seller_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])

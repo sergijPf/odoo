@@ -7,7 +7,6 @@ from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-IMG_SIZE = 'image_1024'
 
 
 class MagentoProductProduct(models.Model):
@@ -693,7 +692,7 @@ class MagentoProductProduct(models.Model):
 
         for img in self.product_image_ids:
             attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', IMG_SIZE),
+                ('res_field', '=', instance.image_resolution or 'image_512'),
                 ('res_model', '=', 'product.image'),
                 ('res_id', '=', img.id)
             ])
@@ -805,7 +804,7 @@ class MagentoProductProduct(models.Model):
                     img_update = True
 
             if method == 'POST' or img_update:
-                images = prod.prepare_image_data_to_export()
+                images = prod.prepare_image_data_to_export(instance)
                 if images:
                     prod_media.update({sku: images})
 
@@ -893,12 +892,12 @@ class MagentoProductProduct(models.Model):
 
                 self.write({'bulk_log_ids': [(4, log_id.id)]})
 
-    def prepare_image_data_to_export(self):
+    def prepare_image_data_to_export(self, instance):
         images = []
 
         for img in self.product_image_ids:
             attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', IMG_SIZE),
+                ('res_field', '=', instance.image_resolution or 'image_512'),
                 ('res_model', '=', 'product.image'),
                 ('res_id', '=', img.id)
             ])
