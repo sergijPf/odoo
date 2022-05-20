@@ -725,7 +725,7 @@ class MagentoConfigurableProduct(models.Model):
                 "attribute_set_id": attr_sets[self.magento_attr_set]['id'],
                 "type_id": "configurable",
                 "status": 1,  # Enabled (1) / Disabled (0)
-                "visibility": 2,  # Catalog
+                "visibility": 4,  # Catalog, Search
                 "custom_attributes": custom_attributes,
                 "extension_attributes": {
                     "stock_item": {"is_in_stock": "true"},
@@ -790,7 +790,7 @@ class MagentoConfigurableProduct(models.Model):
                     "name": conf_product.magento_product_name,
                     "attribute_set_id": attr_sets[conf_product.magento_attr_set]['id'],
                     "status": 1,  # enabled / disabled
-                    "visibility": 2,  # Catalog.
+                    "visibility": 4,  # Catalog, Search
                     "type_id": "configurable",
                     "custom_attributes": custom_attributes,
                     "extension_attributes": {

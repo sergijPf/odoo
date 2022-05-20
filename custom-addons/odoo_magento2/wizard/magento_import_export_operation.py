@@ -76,20 +76,20 @@ class MagentoImportExport(models.TransientModel):
         selection = self.env["product.template"].browse(active_product_ids)
         failed_products = selection.filtered(lambda product: product.type != "product" or not product.is_magento_config)
 
+        self.add_products_to_magento_layer(selection - failed_products)
+
         if failed_products:
             raise UserError(_("It seems like selected product(s) are not Storable or don't have"
                             " proper Magento Config.Product setup: %s" % str([p.name for p in failed_products])))
-
-        self.add_products_to_magento_layer(selection)
-
-        return {
-            'effect': {
-                'fadeout': 'slow',
-                'message': " 'Export to Magento Layer' process completed successfully! {}".format(""),
-                'img_url': '/web/static/img/smile.svg',
-                'type': 'rainbow_man',
+        else:
+            return {
+                'effect': {
+                    'fadeout': 'slow',
+                    'message': " 'Export to Magento Layer' process completed successfully! {}".format(""),
+                    'img_url': '/web/static/img/smile.svg',
+                    'type': 'rainbow_man',
+                }
             }
-        }
 
     def add_products_to_magento_layer(self, odoo_products):
         magento_product_obj = self.env[MAGENTO_PRODUCT_PRODUCT]

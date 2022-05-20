@@ -12,4 +12,4 @@ class MagentoProductLabelsUpdate(models.TransientModel):
     def update_product_labels(self):
         active_product_ids = self._context.get("active_ids", [])
         products_to_update = self.env['magento.configurable.product'].browse(active_product_ids)
-        products_to_update.write({'product_label_ids': [(6, 0, self.product_label_ids.mapped("id"))]})
+        products_to_update.write({'product_label_ids': [(6, 0, self.product_label_ids.mapped("id") or [])]})

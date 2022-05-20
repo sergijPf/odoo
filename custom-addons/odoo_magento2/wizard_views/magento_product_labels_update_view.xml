@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <form string="Update Product Labels">
                 <group>
-                    <field name="product_label_ids" required="1" widget="many2many_tags"
+                    <field name="product_label_ids" widget="many2many_tags"
                            options="{'no_create':True,'no_create_edit': True}"/>
                 </group>
                 <group>
