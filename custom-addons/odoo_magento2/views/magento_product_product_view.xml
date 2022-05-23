@@ -138,8 +138,7 @@
                 <field name="magento_website_ids" widget="many2many_tags"/>
                 <field name="magento_sku"/>
                 <field name="magento_product_name"/>
-                <field name="product_attribute_ids" widget="many2many_tags" readonly="1"
-                       optional="show" can_create="false" can_write="false"/>
+                <field name="product_attribute_ids" widget="many2many_tags" readonly="1"/>
                 <field name="magento_status" widget="badge" optional="show" on_change="1"
                        decoration-success="magento_status == 'in_magento'"
                        decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"

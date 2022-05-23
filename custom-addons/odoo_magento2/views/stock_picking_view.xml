@@ -9,11 +9,12 @@
                     <field name="is_shipment_exportable" invisible="1"/>
                     <button name="export_single_shipment_to_magento" string="Export to Magento"
                             type="object" class="oe_highlight"
-                            attrs="{'invisible': ['|','|','|',
+                            attrs="{'invisible': ['|','|','|','|',
                              ('magento_instance_id','=',False),
                              ('state','!=','done'),
                              ('is_in_magento','=',True),
-                             ('is_shipment_exportable','=',False)]}"/>
+                             ('is_shipment_exportable','=',False),
+                             ('carrier_tracking_ref','=','')]}"/>
                 </xpath>
                 <xpath expr="//notebook[last()]" position="inside">
                     <page name="magento_info" string="Magento Info"

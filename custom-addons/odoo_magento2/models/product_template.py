@@ -16,11 +16,14 @@ class ProductTemplate(models.Model):
 
     @api.onchange('is_magento_config')
     def onchange_magento_config_check(self):
-        if self.is_magento_config and self.magento_conf_prod_ids:
-            raise UserError("You're not able to uncheck it as there are already Configurable Product(s) "
-                            "created in Magento Layer")
-        elif not self.is_magento_config:
-            self.attribute_line_ids.filtered(lambda a: a.magento_config).magento_config = False
+        for rec in self:
+            if rec.is_magento_config and rec.magento_conf_prod_ids:
+                raise UserError("You're not able to uncheck it as there are already Configurable Product(s) "
+                                "created in Magento Layer")
+            elif not rec.is_magento_config:
+                config_attrs = rec.attribute_line_ids.filtered(lambda a: a.magento_config)
+                if config_attrs:
+                    config_attrs.magento_config = config_attrs.main_conf_attr = False
 
     def write(self, vals):
         res = super(ProductTemplate, self).write(vals)
@@ -51,12 +54,23 @@ class ProductTemplate(models.Model):
     def make_configurable(self):
         for rec in self:
             rec.is_magento_config = True
-            for attr in rec.attribute_line_ids:
-                if not attr.is_ignored and len(attr.value_ids) > 1 and not attr.magento_config:
-                    attr.magento_config = True
-            if not rec.attribute_line_ids.filtered(lambda a: a.magento_config):
-                print(rec.attribute_line_ids.filtered(lambda a: not a.is_ignored)[-1])
-                rec.attribute_line_ids.filtered(lambda a: not a.is_ignored)[-1].magento_config = True
+            valid_lines = rec.attribute_line_ids.filtered(lambda a: not a.is_ignored)
+
+            for attr_line in valid_lines:
+                attr_line.magento_config = False
+                attr_line.main_conf_attr = False
+                if len(attr_line.value_ids) > 1:
+                    attr_line.magento_config = True
+                    if attr_line.attribute_id.name in ['color', 'collection']:
+                        attr_line.main_conf_attr = True
+
+            # if product has only one Variant (contains only lines with one attribute value)
+            if not valid_lines.filtered(lambda a: a.magento_config):
+                color_line = valid_lines.filtered(lambda line: line.attribute_id.name == 'color')
+                collection_line = valid_lines.filtered(lambda line: line.attribute_id.name == 'collection')
+                config_attr_line = color_line or collection_line or (valid_lines and valid_lines[-1])
+                if config_attr_line:
+                    config_attr_line.magento_config = True
 
 class ProductTemplateAttributeLine(models.Model):
     _inherit = "product.template.attribute.line"

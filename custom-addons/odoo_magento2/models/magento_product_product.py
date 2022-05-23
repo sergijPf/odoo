@@ -26,8 +26,7 @@ class MagentoProductProduct(models.Model):
     image_1920 = fields.Image(related="odoo_product_id.image_1920")
     product_image_ids = fields.One2many(related="odoo_product_id.product_variant_image_ids")
     ptav_ids = fields.Many2many(related='odoo_product_id.product_template_attribute_value_ids')
-    product_attribute_ids = fields.One2many('magento.product.attributes', 'magento_product_id',
-                                            compute="_compute_product_attributes", store=True)
+    product_attribute_ids = fields.Many2many('product.template.attribute.value', compute="_compute_product_attributes", store=True)
     currency_id = fields.Many2one(related='odoo_product_id.currency_id')
     company_id = fields.Many2one(related='odoo_product_id.company_id')
     uom_id = fields.Many2one(related='odoo_product_id.uom_id')
@@ -67,39 +66,43 @@ class MagentoProductProduct(models.Model):
                          'unique(magento_sku,magento_instance_id)',
                          "Magento Product must be unique")]
 
-    @api.depends('magento_product_name', 'product_attribute_ids')
+    @api.depends('magento_product_name', 'product_attribute_ids.product_attribute_value_id')
     def _compute_simpl_product_name(self):
         for rec in self:
             rec.x_magento_name = rec.with_context(lang='en_US').magento_product_name + ' ' +\
-                                 ' '.join(rec.product_attribute_ids.mapped('x_attribute_value'))
+                                 ' '.join(rec.product_attribute_ids.product_attribute_value_id.mapped('name'))
 
     @api.depends('ptav_ids', 'ptav_ids.product_attribute_value_id.attribute_id.is_ignored_in_magento')
     def _compute_product_attributes(self):
-        self.product_attribute_ids.sudo().unlink()
-
-        # add additional 'relative size' attribute if needed, to cover specific behaviour for size attribute
         for rec in self:
-            for attr in rec.ptav_ids:
-                attr_val = attr.with_context(lang='en_US').product_attribute_value_id
-                if not attr_val.attribute_id.is_ignored_in_magento:
-                    value = attr_val.name
-                    if attr_val.attribute_id.name == "size":
-                        sep = value.find(' - ')
-                        if sep >= 0:
-                            vals = value.split(' - ', 1)
-                            value = vals[1].strip()
-
-                            rec.product_attribute_ids.create({
-                                'magento_product_id': rec.id,
-                                'x_attribute_name': 'relative size',
-                                'x_attribute_value': vals[0].strip()
-                            })
-
-                    rec.product_attribute_ids.create({
-                        'magento_product_id': rec.id,
-                        'x_attribute_name': attr_val.attribute_id.name,
-                        'x_attribute_value': value
-                    })
+            rec.product_attribute_ids = rec.ptav_ids.filtered(
+                lambda x: not x.product_attribute_value_id.attribute_id.is_ignored_in_magento
+            )
+        # self.product_attribute_ids.sudo().unlink()
+        #
+        # # add additional 'relative size' attribute if needed, to cover specific behaviour for size attribute
+        # for rec in self:
+        #     for attr in rec.ptav_ids:
+        #         attr_val = attr.with_context(lang='en_US').product_attribute_value_id
+        #         if not attr_val.attribute_id.is_ignored_in_magento:
+        #             value = attr_val.name
+        #             if attr_val.attribute_id.name == "size":
+        #                 sep = value.find(' - ')
+        #                 if sep >= 0:
+        #                     vals = value.split(' - ', 1)
+        #                     value = vals[1].strip()
+        #
+        #                     rec.product_attribute_ids.create({
+        #                         'magento_product_id': rec.id,
+        #                         'x_attribute_name': 'relative size',
+        #                         'x_attribute_value': vals[0].strip()
+        #                     })
+        #
+        #             rec.product_attribute_ids.create({
+        #                 'magento_product_id': rec.id,
+        #                 'x_attribute_name': attr_val.attribute_id.name,
+        #                 'x_attribute_value': value
+        #             })
 
     @api.depends('odoo_product_id', 'magento_instance_id.location_ids')
     def _compute_available_qty(self):
@@ -403,7 +406,7 @@ class MagentoProductProduct(models.Model):
             conf_sku = prod.magento_conf_prod_sku
             prod_attr_set = prod.magento_conf_product_id.magento_attr_set
             avail_attributes = attribute_sets[prod_attr_set]['attributes']
-            prod_attrs = {a.x_attribute_name: a.x_attribute_value for a in prod.product_attribute_ids}
+            prod_attrs = {a.attribute_id.name: a.name for a in prod.product_attribute_ids.product_attribute_value_id}
 
             if ml_conf_products[conf_sku]['log_message']:
                 text = "Configurable product is not ok. Please check it first. "
@@ -444,9 +447,9 @@ class MagentoProductProduct(models.Model):
 
             if not ml_simp_products[prod_sku]['do_not_export_conf']:
                 # check if product has configurable attributes defined in configurable product
-                simp_prod_attr = prod.product_attribute_ids
+                simp_prod_attr = prod.product_attribute_ids.product_attribute_value_id
                 missed_attrs = ml_conf_products[conf_sku]['config_attr'].difference({
-                    self.to_upper(a.x_attribute_name) for a in simp_prod_attr
+                    self.to_upper(a.attribute_id.name) for a in simp_prod_attr
                 })
                 if missed_attrs:
                     text = "Simple product is missing attribute(s): '%s' defined as configurable. " % missed_attrs
@@ -528,14 +531,14 @@ class MagentoProductProduct(models.Model):
                 ml_conf_products[conf_prod_sku]['magento_conf_prod_options'] = attr_options
 
         # assign new options to config.product with relevant info from Magento
-        for attr_val in self.product_attribute_ids:
-            attr_name = self.to_upper(attr_val.x_attribute_name)
+        for pav in self.product_attribute_ids.product_attribute_value_id:
+            attr_name = self.to_upper(pav.attribute_id.name)
             if attr_name in prod_attr_odoo and attr_name not in prod_attr_magento:
                 # valid for new "configurable" attributes of config.product to be created in Magento
                 attr = available_attributes.get(attr_name)
                 if attr:
                     opt = next((o for o in attr['options'] if o.get('label') and
-                                self.to_upper(o['label']) == self.to_upper(attr_val.x_attribute_value)), {})
+                                self.to_upper(o['label']) == self.to_upper(pav.name)), {})
                     if opt:
                         data['option'].update({
                             "attribute_id": attr["attribute_id"],
@@ -584,8 +587,8 @@ class MagentoProductProduct(models.Model):
         magento_sku = self.magento_sku
         prod_attr_set = self.magento_conf_product_id.magento_attr_set
         available_attributes = attr_sets[prod_attr_set]['attributes']
-        prod_attr_list = [(self.to_upper(a.x_attribute_name), self.to_upper(a.x_attribute_value)) for a in
-                          self.product_attribute_ids]
+        prod_attr_list = [(self.to_upper(a.attribute_id.name), self.to_upper(a.name)) for a in
+                          self.product_attribute_ids.product_attribute_value_id]
         custom_attributes = self.map_product_attributes_with_magento_attr(prod_attr_list, available_attributes)
 
         data = {
@@ -654,7 +657,7 @@ class MagentoProductProduct(models.Model):
                 data = {'product': {'name': '', "price": 0, "status": 1, "visibility": 3}}
 
                 data["product"]["name"] = self.with_context(lang=lang_code).odoo_product_id.name + ' ' + \
-                                          ' '.join(self.product_attribute_ids.mapped('x_attribute_value'))
+                                          ' '.join(self.product_attribute_ids.product_attribute_value_id.mapped('name'))
 
                 if website.pricelist_id:
                     if website.magento_base_currency.id != website.pricelist_id.currency_id.id:
@@ -729,8 +732,8 @@ class MagentoProductProduct(models.Model):
         for prod in self:
             if ml_simp_products[prod.magento_sku]['magento_status'] != 'need_to_link':
                 attribute_set = prod.magento_conf_product_id.magento_attr_set
-                prod_attr_list = [(self.to_upper(a.x_attribute_name), self.to_upper(a.x_attribute_value)) for a in
-                                  prod.product_attribute_ids]
+                prod_attr_list = [(self.to_upper(a.attribute_id.name), self.to_upper(a.name)) for a in
+                                  prod.product_attribute_ids.product_attribute_value_id]
                 custom_attributes = self.map_product_attributes_with_magento_attr(
                     prod_attr_list, attr_sets[attribute_set]['attributes']
                 )
@@ -845,7 +848,7 @@ class MagentoProductProduct(models.Model):
                 new_prod = {
                     'product': {
                         'name': product.with_context(lang=lang_code).odoo_product_id.name + ' ' +
-                                ' '.join(product.product_attribute_ids.mapped('x_attribute_value')),
+                                ' '.join(product.product_attribute_ids.product_attribute_value_id.mapped('name')),
                         'sku': sku,
                         "status": 1,
                         "visibility": 3,
@@ -946,13 +949,13 @@ class MagentoProductProduct(models.Model):
             mag_avail_attrs = available_attributes[mag_attr_set]['attributes']
             conf_sku = prod.magento_conf_prod_sku
 
-            for prod_attr in prod.product_attribute_ids:
-                attr_name = self.to_upper(prod_attr.x_attribute_name)
+            for pav in prod.product_attribute_ids.product_attribute_value_id:
+                attr_name = self.to_upper(pav.attribute_id.name)
                 if attr_name in config_prod_conf_attr.get(conf_sku, {}).get('config_attr', {}):
                     attr = mag_avail_attrs.get(attr_name)
                     if attr:
                         opt = next((o for o in attr['options'] if o.get('label') and
-                                    self.to_upper(o['label']) == self.to_upper(prod_attr.x_attribute_value)), {})
+                                    self.to_upper(o['label']) == self.to_upper(pav.name)), {})
                         if opt:
                             data.append({
                                 'option': {
@@ -1025,15 +1028,15 @@ class MagentoProductProduct(models.Model):
         conf_prod_attributes = ml_conf_products[conf_sku]['config_attr']
 
         simp_attr_val = {}
-        for prod_attr in simp_prod_attr:
-            pa_name = self.to_upper(prod_attr.x_attribute_name)
-            if pa_name in conf_prod_attributes:
-                attr = available_attributes.get(pa_name)
+        for pav in simp_prod_attr:
+            attr_name = self.to_upper(pav.attribute_id.name)
+            if attr_name in conf_prod_attributes:
+                attr = available_attributes.get(attr_name)
                 if attr:
                     opt = next((o for o in attr['options'] if o.get('label') and
-                                self.to_upper(o.get('label')) == self.to_upper(prod_attr.x_attribute_value)), {})
+                                self.to_upper(o.get('label')) == self.to_upper(pav.name)), {})
                     if opt:
-                        simp_attr_val.update({pa_name: self.to_upper(opt['label'])})
+                        simp_attr_val.update({attr_name: self.to_upper(opt['label'])})
 
         for prod in magento_conf_prod_links:
             if magento_conf_prod_links[prod] == simp_attr_val and prod != magento_sku:
@@ -1052,11 +1055,11 @@ class MagentoProductProduct(models.Model):
         :return: generated dictionary
         """
         attr_dict = {}
-        for attrs in self.product_attribute_ids:
-            if attrs.x_attribute_name in [
+        for pav in self.product_attribute_ids.product_attribute_value_id:
+            if pav.attribute_id.name in [
                 a.name for a in self.magento_conf_product_id.with_context(lang='en_US').x_magento_assign_attr_ids
             ]:
-                attr_dict.update({self.to_upper(attrs.x_attribute_name): self.to_upper(attrs.x_attribute_value)})
+                attr_dict.update({self.to_upper(pav.attribute_id.name): self.to_upper(pav.name)})
         return attr_dict
 
     @staticmethod
@@ -1167,19 +1170,3 @@ class MagentoProductProduct(models.Model):
             return "".join(str(val).split()).upper()
         else:
             return val
-
-
-class MagentoProductAttributes(models.Model):
-    _name = 'magento.product.attributes'
-    _description = 'Magento Product Attributes'
-    _rec_name = 'x_attr_combined'
-
-    magento_product_id = fields.Many2one('magento.product.product', 'Magento Product', ondelete='cascade')
-    x_attr_combined = fields.Char(string="Attribute",  compute="_compute_full_attribute_name")
-    x_attribute_name = fields.Char(string='Attribute Name')
-    x_attribute_value = fields.Char(string='Attribute Value')
-
-    @api.depends('x_attribute_name', 'x_attribute_value')
-    def _compute_full_attribute_name(self):
-        for rec in self:
-            rec.x_attr_combined = str(rec.x_attribute_name) + ': ' + str(rec.x_attribute_value)
