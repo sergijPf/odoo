@@ -17,6 +17,8 @@
                         </group>
                         <group name="inputs">
                             <field name="import_rule"/>
+                            <field name="journal_id" required="1"/>
+                            <field name="payment_method_line_id" required="1"/>
                         </group>
                     </group>
                 </sheet>

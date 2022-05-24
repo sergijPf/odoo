@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <record id="action_generate_odoo_token_for_magento" model="ir.actions.server">
-        <field name="name">Generate New Token for Magento</field>
-        <field name="groups_id" eval="[(4, ref('odoo_magento2.group_magento_manager'))]"/>
-        <field name="model_id" ref="odoo_magento2.model_magento_instance"/>
-        <field name="binding_model_id" ref="odoo_magento2.model_magento_instance"/>
-        <field name="binding_view_types">form</field>
-        <field name="state">code</field>
-        <field name="code">records.action_generate_token()</field>
-    </record>
+<!--    <record id="action_generate_odoo_token_for_magento" model="ir.actions.server">-->
+<!--        <field name="name">Generate New Token for Magento</field>-->
+<!--        <field name="groups_id" eval="[(4, ref('odoo_magento2.group_magento_manager'))]"/>-->
+<!--        <field name="model_id" ref="odoo_magento2.model_magento_instance"/>-->
+<!--        <field name="binding_model_id" ref="odoo_magento2.model_magento_instance"/>-->
+<!--        <field name="binding_view_types">form</field>-->
+<!--        <field name="state">code</field>-->
+<!--        <field name="code">records.action_generate_token()</field>-->
+<!--    </record>-->
 
 
     <record id="view_magento_instance_form" model="ir.ui.view">
@@ -76,8 +76,11 @@
                         <group>
                             <field name="catalog_price_scope" readonly="1"/>
                             <field name="magento_verify_ssl" attrs="{'readonly': [('active', '=', True)]}"/>
-                            <field name="odoo_token" readonly="1" groups="odoo_magento2.group_magento_manager"/>
                             <field name="image_resolution"/>
+                            <field name="odoo_token" readonly="1" groups="odoo_magento2.group_magento_manager"/>
+                            <button string="Get New Token for Magento" type="object"
+                                    name="action_generate_token"
+                                    confirm="Do you really want to generate new Access Token for Magento? Please note: queue consumer restart will be needed afterwards."/>
                         </group>
                     </group>
                 </sheet>

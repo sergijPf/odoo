@@ -23,10 +23,6 @@
                                    attrs="{'invisible':[('register_payment','=',False)]}"/>
                         </group>
                         <group string="Order/Invoice Configuration">
-                            <field name="journal_id"
-                                   attrs="{'invisible':[('register_payment','=',False)],'required':[('register_payment','!=',False)]}"/>
-                            <field name="inbound_payment_method_id"
-                                   attrs="{'invisible':[('register_payment','=',False)],'required':[('register_payment','!=',False)]}"/>
                             <field name="sale_journal_id" required="1"/>
                             <field name="picking_policy" required="1"/>
                         </group>

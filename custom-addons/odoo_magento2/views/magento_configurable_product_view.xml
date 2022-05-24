@@ -71,6 +71,9 @@
                         <field name="x_magento_assign_attr_ids"
                                widget="many2many_tags"
                                readonly="1"/>
+                        <h5 class="my-2 text-danger" attrs="{'invisible': ['|', ('magento_product_id', 'in', [False,'']), ('magento_website_ids','!=', [])]}">
+                            Product doesn't linked to any website in Magento
+                        </h5>
                     </div>
                     <notebook>
                         <page string="Magento Details" name="magento_details">
@@ -135,7 +138,8 @@
         <field name="model">magento.configurable.product</field>
         <field name="arch" type="xml">
             <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku"
-                  decoration-warning="not sipmle_count_equal">
+                  decoration-warning="not sipmle_count_equal"
+                  decoration-danger="magento_product_id and not magento_website_ids">
                 <header>
                     <button name="process_products_export_to_magento"
                             string="Process Export directly"

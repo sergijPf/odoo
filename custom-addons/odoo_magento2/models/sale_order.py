@@ -81,16 +81,14 @@ class SaleOrder(models.Model):
                     'partner_id': order.partner_id.id,
                     'date': order.date_order,
                     'amount': order.order_total_amount,
-                    'journal_id': work_flow_process_rec.journal_id.id,
-                    'payment_method_id': work_flow_process_rec.inbound_payment_method_id.id,
-
+                    'journal_id': order.magento_payment_method_id.journal_id.id,
+                    'payment_method_line_id': order.magento_payment_method_id.payment_method_line_id.id
                 }
                 if work_flow_process_rec.create_invoice:
                     vals.update({
                         'ref': invoice.payment_reference,
                         'amount': invoice.amount_residual
                     })
-
                 payment_id = self.env['account.payment'].create(vals)
                 # payment_id.action_post()
                 # self.reconcile_payment(payment_id, invoice)

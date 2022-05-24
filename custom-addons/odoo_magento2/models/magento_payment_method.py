@@ -29,9 +29,20 @@ class MagentoPaymentMethod(models.Model):
              "[Paid]: If Order is Paid On Magento then Order will be imported\n "
              "[Never] : This Payment Method Order will never be imported\n ")
     active = fields.Boolean(string="Status", default=True)
+    journal_id = fields.Many2one('account.journal', string='Payment Journal', domain=[('type', 'in', ['cash', 'bank'])])
+    payment_method_line_id = fields.Many2one(
+        'account.payment.method.line',
+        string="Payment Method Line",
+        domain="[('payment_type', '=', 'inbound'), ('journal_id', '=', journal_id)]"
+    )
 
     _sql_constraints = [('unique_payment_method_code', 'unique(magento_instance_id,payment_method_code)',
                          'This payment method code is already exist')]
+
+    @api.onchange("journal_id")
+    def onchange_journal_id(self):
+        for record in self:
+            record.payment_method_line_id = False
 
     @staticmethod
     def import_payment_methods(instance):

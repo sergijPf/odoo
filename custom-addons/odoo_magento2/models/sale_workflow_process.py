@@ -27,25 +27,18 @@ class SaleWorkflowProcess(models.Model):
         help="if it is checked then, the account journal entry will be generated based on Order date and if "
              "unchecked then, the account journal entry will be generated based on Invoice Date"
     )
-    journal_id = fields.Many2one('account.journal', string='Payment Journal', domain=[('type', 'in', ['cash', 'bank'])])
     sale_journal_id = fields.Many2one('account.journal', string='Sales Journal', default=_default_sales_journal,
                                       domain=[('type', '=', 'sale')])
     picking_policy = fields.Selection([
         ('direct', 'Deliver each product when available'),
         ('one', 'Deliver all products at once')
     ], string='Shipping Policy', default="one")
-    inbound_payment_method_id = fields.Many2one(
-        'account.payment.method',
-        string="Debit Method",
-        domain=[('payment_type', '=', 'inbound')],
-        help="Means of payment for collecting money. Odoo modules offer various payments handling facilities, "
-             "but you can always use the 'Manual' payment method in order to manage payments outside of the software.")
 
     @api.onchange("validate_order")
     def onchange_validate_order(self):
         for record in self:
             if not record.validate_order:
-                record.create_invoice = record.register_payment = record.register_payment = False
+                record.create_invoice = record.register_payment = False
 
     @api.onchange("register_payment")
     def onchange_register_payment(self):

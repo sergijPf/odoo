@@ -67,8 +67,8 @@ class MagentoAsyncBulkLogs(models.Model):
 
     def check_bulk_log_status(self):
         response = self.get_detailed_status_of_log()
-        log_statuses = [i.get('status', 0) for i in response.get('operations_list', []) if i and isinstance(i, dict)]
 
+        log_statuses = [i.get('status', 0) for i in response.get('operations_list', []) if i and isinstance(i, dict)]
         return True if 4 in log_statuses else False
 
     def clear_invalid_records(self):

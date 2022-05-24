@@ -117,11 +117,14 @@ class MagentoImportExport(models.TransientModel):
                   ('odoo_prod_template_id', '=', product.id)]
         conf_product = conf_product_obj.with_context(active_test=False).search(domain)
         if not conf_product:
+            sku = product.with_context(lang='en_US').name.replace(' - ', '_').replace('-', '_').replace('%', '').\
+                replace('#', '').replace('/', '').replace('&', '').replace('  ', ' ').replace(' ', '_')
+            if len(sku) > 63:
+                sku = sku[:63]
             values = {
                 'magento_instance_id': product_dict.get('instance_id'),
                 'odoo_prod_template_id': product.id,
-                'magento_sku': product.with_context(lang='en_US').name.replace(' - ', '_').replace('-', '_').
-                    replace('%', '').replace('#', '').replace('/', '').replace('&', '').replace('  ', ' ').replace(' ', '_')
+                'magento_sku': sku
             }
             conf_product = conf_product_obj.create(values)
         else:
