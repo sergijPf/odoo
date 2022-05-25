@@ -68,43 +68,35 @@ class SaleOrder(models.Model):
                 order.write({'date_order': date_order})
 
             if work_flow_process_rec.create_invoice:
-                invoice = self._create_invoices()
+                if order.invoice_ids:
+                    invoices = order.invoice_ids
+                else:
+                    invoices = self._create_invoices()
                 # confirm invoices
                 # for invoice in invoices:
                 #     invoice.action_post()
 
             if work_flow_process_rec.register_payment:
-                vals = {
-                    'currency_id': order.currency_id.id,
-                    'payment_type': 'inbound',
-                    'partner_type': 'customer',
-                    'partner_id': order.partner_id.id,
-                    'date': order.date_order,
-                    'amount': order.order_total_amount,
-                    'journal_id': order.magento_payment_method_id.journal_id.id,
-                    'payment_method_line_id': order.magento_payment_method_id.payment_method_line_id.id
-                }
-                if work_flow_process_rec.create_invoice:
-                    vals.update({
-                        'ref': invoice.payment_reference,
-                        'amount': invoice.amount_residual
-                    })
-                payment_id = self.env['account.payment'].create(vals)
-                # payment_id.action_post()
-                # self.reconcile_payment(payment_id, invoice)
+                if not order.transaction_ids:
+                    currency = self.env['res.currency'].search([('name', '=', order.order_currency_code)])
+                    vals = {
+                        'acquirer_id': order.magento_payment_method_id.payment_method_line_id.payment_acquirer_id.id,
+                        'reference': order.name,
+                        'state': 'done',
+                        'acquirer_reference': order.payment_transaction_id,
+                        'amount': order.order_total_amount,
+                        'currency_id': currency.id if currency else False,
+                        'partner_id': order.partner_id.id,
+                        'sale_order_ids': [order.id]
+                    }
 
-    # def reconcile_payment(self, payment_id, invoice):
-    #     move_line_obj = self.env['account.move.line']
-    #     domain = [('account_internal_type', 'in', ('receivable', 'payable')),
-    #               ('reconciled', '=', False)]
-    #     line_ids = move_line_obj.search([('move_id', '=', invoice.id)])
-    #     to_reconcile = [line_ids.filtered(lambda line: line.account_internal_type == 'receivable')]
-    #
-    #     for payment, lines in zip([payment_id], to_reconcile):
-    #         payment_lines = payment.line_ids.filtered_domain(domain)
-    #         for account in payment_lines.account_id:
-    #             (payment_lines + lines).filtered_domain([('account_id', '=', account.id),
-    #                                                      ('reconciled', '=', False)]).reconcile()
+                    if work_flow_process_rec.create_invoice and invoices:
+                        vals.update({'invoice_ids': invoices.ids})
+
+                    try:
+                        self.env['payment.transaction'].create(vals)
+                    except Exception as e:
+                        print(e)
 
     def cancel_order_from_magento_by_webhook(self):
         try:

@@ -19,8 +19,8 @@
                                    attrs="{'invisible':[('validate_order','=',False)]}"/>
                             <field name="register_payment"
                                    attrs="{'invisible':[('validate_order','=',False)]}"/>
-                            <field name="invoice_date_is_order_date"
-                                   attrs="{'invisible':[('register_payment','=',False)]}"/>
+<!--                            <field name="invoice_date_is_order_date"-->
+<!--                                   attrs="{'invisible':[('register_payment','=',False)]}"/>-->
                         </group>
                         <group string="Order/Invoice Configuration">
                             <field name="sale_journal_id" required="1"/>
@@ -54,7 +54,7 @@
                 <field name="validate_order"/>
                 <field name="create_invoice"/>
                 <field name="register_payment"/>
-                <field name="invoice_date_is_order_date"/>
+<!--                <field name="invoice_date_is_order_date"/>-->
             </tree>
         </field>
     </record>

@@ -122,7 +122,6 @@ class MagentoInstance(models.Model):
         return super(MagentoInstance, self).write(vals)
 
     def action_generate_token(self):
-        raise UserError("good")
         alphabet = string.ascii_letters + string.digits
 
         while True:

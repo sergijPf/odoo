@@ -78,31 +78,6 @@ class MagentoProductProduct(models.Model):
             rec.product_attribute_ids = rec.ptav_ids.filtered(
                 lambda x: not x.product_attribute_value_id.attribute_id.is_ignored_in_magento
             )
-        # self.product_attribute_ids.sudo().unlink()
-        #
-        # # add additional 'relative size' attribute if needed, to cover specific behaviour for size attribute
-        # for rec in self:
-        #     for attr in rec.ptav_ids:
-        #         attr_val = attr.with_context(lang='en_US').product_attribute_value_id
-        #         if not attr_val.attribute_id.is_ignored_in_magento:
-        #             value = attr_val.name
-        #             if attr_val.attribute_id.name == "size":
-        #                 sep = value.find(' - ')
-        #                 if sep >= 0:
-        #                     vals = value.split(' - ', 1)
-        #                     value = vals[1].strip()
-        #
-        #                     rec.product_attribute_ids.create({
-        #                         'magento_product_id': rec.id,
-        #                         'x_attribute_name': 'relative size',
-        #                         'x_attribute_value': vals[0].strip()
-        #                     })
-        #
-        #             rec.product_attribute_ids.create({
-        #                 'magento_product_id': rec.id,
-        #                 'x_attribute_name': attr_val.attribute_id.name,
-        #                 'x_attribute_value': value
-        #             })
 
     @api.depends('odoo_product_id', 'magento_instance_id.location_ids')
     def _compute_available_qty(self):
@@ -257,7 +232,11 @@ class MagentoProductProduct(models.Model):
         tier_prices = []
         special_prices = {}
         date_format = MAGENTO_DATETIME_FORMAT
-        products_range = self.search([('magento_instance_id', '=', instance.id), ('magento_status', '=', 'in_magento')])
+        products_range = self.search([
+            ('magento_instance_id', '=', instance.id),
+            ('magento_product_id', 'not in', [False, '']),
+            ('magento_status', 'in', ['in_magento','in_process','need_to_link','update_needed'])
+        ])
 
         for website in instance.magento_website_ids:
             pricelist = website.pricelist_id

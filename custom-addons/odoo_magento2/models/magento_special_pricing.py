@@ -26,14 +26,24 @@ class MagentoSpecialPricing(models.Model):
                                          domain="[('instance_id','=',magento_instance_id)]")
     config_product_ids = fields.Many2many('magento.configurable.product', string='Magento Config. Product', copy=False,
                                           domain="[('magento_instance_id','=',magento_instance_id)]")
-    simple_product_ids = fields.Many2many(comodel_name='magento.product.product',
-                                          relation='simple_product_special_price_rel',
-                                          column1='simple_product_id', column2='special_pricing_id',
-                                          string='Magento Simp Product', copy=False,
-                                          domain="[('magento_instance_id','=',magento_instance_id)]")
-    product_ids = fields.Many2many(comodel_name='magento.product.product', relation='product_price_rel',
-                                   column1='product_id', column2='price_id', string='Magento Products',
-                                   compute="_compute_products", store=True)
+    simple_product_ids = fields.Many2many(
+        comodel_name='magento.product.product',
+        relation='simple_product_special_price_rel',
+        column1='simple_product_id',
+        column2='special_pricing_id',
+        string='Magento Simp Product',
+        copy=False,
+        domain="[('magento_instance_id','=',magento_instance_id)]"
+    )
+    product_ids = fields.Many2many(
+        comodel_name='magento.product.product',
+        relation='product_price_rel',
+        column1='product_id',
+        column2='price_id',
+        string='Magento Products',
+        compute="_compute_products",
+        store=True
+    )
     min_qty = fields.Float("Min.quantity", default=1)
     is_special_price = fields.Boolean("Is special price?")
     fixed_price = fields.Float("Special Price", copy=False)
@@ -144,7 +154,9 @@ class MagentoSpecialPricing(models.Model):
                 "quantity": self.min_qty if self.min_qty else 1
             }
 
-        for prod in self.product_ids:
+        for prod in self.product_ids.filtered(
+                lambda x: x.magento_product_id and x.magento_status in ['in_magento','in_process','need_to_link','update_needed']
+        ):
             price_item.update({"sku": prod.magento_sku})
             data_prices.append(price_item.copy())
 
