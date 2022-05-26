@@ -8,7 +8,8 @@
             <field name="arch" type="xml">
                 <xpath expr="//sheet" position="inside">
                     <group name="x_magento_details" string="Magento Details">
-                        <field name="no_create_in_magento" id="no_create_in_magento"/>
+                        <field name="no_create_in_magento"/>
+                        <field name="is_excluded_from_menu" attrs="{'invisible': [('no_create_in_magento', '=', True)]}"/>
                     </group>
                 </xpath>
             </field>

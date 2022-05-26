@@ -1,7 +1,7 @@
 {
     # App information
     'name': "Smartino Magento2 connector",
-    'version': '15.0.13',
+    'version': '15.0.14',
     'category': 'Sales',
     'summary': 'Odoo - Magento2 Connector',
 

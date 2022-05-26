@@ -68,7 +68,7 @@ class ProductTemplate(models.Model):
             if not valid_lines.filtered(lambda a: a.magento_config):
                 color_line = valid_lines.filtered(lambda line: line.attribute_id.name == 'color')
                 collection_line = valid_lines.filtered(lambda line: line.attribute_id.name == 'collection')
-                config_attr_line = color_line or collection_line or (valid_lines and valid_lines[-1])
+                config_attr_line = (color_line and color_line[0]) or (collection_line and collection_line[0]) or (valid_lines and valid_lines[-1])
                 if config_attr_line:
                     config_attr_line.magento_config = True
 
@@ -76,8 +76,11 @@ class ProductTemplateAttributeLine(models.Model):
     _inherit = "product.template.attribute.line"
 
     magento_config = fields.Boolean(string="Magento Conf.Attribute", default=False)
-    main_conf_attr = fields.Boolean(string="Hover Attribute", help="Configurable Attribute to be visible while hovering a product",
-                                    default=False)
+    main_conf_attr = fields.Boolean(
+        string="Hover Attribute",
+        help="Configurable Attribute to be visible while hovering a product",
+        default=False
+    )
     is_ignored = fields.Boolean(related="attribute_id.is_ignored_in_magento")
     create_variant = fields.Selection(related="attribute_id.create_variant")
     is_magento_config_prod = fields.Boolean(related="product_tmpl_id.is_magento_config")

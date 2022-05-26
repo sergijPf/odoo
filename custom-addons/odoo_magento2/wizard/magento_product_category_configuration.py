@@ -12,38 +12,59 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
     def _default_get_magento_instance(self):
         return self.env.context.get('magento_instance_id', False)
 
-    update_existed = fields.Boolean(string="To Update Existed only")
+    is_update_existed = fields.Boolean(string="Update Existed only",
+                                       help="To update categories already exported to Magento")
     magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance', readonly=True,
                                           default=_default_get_magento_instance)
 
     def create_update_product_public_category_structure(self):
         prod_publ_categ_obj = self.env['product.public.category']
-        magento_product_categ_obj = self.env['magento.product.category']
         domain = [('parent_id', '=', False), ('no_create_in_magento', '=', False)]
-        magento_categ_rec = magento_product_categ_obj.with_context(active_test=False).search([
+        ml_category_obj = self.env['magento.product.category']
+        ml_category_recs = ml_category_obj.with_context(active_test=False).search([
             ('instance_id', '=', self.magento_instance_id.id)
         ])
 
         try:
             url = '/V1/categories'
             magento_root_category = req(self.magento_instance_id, url)
+            if not magento_root_category and not isinstance(magento_root_category, dict):
+                raise "Product Categories request has returned incompatible data."
         except Exception as error:
             raise UserError(_("Error getting Product Categories from Magento" + str(error)))
 
-        if self.update_existed:
-            for categ in magento_categ_rec:
-                prod_publ_categ_obj.process_storeview_translations_export(
-                    self.magento_instance_id, categ.product_public_categ_id, categ['magento_category']
-                )
-            domain.append(('magento_prod_categ_ids', '=', False))
-        else:
-            if magento_root_category.get("children_data"):
-                raise UserError("Root Product Category in Magento should not have any subcategories.")
-            magento_categ_rec and magento_categ_rec.unlink()
+        roots_children = magento_root_category.get("children_data")
 
-            for category in prod_publ_categ_obj.search(domain):
-                prod_publ_categ_obj.create_product_category_in_magento_and_layer(
-                    magento_product_categ_obj, category, self.magento_instance_id, magento_root_category.get("id"), None
+        if self.is_update_existed:
+            if not roots_children:
+                raise UserError("There is nothing to update on Magento side!")
+
+            magento_categories_list = []
+            self._get_all_magento_category_ids(roots_children.get('children_data', []), magento_categories_list)
+
+            for categ in ml_category_recs:
+                if categ.magento_category in magento_categories_list:
+                    ml_category_obj.process_storeview_translations_export(
+                        self.magento_instance_id, categ.product_public_categ_id, categ.magento_category
+                    )
+                else:
+                    categ.active = False
+        else:
+            # remove existed
+            if roots_children:
+                for child in roots_children:
+                    child_id = str(child.get("id"))
+                    if child_id and ml_category_obj.delete_category_in_magento(self.magento_instance_id, child_id) is True:
+                        ml_category = ml_category_obj.search([
+                            ('magento_category', '=', child_id),
+                            ('instance_id', '=', self.magento_instance_id.id)
+                        ])
+                        ml_category and ml_category.unlink()
+
+            # create new categories
+            for public_category in prod_publ_categ_obj.search(domain):
+                ml_category_obj.create_product_category_in_magento_and_layer(
+                    public_category, self.magento_instance_id, magento_root_category.get("id"), None
                 )
 
         return {
@@ -54,3 +75,10 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
                 'type': 'rainbow_man',
             }
         }
+
+    def _get_all_magento_category_ids(self, children, categories_list):
+        for child in children:
+            categories_list.append(str(child.get('id')))
+            ch = child.get("children_data", [])
+            if ch:
+                self._get_all_magento_category_ids(ch, categories_list)

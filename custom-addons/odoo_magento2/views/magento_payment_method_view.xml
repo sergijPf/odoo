@@ -17,8 +17,7 @@
                         </group>
                         <group name="inputs">
                             <field name="import_rule"/>
-                            <field name="journal_id" required="1"/>
-                            <field name="payment_method_line_id" required="1"/>
+                            <field name="payment_acquirer_id" required="1"/>
                         </group>
                     </group>
                 </sheet>
@@ -50,6 +49,7 @@
                 <field name="magento_instance_id"/>
                 <field name="payment_method_name"/>
                 <field name="payment_method_code"/>
+                <field name="payment_acquirer_id"/>
             </tree>
         </field>
     </record>

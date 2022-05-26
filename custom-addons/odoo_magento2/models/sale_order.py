@@ -16,7 +16,7 @@ class SaleOrder(models.Model):
     store_id = fields.Many2one('magento.storeview', string="Magento Storeview")
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Payment Method")
     magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Shipping Method")
-    payment_transaction_id = fields.Char(string="Payment Transact. ID", help="Magento Payment System Transaction ID")
+    payment_transaction_code = fields.Char(string="Payment Trans. Code", help="Magento Payment System Transaction ID")
     order_currency_code = fields.Char(string="Order Currency")
     order_total_amount = fields.Float(string="Order Amount")
     magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
@@ -77,13 +77,13 @@ class SaleOrder(models.Model):
                 #     invoice.action_post()
 
             if work_flow_process_rec.register_payment:
-                if not order.transaction_ids:
+                if not order.transaction_ids and order.magento_payment_method_id.payment_acquirer_id:
                     currency = self.env['res.currency'].search([('name', '=', order.order_currency_code)])
                     vals = {
-                        'acquirer_id': order.magento_payment_method_id.payment_method_line_id.payment_acquirer_id.id,
+                        'acquirer_id': order.magento_payment_method_id.payment_acquirer_id.id,
                         'reference': order.name,
                         'state': 'done',
-                        'acquirer_reference': order.payment_transaction_id,
+                        'acquirer_reference': order.payment_transaction_code,
                         'amount': order.order_total_amount,
                         'currency_id': currency.id if currency else False,
                         'partner_id': order.partner_id.id,
@@ -401,7 +401,7 @@ class SaleOrder(models.Model):
             'team_id': store_view.team_id.id if store_view and store_view.team_id else False,
             'carrier_id': odoo_delivery_carrier.id if odoo_delivery_carrier else False,
             'payment_term_id': payment_term_id.id if payment_term_id else False,
-            'payment_transaction_id': sales_order.get('payment', {}).get('last_trans_id', False),
+            'payment_transaction_code': sales_order.get('payment', {}).get('last_trans_id', False),
             'auto_workflow_process_id': workflow_process_id.id,
             'order_currency_code': sales_order.get("order_currency_code"),
             'order_total_amount': sales_order.get("grand_total", 0),
