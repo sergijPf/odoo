@@ -17,9 +17,9 @@ class MagentoImportExport(models.TransientModel):
     magento_instance_ids = fields.Many2many('magento.instance', string="Magento Instances")
     magento_website_id = fields.Many2one('magento.website', string="Magento Website")
     operations = fields.Selection([
+        ('export_product_extra_info', "Export Product's extra info (prices, alternatives etc.)"),
         ('export_shipment_information', 'Export Shipment Info'),
         ('export_invoice_information', 'Export Invoices'),
-        ('export_product_prices', "Export Product's base and advanced Prices"),
         ('export_product_stock', 'Export Product Stock')
     ], string='Import/ Export Operations', help='Import/ Export Operations')
     start_date = fields.Datetime(string="From Date")
@@ -37,8 +37,11 @@ class MagentoImportExport(models.TransientModel):
             res = self.env['stock.picking'].export_shipments_to_magento(instances, False)
         elif self.operations == 'export_invoice_information':
             res = self.env['account.move'].export_invoices_to_magento(instances, False)
-        elif self.operations == 'export_product_prices':
+        elif self.operations == 'export_product_extra_info':
             res = self.env['magento.product.product'].export_product_prices_to_magento(instances)
+            if not res:
+                self.env['magento.configurable.product'].export_products_extra_info_to_magento_in_bulk(instances)
+
         elif self.operations == 'export_product_stock':
             res = self.export_product_stock_operation(instances)
 

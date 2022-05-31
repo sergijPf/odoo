@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import pytz
+import pytz, json
+import logging
+
 from datetime import datetime, timedelta
 from odoo import fields, models, api
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
 MAGENTO_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-
+_logger = logging.getLogger(__name__)
 
 class MagentoProductProduct(models.Model):
     _name = 'magento.product.product'
@@ -21,6 +23,7 @@ class MagentoProductProduct(models.Model):
     magento_website_ids = fields.Many2many('magento.website', string='Magento Product Websites', readonly=False,
                                            domain="[('magento_instance_id','=',magento_instance_id)]")
     magento_sku = fields.Char(string="Simple Product SKU")
+    is_enabled = fields.Boolean(string="Is Enabled in Magento?", default=False)
     magento_product_name = fields.Char(string="Simple Product Name", related="odoo_product_id.name")
     active = fields.Boolean("Active", default=True)
     image_1920 = fields.Image(related="odoo_product_id.image_1920")
@@ -41,11 +44,11 @@ class MagentoProductProduct(models.Model):
     magento_status = fields.Selection([
         ('not_exported', 'not Exported'),
         ('in_process', 'In Process'),
-        ('in_magento', 'In Magento'),
         ('need_to_link', 'Need to be Linked'),
-        ('log_error', 'Error to Export'),
         ('update_needed', 'Need to Update'),
-        ('deleted', 'Deleted in Magento')
+        ('extra_info', 'Extra info needed'),
+        ('in_magento', 'In Magento'),
+        ('log_error', 'Error to Export'),
     ], string='Export Status', help='The status of Product Variant export to Magento ', default='not_exported')
     force_update = fields.Boolean(string="Force export", help="Force run of Simple Product Export", default=False)
     qty_avail = fields.Float(string="Qty on hand", help="Available quantity on specified Locations",
@@ -101,6 +104,14 @@ class MagentoProductProduct(models.Model):
                             f"[{website.name} - {price}{website.pricelist_id.currency_id.name}]   "
 
             rec.base_prices = base_price
+
+    def write(self, vals):
+        if 'active' in vals:
+            for rec in self:
+                if rec.magento_product_id:
+                    raise UserError("You're not able to archive product until it is in Magento. Please delete it first!")
+
+        return super(MagentoProductProduct, self).write(vals)
 
     def unlink(self):
         to_reject = []
@@ -232,11 +243,11 @@ class MagentoProductProduct(models.Model):
         tier_prices = []
         special_prices = {}
         date_format = MAGENTO_DATETIME_FORMAT
-        products_range = self.search([
-            ('magento_instance_id', '=', instance.id),
-            ('magento_product_id', 'not in', [False, '']),
-            ('magento_status', 'in', ['in_magento','in_process','need_to_link','update_needed'])
-        ])
+        domain = [('magento_instance_id', '=', instance.id), ('magento_product_id', 'not in', [False, ''])]
+        if self:
+            domain.append(('id', 'in', self.ids))
+
+        products_range = self.search(domain)
 
         for website in instance.magento_website_ids:
             pricelist = website.pricelist_id
@@ -283,20 +294,21 @@ class MagentoProductProduct(models.Model):
     @staticmethod
     def update_simple_product_dict_with_magento_data(magento_product, ml_simp_products_dict):
         website_ids = magento_product.get("extension_attributes").get("website_ids")
-        category_links = magento_product.get("extension_attributes").get("category_links", [])
+        product_prices = magento_product.get("extension_attributes").get("website_wise_product_price_data", [])
+        prices_list = [json.loads(price) for price in product_prices]
 
         ml_simp_products_dict[str(magento_product.get("sku"))].update({
             'magento_type_id': magento_product.get('type_id'),
             'magento_prod_id': magento_product.get("id"),
+            'is_magento_enabled': True if magento_product.get('status') == 1 else False,
             'magento_update_date': magento_product.get("updated_at"),
             'magento_website_ids': website_ids,
-            'category_links': [cat['category_id'] for cat in category_links],
-            'media_gallery': [i['id'] for i in magento_product.get("media_gallery_entries", []) if i]
+            'media_gallery': [i['id'] for i in magento_product.get("media_gallery_entries", []) if i],
+            'product_prices': {p['website_id']: p.get('product_price', 0) for p in prices_list if p.get('website_id')}
         })
 
-    @staticmethod
-    def check_simple_products_for_errors_and_update_export_statuses(export_products, conf_prods_dict, simp_prods_dict,
-                                                                    attr_sets):
+    def check_simple_products_for_errors_and_update_export_statuses(self, export_products, conf_prods_dict,
+                                                                    simp_prods_dict, attr_sets, update_export_statuses):
         for prod in simp_prods_dict:
             conf_sku = simp_prods_dict[prod]['conf_sku']
             export_prod = export_products.filtered(lambda p: p.magento_sku == prod)
@@ -304,15 +316,12 @@ class MagentoProductProduct(models.Model):
             if conf_sku and conf_prods_dict[conf_sku]['log_message']:
                 text = "Configurable Product is not ok. Please check it first. "
                 simp_prods_dict[prod]['log_message'] += text
-                simp_prods_dict[prod]['to_export'] = False
                 continue
 
             if simp_prods_dict[prod]['log_message']:
-                simp_prods_dict[prod]['to_export'] = False
                 continue
 
-            if export_prod.check_simple_products_attributes_for_errors(simp_prods_dict, conf_prods_dict, attr_sets):
-                simp_prods_dict[prod]['to_export'] = False
+            if export_prod.check_simple_product_attributes_for_errors(simp_prods_dict, conf_prods_dict, attr_sets):
                 continue
 
             if simp_prods_dict[prod]['force_update']:
@@ -330,7 +339,13 @@ class MagentoProductProduct(models.Model):
                                     len(simp_prods_dict[prod].get('media_gallery', [])):
                                 simp_prods_dict[prod]['magento_status'] = 'update_needed'
                                 continue
-                            if simp_prods_dict[prod]['magento_status'] != 'in_magento':
+
+                            if update_export_statuses:
+                                # check prices
+                                if not self.check_simple_product_prices(export_prod, simp_prods_dict[prod]):
+                                    continue
+
+                            if simp_prods_dict[prod]['magento_status'] != 'extra_info':
                                 simp_prods_dict[prod]['magento_status'] = 'in_magento'
 
                             simp_prods_dict[prod]['to_export'] = False
@@ -339,7 +354,7 @@ class MagentoProductProduct(models.Model):
                                 export_prod.error_log_ids.sudo().unlink()
                         else:
                             simp_prods_dict[prod]['magento_status'] = 'need_to_link'
-                    elif simp_prods_dict[prod]['magento_status'] == 'in_magento':
+                    elif simp_prods_dict[prod]['magento_status'] in ['in_magento', 'in_process']:
                         simp_prods_dict[prod]['magento_status'] = 'update_needed'
                 else:
                     text = "The Product with such sku is already in Magento. (And it's type isn't Simple Product). "
@@ -347,68 +362,7 @@ class MagentoProductProduct(models.Model):
             elif simp_prods_dict[prod]['magento_status'] == 'in_magento':
                 simp_prods_dict[prod]['magento_status'] = 'update_needed'
 
-    def process_simple_products_export(self, instance, attr_sets, conf_prods_dict, simp_prods_dict, async_export):
-        simple_products = self.filtered(
-            lambda prd: prd.magento_sku in simp_prods_dict and
-                        simp_prods_dict[prd.magento_sku]['to_export'] is True and
-                        not simp_prods_dict[prd.magento_sku]['log_message']
-        )
-
-        # process simple products update in Magento
-        products_to_update = simple_products.filtered(
-            lambda s: simp_prods_dict[s.magento_sku].get('magento_update_date') and
-                      not simp_prods_dict[s.magento_sku]['log_message']
-        )
-        products_to_update.process_simple_products_create_or_update(
-            instance, simp_prods_dict, attr_sets, conf_prods_dict, async_export, 'PUT'
-        )
-
-        # process new simple product creation in Magento
-        products_to_create = simple_products.filtered(
-            lambda s: not simp_prods_dict[s.magento_sku].get('magento_update_date') and
-                      not simp_prods_dict[s.magento_sku]['log_message']
-        )
-        products_to_create.process_simple_products_create_or_update(
-            instance, simp_prods_dict, attr_sets, conf_prods_dict, async_export, 'POST'
-        )
-
-    def process_simple_products_create_or_update(self, instance, ml_simp_products, attr_sets, ml_conf_products,
-                                                 async_export, method):
-        if not self:
-            return
-
-        if not async_export:
-            for simple_product in self:
-                prod_sku = simple_product.magento_sku
-                simple_product.bulk_log_ids = [(5, 0, 0)]
-
-                if method == 'POST' or ml_simp_products[prod_sku]['magento_status'] != 'need_to_link':
-                    res = simple_product.export_single_simple_product_to_magento(
-                        instance, ml_simp_products, attr_sets, method
-                    )
-                    if res:
-                        self.update_simple_product_dict_with_magento_data(res, ml_simp_products)
-                    else:
-                        continue
-
-                if not ml_simp_products[prod_sku]['do_not_export_conf']:
-                    simple_product.assign_attr_to_config_product_in_magento(
-                        instance, attr_sets, ml_conf_products, ml_simp_products
-                    )
-                    if not ml_simp_products[prod_sku]['log_message']:
-                        simple_product.link_simple_to_config_product_in_magento(instance, ml_conf_products, ml_simp_products)
-        else:
-            if self.export_simple_products_in_bulk(instance, ml_simp_products, attr_sets, method) is False:
-                return
-
-            if self.assign_attr_to_config_products_in_magento_in_bulk(
-                    instance, ml_conf_products, ml_simp_products, attr_sets
-            ) is False:
-                return
-
-            self.link_simple_to_config_products_in_bulk(instance, ml_simp_products)
-
-    def check_simple_products_attributes_for_errors(self, simp_products_dict, conf_products_dict, attribute_sets):
+    def check_simple_product_attributes_for_errors(self, simp_products_dict, conf_products_dict, attribute_sets):
         prod_sku = self.magento_sku
         conf_sku = self.magento_conf_prod_sku
         instance = self.magento_instance_id
@@ -456,6 +410,88 @@ class MagentoProductProduct(models.Model):
                        "Product - %s. " % check_values
                 simp_products_dict[prod_sku]['log_message'] += text
                 return True
+
+    def check_simple_product_prices(self, product, product_dict):
+        for website in product.magento_instance_id.magento_website_ids:
+            text = ''
+            if website.pricelist_id:
+                if website.magento_base_currency.id != website.pricelist_id.currency_id.id:
+                    text = "Price list '%s' currency is different than Magento base currency " \
+                            "for '%s' website. " % (website.pricelist_id.name, website.name)
+
+                odoo_price = self.get_product_price_for_website(website, product.odoo_product_id)
+                magento_price = product_dict['product_prices'].get(website.magento_website_id, 0)
+
+                if odoo_price == 0:
+                    text = "Product missed base price for '%s' website in Odoo. " % website.name
+                elif float(magento_price) == 0 or odoo_price != magento_price:
+                    product_dict['magento_status'] = 'extra_info'
+                # elif odoo_price != magento_price:
+                #     text = "Product prices in Magento and Odoo for %s website are not the same. " % website.name
+                else:
+                    product_dict['magento_status'] = 'in_magento'
+            else:
+                text = "There are no price list defined for '%s' website. " % website.name
+
+            if text:
+                product_dict['log_message'] += text
+
+        return False if product_dict['log_message'] else True
+
+    def process_simple_products_export(self, instance, attr_sets, conf_prods_dict, simp_prods_dict, async_export):
+        simple_products = self.filtered(
+            lambda p: simp_prods_dict[p.magento_sku]['to_export'] and not simp_prods_dict[p.magento_sku]['log_message']
+        )
+
+        # process simple products update in Magento
+        products_to_update = simple_products.filtered(
+            lambda s: simp_prods_dict[s.magento_sku].get('magento_update_date')
+        )
+        products_to_update.process_simple_products_create_or_update_in_magento(
+            instance, simp_prods_dict, attr_sets, conf_prods_dict, async_export, 'PUT'
+        )
+
+        # process new simple product creation in Magento
+        products_to_create = simple_products - products_to_update
+        products_to_create.process_simple_products_create_or_update_in_magento(
+            instance, simp_prods_dict, attr_sets, conf_prods_dict, async_export, 'POST'
+        )
+
+    def process_simple_products_create_or_update_in_magento(self, instance, ml_simp_products, attr_sets,
+                                                            ml_conf_products, async_export, method):
+        if not self:
+            return
+
+        if not async_export:
+            for simple_product in self:
+                prod_sku = simple_product.magento_sku
+                simple_product.bulk_log_ids = [(5, 0, 0)]
+
+                if method == 'POST' or ml_simp_products[prod_sku]['magento_status'] != 'need_to_link':
+                    res = simple_product.export_single_simple_product_to_magento(
+                        instance, ml_simp_products, attr_sets, method
+                    )
+                    if res:
+                        self.update_simple_product_dict_with_magento_data(res, ml_simp_products)
+                    else:
+                        continue
+
+                if not ml_simp_products[prod_sku]['do_not_export_conf']:
+                    simple_product.assign_attr_to_config_product_in_magento(
+                        instance, attr_sets, ml_conf_products, ml_simp_products
+                    )
+                    if not ml_simp_products[prod_sku]['log_message']:
+                        simple_product.link_simple_to_config_product_in_magento(instance, ml_conf_products, ml_simp_products)
+        else:
+            if self.export_simple_products_in_bulk(instance, ml_simp_products, attr_sets, method) is False:
+                return
+
+            if self.assign_attr_to_config_products_in_magento_in_bulk(
+                    instance, ml_conf_products, ml_simp_products, attr_sets
+            ) is False:
+                return
+
+            self.link_simple_to_config_products_in_bulk(instance, ml_simp_products)
 
     def map_product_attributes_with_magento_attr(self, product_attributes, available_attributes):
         custom_attributes = []
@@ -557,7 +593,7 @@ class MagentoProductProduct(models.Model):
         config_product_children = ml_conf_products[config_product_sku]['children']
 
         if ml_simp_products[simple_product_sku]['magento_prod_id'] in config_product_children:
-            ml_simp_products[simple_product_sku]['magento_status'] = 'in_magento'
+            ml_simp_products[simple_product_sku]['magento_status'] = 'extra_info'
             ml_simp_products[simple_product_sku]['log_message'] = ''
             ml_conf_products[config_product_sku]['log_message'] = ''
             return
@@ -567,7 +603,7 @@ class MagentoProductProduct(models.Model):
             api_url = '/V1/configurable-products/%s/child' % config_product_sku
             res = req(magento_instance, api_url, 'POST', data)
             if res is True:
-                ml_simp_products[simple_product_sku]['magento_status'] = 'in_magento'
+                ml_simp_products[simple_product_sku]['magento_status'] = 'extra_info'
             elif res.get('message'):
                 raise
         except Exception as err:
@@ -587,7 +623,7 @@ class MagentoProductProduct(models.Model):
             "product": {
                 "name": self.x_magento_name,
                 "attribute_set_id":  attr_sets[prod_attr_set]['id'],
-                "status": 1,  # Enabled(1) / Disabled(0)
+                "status": 2,  # 1-enabled / 2-disabled
                 "visibility": 3,  # Search
                 "price": 0,
                 "type_id": "simple",
@@ -619,7 +655,7 @@ class MagentoProductProduct(models.Model):
             ml_simp_products[magento_sku]['export_date_to_magento'] = response.get("updated_at")
 
             if ml_simp_products[magento_sku]['do_not_export_conf']:
-                ml_simp_products[magento_sku]['magento_status'] = 'in_magento'
+                ml_simp_products[magento_sku]['magento_status'] = 'extra_info'
             else:
                 ml_simp_products[magento_sku]['magento_status'] = 'need_to_link'
 
@@ -636,7 +672,6 @@ class MagentoProductProduct(models.Model):
 
     def process_storeview_data_export(self, instance, ml_products):
         prod_sku = self.magento_sku
-        product_price = 0
         text = ''
 
         if instance.catalog_price_scope == 'global':
@@ -646,26 +681,11 @@ class MagentoProductProduct(models.Model):
             for website in instance.magento_website_ids:
                 storeview_code = website.store_view_ids[0].magento_storeview_code
                 lang_code = website.store_view_ids[0].lang_id.code
-                data = {'product': {'name': '', "price": 0, "status": 1, "visibility": 3}}
+                # data = {'product': {'name': '', "price": 0, "status": 1, "visibility": 3}}
+                data = {'product': {'name': '', "price": 0, "visibility": 3}}
 
                 data["product"]["name"] = self.with_context(lang=lang_code).odoo_product_id.name + ' ' + \
                                           ' '.join(self.product_attribute_ids.product_attribute_value_id.mapped('name'))
-
-                if website.pricelist_id:
-                    if website.magento_base_currency.id != website.pricelist_id.currency_id.id:
-                        text += "Pricelist '%s' currency is different than Magento base currency " \
-                                "for '%s' website.\n" % (website.pricelist_id.name, website.name)
-                        break
-                    product_price = self.get_product_price_for_website(website, self.odoo_product_id)
-                else:
-                    text += "There are no pricelist defined for '%s' website. " % website.name
-
-                if product_price:
-                    data["product"]["price"] = product_price
-                    data["product"]["status"] = 1
-                else:
-                    data["product"]["price"] = data["product"]["status"] = 0
-                    text += "There are no or '0' price defined for product in '%s' website price-list. " % website.name
 
                 try:
                     api_url = '/%s/V1/products/%s' % (storeview_code, prod_sku)
@@ -735,7 +755,7 @@ class MagentoProductProduct(models.Model):
                         "sku": prod.magento_sku,
                         "name": prod.x_magento_name,
                         "attribute_set_id": attr_sets[attribute_set]['id'],
-                        "status": 1,  # Enabled(1) / Disabled(0)
+                        "status": 2,  # 1-enabled / 2-disabled
                         "visibility": 3,  # Search
                         "price": 0,
                         "type_id": "simple",
@@ -834,7 +854,6 @@ class MagentoProductProduct(models.Model):
             lang_code = website.store_view_ids[0].lang_id.code
 
             for prod in data:
-                product_price = 0
                 sku = prod['product']['sku']
                 product = self.filtered(lambda x: x.magento_sku == sku)
                 new_prod = {
@@ -842,31 +861,11 @@ class MagentoProductProduct(models.Model):
                         'name': product.with_context(lang=lang_code).odoo_product_id.name + ' ' +
                                 ' '.join(product.product_attribute_ids.product_attribute_value_id.mapped('name')),
                         'sku': sku,
-                        "status": 1,
+                        # "status": 1,
                         "visibility": 3,
                         'price': 0
                     }
                 }
-
-                if not website.pricelist_id:
-                    text = "There are no price-list defined for '%s' website.\n" % website.name
-                    ml_products[sku]['log_message'] += text
-                else:
-                    if website.magento_base_currency.id != website.pricelist_id.currency_id.id:
-                        text = "Price-list '%s' currency is different than Magento base currency " \
-                                "for '%s' website.\n" % (website.pricelist_id.name, website.name)
-                        ml_products[sku]['log_message'] += text
-                        break
-
-                    product_price = self.get_product_price_for_website(website, product.odoo_product_id)
-
-                if product_price:
-                    new_prod["product"]["price"] = product_price
-                else:
-                    new_prod["product"]["price"] = new_prod["product"]["status"] = 0
-                    if not ml_products[sku]['log_message']:
-                        text = "There are no or '0' price defined for product in '%s' website's price-list. " % website.name
-                        ml_products[sku]['log_message'] += text
 
                 data_lst.append(new_prod)
 
@@ -875,7 +874,7 @@ class MagentoProductProduct(models.Model):
                 res = req(instance, api_url, 'PUT', data_lst)
             except Exception as e:
                 for product in data:
-                    text = ("Error while exporting products data to '%s' store view. " % storeview_code) + str(e)
+                    text = ("Error while exporting product's info to '%s' store view. " % storeview_code) + str(e)
                     ml_products[product['product']['sku']]['log_message'] += text
                 break
 
@@ -1064,48 +1063,71 @@ class MagentoProductProduct(models.Model):
         self.ensure_one()
         self.magento_conf_product_id.delete_product_in_magento(self)
 
-    def save_magento_products_info_to_database(self, magento_websites, ml_conf_products, ml_simp_products):
-        for s_prod in ml_simp_products:
-            simple_product = self.filtered(lambda prod: prod.magento_sku == s_prod)
-            conf_sku = ml_simp_products[s_prod]['conf_sku']
+    def save_magento_products_info_to_database(self, magento_websites, conf_products, simp_products, is_status_update, is_cron):
+        for s_prod in simp_products:
+            simp_prod_rec = self.filtered(lambda prod: prod.magento_sku == s_prod)
+            simp_prod_dict = simp_products[s_prod]
+            conf_sku = simp_prod_dict['conf_sku']
+            conf_prod_dict = conf_products[conf_sku]
 
-            if ml_simp_products[s_prod]['log_message']:
-                ml_simp_products[s_prod]['magento_status'] = 'log_error'
-                simple_product.save_error_messages_to_log_book(
-                    ml_simp_products[s_prod]['log_message'],
-                    ml_conf_products.get(conf_sku, {}).get('log_message', '')
+            if simp_prod_dict['log_message']:
+                simp_prod_dict['magento_status'] = 'log_error'
+                simp_prod_rec.save_error_messages_to_log_book(simp_prod_dict['log_message'], conf_prod_dict['log_message']
                 )
-            elif simple_product.error_log_ids:
-                simple_product.error_log_ids.sudo().unlink()
+            elif simp_prod_rec.error_log_ids:
+                simp_prod_rec.error_log_ids.sudo().unlink()
 
-            if ml_simp_products[s_prod]['magento_status'] != 'in_magento' and \
-                    ml_conf_products[conf_sku]['magento_status'] == 'in_magento':
-                ml_conf_products[conf_sku]['magento_status'] = 'update_needed'
+            if simp_prod_dict['magento_status'] != 'in_magento':
+                if conf_prod_dict['magento_status'] == 'in_magento':
+                    if simp_prod_dict['magento_status'] == 'extra_info':
+                        conf_prod_dict['magento_status'] = 'extra_info'
+                    else:
+                        conf_prod_dict['magento_status'] = 'update_needed'
 
-            values = self.prepare_data_to_save(ml_simp_products, s_prod, simple_product, magento_websites)
-            simple_product.write(values)
+            values = self.prepare_data_to_save(simp_prod_dict, simp_prod_rec, magento_websites, is_status_update)
 
-        for c_prod in ml_conf_products:
-            conf_product = ml_conf_products[c_prod]['conf_object']
+            if not is_cron:
+                self.enabled_or_disabled_product_in_magento(simp_prod_rec.magento_instance_id, values, s_prod,
+                                                            simp_prod_rec.x_magento_name,
+                                                            simp_prod_dict.get('is_magento_enabled'))
+            simp_prod_rec.write(values)
 
-            if ml_conf_products[c_prod]['log_message']:
-                ml_conf_products[c_prod]['magento_status'] = 'log_error'
+        for c_prod in conf_products:
+            conf_prod_dict = conf_products[c_prod]
+            conf_product = conf_prod_dict['conf_object']
 
-            values = self.prepare_data_to_save(ml_conf_products, c_prod, conf_product, magento_websites)
+            if conf_prod_dict['log_message']:
+                conf_prod_dict['magento_status'] = 'log_error'
+
+            values = self.prepare_data_to_save(conf_prod_dict, conf_product, magento_websites, is_status_update)
+
+            if not is_cron:
+                self.enabled_or_disabled_product_in_magento(conf_product.magento_instance_id, values, c_prod,
+                                                            conf_product.magento_product_name,
+                                                            conf_prod_dict.get('is_magento_enabled'))
             conf_product.write(values)
 
     @staticmethod
-    def prepare_data_to_save(ml_products, prod_sku, odoo_product, websites):
-        mag_prod_websites = ml_products[prod_sku].get('magento_website_ids', [])
+    def prepare_data_to_save(product_dict, odoo_product, websites, is_status_update):
+        values = {'magento_status': product_dict['magento_status']}
+        mag_prod_websites = product_dict.get('magento_website_ids', [])
         odoo_websites = {str(p.magento_website_id) for p in odoo_product.magento_website_ids}
-        values = {'magento_status': ml_products[prod_sku]['magento_status']}
 
-        mag_prod_id = ml_products[prod_sku].get('magento_prod_id')
+        mag_prod_id = product_dict.get('magento_prod_id')
         if mag_prod_id:
             if str(mag_prod_id) != odoo_product.magento_product_id:
                 values.update({'magento_product_id': mag_prod_id})
-        elif odoo_product.magento_product_id:
-            values.update({'magento_product_id': ''})
+        else:
+            if odoo_product.magento_product_id:
+                values.update({'magento_product_id': ''})
+            if values['magento_status'] in ['in_magento', 'extra_info', 'need_to_link', 'update_needed']:
+                values.update({
+                    'magento_status': 'not_exported',
+                    'magento_export_date': '',
+                    'is_enabled': False,
+                    'force_update': False,
+                    'bulk_log_ids': [(5, 0, 0)]
+                })
 
         if mag_prod_websites:
             if odoo_websites != set(mag_prod_websites):
@@ -1114,16 +1136,21 @@ class MagentoProductProduct(models.Model):
         elif odoo_websites:
             values.update({'magento_website_ids': [(5, 0, 0)]})
 
-        if ml_products[prod_sku]['to_export']:
-            values.update({'magento_export_date': ml_products[prod_sku]['export_date_to_magento']})
+        if not product_dict.get('is_magento_enabled') and odoo_product.is_enabled:
+            values.update({'is_enabled': False})
 
-        if ml_products[prod_sku]['force_update'] and ml_products[prod_sku]['magento_status'] != 'log_error':
-            ml_products[prod_sku]['force_update'] = False
-            values.update({'force_update': False})
+        if not is_status_update:
+            if product_dict['magento_status'] != 'log_error':
+                if product_dict['to_export']:
+                    values.update({'magento_export_date': product_dict['export_date_to_magento']})
 
-        # valid for products which have failed exporting storeviews/images info (after product are created in M2)
-        if ml_products[prod_sku]['force_update']:
-            values.update({'force_update': True})
+                if product_dict['force_update']:
+                    product_dict['force_update'] = False
+                    values.update({'force_update': False})
+
+            # valid for products which have failed exporting storeviews/images info (after product are created in M2)
+            if product_dict['force_update']:
+                values.update({'force_update': True})
 
         return values
 
@@ -1138,6 +1165,28 @@ class MagentoProductProduct(models.Model):
         else:
             vals.update({'magento_product_id': self.id})
             self.error_log_ids.create(vals)
+
+    def enabled_or_disabled_product_in_magento(self, instance, values, sku, name, is_enabled):
+        if values['magento_status'] == 'in_magento':
+            if not is_enabled:
+                if self.change_product_status_in_magento(instance, sku, name, 1):
+                    values.update({'is_enabled': True})
+        else:
+            if is_enabled:
+                if self.change_product_status_in_magento(instance, sku, name, 2):
+                    values.update({'is_enabled': False})
+
+    @staticmethod
+    def change_product_status_in_magento(instance, sku, prod_name, status):
+        data = {"product": {"name": prod_name, "status": status}}
+        try:
+            api_url = '/all/V1/products/%s' % sku
+            response = req(instance, api_url, 'PUT', data)
+            if isinstance(response, dict) and response.get('status') == status:
+                return True
+        except Exception as e:
+            _logger.warning('Change product status in Magento fails: %s' % e)
+            return False
 
     @staticmethod
     def clean_old_log_records(instance, log_book_obj):

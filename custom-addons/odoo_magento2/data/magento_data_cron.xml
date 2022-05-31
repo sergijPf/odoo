@@ -24,7 +24,7 @@
             <field name="doall" eval="False"/>
             <field name="model_id" eval="ref('odoo_magento2.model_magento_configurable_product')"/>
             <field name="state">code</field>
-            <field name="code">model.export_products_to_magento(True)</field>
+            <field name="code">model.processing_products_export_to_magento(True, True)</field>
         </record>
     </data>
 </odoo>

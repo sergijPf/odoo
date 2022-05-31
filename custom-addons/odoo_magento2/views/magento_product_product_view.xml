@@ -27,9 +27,14 @@
         <field name="model">magento.product.product</field>
         <field name="arch" type="xml">
             <form string="Product" name="product_form" create="false" delete="true" edit="true">
+                <header>
+                    <field name="magento_status" widget="statusbar"
+                           statusbar_visible="not_exported,in_process,need_to_link,update_needed,extra_info,in_magento"
+                           attrs="{'invisible': [('magento_status', '=', 'log_error')]}"/>
+                </header>
                 <sheet>
                     <field name="id" invisible="True" modifiers="{'invisible': true, 'readonly': true}"/>
-                    <field name="active" invisible="True" />
+                    <field name="active" invisible="True"/>
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button"
                                 name="toggle_active" icon="fa-lock"
@@ -52,7 +57,7 @@
                         </button>
                     </div>
                     <widget name="web_ribbon" text="In Magento" attrs="{'invisible': [('magento_status', '!=', 'in_magento')]}"/>
-                    <widget name="web_ribbon" title="Deleted" bg_color="bg-danger" attrs="{'invisible': [('magento_status', '!=', 'deleted')]}"/>
+                    <widget name="web_ribbon" text="Error" bg_color="bg-danger" attrs="{'invisible': [('magento_status', '!=', 'log_error')]}"/>
                     <field name="image_1920" widget="image" class="oe_avatar" readonly="1"/>
                     <div class="oe_title">
                         <label class="oe_edit_only" for="magento_product_name"/>
@@ -79,15 +84,9 @@
                                 </group>
                                  <group name="magento_info" string="Magento Info">
                                      <field name="magento_instance_id" readonly="1"/>
+                                     <field name="is_enabled" readonly="1"/>
                                      <field name="magento_product_id" readonly="1"/>
-                                    <field name="magento_website_ids" widget="many2many_tags" readonly="1"/>
-                                    <field name="magento_status" widget="badge" optional="show" on_change="1"
-                                           decoration-success="magento_status == 'in_magento'"
-                                           decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
-                                           decoration-info="magento_status == 'in_process'"
-                                           decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
-                                           decoration-danger="magento_status == 'log_error'"
-                                           modifiers="{'readonly':true}"/>
+                                     <field name="magento_website_ids" widget="many2many_tags" readonly="1"/>
                                      <field name="magento_export_date" readonly="1"/>
                                 </group>
                                  <group string="Product Images" name="magento_product_images">
@@ -138,6 +137,7 @@
                   decoration-danger="magento_product_id and not magento_website_ids">
                 <field name="magento_product_id" string="Magento Product ID" invisible="1"/>
                 <field name="magento_instance_id"/>
+                <field name="is_enabled" readonly="1"/>
                 <field name="magento_product_id"/>
                 <field name="magento_website_ids" widget="many2many_tags"/>
                 <field name="magento_sku"/>
@@ -145,12 +145,11 @@
                 <field name="product_attribute_ids" widget="many2many_tags" readonly="1"/>
                 <field name="magento_status" widget="badge" optional="show" on_change="1"
                        decoration-success="magento_status == 'in_magento'"
-                       decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
-                       decoration-info="magento_status == 'in_process'"
-                       decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
+                       decoration-muted="magento_status == 'not_exported'"
+                       decoration-info="magento_status in ['in_process', 'extra_info']"
+                       decoration-warning="magento_status in ['need_to_link', 'update_needed']"
                        decoration-danger="magento_status == 'log_error'"
-                       modifiers="{'readonly':true}"
-                />
+                       modifiers="{'readonly':true}"/>
             </tree>
         </field>
     </record>
@@ -179,6 +178,11 @@
                 <field name="magento_product_id" />
                 <filter string="Not in Magento" name="not_in_magento"
                         domain="[('magento_status', '!=', 'in_magento')]"/>
+                <separator/>
+                <filter string="Enabled in Magento" name="enabled_in_magento"
+                        domain="[('is_enabled', '=', True)]"/>
+                <filter string="Disabled in Magento" name="disabled_in_magento"
+                        domain="[('is_enabled', '=', False)]"/>
                 <separator/>
                 <filter name="archived" string="Archived" domain="[('active','=',0)]"/>
                 <group expand="1" string="Group By">

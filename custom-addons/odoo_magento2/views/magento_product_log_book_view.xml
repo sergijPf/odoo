@@ -35,9 +35,9 @@
                 <field name="magento_export_date" string="Export Date"/>
                 <field name="magento_status"
                        decoration-success="magento_status == 'in_magento'"
-                       decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
+                       decoration-muted="magento_status == 'not_exported'"
                        decoration-info="magento_status == 'in_process'"
-                       decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
+                       decoration-warning="magento_status in ['need_to_link', 'update_needed']"
                        decoration-danger="magento_status == 'log_error'"
                        widget="badge"
                        optional="show"

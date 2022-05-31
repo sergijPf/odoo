@@ -23,7 +23,6 @@ from . import product_product
 from . import product_public_category
 from . import product_page_attribute
 from . import sale_workflow_process
-from . import product_pricelist
 from . import magento_async_bulk_logs
 from . import product_template
 from . import product_image

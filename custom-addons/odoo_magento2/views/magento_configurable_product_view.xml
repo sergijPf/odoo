@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="action_check_magento_product_statuses" model="ir.actions.server">
-        <field name="name">Check Export Statuses</field>
+        <field name="name">Update Export Statuses</field>
         <field name="model_id" ref="odoo_magento2.model_magento_configurable_product"/>
         <field name="binding_model_id" ref="odoo_magento2.model_magento_configurable_product"/>
         <field name="state">code</field>
-        <field name="code">records.export_products_to_magento(True)</field>
+        <field name="code">records.processing_products_export_to_magento(True)</field>
     </record>
 
     <record id="action_get_simple_products" model="ir.actions.act_window">
@@ -23,13 +23,21 @@
         <field name="arch" type="xml">
             <form string="Product" name="product_form" create="false" delete="1">
                 <header>
-                    <button name="export_products_to_magento"
+                    <button name="processing_products_export_to_magento"
                             string="Export to Magento"
                             type="object" class="btn-secondary"/>
-                    <button name="export_products_to_magento"
+                    <button name="processing_products_export_to_magento"
                             context="{'async_export': True}"
                             string="Export to Magento async (RabbitMQ)"
                             type="object" class="btn btn-primary ml-2"/>
+                    <button name="export_products_extra_info_to_magento"
+                            context="{'async_export': True}"
+                            string="Force Export of Extra Info"
+                            type="object" class="btn btn-secondary ml-2"
+                            attrs="{'invisible': [('magento_status', '!=', 'extra_info')]}"/>
+                    <field name="magento_status" widget="statusbar"
+                           statusbar_visible="not_exported,in_process,update_needed,extra_info,in_magento"
+                           attrs="{'invisible': [('magento_status', 'in', ['log_error', 'no_need'])]}"/>
                 </header>
                 <sheet>
                     <field name="id" invisible="1" readonly="1"/>
@@ -69,7 +77,8 @@
                         </button>
                     </div>
                     <widget name="web_ribbon" text="In Magento" attrs="{'invisible': [('magento_status', '!=', 'in_magento')]}"/>
-                    <widget name="web_ribbon" title="Deleted" bg_color="bg-danger" attrs="{'invisible': [('magento_status', '!=', 'deleted')]}"/>
+                    <widget name="web_ribbon" text="Error" bg_color="bg-danger" attrs="{'invisible': [('magento_status', '!=', 'log_error')]}"/>
+                    <widget name="web_ribbon" text="No Need" bg_color="bg-info" attrs="{'invisible': [('magento_status', '!=', 'no_need')]}"/>
                     <field name="image_1920" widget="image" class="oe_avatar" />
                     <div class="oe_title">
                         <label class="oe_edit_only" for="magento_product_name"/>
@@ -99,6 +108,7 @@
                                 </group>
                                 <group name="magento_info" string="Magento Info">
                                     <field name="magento_instance_id" readonly="1"/>
+                                    <field name="is_enabled" readonly="1"/>
                                     <field name="do_not_create_flag" invisible="1"/>
                                     <field name="magento_product_id"
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
@@ -106,17 +116,10 @@
                                     <field name="magento_website_ids"
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
                                            widget="many2many_tags" readonly="1"/>
-                                    <field name="magento_status" widget="badge" optional="show" on_change="1"
-                                           decoration-success="magento_status == 'in_magento'"
-                                           decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
-                                           decoration-info="magento_status == 'in_process'"
-                                           decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
-                                           decoration-danger="magento_status == 'log_error'"
-                                           modifiers="{'readonly':true}"/>
                                     <field name="magento_export_date" readonly="1"
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"/>
                                     <br/>
-                                    <field name="force_update"/>
+                                    <field name="force_update" readonly="1"/>
                                     <field name="magento_attr_set" required="1"/>
                                     <field name="product_label_ids" widget="many2many_tags"
                                            options="{'no_create':True, 'no_create_edit': True}"/>
@@ -147,28 +150,29 @@
         <field name="arch" type="xml">
             <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku"
                   decoration-warning="not sipmle_count_equal"
-                  decoration-danger="magento_product_id and not magento_website_ids">
+                  decoration-danger="(magento_product_id and not magento_website_ids)">
                 <header>
-                    <button name="export_products_to_magento"
+                    <button name="processing_products_export_to_magento"
                             string="Export to Magento"
                             type="object" class="btn-secondary ml-2"/>
-                    <button name="export_products_to_magento"
+                    <button name="processing_products_export_to_magento"
                             context="{'async_export': True}"
                             string="Export to Magento async (RabbitMQ)"
                             type="object" class="btn btn-primary ml-2"/>
                 </header>
                 <field name="magento_instance_id"/>
+                <field name="is_enabled" readonly="1"/>
                 <field name="magento_product_id" string="Magento Product ID"/>
                 <field name="magento_website_ids" widget="many2many_tags"/>
                 <field name="magento_sku"/>
-               <field name="product_label_ids" widget="many2many_tags" readonly="1"/>
+                <field name="product_label_ids" widget="many2many_tags" readonly="1"/>
                 <field name="sipmle_count_equal" invisible="1"/>
                 <field name="product_simple_count"/>
                 <field name="magento_status" widget="badge" optional="show" on_change="1"
                        decoration-success="magento_status == 'in_magento'"
-                       decoration-muted="magento_status == 'not_exported' or magento_status == 'deleted'"
-                       decoration-info="magento_status == 'in_process'"
-                       decoration-warning="magento_status == 'need_to_link' or magento_status == 'update_needed'"
+                       decoration-muted="magento_status in ['not_exported', 'no_need']"
+                       decoration-info="magento_status in ['in_process', 'extra_info']"
+                       decoration-warning="magento_status == 'update_needed'"
                        decoration-danger="magento_status == 'log_error'"
                        modifiers="{'readonly':true}"/>
             </tree>
@@ -198,6 +202,11 @@
                 <field name="magento_product_id" />
                 <filter string="Not in Magento" name="not_in_magento"
                         domain="[('magento_status', '!=', 'in_magento')]"/>
+                <separator/>
+                <filter string="Enabled in Magento" name="enabled_in_magento"
+                        domain="[('is_enabled', '=', True)]"/>
+                <filter string="Disabled in Magento" name="disabled_in_magento"
+                        domain="[('is_enabled', '=', False)]"/>
                 <separator/>
                 <filter name="archived" string="Archived" domain="[('active','=',0)]"/>
                 <group expand="1" string="Group By">
