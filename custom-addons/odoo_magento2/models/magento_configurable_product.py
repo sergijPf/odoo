@@ -61,9 +61,12 @@ class MagentoConfigurableProduct(models.Model):
     sipmle_count_equal = fields.Boolean("Is product count equal?", compute='_compute_simple_and_variant_count_equal')
     bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs")
     related_product_ids = fields.Many2many('magento.configurable.product', 'related_products_rel', 'src_id', 'dest_id',
-                                           string="Related Products", compute="_calculate_related_products")
+                                           string="Related Products", compute="_compute_related_products")
+    cross_sell_product_ids = fields.Many2many('magento.configurable.product', 'cross_sell_products_rel', 'src_id',
+                                              'dest_id', string="Cross-Sell Products", compute="_compute_cross_sell_products")
     product_label_ids = fields.Many2many("magento.product.label", string="Product Labels",
                                          help="Product labels to be marked on Product on Magento's frontpage")
+    issue = fields.Char('Issue with product', compute="_check_config_product_has_issues")
 
     _sql_constraints = [('_magento_conf_product_unique_constraint',
                          'unique(magento_sku,magento_instance_id)',
@@ -109,11 +112,28 @@ class MagentoConfigurableProduct(models.Model):
         for rec in self:
             rec.sipmle_count_equal = True if rec.product_simple_count == rec.product_variant_count else False
 
-    @api.depends('odoo_prod_template_id.alternative_product_ids', 'magento_product_id')
-    def _calculate_related_products(self):
+    @api.depends('odoo_prod_template_id.alternative_product_ids', 'do_not_create_flag')
+    def _compute_related_products(self):
         for rec in self:
             rec.related_product_ids = [(6, 0, rec.odoo_prod_template_id.alternative_product_ids.magento_conf_prod_ids.filtered(
                 lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.do_not_create_flag).ids)]
+
+    @api.depends('odoo_prod_template_id.optional_product_ids', 'do_not_create_flag')
+    def _compute_cross_sell_products(self):
+        for rec in self:
+            rec.cross_sell_product_ids = [
+                (6, 0, rec.odoo_prod_template_id.optional_product_ids.magento_conf_prod_ids.filtered(
+                    lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.do_not_create_flag).ids)]
+
+    @api.depends('magento_product_id', 'is_enabled', 'magento_website_ids')
+    def _check_config_product_has_issues(self):
+        for prod in self:
+            prod.issue = ''
+            if prod.magento_product_id:
+                if not prod.is_enabled:
+                    prod.issue = "Disabled in Magento. "
+                if not prod.magento_website_ids:
+                    prod.issue += "No websites linked to product."
 
     def write(self, vals):
         if 'magento_attr_set' in vals or 'product_label_ids' in vals:
@@ -475,7 +495,7 @@ class MagentoConfigurableProduct(models.Model):
                 continue
 
             if conf_prod.force_update:
-                if ml_conf_products[prod]['magento_status'] == 'in_magento':
+                if ml_conf_products[prod]['magento_status'] in ['in_magento', 'extra_info']:
                     ml_conf_products[prod]['magento_status'] = 'update_needed'
                 continue
 
@@ -502,7 +522,8 @@ class MagentoConfigurableProduct(models.Model):
                         continue
 
                     # check related products:
-                    if ml_conf_products[prod]['product_links_cnt'] != len(conf_prod.related_product_ids):
+                    if ml_conf_products[prod]['product_links_cnt'] != \
+                            (len(conf_prod.related_product_ids) + len(conf_prod.cross_sell_product_ids)):
                         ml_conf_products[prod]['magento_status'] = 'extra_info'
                     else:
                         ml_conf_products[prod]['magento_status'] = 'in_magento'
@@ -1055,6 +1076,14 @@ class MagentoConfigurableProduct(models.Model):
                         'link_type': 'related',
                         'linked_product_sku': rel_prod.magento_sku
                     })
+
+                for cs_prod in product.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
+                    items.append({
+                        'sku': sku,
+                        'link_type': 'crosssell',
+                        'linked_product_sku': cs_prod.magento_sku
+                    })
+
                 data.append({'items': items, 'sku': sku})
 
             if data:
@@ -1075,6 +1104,13 @@ class MagentoConfigurableProduct(models.Model):
                     'sku': sku,
                     'link_type': 'related',
                     'linked_product_sku': rel_prod.magento_sku
+                })
+
+            for cs_prod in self.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
+                items.append({
+                    'sku': sku,
+                    'link_type': 'crosssell',
+                    'linked_product_sku': cs_prod.magento_sku
                 })
 
             if items:

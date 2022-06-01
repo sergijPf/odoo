@@ -32,8 +32,7 @@ class ProductTemplate(models.Model):
             if 'detailed_type' in vals:
                 raise UserError("Product type can't be changed for the products already exported to Magento layer")
             if ('description_sale' in vals or 'product_template_image_ids' in vals or 'attribute_line_ids' in vals or
-                    'x_magento_no_create' in vals or 'public_categ_ids' in vals or 'categ_id' in vals or
-                    'alternative_product_ids' in vals):
+                    'x_magento_no_create' in vals or 'public_categ_ids' in vals or 'categ_id' in vals):
                 self.magento_conf_prod_ids.force_update = True
 
         return res

@@ -64,6 +64,7 @@ class MagentoProductProduct(models.Model):
     base_prices = fields.Char(string="Base Prices:", help="Product base prices for each website",
                               compute="_compute_base_prices")
     error_log_ids = fields.One2many('magento.product.log.book', 'magento_product_id', string="Error Logs")
+    issue = fields.Char('Issue with product', compute="_check_simple_product_has_issues")
 
     _sql_constraints = [('_magento_product_unique_constraint',
                          'unique(magento_sku,magento_instance_id)',
@@ -105,6 +106,16 @@ class MagentoProductProduct(models.Model):
 
             rec.base_prices = base_price
 
+    @api.depends('magento_product_id', 'is_enabled', 'magento_website_ids')
+    def _check_simple_product_has_issues(self):
+        for prod in self:
+            prod.issue = ''
+            if prod.magento_product_id:
+                if not prod.is_enabled:
+                    prod.issue = "Disabled in Magento. "
+                if not prod.magento_website_ids:
+                    prod.issue += "No websites linked to product."
+
     def write(self, vals):
         if 'active' in vals:
             for rec in self:
@@ -137,7 +148,7 @@ class MagentoProductProduct(models.Model):
 
     def export_products_stock_to_magento(self, instance):
         stock_data = []
-        products_range = self.search([('magento_instance_id', '=', instance.id), ('magento_status', '=', 'in_magento')])
+        products_range = self.search([('magento_instance_id', '=', instance.id), ('magento_product_id', 'not in', [False, ''])])
 
         for product in products_range:
             stock_data.append({'sku': product.magento_sku, 'qty': product.qty_avail, 'is_in_stock': 1})
@@ -325,7 +336,7 @@ class MagentoProductProduct(models.Model):
                 continue
 
             if simp_prods_dict[prod]['force_update']:
-                if simp_prods_dict[prod]['magento_status'] == 'in_magento':
+                if simp_prods_dict[prod]['magento_status'] in ['in_magento', 'extra_info']:
                     simp_prods_dict[prod]['magento_status'] = 'update_needed'
                 continue
 

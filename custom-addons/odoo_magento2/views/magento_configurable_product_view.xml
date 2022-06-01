@@ -88,9 +88,9 @@
                         <field name="x_magento_assign_attr_ids"
                                widget="many2many_tags"
                                readonly="1"/>
-                        <h5 class="my-2 text-danger" attrs="{'invisible': ['|', ('magento_product_id', 'in', [False,'']), ('magento_website_ids','!=', [])]}">
-                            Product doesn't linked to any website in Magento
-                        </h5>
+                        <h4 class="my-2 text-danger" attrs="{'invisible': [('issue', '=', '')]}">
+                            <field name="issue" readonly="1"/>
+                        </h4>
                     </div>
                     <notebook>
                         <page string="Magento Details" name="magento_details">
@@ -102,6 +102,7 @@
                                     <field name="x_magento_single_attr_ids" readonly="1" widget="many2many_tags"/>
                                     <field name="x_magento_main_config_attr" readonly="1"/>
                                     <field name="related_product_ids" readonly="1" widget="many2many_tags"/>
+                                    <field name="cross_sell_product_ids" readonly="1" widget="many2many_tags"/>
                                     <field name="category_ids"
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
                                            readonly="1" widget="many2many_tags"/>
@@ -118,7 +119,6 @@
                                            widget="many2many_tags" readonly="1"/>
                                     <field name="magento_export_date" readonly="1"
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"/>
-                                    <br/>
                                     <field name="force_update" readonly="1"/>
                                     <field name="magento_attr_set" required="1"/>
                                     <field name="product_label_ids" widget="many2many_tags"
@@ -150,7 +150,7 @@
         <field name="arch" type="xml">
             <tree string="Magento Product" create="false" delete="false" default_order="magento_instance_id,magento_sku"
                   decoration-warning="not sipmle_count_equal"
-                  decoration-danger="(magento_product_id and not magento_website_ids)">
+                  decoration-danger="issue">
                 <header>
                     <button name="processing_products_export_to_magento"
                             string="Export to Magento"
@@ -160,6 +160,7 @@
                             string="Export to Magento async (RabbitMQ)"
                             type="object" class="btn btn-primary ml-2"/>
                 </header>
+                <field name="issue" invisible="1"/>
                 <field name="magento_instance_id"/>
                 <field name="is_enabled" readonly="1"/>
                 <field name="magento_product_id" string="Magento Product ID"/>
@@ -173,8 +174,7 @@
                        decoration-muted="magento_status in ['not_exported', 'no_need']"
                        decoration-info="magento_status in ['in_process', 'extra_info']"
                        decoration-warning="magento_status == 'update_needed'"
-                       decoration-danger="magento_status == 'log_error'"
-                       modifiers="{'readonly':true}"/>
+                       decoration-danger="magento_status == 'log_error'"/>
             </tree>
         </field>
     </record>
@@ -197,8 +197,8 @@
         <field name="model">magento.configurable.product</field>
         <field name="arch" type="xml">
             <search string="Magento Configurable product search view">
-                <field name="magento_sku" />
                 <field name="magento_product_name" />
+                <field name="magento_sku" />
                 <field name="magento_product_id" />
                 <filter string="Not in Magento" name="not_in_magento"
                         domain="[('magento_status', '!=', 'in_magento')]"/>

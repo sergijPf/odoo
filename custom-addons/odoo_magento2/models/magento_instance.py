@@ -62,7 +62,7 @@ class MagentoInstance(models.Model):
         ('image_512', '512px'),
         ('image_256', '256px'),
         ('image_128', '128px')
-    ], string="Image Resolution", default='image_512')
+    ], string="Image Resolution", default='image_1024')
 
     def _compute_get_scheduler_list(self):
         seller_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
