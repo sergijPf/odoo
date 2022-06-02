@@ -53,3 +53,58 @@ class ResPartner(models.Model):
                 return
 
         return odoo_partner
+
+    def check_address_exists(self, address_dict):
+        addr_type = address_dict.get('address_type')
+        country, streets, type = self.get_address_details(address_dict, addr_type)
+        city = address_dict.get('city')
+        street = streets.get('street', '')
+        street2 = streets.get('street2', '')
+        zip = address_dict.get('postcode')
+
+        exists = self.filtered(
+            lambda x: x.type == type and
+                      {x.country_id.id, x.city, x.zip, x.street or '', x.street2 or ''} == {country.id, city, zip, street, street2}
+        )
+
+        if exists and not exists[0]['is_magento_customer']:
+            exists[0]['is_magento_customer'] = True
+
+        return True if exists else False
+
+    def get_address_details(self, address_dict, addr_type):
+        country_code = address_dict.get('country_id')
+        country = self.env['res.country'].search(['|', ('code', '=', country_code),
+                                                  ('name', '=ilike', country_code)], limit=1)
+        streets = self.get_street_and_street2(address_dict.get('street'))
+
+        if addr_type == 'billing':
+            _type = 'invoice'
+        elif addr_type == 'shipping':
+            _type = 'delivery'
+        else:
+            _type = 'other'
+
+        return country, streets, _type
+
+    @staticmethod
+    def get_street_and_street2(streets):
+        result = {}
+
+        if streets:
+            if len(streets) == 1:
+                result = {'street': streets[0], 'street2': False}
+            elif len(streets) == 2:
+                result = {'street': streets[0], 'street2': streets[1]}
+            elif len(streets) == 3:
+                result = {
+                    'street': streets[0] + ', ' + streets[1],
+                    'street2': streets[2]
+                }
+            elif len(streets) == 4:
+                result = {
+                    'street': streets[0] + ', ' + streets[1],
+                    'street2': streets[2] + ', ' + streets[3]
+                }
+
+        return result

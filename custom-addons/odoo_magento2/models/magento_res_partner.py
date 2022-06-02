@@ -13,14 +13,14 @@ class MagentoResPartner(models.Model):
 
     magento_customer_id = fields.Char(string="Customer ID", help="Customer ID number in Magento")
     partner_id = fields.Many2one("res.partner", "Customer", ondelete='cascade')
-    name = fields.Char(related="partner_id.name", string="Name *")
+    name = fields.Char(related="partner_id.name", string="Name")
     phone = fields.Char(related="partner_id.phone", string="Phone")
-    email = fields.Char(related="partner_id.email", string="Email *")
+    email = fields.Char(related="partner_id.email", string="Email")
     is_company = fields.Boolean(related="partner_id.is_company", string="Is company")
     magento_instance_id = fields.Many2one('magento.instance', string='Magento Instance')
-    magento_website_id = fields.Many2one("magento.website", string="Magento Website *")
+    magento_website_id = fields.Many2one("magento.website", string="Magento Website")
     customer_group_id = fields.Many2one("magento.customer.groups", string="Customer groups")
-    customer_group_name = fields.Char(related="customer_group_id.group_name", string="Customer group *", store=True)
+    customer_group_name = fields.Char(related="customer_group_id.group_name", string="Customer group", store=True)
     customer_address_ids = fields.One2many("magento.customer.addresses", 'customer_id',
                                            string="Magento Customer Addresses")
     status = fields.Selection([
@@ -48,23 +48,14 @@ class MagentoResPartner(models.Model):
                 })
 
             # check customer billing address(magento layer) / invoice address(odoo) exist
-            b_address_id = str(billing_address.get('customer_address_id'))
+            if not odoo_partner.child_ids.check_address_exists(billing_address):
+                customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner)
 
-            if not customer_addresses.filtered(
-                    lambda x: x.magento_customer_address_id == b_address_id and x.address_type == 'billing'):
-                customer_addresses.create_customers_address(
-                    billing_address, customer_rec, odoo_partner, 'billing'
-                )
             # check customer shipping addresses(magento_layer) / delivery address(odoo) exist
             for address in delivery_addresses:
-                addr = address.get('shipping', {}).get('address', {})
-                s_address_id = str(addr.get('customer_address_id'))
-
-                if not customer_addresses.filtered(
-                        lambda x: x.magento_customer_address_id == s_address_id and x.address_type == 'shipping'):
-                    customer_addresses.create_customers_address(
-                        addr, customer_rec, odoo_partner, 'shipping'
-                    )
+                addr_dict = address.get('shipping', {}).get('address', {})
+                if not odoo_partner.child_ids.check_address_exists(addr_dict):
+                    customer_addresses.create_customers_address(addr_dict, customer_rec, odoo_partner)
         else:
             group_id_in_ml = self.customer_group_id.get_customer_group(instance, group_id, group_name)
 
@@ -78,11 +69,11 @@ class MagentoResPartner(models.Model):
             })
             customer_addresses = customer_rec.customer_address_ids
 
-            customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner, 'billing')
+            customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner)
 
             for address in delivery_addresses:
                 addr = address.get('shipping', {}).get('address', {})
-                customer_addresses.create_customers_address(addr, customer_rec, odoo_partner, 'shipping')
+                customer_addresses.create_customers_address(addr, customer_rec, odoo_partner)
 
         return customer_rec
     #
@@ -180,24 +171,15 @@ class MagentoCustomerAddresses(models.Model):
     magento_customer_address_id = fields.Char(string="Address ID")
     odoo_partner_id = fields.Many2one("res.partner", "Customer", ondelete='cascade')
     name = fields.Char(related="odoo_partner_id.name", string="Name")
-    country = fields.Char(related="odoo_partner_id.country_id.code", string="Country *")
-    city = fields.Char(related="odoo_partner_id.city", string="City *")
-    street = fields.Char(related="odoo_partner_id.street", string="Street *")
+    country = fields.Char(related="odoo_partner_id.country_id.code", string="Country")
+    city = fields.Char(related="odoo_partner_id.city", string="City")
+    street = fields.Char(related="odoo_partner_id.street", string="Street")
     street2 = fields.Char(related="odoo_partner_id.street2", string="Street2")
-    zip = fields.Char(related="odoo_partner_id.zip", string="Postcode *")
+    zip = fields.Char(related="odoo_partner_id.zip", string="Postcode")
 
-    def create_customers_address(self, address_dict, magento_customer, odoo_partner, addr_type):
-        country_code = address_dict.get('country_id')
-        country = self.env['res.country'].search(['|', ('code', '=', country_code),
-                                                  ('name', '=ilike', country_code)], limit=1)
-        streets = self.get_street_and_street2(address_dict.get('street'))
-
-        if addr_type == 'billing':
-            _type = 'invoice'
-        elif addr_type == 'shipping':
-            _type = 'delivery'
-        else:
-            _type = 'other'
+    def create_customers_address(self, address_dict, magento_customer, odoo_partner):
+        addr_type = address_dict.get('address_type')
+        country, streets, _type = odoo_partner.get_address_details(address_dict, addr_type)
 
         # create address in Odoo 'res.partners' table
         odoo_address = self.odoo_partner_id.with_context(tracking_disable=True).create({
@@ -221,28 +203,6 @@ class MagentoCustomerAddresses(models.Model):
             'customer_id': magento_customer.id,
             'odoo_partner_id': odoo_address.id
         })
-
-    @staticmethod
-    def get_street_and_street2(streets):
-        result = {}
-
-        if streets:
-            if len(streets) == 1:
-                result = {'street': streets[0], 'street2': False}
-            elif len(streets) == 2:
-                result = {'street': streets[0], 'street2': streets[1]}
-            elif len(streets) == 3:
-                result = {
-                    'street': streets[0] + ', ' + streets[1],
-                    'street2': streets[2]
-                }
-            elif len(streets) == 4:
-                result = {
-                    'street': streets[0] + ', ' + streets[1],
-                    'street2': streets[2] + ', ' + streets[3]
-                }
-
-        return result
 
 
 class MagentoCustomerGroups(models.Model):
