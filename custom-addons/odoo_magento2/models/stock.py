@@ -14,6 +14,8 @@ class StockPicking(models.Model):
     is_in_magento = fields.Boolean("Is in Magento?", help="Checked means Shipment is in Magento")
     magento_instance_id = fields.Many2one('magento.instance', 'Instance')
     magento_shipping_id = fields.Char(string="Magento Shipping Id")
+    inpost_locker_code = fields.Char(related='sale_id.inpost_locker_code', string="Locker ID of Inpost Paczkomat")
+    magento_carrier_name = fields.Char(related='sale_id.magento_carrier_name')
     is_shipment_exportable = fields.Boolean("Is Shipment exportable", compute='_compute_shipment_exportable',
                                             store=False)
 

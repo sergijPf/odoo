@@ -17,6 +17,7 @@ class SaleOrder(models.Model):
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Payment Method")
     magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Shipping Method")
     payment_transaction_code = fields.Char(string="Payment Trans. Code", help="Magento Payment System Transaction ID")
+    inpost_locker_code = fields.Char(string="Locker ID", default='')
     order_currency_code = fields.Char(string="Order Currency")
     order_total_amount = fields.Float(string="Order Amount")
     magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
@@ -402,6 +403,7 @@ class SaleOrder(models.Model):
             'carrier_id': odoo_delivery_carrier.id if odoo_delivery_carrier else False,
             'payment_term_id': payment_term_id.id if payment_term_id else False,
             'payment_transaction_code': sales_order.get('payment', {}).get('last_trans_id', False),
+            'inpost_locker_code': sales_order.get('extension_attributes', {}).get('inpost_locker_id', ''),
             'auto_workflow_process_id': workflow_process_id.id,
             'order_currency_code': sales_order.get("order_currency_code"),
             'order_total_amount': sales_order.get("grand_total", 0),

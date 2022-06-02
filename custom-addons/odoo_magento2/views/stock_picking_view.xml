@@ -22,6 +22,9 @@
                         <group>
                             <field name="is_magento_picking" invisible="1"/>
                             <field name="magento_instance_id" readonly="1"/>
+                            <field name="magento_carrier_name" readonly="1"/>
+                            <field name="inpost_locker_code" readonly="1"
+                                   attrs="{'invisible' : [('inpost_locker_code','=','')]}"/>
                             <field name="magento_shipping_id" readonly="1"/>
                             <field name="is_in_magento" readonly="1"/>
                         </group>

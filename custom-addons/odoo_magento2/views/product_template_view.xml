@@ -4,6 +4,7 @@
         <field name="name">Magento - Make as Configurable</field>
         <field name="model_id" ref="product.model_product_template"/>
         <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="sequence">1</field>
         <field name="state">code</field>
         <field name="code">records.make_configurable()</field>
     </record>

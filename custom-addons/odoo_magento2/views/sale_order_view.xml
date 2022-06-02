@@ -38,7 +38,6 @@
                             <field name="auto_workflow_process_id" readonly="1"/>
                             <field name="magento_carrier_name" readonly="1"/>
                             <field name="magento_payment_method_id" readonly="1"/>
-                            <field name="payment_transaction_code" readonly="1"/>
                             <field name="order_total_amount" readonly="1"/>
                             <field name="order_currency_code" readonly="1"/>
 

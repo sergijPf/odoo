@@ -29,7 +29,8 @@ class MagentoProductProduct(models.Model):
     image_1920 = fields.Image(related="odoo_product_id.image_1920")
     product_image_ids = fields.One2many(related="odoo_product_id.product_variant_image_ids")
     ptav_ids = fields.Many2many(related='odoo_product_id.product_template_attribute_value_ids')
-    product_attribute_ids = fields.Many2many('product.template.attribute.value', compute="_compute_product_attributes", store=True)
+    product_attribute_ids = fields.Many2many('product.template.attribute.value', compute="_compute_product_attributes",
+                                             store=True)
     currency_id = fields.Many2one(related='odoo_product_id.currency_id')
     company_id = fields.Many2one(related='odoo_product_id.company_id')
     uom_id = fields.Many2one(related='odoo_product_id.uom_id')
@@ -1085,8 +1086,12 @@ class MagentoProductProduct(models.Model):
                 simp_prod_dict['magento_status'] = 'log_error'
                 simp_prod_rec.save_error_messages_to_log_book(simp_prod_dict['log_message'], conf_prod_dict['log_message']
                 )
-            elif simp_prod_rec.error_log_ids:
-                simp_prod_rec.error_log_ids.sudo().unlink()
+            else:
+                if simp_prod_rec.error_log_ids:
+                    simp_prod_rec.error_log_ids.sudo().unlink()
+                if simp_prod_dict['magento_status'] == 'log_error':
+                    new_status = 'update_needed' if simp_prod_dict.get('magento_product_id') else 'not_exported'
+                    simp_prod_dict['magento_status'] = new_status
 
             if simp_prod_dict['magento_status'] != 'in_magento':
                 if conf_prod_dict['magento_status'] == 'in_magento':
@@ -1109,6 +1114,10 @@ class MagentoProductProduct(models.Model):
 
             if conf_prod_dict['log_message']:
                 conf_prod_dict['magento_status'] = 'log_error'
+            else:
+                if conf_prod_dict['magento_status'] == 'log_error':
+                    new_status = 'update_needed' if conf_prod_dict.get('magento_product_id') else 'not_exported'
+                    conf_prod_dict['magento_status'] = new_status
 
             values = self.prepare_data_to_save(conf_prod_dict, conf_product, magento_websites, is_status_update)
 

@@ -61,13 +61,15 @@ class ProductTemplate(models.Model):
                 if len(attr_line.value_ids) > 1:
                     attr_line.magento_config = True
                     if attr_line.attribute_id.name in ['color', 'collection']:
-                        attr_line.main_conf_attr = True
+                        if not valid_lines.filtered(lambda a: a.main_conf_attr):
+                            attr_line.main_conf_attr = True
 
             # if product has only one Variant (contains only lines with one attribute value)
             if not valid_lines.filtered(lambda a: a.magento_config):
                 color_line = valid_lines.filtered(lambda line: line.attribute_id.name == 'color')
                 collection_line = valid_lines.filtered(lambda line: line.attribute_id.name == 'collection')
-                config_attr_line = (color_line and color_line[0]) or (collection_line and collection_line[0]) or (valid_lines and valid_lines[-1])
+                config_attr_line = (color_line and color_line[0]) or (collection_line and collection_line[0]) or\
+                                   (valid_lines and valid_lines[-1])
                 if config_attr_line:
                     config_attr_line.magento_config = True
 
