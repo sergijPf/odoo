@@ -320,6 +320,7 @@ class MagentoConfigurableProduct(models.Model):
                     self.to_upper(attr.get('default_frontend_label')): {
                         'attribute_id': attr.get('attribute_id'),
                         'attribute_code': attr.get('attribute_code'),
+                        'frontend_input': attr.get('frontend_input'),
                         'options': attr.get('options'),
                         'can_be_configurable': True if attr.get('is_user_defined') else False
                     }
@@ -576,7 +577,8 @@ class MagentoConfigurableProduct(models.Model):
         #         "PRODUCTLIFEPHASE": self.with_context(lang='en_US').odoo_prod_template_id.x_status
         #     })
 
-        missed_attrs = set(list(config_attrs) + prod_page_attrs + single_attrs_list + product_label).difference(magento_attributes)
+        missed_attrs = set(
+            list(config_attrs) + prod_page_attrs + single_attrs_list + product_label).difference(magento_attributes)
         if missed_attrs:
             text = "Attribute(s) - '%s' have to be manually created and linked to relevant Attribute-set" \
                    " on Magento side. \n" % missed_attrs
@@ -592,17 +594,22 @@ class MagentoConfigurableProduct(models.Model):
             return False
 
         # check attribute options exist in Magento
-        for attr in single_attr_recs:
-            attribute = self.to_upper(attr.attribute_id.name)
+        for attribute in single_attrs_list:
             mag_attr = magento_attributes[attribute]
-            attr_val_rec = attr.value_ids
-
+            attr_vals = single_attr_recs.filtered(lambda x: self.to_upper(x.attribute_id.name) == attribute)
+            attr_val_rec = attr_vals.value_ids
+            if len(attr_val_rec) > 1 and mag_attr['frontend_input'] != 'multiselect':
+                text = f"'{attribute}' attribute can't be used as multiselect as it has single select" \
+                       f" setup in Magento."
+                ml_conf_products[sku]['log_message'] += text
+                return False
             if self.to_upper(attr_val_rec.name) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
                 val_id, err = self.create_new_attribute_option_in_magento(
                     instance, mag_attr['attribute_code'], attr_val_rec
                 )
                 if err:
                     ml_conf_products[sku]['log_message'] += err
+                    return False
                 else:
                     mag_attr['options'].append({'label': attr_val_rec.name.upper(), 'value': val_id})
 
@@ -701,6 +708,7 @@ class MagentoConfigurableProduct(models.Model):
     def export_single_conf_product_to_magento(self, ml_conf_products, attr_sets, method='POST'):
         prod_sku = self.magento_sku
         instance = self.magento_instance_id
+        conf_prod_dict = ml_conf_products[prod_sku]
         categ_list = [cat.magento_category for cat in self.category_ids]
         lang_code = self.env['res.lang']._lang_get(self.env.user.lang).code
         custom_attributes = self.add_conf_product_attributes(attr_sets, lang_code)
@@ -727,8 +735,8 @@ class MagentoConfigurableProduct(models.Model):
             })
         else:
             magento_attributes = attr_sets[self.magento_attr_set]['attributes']
-            config_attrs = ml_conf_products[prod_sku]['config_attr']
-            magento_prod_attrs = ml_conf_products[prod_sku].get('magento_conf_prod_options', {})
+            config_attrs = conf_prod_dict['config_attr']
+            magento_prod_attrs = conf_prod_dict.get('magento_conf_prod_options', {})
             if not self.check_config_product_assign_attributes_match(magento_prod_attrs, config_attrs, magento_attributes):
                 # here if False - means "config" attributes were changed and need to unlink all related simple products
                 data['product']["extension_attributes"].update({"configurable_product_links": []})
@@ -738,7 +746,7 @@ class MagentoConfigurableProduct(models.Model):
             response = req(instance, api_url, method, data)
         except Exception as err:
             text = "Error while Config.Product %s in Magento.\n" % ('update' if method == "PUT" else "creation")
-            ml_conf_products[prod_sku]['log_message'] += text + str(err)
+            conf_prod_dict['log_message'] += text + str(err)
             return {}
 
         if response.get('sku'):
@@ -748,7 +756,7 @@ class MagentoConfigurableProduct(models.Model):
 
             trigger = False
             if method == "PUT":
-                magento_images = ml_conf_products[prod_sku].get('media_gallery', [])
+                magento_images = conf_prod_dict.get('media_gallery', [])
                 tmp = 1 if (not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image') and self.image_1920) else 0
 
                 if len(magento_images) != (len(self.product_image_ids) + (1 if self.image_1920 else 0) + tmp):
@@ -759,8 +767,8 @@ class MagentoConfigurableProduct(models.Model):
             if method == "POST" or trigger:
                 self.process_images_export_to_magento(instance, ml_conf_products)
 
-            ml_conf_products[prod_sku]['export_date_to_magento'] = response.get("updated_at")
-            ml_conf_products[prod_sku]['magento_status'] = 'extra_info'
+            conf_prod_dict['export_date_to_magento'] = response.get("updated_at")
+            conf_prod_dict['magento_status'] = 'extra_info'
 
             return response
 
@@ -771,7 +779,8 @@ class MagentoConfigurableProduct(models.Model):
         lang_code = self.env['res.lang']._lang_get(self.env.user.lang).code
 
         for prod_sku in new_conf_prods_list:
-            conf_product = ml_conf_products[prod_sku]['conf_object']
+            conf_prod_dict = ml_conf_products[prod_sku]
+            conf_product = conf_prod_dict['conf_object']
             categ_list = [cat.magento_category for cat in conf_product.category_ids]
             custom_attributes = conf_product.add_conf_product_attributes(attr_sets, lang_code)
 
@@ -859,9 +868,9 @@ class MagentoConfigurableProduct(models.Model):
         for attr_name in unique_attr:
             value = ''
             mag_attr = available_attributes[self.to_upper(attr_name)]
-            single_attr_recs = self.with_context(lang='en_US').x_magento_single_attr_ids.filtered(
+            single_attr_vals = self.with_context(lang='en_US').x_magento_single_attr_ids.filtered(
                 lambda x: x.attribute_id.name == attr_name)
-            for rec in single_attr_recs:
+            for rec in single_attr_vals:
                 opt = next((o for o in mag_attr['options'] if o.get('label') and
                             self.to_upper(o['label']) == self.to_upper(rec.value_ids.name)), {})
                 if opt:
