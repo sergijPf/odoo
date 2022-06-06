@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--New View for Instance Wise Dashboard-->
+    <record id="magento_dashboard_kanban_view" model="ir.ui.view">
+        <field name="name">magento.instance.dashboard</field>
+        <field name="model">magento.instance</field>
+        <field name="arch" type="xml">
+            <kanban class="oe_background_grey o_kanban_dashboard o_emphasize_colors o_stock_kanban" create="false" group_create="false">
+                <field name="color"/>
+                <field name="name"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)} mt-5" style="width: 100%">
+                            <h4><field name="name"/></h4>
+                        </div>
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)}" style="width: 18%">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        Configurable Products
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container o_kanban_card_content">
+                                <div class="row">
+                                    <div class="col-6 o_kanban_primary_left">
+                                        <button class="btn btn-primary" name="get_all_conf_products" type="object">
+                                            <span>Go to</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.disabled_config_prods_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_disabled_conf_products" type="object">
+                                                    <field name="disabled_config_prods_count"/>
+                                                    Disabled in M2
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="row" t-if="record.update_config_prods_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_conf_products_to_be_updated" type="object" class="text-warning">
+                                                    <field name="update_config_prods_count"/>
+                                                    Update needed
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)}" style="width: 18%">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        Simple Products
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container o_kanban_card_content">
+                                <div class="row">
+                                    <div class="col-6 o_kanban_primary_left">
+                                        <button class="btn btn-primary" name="get_all_simple_products" type="object">
+                                            <span>Go to</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.disabled_simple_prods_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_disabled_simple_products" type="object">
+                                                    <field name="disabled_simple_prods_count"/>
+                                                    Disabled in M2
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="row" t-if="record.update_simple_prods_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_simple_products_to_be_updated" type="object" class="text-warning">
+                                                    <field name="update_simple_prods_count"/>
+                                                    Update needed
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)}" style="width: 18%">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        Sales Orders
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container o_kanban_card_content">
+                                <div class="row">
+                                    <div class="col-6 o_kanban_primary_left">
+                                        <button class="btn btn-primary" name="get_all_sale_orders" type="object">
+                                            <span>Go to</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.pending_sale_orders_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_pending_sale_orders" type="object">
+                                                    <field name="pending_sale_orders_count"/>
+                                                    Pending
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.sale_orders_with_errors_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_sale_order_with_errors" type="object" class="text-danger">
+                                                    <field name="sale_orders_with_errors_count"/>
+                                                    Error processing
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)}" style="width: 18%">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        Invoices
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container o_kanban_card_content">
+                                <div class="row">
+                                    <div class="col-6 o_kanban_primary_left">
+                                        <button class="btn btn-primary" name="get_all_invoices" type="object">
+                                            <span>Go to</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.pending_invoices_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_pending_invoices" type="object">
+                                                    <field name="pending_invoices_count"/>
+                                                    Draft
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.invoices_pending_payment_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_invoices_with_pending_payments" type="object">
+                                                    <field name="invoices_pending_payment_count"/>
+                                                    Pending Payments
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.invoices_with_errors_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_invoices_with_errors" type="object" class="text-danger">
+                                                    <field name="invoices_with_errors_count"/>
+                                                    Error processing
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)}" style="width: 18%">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        Shipments
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container o_kanban_card_content">
+                                <div class="row">
+                                    <div class="col-6 o_kanban_primary_left">
+                                        <button class="btn btn-primary" name="get_all_magento_shipments" type="object">
+                                            <span>Go to</span>
+                                        </button>
+                                    </div>
+                                     <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.pending_shipments_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_magento_pending_shipments" type="object">
+                                                    <field name="pending_shipments_count"/>
+                                                    Pending
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 o_kanban_primary_right">
+                                        <div class="row" t-if="record.shipments_with_errors_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <a name="get_shipments_with_errors" type="object" class="text-danger">
+                                                    <field name="shipments_with_errors_count"/>
+                                                    Error processing
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="magento_dashboard_action" model="ir.actions.act_window">
+        <field name="name">Magento Layer Dashboard</field>
+        <field name="res_model">magento.instance</field>
+        <field name="view_mode">kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Magento Dashboard
+            </p>
+            <p>
+                Your Magento dashboard is empty. Create <i>Magento Instance</i> first, then Magento dashboard will create automatically.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_main_magento_dashboard" name="Dashboard"
+        parent="odoo_magento2.menu_magento_root" sequence="1"
+        action="magento_dashboard_action" />
+</odoo>
