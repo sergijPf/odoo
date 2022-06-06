@@ -56,6 +56,23 @@ class MagentoInstance(models.Model):
                                         help="Check this if your Magento site is using SSL certificate")
     active = fields.Boolean(string="Status", default=True)
     cron_count = fields.Integer("Scheduler Count", compute="_compute_get_scheduler_list")
+    color = fields.Integer('Color')
+    config_product_ids = fields.One2many('magento.configurable.product', 'magento_instance_id')
+    simple_product_ids = fields.One2many('magento.product.product', 'magento_instance_id')
+    sale_order_ids = fields.One2many('sale.order', 'magento_instance_id')
+    invoice_ids = fields.One2many('account.move', 'magento_instance_id')
+    shipment_ids = fields.One2many('stock.picking', 'magento_instance_id')
+    disabled_config_prods_count = fields.Integer(compute="_compute_products_count")
+    update_config_prods_count = fields.Integer(compute="_compute_products_count")
+    disabled_simple_prods_count = fields.Integer(compute="_compute_products_count")
+    update_simple_prods_count = fields.Integer(compute="_compute_products_count")
+    pending_sale_orders_count = fields.Integer(compute="_compute_pending_sale_info")
+    pending_invoices_count = fields.Integer(compute="_compute_pending_sale_info")
+    invoices_pending_payment_count = fields.Integer(compute="_compute_pending_sale_info")
+    pending_shipments_count = fields.Integer(compute="_compute_pending_sale_info")
+    sale_orders_with_errors_count = fields.Integer(compute="_compute_sale_orders_invoices_and_shipments_with_errors_count")
+    invoices_with_errors_count = fields.Integer(compute="_compute_sale_orders_invoices_and_shipments_with_errors_count")
+    shipments_with_errors_count = fields.Integer(compute="_compute_sale_orders_invoices_and_shipments_with_errors_count")
     image_resolution = fields.Selection([
         ('image_1920', '1920px'),
         ('image_1024', '1024px'),
@@ -63,6 +80,30 @@ class MagentoInstance(models.Model):
         ('image_256', '256px'),
         ('image_128', '128px')
     ], string="Image Resolution", default='image_1024')
+
+    def _compute_products_count(self):
+        for rec in self:
+            rec.disabled_config_prods_count = len(rec.config_product_ids.filtered(lambda x: not x.is_enabled))
+            rec.disabled_simple_prods_count = len(rec.simple_product_ids.filtered(lambda x: not x.is_enabled))
+            rec.update_config_prods_count = len(rec.config_product_ids.filtered(
+                lambda x: x.magento_product_id and  x.magento_status != 'in_magento'
+            ))
+            rec.update_simple_prods_count = len(rec.simple_product_ids.filtered(
+                lambda x: x.magento_product_id and x.magento_status != 'in_magento'
+            ))
+
+    def _compute_sale_orders_invoices_and_shipments_with_errors_count(self):
+        for rec in self:
+            rec.sale_orders_with_errors_count = len(rec.sale_order_ids.magento_order_log_book_ids)
+            rec.invoices_with_errors_count = len(rec.invoice_ids.magento_invoice_log_book_ids)
+            rec.shipments_with_errors_count = len(rec.shipment_ids.magento_shipment_log_book_ids)
+
+    def _compute_pending_sale_info(self):
+        for rec in self:
+            rec.pending_sale_orders_count = len(rec.sale_order_ids.filtered(lambda x: x.invoice_status != 'invoiced'))
+            rec.pending_invoices_count = len(rec.invoice_ids.filtered(lambda x: x.state == 'draft'))
+            rec.invoices_pending_payment_count = len(rec.invoice_ids.filtered(lambda x: x.payment_state != 'paid'))
+            rec.pending_shipments_count = len(rec.shipment_ids.filtered(lambda x: x.state not in ['done', 'cancel']))
 
     def _compute_get_scheduler_list(self):
         seller_cron = self.env[IR_CRON].search([('magento_instance_id', '=', self.id)])
@@ -348,3 +389,173 @@ class MagentoInstance(models.Model):
         action['context'] = {'magento_instance_id': self.id}
 
         return action
+
+    def get_all_conf_products(self):
+        return self._get_configurable_products(self.config_product_ids)
+
+    def get_disabled_conf_products(self):
+        disabled_conf_prods = self.config_product_ids.filtered(lambda x: not x.is_enabled)
+        return self._get_configurable_products(disabled_conf_prods)
+
+    def get_conf_products_to_be_updated(self):
+        to_be_updated_prods = self.config_product_ids.filtered(
+            lambda x:x.magento_product_id and  x.magento_status != 'in_magento'
+        )
+        return self._get_configurable_products(to_be_updated_prods)
+
+    def _get_configurable_products(self, product_ids):
+        form_view_id = self.env.ref('odoo_magento2.view_magento_configurable_product_form').id
+        tree_view = self.env.ref('odoo_magento2.view_magento_configurable_product_tree').id
+
+        return {
+            'name': 'Configurable Products',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree, form',
+            'res_model': 'magento.configurable.product',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('id', 'in', product_ids.ids)]
+        }
+
+    def get_all_simple_products(self):
+        return self._get_simple_products(self.simple_product_ids)
+
+    def get_disabled_simple_products(self):
+        disabled_prods = self.simple_product_ids.filtered(lambda x: not x.is_enabled)
+        return self._get_simple_products(disabled_prods)
+
+    def get_simple_products_to_be_updated(self):
+        to_be_updated_prods = self.simple_product_ids.filtered(
+            lambda x: x.magento_product_id and x.magento_status != 'in_magento'
+        )
+        return self._get_simple_products(to_be_updated_prods)
+
+    def _get_simple_products(self, product_ids):
+        form_view_id = self.env.ref('odoo_magento2.view_magento_product_form').id
+        tree_view = self.env.ref('odoo_magento2.view_magento_product_tree').id
+
+        return {
+            'name': 'Simple Products',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree, form',
+            'res_model': 'magento.product.product',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('id', 'in', product_ids.ids)]
+        }
+
+    def get_all_sale_orders(self):
+        return self._get_magento_sale_orders(self.sale_order_ids)
+
+    def get_pending_sale_orders(self):
+        orders = self.sale_order_ids.filtered(lambda x: x.invoice_status != 'invoiced')
+        return self._get_magento_sale_orders(orders)
+
+    def _get_magento_sale_orders(self, order_ids):
+        form_view_id = self.env.ref('odoo_magento2.magento_view_order_form').id
+        tree_view = self.env.ref('odoo_magento2.magento_sale_order_tree_view').id
+
+        return {
+            'name': 'Magento Sale Orders',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree, form',
+            'res_model': 'sale.order',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('id', 'in', order_ids.ids)]
+        }
+
+    def get_sale_order_with_errors(self):
+        form_view_id = self.env.ref('odoo_magento2.view_magento_imported_orders_log_book_form').id
+        tree_view = self.env.ref('odoo_magento2.view_magento_imported_orders_log_book_tree').id
+
+        return {
+            'name': 'Imported Sale Orders with Errors ',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree, form',
+            'res_model': 'magento.orders.log.book',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('id', 'in', self.sale_order_ids.magento_order_log_book_ids.ids)]
+        }
+
+    def get_all_invoices(self):
+        return self._get_magento_invoices(self.invoice_ids)
+
+    def get_pending_invoices(self):
+        return self._get_magento_invoices(self.invoice_ids.filtered(lambda x: x.state == 'draft'))
+
+    def get_invoices_with_pending_payments(self):
+        pending_payment_invoices = self.invoice_ids.filtered(lambda x: x.payment_state != 'paid')
+        return self._get_magento_invoices(pending_payment_invoices)
+
+    def _get_magento_invoices(self, invoice_ids):
+        form_view_id = self.env.ref('odoo_magento2.inherited_account_invoice_form_view').id
+        tree_view = self.env.ref('odoo_magento2.magento_invoice_tree_view').id
+
+        return {
+            'name': 'Magento Invoices',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree, form',
+            'res_model': 'account.move',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('id', 'in', invoice_ids.ids)]
+        }
+
+    def get_invoices_with_errors(self):
+        form_view_id = self.env.ref('odoo_magento2.view_magento_invoice_errors_log_book_form').id
+        tree_view = self.env.ref('odoo_magento2.view_magento_invoices_error_log_book_tree').id
+
+        return {
+            'name': 'Invoice export Errors',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree, form',
+            'res_model': 'magento.invoices.log.book',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('id', 'in', self.invoice_ids.magento_invoice_log_book_ids.ids)]
+        }
+
+    def get_magento_pending_shipments(self):
+        shipment_ids = self.shipment_ids.filtered(lambda x: x.state not in ['done', 'cancel'])
+        return self._get_magento_shipments(shipment_ids)
+
+    def get_all_magento_shipments(self):
+        return self._get_magento_shipments(self.shipment_ids)
+
+    def _get_magento_shipments(self, shipment_ids):
+        form_view_id = self.env.ref('odoo_magento2.magento_view_stock_picking_form').id
+        tree_view = self.env.ref('odoo_magento2.magento_view_stock_picking_tree').id
+
+        return {
+            'name': 'Magento Shipments Info',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree,form',
+            'res_model': 'stock.picking',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('id', 'in', shipment_ids.ids)]
+        }
+
+    def get_shipments_with_errors(self):
+        form_view_id = self.env.ref('odoo_magento2.view_magento_shipment_errors_log_book_form').id
+        tree_view = self.env.ref('odoo_magento2.view_magento_shipment_errors_log_book_tree').id
+
+        return {
+            'name': 'Invoice export Errors',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree, form',
+            'res_model': 'magento.shipments.log.book',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('id', 'in', self.shipment_ids.magento_shipment_log_book_ids.ids)]
+        }

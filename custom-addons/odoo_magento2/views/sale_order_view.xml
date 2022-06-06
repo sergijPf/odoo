@@ -49,7 +49,7 @@
         </field>
     </record>
 
-    <record id="sale_order_tree_view" model="ir.ui.view">
+    <record id="magento_sale_order_tree_view" model="ir.ui.view">
         <field name="name">magento.sale.order.tree.view</field>
         <field name="model">sale.order</field>
         <field name="arch" type="xml">
@@ -62,7 +62,10 @@
                 <field name="amount_total" sum="Total Tax Included"/>
                 <field name="magento_payment_method_id" />
                 <field name="store_id"/>
-                <field name="state"/>
+                <field name="invoice_status" widget="badge" optional="show" readonly="1"
+                       decoration-success="invoice_status == 'invoiced'"
+                       decoration-info="invoice_status in ['to invoice', 'no']"
+                       decoration-warning="invoice_status == 'upselling'"/>
             </tree>
         </field>
     </record>
@@ -97,7 +100,7 @@
         <field name="name">Quotations</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">sale.order</field>
-        <field name="view_id" ref="sale_order_tree_view"/>
+        <field name="view_id" ref="magento_sale_order_tree_view"/>
         <field name="view_mode">tree,form</field>
         <field name="domain">
             [('magento_instance_id','!=',False),
@@ -110,7 +113,7 @@
         <field name="name">Sales Order</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">sale.order</field>
-        <field name="view_id" ref="sale_order_tree_view"/>
+        <field name="view_id" ref="magento_sale_order_tree_view"/>
         <field name="view_mode">tree,form</field>
         <field name="domain">
             [('magento_instance_id','!=',False),

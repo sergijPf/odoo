@@ -34,6 +34,7 @@ class AccountInvoice(models.Model):
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Magento Payment Method")
     is_in_magento = fields.Boolean(string='Is in Magento?', default=False)
     magento_instance_id = fields.Many2one('magento.instance', string="Magento Instance")
+    magento_invoice_log_book_ids = fields.One2many('magento.invoices.log.book', 'invoice_id', "Logged Error Messages")
 
     def export_invoices_to_magento(self, magento_instances, is_cron_call):
         invoices = self.search([

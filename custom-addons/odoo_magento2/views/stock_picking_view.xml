@@ -1,98 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-        <record id="view_stock_picking_out_connector_form" model="ir.ui.view">
-            <field name="name">stock.picking.form</field>
-            <field name="model">stock.picking</field>
-            <field name="inherit_id" ref="stock.view_picking_form"/>
-            <field name="arch" type="xml">
-                <xpath expr="//header/button[5]" position="after">
-                    <field name="is_shipment_exportable" invisible="1"/>
-                    <button name="export_single_shipment_to_magento" string="Export to Magento"
-                            type="object" class="oe_highlight"
-                            attrs="{'invisible': ['|','|','|','|',
-                             ('magento_instance_id','=',False),
-                             ('state','!=','done'),
-                             ('is_in_magento','=',True),
-                             ('is_shipment_exportable','=',False),
-                             ('carrier_tracking_ref','=','')]}"/>
-                </xpath>
-                <xpath expr="//notebook[last()]" position="inside">
-                    <page name="magento_info" string="Magento Info"
-                          attrs="{'invisible' : ['|', ('is_magento_picking','=',False), ('is_shipment_exportable','=',False)]}">
-                        <group>
-                            <field name="is_magento_picking" invisible="1"/>
-                            <field name="magento_instance_id" readonly="1"/>
-                            <field name="magento_carrier_name" readonly="1"/>
-                            <field name="inpost_locker_code" readonly="1"
-                                   attrs="{'invisible' : [('inpost_locker_code','=','')]}"/>
-                            <field name="magento_shipping_id" readonly="1"/>
-                            <field name="is_in_magento" readonly="1"/>
-                        </group>
-                    </page>
-                </xpath>
-            </field>
-        </record>
+    <record id="magento_view_stock_picking_form" model="ir.ui.view">
+        <field name="name">magento.stock.picking.form</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[5]" position="after">
+                <field name="is_shipment_exportable" invisible="1"/>
+                <button name="export_single_shipment_to_magento" string="Export to Magento"
+                        type="object" class="oe_highlight"
+                        attrs="{'invisible': ['|','|','|','|',
+                         ('magento_instance_id','=',False),
+                         ('state','!=','done'),
+                         ('is_in_magento','=',True),
+                         ('is_shipment_exportable','=',False),
+                         ('carrier_tracking_ref','=','')]}"/>
+            </xpath>
+            <xpath expr="//notebook[last()]" position="inside">
+                <page name="magento_info" string="Magento Info"
+                      attrs="{'invisible' : ['|', ('is_magento_picking','=',False), ('is_shipment_exportable','=',False)]}">
+                    <group>
+                        <field name="is_magento_picking" invisible="1"/>
+                        <field name="magento_instance_id" readonly="1"/>
+                        <field name="magento_carrier_name" readonly="1"/>
+                        <field name="inpost_locker_code" readonly="1"
+                               attrs="{'invisible' : [('inpost_locker_code','=','')]}"/>
+                        <field name="magento_shipping_id" readonly="1"/>
+                        <field name="is_in_magento" readonly="1"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
 
-        <record id="magento_view_stock_picking_tree" model="ir.ui.view">
-            <field name="name">magento.view.stock.picking.tree</field>
-            <field name="model">stock.picking</field>
-            <field name="priority" eval="50"/>
-            <field name="arch" type="xml">
-                <tree string="Picking list" create="false">
-                    <field name="name"/>
-                    <field name="location_dest_id"/>
-                    <field name="partner_id"/>
-                    <field name="date"/>
-                    <field name="origin"/>
-                    <field name="backorder_id"/>
-                    <field name="magento_instance_id"/>
-                    <field name="state"/>
-                </tree>
-            </field>
-        </record>
+    <record id="magento_view_stock_picking_tree" model="ir.ui.view">
+        <field name="name">magento.view.stock.picking.tree</field>
+        <field name="model">stock.picking</field>
+        <field name="arch" type="xml">
+            <tree string="Picking list" create="false">
+                <field name="name"/>
+                <field name="location_dest_id"/>
+                <field name="partner_id"/>
+                <field name="date"/>
+                <field name="origin"/>
+                <field name="backorder_id"/>
+                <field name="magento_instance_id"/>
+                <field name="state" optional="show" widget="badge" decoration-success="state == 'done'" decoration-info="state not in ('done', 'cancel', 'draft')" decoration-muted="state == 'draft'"/>
+            </tree>
+        </field>
+    </record>
 
-        <record id="magento_view_stock_picking_filter" model="ir.ui.view">
-            <field name="name">stock.picking.search</field>
-            <field name="model">stock.picking</field>
-            <field name="inherit_id" ref="stock.view_picking_internal_search"/>
-            <field name="arch" type="xml">
-                <xpath expr="//filter[@name='status']" position="after">
-                    <filter string="Magento Instances" name="magento_instance_id"
-                            context="{'group_by':'magento_instance_id'}" />
-                </xpath>
-            </field>
-        </record>
+    <record id="magento_view_stock_picking_filter" model="ir.ui.view">
+        <field name="name">stock.picking.search</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='status']" position="after">
+                <filter string="Magento Instances" name="magento_instance_id"
+                        context="{'group_by':'magento_instance_id'}" />
+            </xpath>
+        </field>
+    </record>
 
-        <record id="action_magento_stock_picking_tree" model="ir.actions.act_window">
-            <field name="name">Delivery Orders</field>
-            <field name="res_model">stock.picking</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="view_mode">tree,form</field>
-            <field name="view_id" ref="magento_view_stock_picking_tree"/>
-            <field name="search_view_id" ref="magento_view_stock_picking_filter"/>
-            <field name="domain">[('is_magento_picking','=','True'),('magento_instance_id','!=',False)]</field>
-            <field name="help" type="html">
-                <div>
-                    <br />
-                    <br />
-                    <br />
-                    <p>
-                        <b>There is no any Delivery Order created for any of Magento Sale Orders.</b>
-                        <br/>
-                        <br/>
-                        Delivery order for Magento will be created automatically
-                        and it will be visible over here.<br/>
-                        From here, you can't manually create delivery order for Magento. It
-                        must be created via Sale Order.
-                    </p>
-                </div>
-            </field>
-        </record>
+    <record id="action_magento_stock_picking_tree" model="ir.actions.act_window">
+        <field name="name">Delivery Orders</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="magento_view_stock_picking_tree"/>
+        <field name="search_view_id" ref="magento_view_stock_picking_filter"/>
+        <field name="domain">[('is_magento_picking','=','True'),('magento_instance_id','!=',False)]</field>
+        <field name="help" type="html">
+            <div>
+                <br />
+                <br />
+                <br />
+                <p>
+                    <b>There is no any Delivery Order created for any of Magento Sale Orders.</b>
+                    <br/>
+                    <br/>
+                    Delivery order for Magento will be created automatically
+                    and it will be visible over here.<br/>
+                    From here, you can't manually create delivery order for Magento. It
+                    must be created via Sale Order.
+                </p>
+            </div>
+        </field>
+    </record>
 
-        <menuitem id="menu_transfer_details_parent" name="Delivery"
-            sequence="4" parent="odoo_magento2.menu_magento_sales_and_customer"/>
+    <menuitem id="menu_transfer_details_parent" name="Delivery"
+        sequence="4" parent="odoo_magento2.menu_magento_sales_and_customer"/>
 
-        <menuitem id="menu_magento_delivery_order" name="Shipments"
-            parent="menu_transfer_details_parent" sequence="1"
-            action="action_magento_stock_picking_tree" />
+    <menuitem id="menu_magento_delivery_order" name="Shipments"
+        parent="menu_transfer_details_parent" sequence="1"
+        action="action_magento_stock_picking_tree" />
 </odoo>

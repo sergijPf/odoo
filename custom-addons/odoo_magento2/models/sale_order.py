@@ -21,7 +21,7 @@ class SaleOrder(models.Model):
     order_currency_code = fields.Char(string="Order Currency")
     order_total_amount = fields.Float(string="Order Amount")
     magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
-    magento_order_log_book_ids = fields.One2many('magento.orders.log.book', 'sale_order_id', "Log Error Messages")
+    magento_order_log_book_ids = fields.One2many('magento.orders.log.book', 'sale_order_id', "Logged Error Messages")
     auto_workflow_process_id = fields.Many2one("sale.workflow.process", string="Workflow Process", copy=False)
     moves_count = fields.Integer(compute="_compute_stock_move", string="Stock Move", store=False,
                                  help="Stock Move Count for Orders without Picking.")

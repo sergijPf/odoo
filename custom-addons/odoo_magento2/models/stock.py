@@ -3,17 +3,16 @@
 from odoo import models, fields, _
 from ..python_library.api_request import req
 
-STOCK_PICKING = 'stock.picking'
-
 
 class StockPicking(models.Model):
-    _inherit = STOCK_PICKING
+    _inherit = 'stock.picking'
     _description = 'Stock Picking'
 
     is_magento_picking = fields.Boolean('Magento Picking?', help="If checked, It is Magento Picking")
     is_in_magento = fields.Boolean("Is in Magento?", help="Checked means Shipment is in Magento")
     magento_instance_id = fields.Many2one('magento.instance', 'Instance')
     magento_shipping_id = fields.Char(string="Magento Shipping Id")
+    magento_shipment_log_book_ids = fields.One2many('magento.shipments.log.book', 'picking_id', "Logged Error Messages")
     inpost_locker_code = fields.Char(related='sale_id.inpost_locker_code', string="Locker ID of Inpost Paczkomat")
     magento_carrier_name = fields.Char(related='sale_id.magento_carrier_name')
     is_shipment_exportable = fields.Boolean("Is Shipment exportable", compute='_compute_shipment_exportable',

@@ -65,6 +65,7 @@
                         <group>
                             <field name="catalog_price_scope" readonly="1"/>
                             <field name="magento_verify_ssl" attrs="{'readonly': [('active', '=', True)]}"/>
+                            <field name="color" widget="color_picker"/>
                             <field name="image_resolution"/>
                             <field name="odoo_token" readonly="1" groups="odoo_magento2.group_magento_manager"/>
                             <button string="Get New Token for Magento" type="object"

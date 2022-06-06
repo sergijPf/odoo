@@ -18,6 +18,7 @@
         'views/magento_instance_view.xml',
         'views/magento_website_view.xml',
         'views/magento_storeview_view.xml',
+        'views/magento_dashboard_view.xml',
         'views/magento_payment_method_view.xml',
         'views/magento_delivery_carrier_view.xml',
         'views/magento_product_product_view.xml',
