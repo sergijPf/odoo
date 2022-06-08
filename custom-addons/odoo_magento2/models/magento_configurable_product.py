@@ -603,15 +603,16 @@ class MagentoConfigurableProduct(models.Model):
                        f" setup in Magento."
                 ml_conf_products[sku]['log_message'] += text
                 return False
-            if self.to_upper(attr_val_rec.name) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
-                val_id, err = self.create_new_attribute_option_in_magento(
-                    instance, mag_attr['attribute_code'], attr_val_rec
-                )
-                if err:
-                    ml_conf_products[sku]['log_message'] += err
-                    return False
-                else:
-                    mag_attr['options'].append({'label': attr_val_rec.name.upper(), 'value': val_id})
+            for rec in attr_val_rec:
+                if self.to_upper(rec.name) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
+                    val_id, err = self.create_new_attribute_option_in_magento(
+                        instance, mag_attr['attribute_code'], rec
+                    )
+                    if err:
+                        ml_conf_products[sku]['log_message'] += err
+                        return False
+                    else:
+                        mag_attr['options'].append({'label': rec.name.upper(), 'value': val_id})
 
         return True
 

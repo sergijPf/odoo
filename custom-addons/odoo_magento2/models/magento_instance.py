@@ -60,6 +60,7 @@ class MagentoInstance(models.Model):
     config_product_ids = fields.One2many('magento.configurable.product', 'magento_instance_id')
     simple_product_ids = fields.One2many('magento.product.product', 'magento_instance_id')
     sale_order_ids = fields.One2many('sale.order', 'magento_instance_id')
+    sale_order_error_ids = fields.One2many('magento.orders.log.book', 'magento_instance_id')
     invoice_ids = fields.One2many('account.move', 'magento_instance_id')
     shipment_ids = fields.One2many('stock.picking', 'magento_instance_id')
     disabled_config_prods_count = fields.Integer(compute="_compute_products_count")
@@ -94,7 +95,7 @@ class MagentoInstance(models.Model):
 
     def _compute_sale_orders_invoices_and_shipments_with_errors_count(self):
         for rec in self:
-            rec.sale_orders_with_errors_count = len(rec.sale_order_ids.magento_order_log_book_ids)
+            rec.sale_orders_with_errors_count = len(rec.sale_order_error_ids)
             rec.invoices_with_errors_count = len(rec.invoice_ids.magento_invoice_log_book_ids)
             rec.shipments_with_errors_count = len(rec.shipment_ids.magento_shipment_log_book_ids)
 
@@ -480,7 +481,7 @@ class MagentoInstance(models.Model):
             'views': [(tree_view, 'tree'), (form_view_id, 'form')],
             'view_id': tree_view,
             'target': 'current',
-            'domain': [('id', 'in', self.sale_order_ids.magento_order_log_book_ids.ids)]
+            'domain': [('magento_instance_id', '=', self.id)]
         }
 
     def get_all_invoices(self):

@@ -19,6 +19,8 @@
                 <field name="x_magento_no_create" id="x_magento_no_create"
                        groups="odoo_magento2.group_magento_user"
                        attrs="{'invisible': [('is_magento_config', '!=', True)]}"/>
+                <field name="website_description"
+                       attrs="{'invisible': [('is_magento_config', '!=', True)]}"/>
             </xpath>
 
             <xpath expr="//field[@name='attribute_line_ids']/tree/field[@name='value_ids']" position='after'>

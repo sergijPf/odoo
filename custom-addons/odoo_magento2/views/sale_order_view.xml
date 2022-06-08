@@ -40,7 +40,6 @@
                             <field name="magento_payment_method_id" readonly="1"/>
                             <field name="order_total_amount" readonly="1"/>
                             <field name="order_currency_code" readonly="1"/>
-
                         </group>
                     </group>
                 </page>
@@ -62,7 +61,10 @@
                 <field name="amount_total" sum="Total Tax Included"/>
                 <field name="magento_payment_method_id" />
                 <field name="store_id"/>
-                <field name="invoice_status" widget="badge" optional="show" readonly="1"
+                <field name="state" widget="badge" optional="show" on_change="1"
+                       decoration-success="state == 'sale' or state == 'done'"
+                       decoration-info="state == 'draft' or state == 'sent'" modifiers="{'readonly': true}"/>
+                <field name="invoice_status" widget="badge" optional="show"
                        decoration-success="invoice_status == 'invoiced'"
                        decoration-info="invoice_status in ['to invoice', 'no']"
                        decoration-warning="invoice_status == 'upselling'"/>
@@ -75,11 +77,9 @@
          <field name="model">sale.order</field>
          <field name="inherit_id" ref="sale.view_sales_order_filter"/>
          <field name="arch" type="xml">
-            <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
-<!--                <filter string="Fulfilled in Magento" name="magento_order_status_updated"-->
-<!--                        domain="[('updated_in_magento', '=', True)]"/>-->
-<!--                <filter string="Not fulfilled in Magento" name="magento_order_status_not_updated"-->
-<!--                        domain="[('updated_in_magento', '!=', True)]"/>-->
+            <xpath expr="//filter[@name='customer']" position="before">
+                <filter name="Magento Instance" string="Magento Instance"
+                        context="{'group_by' : 'magento_instance_id'}"/>
             </xpath>
         </field>
     </record>
@@ -102,10 +102,7 @@
         <field name="res_model">sale.order</field>
         <field name="view_id" ref="magento_sale_order_tree_view"/>
         <field name="view_mode">tree,form</field>
-        <field name="domain">
-            [('magento_instance_id','!=',False),
-            ('state','in',('draft','sent','cancel'))]
-        </field>
+        <field name="domain">[('magento_instance_id','!=',False), ('state','in',('draft','sent','cancel'))]</field>
         <field name="search_view_id" ref="sale_order_quotation_filter_view"/>
     </record>
 
@@ -115,10 +112,7 @@
         <field name="res_model">sale.order</field>
         <field name="view_id" ref="magento_sale_order_tree_view"/>
         <field name="view_mode">tree,form</field>
-        <field name="domain">
-            [('magento_instance_id','!=',False),
-            ('state','not in',('draft','sent','cancel'))]
-        </field>
+        <field name="domain">[('magento_instance_id','!=',False),('state','not in',('draft','sent','cancel'))]</field>
         <field name="search_view_id" ref="sale_order_filter_view"/>
     </record>
 

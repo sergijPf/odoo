@@ -31,20 +31,16 @@
                                     </div>
                                     <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.disabled_config_prods_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_disabled_conf_products" type="object">
-                                                    <field name="disabled_config_prods_count"/>
-                                                    Disabled in M2
-                                                </a>
-                                            </div>
+                                            <a name="get_disabled_conf_products" type="object">
+                                                <field name="disabled_config_prods_count"/>
+                                                Disabled in M2
+                                            </a>
                                         </div>
                                         <div class="row" t-if="record.update_config_prods_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_conf_products_to_be_updated" type="object" class="text-warning">
-                                                    <field name="update_config_prods_count"/>
-                                                    Update needed
-                                                </a>
-                                            </div>
+                                            <a name="get_conf_products_to_be_updated" type="object" class="text-warning">
+                                                <field name="update_config_prods_count"/>
+                                                Update needed
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -67,20 +63,16 @@
                                     </div>
                                     <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.disabled_simple_prods_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_disabled_simple_products" type="object">
-                                                    <field name="disabled_simple_prods_count"/>
-                                                    Disabled in M2
-                                                </a>
-                                            </div>
+                                            <a name="get_disabled_simple_products" type="object">
+                                                <field name="disabled_simple_prods_count"/>
+                                                Disabled in M2
+                                            </a>
                                         </div>
                                         <div class="row" t-if="record.update_simple_prods_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_simple_products_to_be_updated" type="object" class="text-warning">
-                                                    <field name="update_simple_prods_count"/>
-                                                    Update needed
-                                                </a>
-                                            </div>
+                                            <a name="get_simple_products_to_be_updated" type="object" class="text-warning">
+                                                <field name="update_simple_prods_count"/>
+                                                Update needed
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -103,22 +95,16 @@
                                     </div>
                                     <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.pending_sale_orders_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_pending_sale_orders" type="object">
-                                                    <field name="pending_sale_orders_count"/>
-                                                    Pending
-                                                </a>
-                                            </div>
+                                            <a name="get_pending_sale_orders" type="object">
+                                                <field name="pending_sale_orders_count"/>
+                                                Pending
+                                            </a>
                                         </div>
-                                    </div>
-                                    <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.sale_orders_with_errors_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_sale_order_with_errors" type="object" class="text-danger">
-                                                    <field name="sale_orders_with_errors_count"/>
-                                                    Error processing
-                                                </a>
-                                            </div>
+                                            <a name="get_sale_order_with_errors" type="object" class="text-danger">
+                                                <field name="sale_orders_with_errors_count"/>
+                                                Error processing
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -141,32 +127,22 @@
                                     </div>
                                     <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.pending_invoices_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_pending_invoices" type="object">
-                                                    <field name="pending_invoices_count"/>
-                                                    Draft
-                                                </a>
-                                            </div>
+                                            <a name="get_pending_invoices" type="object">
+                                                <field name="pending_invoices_count"/>
+                                                Draft
+                                            </a>
                                         </div>
-                                    </div>
-                                    <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.invoices_pending_payment_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_invoices_with_pending_payments" type="object">
-                                                    <field name="invoices_pending_payment_count"/>
-                                                    Pending Payments
-                                                </a>
-                                            </div>
+                                            <a name="get_invoices_with_pending_payments" type="object">
+                                                <field name="invoices_pending_payment_count"/>
+                                                Pending Payments
+                                            </a>
                                         </div>
-                                    </div>
-                                    <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.invoices_with_errors_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_invoices_with_errors" type="object" class="text-danger">
-                                                    <field name="invoices_with_errors_count"/>
-                                                    Error processing
-                                                </a>
-                                            </div>
+                                            <a name="get_invoices_with_errors" type="object" class="text-danger">
+                                                <field name="invoices_with_errors_count"/>
+                                                Error processing
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -189,22 +165,16 @@
                                     </div>
                                      <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.pending_shipments_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_magento_pending_shipments" type="object">
-                                                    <field name="pending_shipments_count"/>
-                                                    Pending
-                                                </a>
-                                            </div>
+                                            <a name="get_magento_pending_shipments" type="object">
+                                                <field name="pending_shipments_count"/>
+                                                Pending
+                                            </a>
                                         </div>
-                                    </div>
-                                    <div class="col-6 o_kanban_primary_right">
                                         <div class="row" t-if="record.shipments_with_errors_count.raw_value > 0">
-                                            <div class="col-12">
-                                                <a name="get_shipments_with_errors" type="object" class="text-danger">
-                                                    <field name="shipments_with_errors_count"/>
-                                                    Error processing
-                                                </a>
-                                            </div>
+                                            <a name="get_shipments_with_errors" type="object" class="text-danger">
+                                                <field name="shipments_with_errors_count"/>
+                                                Error processing
+                                            </a>
                                         </div>
                                     </div>
                                 </div>

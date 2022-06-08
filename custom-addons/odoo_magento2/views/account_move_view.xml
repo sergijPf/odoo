@@ -16,7 +16,16 @@
                 <field name="currency_id" invisible="1"/>
                 <field name="company_currency_id" invisible="1"/>
                 <field name="magento_instance_id"/>
-                <field name="state"/>
+                <field name="payment_state" widget="badge" optional="show"
+                       decoration-danger="payment_state == 'not_paid'"
+                       decoration-warning="payment_state in ('partial', 'in_payment')"
+                       decoration-success="payment_state in ('paid', 'reversed')"
+                       attrs="{'invisible': [('payment_state', 'in', ('invoicing_legacy'))]}"
+                       modifiers="{'invisible': [['payment_state', 'in', 'invoicing_legacy']], 'readonly': true}"/>
+                <field name="state" widget="badge" optional="show" on_change="1"
+                       decoration-success="state == 'posted'"
+                       decoration-info="state == 'draft'"
+                       modifiers="{'readonly': true, 'required': true}"/>
                 <field name="move_type" invisible="context.get('move_type',True)"/>
              </tree>
         </field>
