@@ -30,6 +30,7 @@
             <field name="model">magento.payment.method</field>
             <field name="arch" type="xml">
                 <search string="Filter Paymentmethod Wise">
+                    <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
                     <field name="magento_instance_id"/>
                     <field name="payment_method_name"/>
                     <field name="payment_method_code"/>

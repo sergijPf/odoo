@@ -187,7 +187,7 @@
     </record>
 
     <record id="magento_dashboard_action" model="ir.actions.act_window">
-        <field name="name">Magento Layer Dashboard</field>
+        <field name="name">Magento Layer</field>
         <field name="res_model">magento.instance</field>
         <field name="view_mode">kanban</field>
         <field name="help" type="html">

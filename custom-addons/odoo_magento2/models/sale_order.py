@@ -79,10 +79,17 @@ class SaleOrder(models.Model):
 
             if work_flow_process_rec.register_payment:
                 if not order.transaction_ids and order.magento_payment_method_id.payment_acquirer_id:
+                    paym_trans = self.env['payment.transaction'].search([('reference', '=', order.name)])
+                    if paym_trans:
+                        cnt = len(self.env['payment.transaction'].search([('reference', 'ilike', order.name + '%')]))
+                        ref = order.name + f'-{cnt}'
+                    else:
+                        ref = order.name
+
                     currency = self.env['res.currency'].search([('name', '=', order.order_currency_code)])
                     vals = {
                         'acquirer_id': order.magento_payment_method_id.payment_acquirer_id.id,
-                        'reference': order.name,
+                        'reference': ref,
                         'state': 'done',
                         'acquirer_reference': order.payment_transaction_code,
                         'amount': order.order_total_amount,
@@ -206,12 +213,9 @@ class SaleOrder(models.Model):
 
     def check_sales_order_data(self, instance, sales_order, website):
         order_lines = sales_order.get('items')
-        payment_method = sales_order.get('payment', {}).get('method')
         odoo_partner = False
 
-        allowed_flow, message = self.check_payment_method_and_order_flow_configurations(
-            instance, sales_order, payment_method
-        )
+        allowed_flow, message = self.check_payment_method_and_order_flow_configurations(instance, sales_order)
         if message:
             return allowed_flow, odoo_partner, message
 
@@ -237,15 +241,16 @@ class SaleOrder(models.Model):
 
         return allowed_flow, odoo_partner, message
 
-    def check_payment_method_and_order_flow_configurations(self, instance, sales_order, payment_method):
+    def check_payment_method_and_order_flow_configurations(self, instance, sales_order):
         order_ref = sales_order.get('increment_id')
         amount_paid = sales_order.get('payment', {}).get('amount_paid', 0)
         order_status = sales_order.get('status')
+        payment_method = sales_order.get('payment', {}).get('method')
         payment_option = instance.payment_method_ids.filtered(lambda x: x.payment_method_code == payment_method)
 
         if not payment_option:
             return False, "Payment method %s is not found in Magento Layer. Please synchronize Instance " \
-                          "Metadata" % payment_method
+                          "Metadata or unarchive it." % payment_method
 
         allowed_flow = self.env['magento.financial.status'].search([
             ('magento_instance_id', '=', instance.id),
@@ -255,8 +260,8 @@ class SaleOrder(models.Model):
 
         if not allowed_flow:
             return  False, "- Automatic 'Order Processing Workflow' configuration not found for this order. \n -" \
-                           " System tries to find the workflow based on combination of Payment Method (such as PayPal, " \
-                           "P24 etc.) and Order's Financial Status(such as Pending, Processing Orders etc.).\n " \
+                           " System tries to find a workflow based on combination of Payment Method (such as PayPal, " \
+                           "P24 etc.) and Order's Financial Status(such as Pending, Processing etc.).\n " \
                            "- For current Sales Order: Payment Method is '%s' and Order's Financial Status is '%s'.\n  " \
                            "- You can configure the Automatic Order Processing Workflow under the menu Magento >> " \
                            "Configuration >> Orders Processing Gateway." % (payment_option.payment_method_name,
@@ -277,16 +282,16 @@ class SaleOrder(models.Model):
 
     def check_magento_shipping_method(self, magento_instance, sales_order):
         order_ref = sales_order.get('increment_id')
-        shipping = sales_order.get('extension_attributes').get('shipping_assignments')
-        shipping_method = shipping[0].get('shipping').get('method') or False
+        shipping = sales_order.get('extension_attributes', {}).get('shipping_assignments')
+        shipping_method = shipping[0].get('shipping', {}).get('method') if shipping else False
 
         if not shipping_method:
-            return "Delivery method is not found in Order - %s." % order_ref
+            return f"Delivery method is not found within imported Order({order_ref}) info."
 
         mag_deliv_carrier = magento_instance.shipping_method_ids.filtered(lambda x: x.carrier_code == shipping_method)
         if not mag_deliv_carrier:
-            return "Order %s has failed to proceed due to shipping method - %s wasn't found within Magento " \
-                   "Delivery Methods. Please synchronize Instance Metadata." % (order_ref, shipping_method)
+            return f"Order {order_ref} has failed to proceed due to shipping method - {shipping_method} wasn't found " \
+                   f"within Magento Delivery Methods. Please synchronize Instance Metadata."
 
         odoo_delivery_carrier = mag_deliv_carrier.delivery_carrier_ids
         delivery_carrier = odoo_delivery_carrier[0] if odoo_delivery_carrier else False
@@ -299,8 +304,8 @@ class SaleOrder(models.Model):
                     'magento_carrier': mag_deliv_carrier.id
                 })
             except Exception as err:
-                return "Error while new Delivery Method creation in Odoo: %s. Please create it manually and link " \
-                       "'Magento Delivery Carrier' field with %s shipping method code. " % (str(err), shipping_method)
+                return f"Error while new Delivery Method creation in Odoo: {err}. Please create it manually and link " \
+                       f"'Magento Delivery Carrier' field with {shipping_method} shipping method code. "
 
         return ''
 
@@ -340,10 +345,9 @@ class SaleOrder(models.Model):
             pricelist_currency = website.pricelist_id.currency_id.name
 
             if order_currency != pricelist_currency:
-                return "Order currency - %s and Price list currency in Odoo %s do not match." % (order_currency,
-                                                                                                 pricelist_currency)
+                return f"{order_currency} order currency and Odoo's Price list currency {pricelist_currency} don't match."
         else:
-            return "%s website is missing Price list to be defined in Instance Configurations in Odoo" % (website.name)
+            return f"{website.name} website is missing Price list to be defined in Instance Configurations in Odoo."
 
         return ''
 

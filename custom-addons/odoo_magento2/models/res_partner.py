@@ -14,15 +14,16 @@ class ResPartner(models.Model):
         message = ""
         odoo_partner = self.get_odoo_res_partner(customer_dict, website)
 
-        if not odoo_partner:
-            message = 'Error while Magento Customer creation in Odoo.'
+        if not odoo_partner or isinstance(odoo_partner, str):
+            message = 'Error creating Customer in Odoo ' + odoo_partner if isinstance(odoo_partner, str) else '.'
             return False, False, message
 
         magento_partner = self.env['magento.res.partner'].get_magento_res_partner(
             instance, customer_dict, odoo_partner, website
         )
-        if not magento_partner:
-            message = 'Error while Magento Customer creation in Magento Layer'
+        if not magento_partner or isinstance(magento_partner, str):
+            message = f'Error while Magento Customer creation in ' \
+                      f'Magento Layer {magento_partner if isinstance(magento_partner, str) else ""}'
             return False, False, message
 
         return odoo_partner, magento_partner, message
@@ -45,12 +46,12 @@ class ResPartner(models.Model):
                 odoo_partner = self.create({
                     'email': customer_email,
                     'type': 'contact',
-                    'name': customer_dict.get("customer_firstname") + ', ' + customer_dict.get("customer_lastname"),
+                    'name': f'{customer_dict.get("customer_firstname", "")}, {customer_dict.get("customer_lastname", "")}',
                     'property_product_pricelist': website.pricelist_id.id,
                     'is_magento_customer': True
                 })
-            except Exception:
-                return
+            except Exception as e:
+                return str(e) + '.'
 
         return odoo_partner
 

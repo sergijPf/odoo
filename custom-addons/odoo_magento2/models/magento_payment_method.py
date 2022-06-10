@@ -44,7 +44,7 @@ class MagentoPaymentMethod(models.Model):
 
         for pm in payment_methods:
             pm_code = pm.get('value')
-            odoo_pm = instance.payment_method_ids.with_context(active_test=False).filtered(
+            odoo_pm = instance.with_context(active_test=False).payment_method_ids.filtered(
                 lambda x: x.payment_method_code == pm_code)
 
             if not odoo_pm:

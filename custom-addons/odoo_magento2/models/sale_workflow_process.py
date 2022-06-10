@@ -22,11 +22,11 @@ class SaleWorkflowProcess(models.Model):
                                     help="If it's checked, Invoice for Order will be Created and Posted automatically.")
     register_payment = fields.Boolean('Register Payment', help="If it's checked, Payment will be registered for Invoice.",
                                       default=False)
-    invoice_date_is_order_date = fields.Boolean(
-        string = 'Force Accounting Date',
-        help="if it is checked then, the account journal entry will be generated based on Order date and if "
-             "unchecked then, the account journal entry will be generated based on Invoice Date"
-    )
+    # invoice_date_is_order_date = fields.Boolean(
+    #     string = 'Force Accounting Date',
+    #     help="if it is checked then, the account journal entry will be generated based on Order date and if "
+    #          "unchecked then, the account journal entry will be generated based on Invoice Date"
+    # )
     sale_journal_id = fields.Many2one('account.journal', string='Sales Journal', default=_default_sales_journal,
                                       domain=[('type', '=', 'sale')])
     picking_policy = fields.Selection([
@@ -40,11 +40,11 @@ class SaleWorkflowProcess(models.Model):
             if not record.validate_order:
                 record.create_invoice = record.register_payment = False
 
-    @api.onchange("register_payment")
-    def onchange_register_payment(self):
-        for record in self:
-            if not record.register_payment:
-                record.invoice_date_is_order_date = False
+    # @api.onchange("register_payment")
+    # def onchange_register_payment(self):
+    #     for record in self:
+    #         if not record.register_payment:
+    #             record.invoice_date_is_order_date = False
 
     @api.model
     def auto_workflow_process(self, order_ids=[]):

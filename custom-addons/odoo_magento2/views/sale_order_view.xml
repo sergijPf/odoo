@@ -72,18 +72,6 @@
         </field>
     </record>
 
-     <record id="sale_order_filter_view" model="ir.ui.view">
-         <field name="name">sale.order.filter.view</field>
-         <field name="model">sale.order</field>
-         <field name="inherit_id" ref="sale.view_sales_order_filter"/>
-         <field name="arch" type="xml">
-            <xpath expr="//filter[@name='customer']" position="before">
-                <filter name="Magento Instance" string="Magento Instance"
-                        context="{'group_by' : 'magento_instance_id'}"/>
-            </xpath>
-        </field>
-    </record>
-
     <record id="sale_order_quotation_filter_view" model="ir.ui.view">
          <field name="name">sale.order.quotation.filter.view</field>
          <field name="model">sale.order</field>
@@ -113,7 +101,6 @@
         <field name="view_id" ref="magento_sale_order_tree_view"/>
         <field name="view_mode">tree,form</field>
         <field name="domain">[('magento_instance_id','!=',False),('state','not in',('draft','sent','cancel'))]</field>
-        <field name="search_view_id" ref="sale_order_filter_view"/>
     </record>
 
     <menuitem id="menu_magento_sales_and_customer" name="Sales"

@@ -115,8 +115,12 @@ class MagentoConfigurableProduct(models.Model):
     @api.depends('odoo_prod_template_id.alternative_product_ids', 'do_not_create_flag')
     def _compute_related_products(self):
         for rec in self:
-            rec.related_product_ids = [(6, 0, rec.odoo_prod_template_id.alternative_product_ids.magento_conf_prod_ids.filtered(
-                lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.do_not_create_flag).ids)]
+            alternatives = rec.odoo_prod_template_id.alternative_product_ids.magento_conf_prod_ids.filtered(
+                lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.do_not_create_flag)
+            accessories = rec.odoo_prod_template_id.accessory_product_ids.magento_conf_prod_ids.filtered(
+                lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.do_not_create_flag)
+
+            rec.related_product_ids = [(6, 0, (alternatives + accessories).ids)]
 
     @api.depends('odoo_prod_template_id.optional_product_ids', 'do_not_create_flag')
     def _compute_cross_sell_products(self):
@@ -252,7 +256,7 @@ class MagentoConfigurableProduct(models.Model):
                         )
 
                     simple_product_recs.save_magento_products_info_to_database(
-                        instance.magento_website_ids, conf_prods_dict, simp_prods_dict, update_export_statuses, is_cron
+                        instance, conf_prods_dict, simp_prods_dict, update_export_statuses, is_cron
                     )
 
                     simple_product_recs = self.env['magento.product.product']
@@ -905,14 +909,19 @@ class MagentoConfigurableProduct(models.Model):
         #             "value": opt['value']
         #         })
 
+        # custom_attributes.append({
+        #     "attribute_code": 'tax_class_id',
+        #     "value": '0'
+        # })
+
         return custom_attributes
 
     def add_translatable_conf_product_attributes(self, custom_attributes, available_attributes, lang_code):
         prod_attributes = self.odoo_prod_template_id.categ_id.x_attribute_ids
         prod_attr_groups = prod_attributes.categ_group_id
 
-        if self.odoo_prod_template_id.description_sale:
-            value = self.with_context(lang=lang_code).odoo_prod_template_id.description_sale
+        if self.odoo_prod_template_id.website_description:
+            value = self.with_context(lang=lang_code).odoo_prod_template_id.website_description
             value_stripped = str(value).lstrip('<p>').rstrip('</p>').rstrip('<br>')
             if value_stripped:
                 self.add_to_custom_attributes_list(custom_attributes, 'short_description', value_stripped)
@@ -1129,7 +1138,6 @@ class MagentoConfigurableProduct(models.Model):
                     req(self.magento_instance_id, api_url, 'POST', {'items': items})
                 except Exception as e:
                     raise UserError ("Error while exporting configurable product extra info to Magento: %s" % e)
-
 
         response = self.simple_product_ids.export_product_prices_to_magento(self.magento_instance_id)
         if not response:

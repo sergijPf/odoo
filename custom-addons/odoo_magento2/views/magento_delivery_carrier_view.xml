@@ -9,6 +9,7 @@
                 <field name="carrier_label" string="Label" class="oe_inline"/>
                 <field name="magento_carrier_title" string="Title" class="oe_inline"/>
                 <field name="carrier_code" string="Code" class="oe_inline"/>
+                <field name="delivery_carrier_ids" widget="many2many_tags" class="oe_inline"/>
             </tree>
         </field>
     </record>

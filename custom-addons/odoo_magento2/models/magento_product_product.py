@@ -523,6 +523,11 @@ class MagentoProductProduct(models.Model):
                     "value": value
                 })
 
+        # custom_attributes.append({
+        #     "attribute_code": 'tax_class_id',
+        #     "value": '0'
+        # })
+
         return custom_attributes
 
     def assign_attr_to_config_product_in_magento(self, magento_instance, attr_sets, ml_conf_products, ml_simp_products):
@@ -698,6 +703,11 @@ class MagentoProductProduct(models.Model):
 
                 data["product"]["name"] = self.with_context(lang=lang_code).odoo_product_id.name + ' ' + \
                                           ' '.join(self.product_attribute_ids.product_attribute_value_id.mapped('name'))
+
+                # data['product']['custom_attributes'] = [{
+                #     "attribute_code": 'tax_class_id',
+                #     "value": '0'
+                # }]
 
                 try:
                     api_url = '/%s/V1/products/%s' % (storeview_code, prod_sku)
@@ -875,6 +885,7 @@ class MagentoProductProduct(models.Model):
                         'sku': sku,
                         # "status": 1,
                         "visibility": 3,
+                        # 'custom_attributes': data[product]['custom_attributes'],
                         'price': 0
                     }
                 }
@@ -1010,7 +1021,7 @@ class MagentoProductProduct(models.Model):
                 text = "Error while asynchronously linking Simple to Configurable Product in Magento. " + str(e)
                 for prod in self:
                     ml_simp_products[prod.magento_sku]['log_message'] += text
-            
+
             if res.get("errors"):
                 return False
             else:
@@ -1075,17 +1086,21 @@ class MagentoProductProduct(models.Model):
         self.ensure_one()
         self.magento_conf_product_id.delete_product_in_magento(self)
 
-    def save_magento_products_info_to_database(self, magento_websites, conf_products, simp_products, is_status_update, is_cron):
+    def save_magento_products_info_to_database(self, instance, conf_products, simp_products, is_status_update, is_cron):
+        magento_websites = instance.magento_website_ids
+        simpl_prods = self.env['magento.product.product']
+        conf_prods = self.env['magento.configurable.product']
+
         for s_prod in simp_products:
             simp_prod_rec = self.filtered(lambda prod: prod.magento_sku == s_prod)
+            simpl_prods += simp_prod_rec
             simp_prod_dict = simp_products[s_prod]
             conf_sku = simp_prod_dict['conf_sku']
             conf_prod_dict = conf_products[conf_sku]
 
             if simp_prod_dict['log_message']:
                 simp_prod_dict['magento_status'] = 'log_error'
-                simp_prod_rec.save_error_messages_to_log_book(simp_prod_dict['log_message'], conf_prod_dict['log_message']
-                )
+                simp_prod_rec.save_error_messages_to_log_book(simp_prod_dict['log_message'], conf_prod_dict['log_message'])
             else:
                 if simp_prod_rec.error_log_ids:
                     simp_prod_rec.error_log_ids.sudo().unlink()
@@ -1101,16 +1116,12 @@ class MagentoProductProduct(models.Model):
                         conf_prod_dict['magento_status'] = 'update_needed'
 
             values = self.prepare_data_to_save(simp_prod_dict, simp_prod_rec, magento_websites, is_status_update)
-
-            if not is_cron:
-                self.enabled_or_disabled_product_in_magento(simp_prod_rec.magento_instance_id, values, s_prod,
-                                                            simp_prod_rec.x_magento_name,
-                                                            simp_prod_dict.get('is_magento_enabled'))
             simp_prod_rec.write(values)
 
         for c_prod in conf_products:
             conf_prod_dict = conf_products[c_prod]
             conf_product = conf_prod_dict['conf_object']
+            conf_prods += conf_product
 
             if conf_prod_dict['log_message']:
                 conf_prod_dict['magento_status'] = 'log_error'
@@ -1120,12 +1131,14 @@ class MagentoProductProduct(models.Model):
                     conf_prod_dict['magento_status'] = new_status
 
             values = self.prepare_data_to_save(conf_prod_dict, conf_product, magento_websites, is_status_update)
-
-            if not is_cron:
-                self.enabled_or_disabled_product_in_magento(conf_product.magento_instance_id, values, c_prod,
-                                                            conf_product.magento_product_name,
-                                                            conf_prod_dict.get('is_magento_enabled'))
             conf_product.write(values)
+
+        if not is_cron:
+            failed = self.process_products_statuses_update_in_magento(instance, simpl_prods, simp_products)
+            failed += self.process_products_statuses_update_in_magento(instance, conf_prods, conf_products)
+
+            if failed:
+                _logger.warning(f"Failed to Enable/Disable products with the following SKUs in Magento: {failed}")
 
     @staticmethod
     def prepare_data_to_save(product_dict, odoo_product, websites, is_status_update):
@@ -1186,27 +1199,65 @@ class MagentoProductProduct(models.Model):
             vals.update({'magento_product_id': self.id})
             self.error_log_ids.create(vals)
 
-    def enabled_or_disabled_product_in_magento(self, instance, values, sku, name, is_enabled):
-        if values['magento_status'] == 'in_magento':
-            if not is_enabled:
-                if self.change_product_status_in_magento(instance, sku, name, 1):
-                    values.update({'is_enabled': True})
-        else:
-            if is_enabled:
-                if self.change_product_status_in_magento(instance, sku, name, 2):
-                    values.update({'is_enabled': False})
+    def process_products_statuses_update_in_magento(self, instance, product_recs,  products_dict):
+        to_disable, to_enable = self.prepare_enable_or_disable_products(instance, product_recs, products_dict)
+        common_list = to_disable + to_enable
+        failed = []
 
-    @staticmethod
-    def change_product_status_in_magento(instance, sku, prod_name, status):
-        data = {"product": {"name": prod_name, "status": status}}
-        try:
-            api_url = '/all/V1/products/%s' % sku
-            response = req(instance, api_url, 'PUT', data)
-            if isinstance(response, dict) and response.get('status') == status:
-                return True
-        except Exception as e:
-            _logger.warning('Change product status in Magento fails: %s' % e)
-            return False
+        if common_list:
+            api_url = '/all/V1/products/status'
+            count = (len(common_list) // 20) + 1
+
+            for c in range(count):
+                list_extract = common_list[c * 20:20 * (c + 1)]
+
+                try:
+                    response = req(instance, api_url, 'POST', {"products": list_extract})
+                except Exception as e:
+                    _logger.warning(f'Change product status in Magento fails: {e}')
+                    failed += list({p['sku'] for p in list_extract})
+                    response = []
+
+                if response:
+                    failed_params = []
+                    for res in response:
+                        if isinstance(res, dict) and res.get('parameters'):
+                            failed_params += res.get('parameters')
+                    failed += list({p['sku'] for p in list_extract if p['sku'] in failed_params})
+
+            if failed:
+                product_recs = product_recs.filtered(lambda x: x.magento_sku not in failed)
+
+        product_recs.filtered(
+            lambda x: x.magento_sku in [p['sku'] for p in to_disable] or
+                      (x.is_enabled and not products_dict[x.magento_sku].get('is_magento_enabled'))
+        ).write({'is_enabled': False})
+
+        product_recs.filtered(
+            lambda x: x.magento_sku in [p['sku'] for p in to_enable] or
+                      (not x.is_enabled and products_dict[x.magento_sku].get('is_magento_enabled'))
+        ).write({'is_enabled': True})
+
+        return failed
+
+    def prepare_enable_or_disable_products(self, instance, product_recs, product_dict):
+        to_disable = []
+        to_enable = []
+
+        for prod in product_recs:
+            sku = prod.magento_sku
+            is_enabled = product_dict[sku].get('is_magento_enabled')
+
+            if prod.magento_status == 'in_magento':
+                if not is_enabled:
+                    for view in instance.magento_website_ids.store_view_ids:
+                        to_enable.append({"sku": sku, "status": 1, "store_id": view.magento_storeview_id})
+            else:
+                if is_enabled:
+                    for view in instance.magento_website_ids.store_view_ids:
+                        to_disable.append({"sku": sku, "status": 2, "store_id": view.magento_storeview_id})
+
+        return to_disable, to_enable
 
     @staticmethod
     def clean_old_log_records(instance, log_book_obj):

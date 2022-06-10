@@ -82,7 +82,7 @@ class TestMagentoProduct(common.TestMagentoInstanceCommon):
 
         # check if update of product specific fields changes 'force_update' field for conf.product in layer
         conf_prod.force_update = False
-        self.product_template.description_sale = '<p> test paragraph </p>'
+        self.product_template.website_description = '<p> test paragraph </p>'
         self.assertTrue(conf_prod.force_update)
 
         # check product variant is in magento layer and sku == internal reference

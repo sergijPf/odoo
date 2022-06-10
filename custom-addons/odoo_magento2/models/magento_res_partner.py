@@ -35,8 +35,10 @@ class MagentoResPartner(models.Model):
         billing_address = customer_dict.get("billing_address")
         delivery_addresses = customer_dict.get("extension_attributes", {}).get("shipping_assignments")
         customer_id = str(customer_dict.get("customer_id"))
-        customer_rec = self.search([('magento_instance_id', '=', instance.id),
-                                    ('magento_customer_id', '=', customer_id)])
+        domain = [('magento_instance_id', '=', instance.id)]
+        filt = ('email', '=', customer_dict.get("customer_email")) if customer_id == "None" else ('magento_customer_id', '=', customer_id)
+
+        customer_rec = self.search(domain.append(filt))
 
         if customer_rec:
             customer_group_rec = customer_rec.customer_group_id
@@ -59,14 +61,18 @@ class MagentoResPartner(models.Model):
         else:
             group_id_in_ml = self.customer_group_id.get_customer_group(instance, group_id, group_name)
 
-            customer_rec = self.create({
-                'magento_customer_id': customer_id,
-                "customer_group_id": group_id_in_ml.id,
-                'partner_id': odoo_partner.id,
-                'magento_instance_id': instance.id,
-                'status': 'imported',
-                'magento_website_id':  website.id
-            })
+            try:
+                customer_rec = self.create({
+                    'magento_customer_id': customer_id,
+                    "customer_group_id": group_id_in_ml.id,
+                    'partner_id': odoo_partner.id,
+                    'magento_instance_id': instance.id,
+                    'status': 'imported',
+                    'magento_website_id':  website.id
+                })
+            except Exception as err:
+                return str(err)
+
             customer_addresses = customer_rec.customer_address_ids
 
             customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner)

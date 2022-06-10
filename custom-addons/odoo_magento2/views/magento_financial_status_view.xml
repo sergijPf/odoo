@@ -6,7 +6,7 @@
         <field eval="16" name="priority"/>
         <field name="type">tree</field>
         <field name="arch" type="xml">
-            <tree name="magento_financial_status_tree" editable="top" sample="1">
+            <tree name="magento_financial_status_tree" editable="top" delete="1" sample="1">
                 <field name="magento_instance_id" required="1" options="{'no_create':True}"
                        domain="[('active','=',True)]"/>
                 <field name="payment_method_id" options="{'no_create':True}" required="1"

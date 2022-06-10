@@ -21,7 +21,7 @@ class Binary(http.Controller):
         if not magento_instance:
             return f"The instance with such URL - '{url}' doesn't  exist in Odoo."
 
-        auth = request.httprequest.headers.get("X-Access-Token", magento_instance.odoo_token) # to replace odoo_token with ''
+        auth = request.httprequest.headers.get("X-Access-Token", '')
         if not magento_instance.odoo_token or not auth or magento_instance.odoo_token != auth:
             return "Access Token doesn't match for Magento and Odoo."
 
