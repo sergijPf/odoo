@@ -510,8 +510,8 @@ class MagentoConfigurableProduct(models.Model):
                     magento_images = ml_conf_products[prod].get('media_gallery', [])
                     prod_images = conf_prod.product_image_ids
                     thumb_image = conf_prod.image_1920
-                    img = 1 if (not prod_images.filtered(lambda x: x.image_role == 'small_image') and thumb_image) else 0
-                    if len(magento_images) != (len(prod_images) + (1 if thumb_image else 0) + img):
+
+                    if len(magento_images) != (len(prod_images) + (1 if thumb_image else 0)):
                         ml_conf_products[prod]['magento_status'] = 'update_needed'
                         continue
 
@@ -762,9 +762,8 @@ class MagentoConfigurableProduct(models.Model):
             trigger = False
             if method == "PUT":
                 magento_images = conf_prod_dict.get('media_gallery', [])
-                tmp = 1 if (not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image') and self.image_1920) else 0
 
-                if len(magento_images) != (len(self.product_image_ids) + (1 if self.image_1920 else 0) + tmp):
+                if len(magento_images) != (len(self.product_image_ids) + (1 if self.image_1920 else 0)):
                     trigger = True
                     if magento_images:
                         self.remove_product_images_from_magento(instance, ml_conf_products, prod_sku)
@@ -955,36 +954,7 @@ class MagentoConfigurableProduct(models.Model):
                 "sku": prod_sku
             })
 
-        # prepare images export
-        for img in self.product_image_ids:
-            attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', instance.image_resolution or 'image_512'),
-                ('res_model', '=', 'product.image'),
-                ('res_id', '=', img.id)
-            ])
-            if attachment:
-                prod_media[prod_sku].append((attachment, img.name, img.image_role))
-
-        # product's thumbnail Image
-        if self.image_1920:
-            attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', 'image_128'),
-                ('res_model', '=', 'product.template'),
-                ('res_id', '=', self.odoo_prod_template_id.id)
-            ])
-            if attachment:
-                prod_media[prod_sku].append((attachment, '', 'thumbnail'))
-
-            ### Temporary solution of adding 'small_image' images if there is no (for testing purposes)
-            if not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
-                attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', instance.image_resolution or 'image_512'),
-                    ('res_model', '=', 'product.template'),
-                    ('res_id', '=', self.odoo_prod_template_id.id)
-                ])
-                if attachment:
-                    prod_media[prod_sku].append((attachment, '', 'small_image'))
-            ###
+        prod_media[prod_sku] = self.prepare_images_list(instance)
 
     @staticmethod
     def add_to_custom_attributes_list(custom_attributes, attr_code, attr_value):
@@ -1044,106 +1014,51 @@ class MagentoConfigurableProduct(models.Model):
             ml_products[prod_sku]['force_update'] = True
 
     def process_images_export_to_magento(self, magento_instance, ml_conf_products):
-        prod_media = []
-
-        for img in self.product_image_ids:
-            attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', magento_instance.image_resolution or 'image_512'),
-                ('res_model', '=', 'product.image'),
-                ('res_id', '=', img.id)
-            ])
-            if attachment:
-                prod_media.append((attachment, img.name, img.image_role))
-
-        # product Thumbnail image
-        if self.image_1920:
-            attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', 'image_128'),
-                ('res_model', '=', 'product.template'),
-                ('res_id', '=', self.odoo_prod_template_id.id)
-            ])
-            if attachment:
-                prod_media.append((attachment, '', 'thumbnail'))
-
-            ### Temporary solution of adding 'small_image' images if there is no (for testing purposes)
-            if not self.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
-                attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', magento_instance.image_resolution or 'image_512'),
-                    ('res_model', '=', 'product.template'),
-                    ('res_id', '=', self.odoo_prod_template_id.id)
-                ])
-                if attachment:
-                    prod_media.append((attachment, '', 'small_image'))
-            ###
+        prod_media = self.prepare_images_list(magento_instance)
 
         if prod_media:
             self.export_media_to_magento(magento_instance, {self.magento_sku: prod_media}, ml_conf_products)
 
-    def export_products_extra_info_to_magento_in_bulk(self, instances):
-        for instance in instances:
-            valid_products = self.search([]).filtered(
-                lambda x: x.magento_instance_id.id == instance.id and x.magento_product_id
-            )
+    def prepare_images_list(self, instance, simple_prod=False):
+        prod_media_list = []
+        product_rec = simple_prod or self
 
-            data = []
-            for product in valid_products:
-                items = []
-                sku = product.magento_sku
-                for rel_prod in product.related_product_ids.filtered(lambda p: p.magento_product_id):
-                    items.append({
-                        'sku': sku,
-                        'link_type': 'related',
-                        'linked_product_sku': rel_prod.magento_sku
-                    })
+        for img in product_rec.product_image_ids:
+            attachment = self.env['ir.attachment'].sudo().search([
+                ('res_field', '=', instance.image_resolution or 'image_1024'),
+                ('res_model', '=', 'product.image'),
+                ('res_id', '=', img.id)
+            ])
+            if attachment:
+                prod_media_list.append((attachment, img.name, [img.image_role]))
 
-                for cs_prod in product.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
-                    items.append({
-                        'sku': sku,
-                        'link_type': 'crosssell',
-                        'linked_product_sku': cs_prod.magento_sku
-                    })
+        if product_rec.image_1920:     # product Thumbnail image
+            res_field = 'image_128'
+            roles = ['thumbnail']
+            attachment = False
 
-                data.append({'items': items, 'sku': sku})
+            if not product_rec.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
+                res_field = instance.image_resolution or 'image_1024'
+                roles += ['small_image']
 
-            if data:
-                try:
-                    api_url = '/all/async/bulk/V1/products/bySku/links'
-                    req(instance, api_url, 'POST', data)
-                except Exception as e:
-                    raise UserError ("Error while exporting configurable product extra info to Magento: %s" % e)
+            if simple_prod:
+                attachment = self.env['ir.attachment'].sudo().search([
+                    ('res_field', '=', 'image_variant_128'),
+                    ('res_model', '=', 'product.product'),
+                    ('res_id', '=', simple_prod.odoo_product_id.id)
+                ])
 
-    def export_products_extra_info_to_magento(self):
-        self.ensure_one()
+            if not attachment:
+                attachment = self.env['ir.attachment'].sudo().search([
+                    ('res_field', '=', res_field),
+                    ('res_model', '=', 'product.template'),
+                    ('res_id', '=', product_rec.odoo_prod_template_id.id)
+                ])
 
-        if self.magento_product_id:
-            items = []
-            sku = self.magento_sku
-            for rel_prod in self.related_product_ids.filtered(lambda p: p.magento_product_id):
-                items.append({
-                    'sku': sku,
-                    'link_type': 'related',
-                    'linked_product_sku': rel_prod.magento_sku
-                })
+            if attachment:
+                prod_media_list.append((attachment, '', roles))
 
-            for cs_prod in self.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
-                items.append({
-                    'sku': sku,
-                    'link_type': 'crosssell',
-                    'linked_product_sku': cs_prod.magento_sku
-                })
-
-            if items:
-                try:
-                    api_url = '/all/V1/products/%s/links' % sku
-                    req(self.magento_instance_id, api_url, 'POST', {'items': items})
-                except Exception as e:
-                    raise UserError ("Error while exporting configurable product extra info to Magento: %s" % e)
-
-        response = self.simple_product_ids.export_product_prices_to_magento(self.magento_instance_id)
-        if not response:
-            self.processing_products_export_to_magento(True)
-        else:
-            return response
+        return prod_media_list
 
     @staticmethod
     def export_media_to_magento(magento_instance, products_media, ml_products):
@@ -1156,8 +1071,8 @@ class MagentoConfigurableProduct(models.Model):
             images.update({
                 "entry": {
                     "media_type": "image",
-                    "types": [role],
-                    "disabled": "true" if role == 'thumbnail' else "false",
+                    "types": role,
+                    "disabled": "true" if role == ['thumbnail'] else "false",
                     "label": name,
                     "content": {
                         "base64EncodedData": attachment.datas.decode('utf-8'),
@@ -1172,10 +1087,11 @@ class MagentoConfigurableProduct(models.Model):
                 req(magento_instance, api_url, 'POST', images)
             except Exception as e:
                 ml_products[prod_sku]['force_update'] = True
-                text = ("Error while Product (%s) Image export to Magento. " % str(role)) + str(e)
+                text = f"Error while Product ({role}) Image(s) export to Magento: {e} "
                 ml_products[prod_sku]['log_message'] += text
 
-    def remove_product_images_from_magento(self, magento_instance, ml_products, magento_sku):
+    @staticmethod
+    def remove_product_images_from_magento(magento_instance, ml_products, magento_sku):
         for img_id in ml_products[magento_sku]['media_gallery']:
             try:
                 api_url = '/all/V1/products/%s/media/%s' % (magento_sku, img_id)
@@ -1272,8 +1188,8 @@ class MagentoConfigurableProduct(models.Model):
                 images.append({
                     "entry": {
                         "media_type": "image",
-                        "types": [role],
-                        "disabled": "true" if role == 'thumbnail' else "false",
+                        "types": role,
+                        "disabled": "true" if role == ['thumbnail'] else "false",
                         "label": name,
                         "content": {
                             "base64EncodedData": attachment.datas.decode('utf-8'),
@@ -1287,6 +1203,72 @@ class MagentoConfigurableProduct(models.Model):
 
                 if prod_sku == last_prod and img == products_media[prod_sku][-1]:
                     images, files_size = process(images)
+
+    def export_products_extra_info_to_magento_in_bulk(self, instances):
+        for instance in instances:
+            valid_products = self.search([]).filtered(
+                lambda x: x.magento_instance_id.id == instance.id and x.magento_product_id
+            )
+
+            data = []
+            for product in valid_products:
+                items = []
+                sku = product.magento_sku
+                for rel_prod in product.related_product_ids.filtered(lambda p: p.magento_product_id):
+                    items.append({
+                        'sku': sku,
+                        'link_type': 'related',
+                        'linked_product_sku': rel_prod.magento_sku
+                    })
+
+                for cs_prod in product.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
+                    items.append({
+                        'sku': sku,
+                        'link_type': 'crosssell',
+                        'linked_product_sku': cs_prod.magento_sku
+                    })
+
+                data.append({'items': items, 'sku': sku})
+
+            if data:
+                try:
+                    api_url = '/all/async/bulk/V1/products/bySku/links'
+                    req(instance, api_url, 'POST', data)
+                except Exception as e:
+                    raise UserError ("Error while exporting configurable product extra info to Magento: %s" % e)
+
+    def export_products_extra_info_to_magento(self):
+        self.ensure_one()
+
+        if self.magento_product_id:
+            items = []
+            sku = self.magento_sku
+            for rel_prod in self.related_product_ids.filtered(lambda p: p.magento_product_id):
+                items.append({
+                    'sku': sku,
+                    'link_type': 'related',
+                    'linked_product_sku': rel_prod.magento_sku
+                })
+
+            for cs_prod in self.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
+                items.append({
+                    'sku': sku,
+                    'link_type': 'crosssell',
+                    'linked_product_sku': cs_prod.magento_sku
+                })
+
+            if items:
+                try:
+                    api_url = '/all/V1/products/%s/links' % sku
+                    req(self.magento_instance_id, api_url, 'POST', {'items': items})
+                except Exception as e:
+                    raise UserError ("Error while exporting configurable product extra info to Magento: %s" % e)
+
+        response = self.simple_product_ids.export_product_prices_to_magento(self.magento_instance_id)
+        if not response:
+            self.processing_products_export_to_magento(True)
+        else:
+            return response
 
     def convert_json_to_dict(self, json_data):
         if not json_data:

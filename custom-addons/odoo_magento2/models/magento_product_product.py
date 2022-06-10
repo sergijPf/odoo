@@ -722,36 +722,11 @@ class MagentoProductProduct(models.Model):
 
     def process_images_export(self, instance, ml_simp_products):
         magento_sku = self.magento_sku
-        prod_media = []
 
         if ml_simp_products[magento_sku].get('media_gallery', []):
             self.magento_conf_product_id.remove_product_images_from_magento(instance, ml_simp_products, magento_sku)
 
-        for img in self.product_image_ids:
-            attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', instance.image_resolution or 'image_512'),
-                ('res_model', '=', 'product.image'),
-                ('res_id', '=', img.id)
-            ])
-            if attachment:
-                prod_media.append((attachment, img.name, img.image_role))
-
-        # product's thumbnail Image
-        if self.image_1920:
-            attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', 'image_variant_128'),
-                ('res_model', '=', 'product.product'),
-                ('res_id', '=', self.odoo_product_id.id)
-            ])
-            if not attachment:
-                attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', 'image_128'),
-                    ('res_model', '=', 'product.template'),
-                    ('res_id', '=', self.odoo_prod_template_id.id)
-                ])
-
-            if attachment:
-                prod_media.append((attachment, '', 'thumbnail'))
+        prod_media = self.magento_conf_product_id.prepare_images_list(instance, self)
 
         if prod_media:
             self.magento_conf_product_id.export_media_to_magento(instance, {magento_sku: prod_media}, ml_simp_products)
@@ -841,7 +816,7 @@ class MagentoProductProduct(models.Model):
                     img_update = True
 
             if method == 'POST' or img_update:
-                images = prod.prepare_image_data_to_export(instance)
+                images = prod.magento_conf_product_id.prepare_images_list(instance, prod)
                 if images:
                     prod_media.update({sku: images})
 
@@ -908,36 +883,6 @@ class MagentoProductProduct(models.Model):
                 })
 
                 self.write({'bulk_log_ids': [(4, log_id.id)]})
-
-    def prepare_image_data_to_export(self, instance):
-        images = []
-
-        for img in self.product_image_ids:
-            attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', instance.image_resolution or 'image_512'),
-                ('res_model', '=', 'product.image'),
-                ('res_id', '=', img.id)
-            ])
-            if attachment:
-                images.append((attachment, img.name, img.image_role))
-
-        # product's thumbnail Image
-        if self.image_1920:
-            attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', 'image_variant_128'),
-                ('res_model', '=', 'product.product'),
-                ('res_id', '=', self.odoo_product_id.id)
-            ])
-            if not attachment:
-                attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', 'image_128'),
-                    ('res_model', '=', 'product.template'),
-                    ('res_id', '=', self.odoo_prod_template_id.id)
-                ])
-            if attachment:
-                images.append((attachment, '', 'thumbnail'))
-
-            return images
 
     @staticmethod
     def remove_product_images_from_magento_in_bulk(magento_instance, remove_images, ml_products):

@@ -7,8 +7,8 @@ class ProductImage(models.Model):
     _inherit = 'product.image'
 
     image_role = fields.Selection([
-        ('small_image', "Small"),
-        ('image', "Base"),
+        ('small_image', "Small (Catalog/Search pages)"),
+        ('image', "Base (Product Page)"),
         ('swatch_image', "Swatch (Variants only)")
     ], string="Image role")
 
