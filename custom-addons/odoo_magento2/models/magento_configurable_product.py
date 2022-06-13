@@ -112,7 +112,7 @@ class MagentoConfigurableProduct(models.Model):
         for rec in self:
             rec.sipmle_count_equal = True if rec.product_simple_count == rec.product_variant_count else False
 
-    @api.depends('odoo_prod_template_id.alternative_product_ids', 'do_not_create_flag')
+    @api.depends('odoo_prod_template_id.alternative_product_ids', 'odoo_prod_template_id.accessory_product_ids', 'do_not_create_flag')
     def _compute_related_products(self):
         for rec in self:
             alternatives = rec.odoo_prod_template_id.alternative_product_ids.magento_conf_prod_ids.filtered(
@@ -368,7 +368,7 @@ class MagentoConfigurableProduct(models.Model):
         self.check_config_products_for_errors_and_update_export_statuses(conf_products_dict, attr_sets)
 
         simple_products.check_simple_products_for_errors_and_update_export_statuses(
-            simple_products, conf_products_dict, simp_products_dict, attr_sets, update_export_statuses
+            conf_products_dict, simp_products_dict, attr_sets, update_export_statuses
         )
 
         return conf_products_dict, simp_products_dict
@@ -377,13 +377,13 @@ class MagentoConfigurableProduct(models.Model):
         """
         Create dictionary which contains metadata for selected Configurable Products and related Simple Products
         :param export_products: Odoo Product(s) in Magento Layer to be exported
-        :return: Configurable and Simple products dictionary
+        :return: Configurable and Simple products dictionaries
         """
         configurable_products = {c for c in export_products.magento_conf_product_id}
 
         conf_products_dict = {
             str(c.magento_sku): {
-                'conf_object': c,
+                'conf_prod_rec': c,
                 'config_attr': {self.to_upper(a.name) for a in c.with_context(lang='en_US').x_magento_assign_attr_ids},
                 'children': [],
                 'magento_status': c.magento_status,
@@ -397,13 +397,10 @@ class MagentoConfigurableProduct(models.Model):
         text = "Configurable Product is missing 'Magento Product SKU' field. "
         simp_products_dict = {
             str(s.magento_sku): {
-                'conf_sku': str(s.magento_conf_prod_sku),
+                'simple_prod_rec': s,
                 'log_message': '' if s.magento_conf_prod_sku else text,
                 'export_date_to_magento': '',
-                'conf_attrs_and_vals': s.get_product_conf_attributes_dict(),
                 'magento_status': s.magento_status,
-                'do_not_export_conf': s.magento_conf_product_id.do_not_create_flag,
-                'product_categ': [],
                 'force_update': s.force_update,
                 'to_export': True
             } for s in export_products
@@ -418,6 +415,7 @@ class MagentoConfigurableProduct(models.Model):
         cur_page = 0
         magento_sku_list = list(ml_products_dict)
         times = (len(magento_sku_list) // step) + (1 if len(magento_sku_list) % step else 0)
+
         for cnt in range(times):
             sku_list = ','.join(magento_sku_list[cur_page:step * (1 + cnt)])
             search_criteria = 'searchCriteria[filterGroups][0][filters][0][field]=sku&searchCriteria[filterGroups][0]' \
@@ -465,7 +463,7 @@ class MagentoConfigurableProduct(models.Model):
             if ml_conf_products[prod]['log_message']:
                 continue
 
-            conf_prod = ml_conf_products[prod]['conf_object']
+            conf_prod = ml_conf_products[prod]['conf_prod_rec']
             magento_attr_set = conf_prod.magento_attr_set
             prod_attr_set_id = attr_sets.get(magento_attr_set, {}).get('id')
             avail_attributes = attr_sets.get(magento_attr_set, {}).get('attributes')
@@ -548,7 +546,7 @@ class MagentoConfigurableProduct(models.Model):
             if not ml_conf_products[sku]['to_export'] or ml_conf_products[sku]['log_message']:
                 continue
 
-            conf_prod = ml_conf_products[sku]['conf_object']
+            conf_prod = ml_conf_products[sku]['conf_prod_rec']
             conf_prod.bulk_log_ids = [(5, 0, 0)]
 
             if ml_conf_products[sku].get('magento_update_date'):
@@ -784,7 +782,7 @@ class MagentoConfigurableProduct(models.Model):
 
         for prod_sku in new_conf_prods_list:
             conf_prod_dict = ml_conf_products[prod_sku]
-            conf_product = conf_prod_dict['conf_object']
+            conf_product = conf_prod_dict['conf_prod_rec']
             categ_list = [cat.magento_category for cat in conf_product.category_ids]
             custom_attributes = conf_product.add_conf_product_attributes(attr_sets, lang_code)
 
@@ -827,7 +825,7 @@ class MagentoConfigurableProduct(models.Model):
 
             for prod_sku in new_conf_prods_list:
                 prod_media.update({prod_sku: []})
-                conf_product = ml_conf_products[prod_sku]['conf_object']
+                conf_product = ml_conf_products[prod_sku]['conf_prod_rec']
                 ml_conf_products[prod_sku]['export_date_to_magento'] = datetime_stamp
                 ml_conf_products[prod_sku]['magento_status'] = 'in_process'
                 conf_product.write({'bulk_log_ids': [(6, 0, [log_id.id])]})
@@ -844,7 +842,7 @@ class MagentoConfigurableProduct(models.Model):
                         'topic': 'Website info export'
                     })
                     for prod_sku in new_conf_prods_list:
-                        ml_conf_products[prod_sku]['conf_object'].write({'bulk_log_ids': [(4, log_id.id)]})
+                        ml_conf_products[prod_sku]['conf_prod_rec'].write({'bulk_log_ids': [(4, log_id.id)]})
 
             self.process_conf_prod_storeview_data_export_in_bulk(magento_instance, data, attr_sets, ml_conf_products)
 
@@ -1123,7 +1121,7 @@ class MagentoConfigurableProduct(models.Model):
 
             for product in data:
                 sku = product['product']['sku']
-                conf_prod = ml_conf_products[sku]['conf_object']
+                conf_prod = ml_conf_products[sku]['conf_prod_rec']
                 custom_attributes = product['product']['custom_attributes']
 
                 conf_prod.add_translatable_conf_product_attributes(
@@ -1155,7 +1153,7 @@ class MagentoConfigurableProduct(models.Model):
                 })
                 for product in data:
                     sku = product['product']['sku']
-                    ml_conf_products[sku]['conf_object'].write({'bulk_log_ids': [(4, log_id.id)]})
+                    ml_conf_products[sku]['conf_prod_rec'].write({'bulk_log_ids': [(4, log_id.id)]})
 
     @staticmethod
     def export_media_to_magento_in_bulk(instance, products_media, ml_products):

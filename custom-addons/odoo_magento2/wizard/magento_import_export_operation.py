@@ -134,6 +134,7 @@ class MagentoImportExport(models.TransientModel):
             if not conf_product.active:
                 conf_product.write({'active': True})
             conf_product.force_update = True
+            conf_product.simple_product_ids.force_update = True
 
         product_dict.update({"conf_product_id": conf_product})
 

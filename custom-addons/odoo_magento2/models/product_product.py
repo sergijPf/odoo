@@ -21,7 +21,8 @@ class ProductProduct(models.Model):
     def write(self, vals):
         res = super(ProductProduct, self).write(vals)
 
-        if self.magento_product_ids and ('product_variant_image_ids' in vals or 'weight' in vals):
+        if self.magento_product_ids and ('product_variant_image_ids' in vals or 'name' in vals or 'image_1920' in vals
+                                         or 'product_template_attribute_value_ids' in vals or 'weight' in vals):
             self.magento_product_ids.force_update = True
 
         return res
