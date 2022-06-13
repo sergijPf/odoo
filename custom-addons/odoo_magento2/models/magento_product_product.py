@@ -448,6 +448,14 @@ class MagentoProductProduct(models.Model):
         return False if product_dict['log_message'] else True
 
     def process_simple_products_export(self, instance, attr_sets, conf_prods_dict, simp_prods_dict, async_export):
+        for prod in simp_prods_dict:
+            if not simp_prods_dict[prod]['log_message']:
+                conf_sku = simp_prods_dict[prod]['simple_prod_rec'].magento_conf_prod_sku
+                error = conf_prods_dict[conf_sku]['log_message']
+                if error:
+                    text = f'Configurable product got some error while export: {error}'
+                    simp_prods_dict[prod]['log_message'] = text
+
         simple_products = self.filtered(
             lambda p: simp_prods_dict[p.magento_sku]['to_export'] and not simp_prods_dict[p.magento_sku]['log_message']
         )
@@ -1053,12 +1061,11 @@ class MagentoProductProduct(models.Model):
                     new_status = 'update_needed' if simp_prod_dict.get('magento_product_id') else 'not_exported'
                     simp_prod_dict['magento_status'] = new_status
 
-            if simp_prod_dict['magento_status'] != 'in_magento':
-                if conf_prod_dict['magento_status'] == 'in_magento':
-                    if simp_prod_dict['magento_status'] == 'extra_info':
-                        conf_prod_dict['magento_status'] = 'extra_info'
-                    else:
-                        conf_prod_dict['magento_status'] = 'update_needed'
+            if simp_prod_dict['magento_status'] != 'in_magento' and conf_prod_dict['magento_status'] == 'in_magento':
+                if simp_prod_dict['magento_status'] == 'extra_info':
+                    conf_prod_dict['magento_status'] = 'extra_info'
+                else:
+                    conf_prod_dict['magento_status'] = 'update_needed'
 
             values = self.prepare_data_to_save(simp_prod_dict, simp_prod_rec, magento_websites, is_status_update)
             simp_prod_rec.write(values)
