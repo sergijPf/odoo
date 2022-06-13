@@ -738,9 +738,6 @@ class MagentoProductProduct(models.Model):
 
     def export_simple_products_in_bulk(self, instance, ml_simp_products, attr_sets, method='POST'):
         data = []
-        prod_media = {}
-        product_websites = []
-        remove_images = []
         conf_prod_obj = self.env['magento.configurable.product']
 
         for prod in self:
@@ -777,8 +774,8 @@ class MagentoProductProduct(models.Model):
             response = req(instance, api_url, method, data)
             datetime_stamp = datetime.now()
         except Exception as err:
-            text = ("Error while asynchronously Simple Products %s in Magento: " % (
-                'create' if method == 'POST' else "update")) + str(err)
+            text = (f"Error while asynchronously Simple Products {'create' if method == 'POST' else 'update'} in "
+                    f"Magento: {str(err)}")
             for prod in self:
                 ml_simp_products[prod.magento_sku]['log_message'] += text
             return False
@@ -786,60 +783,33 @@ class MagentoProductProduct(models.Model):
         if response.get('errors'):
             return False
 
-        log_id = self.bulk_log_ids.create({
-            'bulk_uuid': response.get("bulk_uuid"),
-            'topic': 'Product Export'
-        })
+        log_id = self.bulk_log_ids.create({'bulk_uuid': response.get("bulk_uuid"), 'topic': 'Product Export'})
+        prod_media = {}
+        product_websites = []
+        remove_images = []
 
         for prod in self:
             sku = prod.magento_sku
-            img_update = False
             ml_simp_products[sku]['export_date_to_magento'] = datetime_stamp
             ml_simp_products[sku]['magento_status'] = 'in_process'
+            magento_images = ml_simp_products[sku].get('media_gallery', [])
             prod.write({'bulk_log_ids': [(6, 0, [log_id.id])]})
 
-            # prepare products dict with websites and images info to be exported
-            if method == "POST":
-                # update product_website dict with avail.websites
-                for site in instance.magento_website_ids:
-                    product_websites.append({
-                        "productWebsiteLink": {
-                            "sku": sku,
-                            "website_id": site.magento_website_id
-                        },
-                        "sku": sku
-                    })
-            elif method == "PUT":
-                magento_images = ml_simp_products[sku].get('media_gallery', [])
-
-                if (len(prod.product_image_ids) + (1 if prod.image_1920 else 0)) != len(magento_images):
-                    for _id in magento_images:
-                        remove_images.append({
-                            "entryId": _id,
-                            "sku": sku
-                        })
-                    img_update = True
-
-            if method == 'POST' or img_update:
-                images = prod.magento_conf_product_id.prepare_images_list(instance, prod)
-                if images:
-                    prod_media.update({sku: images})
+            conf_prod_obj.prepare_images_and_websites_info(
+                instance, prod, magento_images, product_websites, prod_media, remove_images, method, True
+            )
 
         if method == "POST" and product_websites:
             res = conf_prod_obj.link_product_with_websites_in_magento_in_bulk(
-                instance, product_websites, [s.magento_sku for s in self], ml_simp_products
+                instance, product_websites, [s.magento_sku for s in self], ml_simp_products, self
             )
-            if not res.get('errors', True):
-                log_id = self.bulk_log_ids.create({
-                    'bulk_uuid': res.get("bulk_uuid"),
-                    'topic': 'Website info export'
-                })
-                self.write({'bulk_log_ids': [(4, log_id.id)]})
+            if res:
+                self.write({'bulk_log_ids': [(4, res.id)]})
 
         self.process_simple_prod_storeview_data_export_in_bulk(instance, data, ml_simp_products)
 
         if remove_images:
-            self.remove_product_images_from_magento_in_bulk(instance, remove_images, ml_simp_products)
+            conf_prod_obj.remove_product_images_from_magento_in_bulk(instance, remove_images, ml_simp_products)
         if prod_media:
             conf_prod_obj.export_media_to_magento_in_bulk(instance, prod_media, ml_simp_products)
 
@@ -888,17 +858,6 @@ class MagentoProductProduct(models.Model):
                 })
 
                 self.write({'bulk_log_ids': [(4, log_id.id)]})
-
-    @staticmethod
-    def remove_product_images_from_magento_in_bulk(magento_instance, remove_images, ml_products):
-        try:
-            api_url = '/all/async/bulk/V1/products/bySku/media/byEntryId'
-            req(magento_instance, api_url, 'DELETE', remove_images)
-        except Exception as err:
-            text = "Error while async Product Images remove from Magento. " + str(err)
-            for sku in {img["sku"] for img in remove_images}:
-                ml_products[sku]['force_update'] = True
-                ml_products[sku]['log_message'] += text
 
     def assign_attr_to_config_products_in_magento_in_bulk(self, magento_instance, config_prod_conf_attr,
                                                           ml_simp_products, available_attributes):
@@ -1058,7 +1017,7 @@ class MagentoProductProduct(models.Model):
                 if simp_prod_rec.error_log_ids:
                     simp_prod_rec.error_log_ids.sudo().unlink()
                 if simp_prod_dict['magento_status'] == 'log_error':
-                    new_status = 'update_needed' if simp_prod_dict.get('magento_product_id') else 'not_exported'
+                    new_status = 'update_needed' if simp_prod_dict.get('magento_prod_id') else 'not_exported'
                     simp_prod_dict['magento_status'] = new_status
 
             if simp_prod_dict['magento_status'] != 'in_magento' and conf_prod_dict['magento_status'] == 'in_magento':
@@ -1079,7 +1038,7 @@ class MagentoProductProduct(models.Model):
                 conf_prod_dict['magento_status'] = 'log_error'
             else:
                 if conf_prod_dict['magento_status'] == 'log_error':
-                    new_status = 'update_needed' if conf_prod_dict.get('magento_product_id') else 'not_exported'
+                    new_status = 'update_needed' if conf_prod_dict.get('magento_prod_id') else 'not_exported'
                     conf_prod_dict['magento_status'] = new_status
 
             values = self.prepare_data_to_save(conf_prod_dict, conf_product, magento_websites, is_status_update)
