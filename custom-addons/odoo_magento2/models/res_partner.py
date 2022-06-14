@@ -18,15 +18,15 @@ class ResPartner(models.Model):
             message = 'Error creating Customer in Odoo ' + odoo_partner if isinstance(odoo_partner, str) else '.'
             return False, False, message
 
-        magento_partner = self.env['magento.res.partner'].get_magento_res_partner(
+        magento_addresses = self.env['magento.res.partner'].get_magento_res_partner(
             instance, customer_dict, odoo_partner, website
         )
-        if not magento_partner or isinstance(magento_partner, str):
+        if not magento_addresses or isinstance(magento_addresses, str):
             message = f'Error while Magento Customer creation in ' \
-                      f'Magento Layer {magento_partner if isinstance(magento_partner, str) else ""}'
+                      f'Magento Layer {magento_addresses if isinstance(magento_addresses, str) else ""}'
             return False, False, message
 
-        return odoo_partner, magento_partner, message
+        return odoo_partner, magento_addresses, message
 
     def get_odoo_res_partner(self, customer_dict, website):
         customer_email = customer_dict.get("customer_email")
@@ -56,8 +56,7 @@ class ResPartner(models.Model):
         return odoo_partner
 
     def check_address_exists(self, address_dict):
-        addr_type = address_dict.get('address_type')
-        country, streets, type = self.get_address_details(address_dict, addr_type)
+        country, streets, type = self.get_address_details(address_dict)
         city = address_dict.get('city')
         street = streets.get('street', '')
         street2 = streets.get('street2', '')
@@ -73,7 +72,8 @@ class ResPartner(models.Model):
 
         return True if exists else False
 
-    def get_address_details(self, address_dict, addr_type):
+    def get_address_details(self, address_dict):
+        addr_type = address_dict.get('address_type')
         country_code = address_dict.get('country_id')
         country = self.env['res.country'].search(['|', ('code', '=', country_code),
                                                   ('name', '=ilike', country_code)], limit=1)
@@ -94,7 +94,7 @@ class ResPartner(models.Model):
 
         if streets:
             if len(streets) == 1:
-                result = {'street': streets[0], 'street2': False}
+                result = {'street': streets[0], 'street2': ""}
             elif len(streets) == 2:
                 result = {'street': streets[0], 'street2': streets[1]}
             elif len(streets) == 3:

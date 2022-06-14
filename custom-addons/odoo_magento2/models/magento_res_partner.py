@@ -36,6 +36,7 @@ class MagentoResPartner(models.Model):
         delivery_addresses = customer_dict.get("extension_attributes", {}).get("shipping_assignments")
         customer_id = str(customer_dict.get("customer_id"))
         domain = [('magento_instance_id', '=', instance.id)]
+        bill_addr = ship_addr = False
 
         if customer_id == "None":
             domain.append(('email', '=', customer_dict.get("customer_email")))
@@ -55,13 +56,13 @@ class MagentoResPartner(models.Model):
 
             # check customer billing address(magento layer) / invoice address(odoo) exist
             if not odoo_partner.child_ids.check_address_exists(billing_address):
-                customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner)
+                bill_addr = customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner)
 
             # check customer shipping addresses(magento_layer) / delivery address(odoo) exist
             for address in delivery_addresses:
                 addr_dict = address.get('shipping', {}).get('address', {})
                 if not odoo_partner.child_ids.check_address_exists(addr_dict):
-                    customer_addresses.create_customers_address(addr_dict, customer_rec, odoo_partner)
+                    ship_addr = customer_addresses.create_customers_address(addr_dict, customer_rec, odoo_partner)
         else:
             group_id_in_ml = self.customer_group_id.get_customer_group(instance, group_id, group_name)
 
@@ -79,13 +80,13 @@ class MagentoResPartner(models.Model):
 
             customer_addresses = customer_rec.customer_address_ids
 
-            customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner)
+            bill_addr = customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner)
 
             for address in delivery_addresses:
                 addr = address.get('shipping', {}).get('address', {})
-                customer_addresses.create_customers_address(addr, customer_rec, odoo_partner)
+                ship_addr = customer_addresses.create_customers_address(addr, customer_rec, odoo_partner)
 
-        return customer_rec
+        return (bill_addr, ship_addr)
     #
     # def export_customers_to_magento(self):
     #     active_ids = self._context.get("active_ids", [])
@@ -178,7 +179,6 @@ class MagentoCustomerAddresses(models.Model):
         ('other', 'Other')
     ], string="Address Type")
     customer_id = fields.Many2one('magento.res.partner', "Magento Customer")
-    magento_customer_address_id = fields.Char(string="Address ID")
     odoo_partner_id = fields.Many2one("res.partner", "Customer", ondelete='cascade')
     name = fields.Char(related="odoo_partner_id.name", string="Name")
     country = fields.Char(related="odoo_partner_id.country_id.code", string="Country")
@@ -188,8 +188,7 @@ class MagentoCustomerAddresses(models.Model):
     zip = fields.Char(related="odoo_partner_id.zip", string="Postcode")
 
     def create_customers_address(self, address_dict, magento_customer, odoo_partner):
-        addr_type = address_dict.get('address_type')
-        country, streets, _type = odoo_partner.get_address_details(address_dict, addr_type)
+        country, streets, _type = odoo_partner.get_address_details(address_dict)
 
         # create address in Odoo 'res.partners' table
         odoo_address = self.odoo_partner_id.with_context(tracking_disable=True).create({
@@ -206,13 +205,13 @@ class MagentoCustomerAddresses(models.Model):
             'is_magento_customer': True
         })
 
-        # create address in magento layer
-        self.create({
-            'address_type': addr_type,
-            'magento_customer_address_id': address_dict.get('customer_address_id'),
+        magento_address = self.create({
+            'address_type': address_dict.get('address_type'),
             'customer_id': magento_customer.id,
             'odoo_partner_id': odoo_address.id
         })
+
+        return magento_address
 
 
 class MagentoCustomerGroups(models.Model):
