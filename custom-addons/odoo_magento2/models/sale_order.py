@@ -299,7 +299,7 @@ class SaleOrder(models.Model):
             try:
                 product = self.env.ref('odoo_magento2.product_product_shipping')
                 self.env["delivery.carrier"].create({
-                    'name': mag_deliv_carrier.magento_carrier or mag_deliv_carrier.magento_carrier_title,
+                    'name': mag_deliv_carrier.carrier_label or mag_deliv_carrier.magento_carrier_title,
                     'product_id': product.id,
                     'magento_carrier': mag_deliv_carrier.id
                 })

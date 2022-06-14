@@ -36,9 +36,13 @@ class MagentoResPartner(models.Model):
         delivery_addresses = customer_dict.get("extension_attributes", {}).get("shipping_assignments")
         customer_id = str(customer_dict.get("customer_id"))
         domain = [('magento_instance_id', '=', instance.id)]
-        filt = ('email', '=', customer_dict.get("customer_email")) if customer_id == "None" else ('magento_customer_id', '=', customer_id)
 
-        customer_rec = self.search(domain.append(filt))
+        if customer_id == "None":
+            domain.append(('email', '=', customer_dict.get("customer_email")))
+        else:
+            domain.append(('magento_customer_id', '=', customer_id))
+
+        customer_rec = self.search(domain)
 
         if customer_rec:
             customer_group_rec = customer_rec.customer_group_id
