@@ -16,7 +16,7 @@ class ResPartner(models.Model):
 
         if not odoo_partner or isinstance(odoo_partner, str):
             message = 'Error creating Customer in Odoo ' + odoo_partner if isinstance(odoo_partner, str) else '.'
-            return False, False, message
+            return False, message
 
         magento_addresses = self.env['magento.res.partner'].get_magento_res_partner(
             instance, customer_dict, odoo_partner, website
@@ -24,9 +24,9 @@ class ResPartner(models.Model):
         if not magento_addresses or isinstance(magento_addresses, str):
             message = f'Error while Magento Customer creation in ' \
                       f'Magento Layer {magento_addresses if isinstance(magento_addresses, str) else ""}'
-            return False, False, message
+            return False, message
 
-        return odoo_partner, magento_addresses, message
+        return (odoo_partner, *magento_addresses), message
 
     def get_odoo_res_partner(self, customer_dict, website):
         customer_email = customer_dict.get("customer_email")
@@ -62,15 +62,15 @@ class ResPartner(models.Model):
         street2 = streets.get('street2', '')
         zip = address_dict.get('postcode')
 
-        exists = self.filtered(
+        address = self.filtered(
             lambda x: x.type == type and
                       {x.country_id.id, x.city, x.zip, x.street or '', x.street2 or ''} == {country.id, city, zip, street, street2}
         )
 
-        if exists and not exists[0]['is_magento_customer']:
-            exists[0]['is_magento_customer'] = True
+        if address and not address[0]['is_magento_customer']:
+            address[0]['is_magento_customer'] = True
 
-        return True if exists else False
+        return address if address else False
 
     def get_address_details(self, address_dict):
         addr_type = address_dict.get('address_type')

@@ -36,7 +36,7 @@ class MagentoResPartner(models.Model):
         delivery_addresses = customer_dict.get("extension_attributes", {}).get("shipping_assignments")
         customer_id = str(customer_dict.get("customer_id"))
         domain = [('magento_instance_id', '=', instance.id)]
-        bill_addr = ship_addr = False
+        ship_addr = False
 
         if customer_id == "None":
             domain.append(('email', '=', customer_dict.get("customer_email")))
@@ -55,13 +55,15 @@ class MagentoResPartner(models.Model):
                 })
 
             # check customer billing address(magento layer) / invoice address(odoo) exist
-            if not odoo_partner.child_ids.check_address_exists(billing_address):
+            bill_addr = odoo_partner.child_ids.check_address_exists(billing_address)
+            if not bill_addr:
                 bill_addr = customer_addresses.create_customers_address(billing_address, customer_rec, odoo_partner)
 
             # check customer shipping addresses(magento_layer) / delivery address(odoo) exist
             for address in delivery_addresses:
                 addr_dict = address.get('shipping', {}).get('address', {})
-                if not odoo_partner.child_ids.check_address_exists(addr_dict):
+                ship_addr = odoo_partner.child_ids.check_address_exists(addr_dict)
+                if not ship_addr:
                     ship_addr = customer_addresses.create_customers_address(addr_dict, customer_rec, odoo_partner)
         else:
             group_id_in_ml = self.customer_group_id.get_customer_group(instance, group_id, group_name)
@@ -86,7 +88,7 @@ class MagentoResPartner(models.Model):
                 addr = address.get('shipping', {}).get('address', {})
                 ship_addr = customer_addresses.create_customers_address(addr, customer_rec, odoo_partner)
 
-        return (bill_addr, ship_addr)
+        return bill_addr, ship_addr
     #
     # def export_customers_to_magento(self):
     #     active_ids = self._context.get("active_ids", [])

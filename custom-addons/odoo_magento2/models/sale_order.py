@@ -176,13 +176,13 @@ class SaleOrder(models.Model):
 
         website = storeview.magento_website_id
 
-        auto_workflow, odoo_partner, addresses, message = self.check_sales_order_data(magento_instance, sales_order, website)
+        auto_workflow, res_partners, message = self.check_sales_order_data(magento_instance, sales_order, website)
         if message:
             self.log_order_import_error(so_log_book_rec, order_ref, magento_instance, website, message)
             return False
 
         order_values = self.prepare_and_generate_sales_order_values(
-            magento_instance, website, sales_order, odoo_partner, addresses, auto_workflow
+            magento_instance, website, sales_order, res_partners, auto_workflow
         )
 
         # proceed order creation/update
@@ -213,35 +213,33 @@ class SaleOrder(models.Model):
 
     def check_sales_order_data(self, instance, sales_order, website):
         order_lines = sales_order.get('items')
-        odoo_partner = False
-        addresses = False
+        res_partners = False
 
         allowed_flow, message = self.check_payment_method_and_order_flow_configurations(instance, sales_order)
         if message:
-            return allowed_flow, odoo_partner, addresses, message
+            return allowed_flow, res_partners, message
 
         message = self.check_magento_shipping_method(instance, sales_order)
         if message:
-            return allowed_flow, odoo_partner, addresses, message
+            return allowed_flow, res_partners, message
 
         if not website.warehouse_id:
-            return allowed_flow, odoo_partner, addresses, ("Warehouse is not set for the %s website.\n "
-                                                                 "Please configure it first: Settings >> Magento "
-                                                                 "Websites. ") % website.name
+            return allowed_flow, res_partners, ("Warehouse is not set for the %s website. Please configure it first:"
+                                                " Settings >> Magento Websites. ") % website.name
 
         message = self.check_pricelist_and_currency_of_sales_order(sales_order, website)
         if message:
-            return allowed_flow, odoo_partner, addresses, message
+            return allowed_flow, res_partners, message
 
-        odoo_partner, addresses, message = self.env['res.partner'].check_customer_and_addresses_exist(
+        res_partners, message = self.env['res.partner'].check_customer_and_addresses_exist(
             instance, sales_order, website
         )
         if message:
-            return allowed_flow, odoo_partner, addresses, message
+            return allowed_flow, res_partners, message
 
         message = self.check_products_exist_and_prices(instance, order_lines, website)
 
-        return allowed_flow, odoo_partner, addresses, message
+        return allowed_flow, res_partners, message
 
     def check_payment_method_and_order_flow_configurations(self, instance, sales_order):
         order_ref = sales_order.get('increment_id')
@@ -353,7 +351,7 @@ class SaleOrder(models.Model):
 
         return ''
 
-    def prepare_and_generate_sales_order_values(self, instance, website, sales_order, odoo_partner, addresses, auto_workflow):
+    def prepare_and_generate_sales_order_values(self, instance, website, sales_order, res_partners, auto_workflow):
         so_increment_id = sales_order.get('increment_id', '')
         workflow_process_id = auto_workflow.auto_workflow_id
         shipping = sales_order.get('extension_attributes').get('shipping_assignments')
@@ -372,16 +370,16 @@ class SaleOrder(models.Model):
         store_view = instance.magento_website_ids.store_view_ids.filtered(
             lambda x: x.magento_storeview_id == str(sales_order.get('store_id'))
         )
-        invoice_partner = addresses[0].odoo_partner_id if addresses and addresses[0] else False
-        shipping_partner = addresses[1].odoo_partner_id if addresses and addresses[1] else False
+        invoice_partner_id = res_partners[1].id if res_partners and res_partners[1] else False
+        shipping_partner_id = res_partners[2].id if res_partners and res_partners[2] else False
 
         order_vals = {
             'client_order_ref': so_increment_id,
             'state': 'draft',
             'date_order': sales_order.get('created_at', False),
-            'partner_id': odoo_partner.id,
-            'partner_invoice_id': invoice_partner.id,
-            'partner_shipping_id': shipping_partner.id,
+            'partner_id': res_partners[0].id if res_partners and res_partners[0] else False,
+            'partner_invoice_id': invoice_partner_id,
+            'partner_shipping_id': shipping_partner_id,
             'pricelist_id': website.pricelist_id.id,
             'company_id': instance.company_id.id,
             'picking_policy': workflow_process_id and workflow_process_id.picking_policy or False,
