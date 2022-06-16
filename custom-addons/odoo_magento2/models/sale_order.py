@@ -402,7 +402,7 @@ class SaleOrder(models.Model):
         new_record.onchange_partner_shipping_id()  # updates fiscal position
         order_vals = sale_order_obj._convert_to_write(new_record._cache)
 
-        return order_vals.update({
+        order_vals.update({
             'client_order_ref': so_increment_id,
             'name': "%s%s" % (store_view and store_view.sale_prefix or '', so_increment_id),
             'team_id': store_view.team_id.id if store_view and store_view.team_id else False,
@@ -422,6 +422,8 @@ class SaleOrder(models.Model):
             'magento_order_status': sales_order.get('status'),
             'magento_order_reference': so_increment_id
         })
+
+        return order_vals
 
     def create_magento_sales_order_lines(self, instance, sales_order):
         sales_order_line = self.env['sale.order.line']

@@ -58,7 +58,7 @@ class SaleOrderLine(models.Model):
         new_order_line.product_id_change()
         order_line_vals = sale_order_line_obj._convert_to_write(new_order_line._cache)
 
-        return order_line_vals.update({
+        order_line_vals.update({
             'name': order_line.get('name'),
             'product_uom_qty': float(order_line.get('qty_ordered', 1.0)),
             'price_unit': original_price,
@@ -67,13 +67,15 @@ class SaleOrderLine(models.Model):
             'magento_sale_order_line_ref': so_line_ref
         })
 
+        return order_line_vals
+
     def get_account_tax_id(self, extension_attrs, type, order_rec, item, item_id):
         tax_percent = self.check_tax_percent(extension_attrs, type, item_id)
         if tax_percent is False:
             return f"Unable to get tax percentage from order data for {item}"
 
-        tax_id = order_rec.fiscal_position_id.with_context(active_test=False).tax_ids.filtered(
-            lambda x: x.type_tax_use == 'sale' and x.price_include and
+        tax_id = order_rec.fiscal_position_id.tax_ids.with_context(active_test=False).tax_src_id.filtered(
+            lambda x: x.type_tax_use == 'sale' and (True if tax_percent == 0 else x.price_include) and
                       (x.amount >= tax_percent - 0.001 and x.amount <= tax_percent + 0.001)
         )
 
@@ -83,16 +85,19 @@ class SaleOrderLine(models.Model):
                 tax_id.active = True
             return tax_id
         else:
-            return f"Missed '{tax_percent}' tax (brutto) within '{order_rec.fiscal_position.name}' Fiscal Position"
+            return f"Missed '{tax_percent}'% tax (brutto) within '{order_rec.fiscal_position_id.name}' Fiscal Position"
 
     @staticmethod
     def check_tax_percent(extension_attributes, type, item_id):
         tax_percent = False
 
         if extension_attributes and "item_applied_taxes" in extension_attributes:
-            for tax in extension_attributes["item_applied_taxes"]:
-                if tax.get('type') == type and tax.get('applied_taxes') and item_id == tax.get('item_id'):
-                    tax_percent = tax.get('applied_taxes')[0].get('percent')
+            if extension_attributes["item_applied_taxes"] == []:
+                tax_percent = 0
+            else:
+                for tax in extension_attributes["item_applied_taxes"]:
+                    if tax.get('type') == type and tax.get('applied_taxes') and item_id == tax.get('item_id'):
+                        tax_percent = tax.get('applied_taxes')[0].get('percent')
 
         return tax_percent
 
