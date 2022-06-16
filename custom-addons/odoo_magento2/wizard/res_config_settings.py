@@ -23,8 +23,6 @@ class ResConfigSettings(models.TransientModel):
         ('global', 'Global'),
         ('website', 'Website')
     ], string="Magento Catalog Price Scope", help="Scope of Price in Magento", default='website')
-    pricelist_id = fields.Many2one('product.pricelist', "Pricelist", help="Product price will be taken/set from this "
-                                                                          "pricelist if Catalog Price Scope is global")
     invoice_done_notify_customer = fields.Boolean(string="Invoices Done Notify customer", default=False,
                                                   help="while export invoice send email to the customer")
     magento_website_pricelist_id = fields.Many2one(
@@ -43,7 +41,6 @@ class ResConfigSettings(models.TransientModel):
             self.write({
                 'location_ids': [(6, 0, instance_id.location_ids.ids)] if instance_id.location_ids else False,
                 'catalog_price_scope': instance_id.catalog_price_scope,
-                'pricelist_id': instance_id.pricelist_id.id if instance_id.pricelist_id else False,
                 'invoice_done_notify_customer': instance_id.invoice_done_notify_customer
             })
         else:
@@ -100,7 +97,6 @@ class ResConfigSettings(models.TransientModel):
         values.update({
             'location_ids': [(6, 0, self.location_ids.ids)] if self.location_ids else False,
             'catalog_price_scope': magento_instance.catalog_price_scope if magento_instance else False,
-            'pricelist_id': self.pricelist_id.id if self.pricelist_id else False,
             'invoice_done_notify_customer': self.invoice_done_notify_customer
         })
         magento_instance.write(values)

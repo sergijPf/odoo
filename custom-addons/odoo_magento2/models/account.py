@@ -4,30 +4,6 @@ from odoo import fields, models
 from ..python_library.api_request import req
 
 
-class AccountTaxCode(models.Model):
-    _inherit = 'account.tax'
-
-    def get_tax_from_rate(self, rate, is_tax_included=False):
-        tax_ids = self.with_context(active_test=False).search(
-            [('price_include', '=', is_tax_included),
-             ('type_tax_use', 'in', ['sale']),
-             ('amount', '>=', rate - 0.001),
-             ('amount', '<=', rate + 0.001)])
-        if tax_ids:
-            return tax_ids[0]
-
-        # try to find a tax with less precision
-        tax_ids = self.with_context(active_test=False).search(
-            [('price_include', '=', is_tax_included),
-             ('type_tax_use', 'in', ['sale']),
-             ('amount', '>=', rate - 0.01),
-             ('amount', '<=', rate + 0.01)])
-        if tax_ids:
-            return tax_ids[0]
-
-        return False
-
-
 class AccountInvoice(models.Model):
     _inherit = 'account.move'
 

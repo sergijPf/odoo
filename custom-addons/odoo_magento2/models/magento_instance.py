@@ -39,7 +39,6 @@ class MagentoInstance(models.Model):
         ('global', 'Global'),
         ('website', 'Website')
     ], string="Catalog Price Scopes", help="Scope of Price in Magento", default='website')
-    pricelist_id = fields.Many2one('product.pricelist', "Pricelist", help="Product Price is set in selected Pricelist")
     access_token = fields.Char(string="Magento Access Token")
     odoo_token = fields.Char(string="Odoo Auto-generated Token", help="Token to be used while Sale Orders import")
     company_id = fields.Many2one('res.company', string='Magento Company')

@@ -10,25 +10,17 @@ class ResPartner(models.Model):
                                          help="Used for identified that the customer is imported from Magento store.")
     magento_res_partner_ids = fields.One2many('magento.res.partner', "partner_id", string='Magento Customers')
 
-    def check_customer_and_addresses_exist(self, instance, customer_dict, website):
-        message = ""
-        odoo_partner = self.get_odoo_res_partner(customer_dict, website)
+    def check_customer_and_addresses_exist(self, instance, customer_dict, so_metadict):
+        res = self.get_odoo_res_partner(customer_dict, so_metadict)
 
-        if not odoo_partner or isinstance(odoo_partner, str):
-            message = 'Error creating Customer in Odoo ' + odoo_partner if isinstance(odoo_partner, str) else '.'
-            return False, message
+        if res:
+            return res
 
-        magento_addresses = self.env['magento.res.partner'].get_magento_res_partner(
-            instance, customer_dict, odoo_partner, website
-        )
-        if not magento_addresses or isinstance(magento_addresses, str):
-            message = f'Error while Magento Customer creation in ' \
-                      f'Magento Layer {magento_addresses if isinstance(magento_addresses, str) else ""}'
-            return False, message
+        return self.env['magento.res.partner'].get_magento_res_partner(instance, customer_dict, so_metadict)
 
-        return (odoo_partner, *magento_addresses), message
-
-    def get_odoo_res_partner(self, customer_dict, website):
+    def get_odoo_res_partner(self, customer_dict, so_metadict):
+        website = so_metadict['website']
+        so_metadict.update({'odoo_partner': False})
         customer_email = customer_dict.get("customer_email")
         odoo_partner = self.with_context(active_test=False).search([('email', '=', customer_email),
                                                                     ('type', '=', 'contact'),
@@ -51,9 +43,11 @@ class ResPartner(models.Model):
                     'is_magento_customer': True
                 })
             except Exception as e:
-                return str(e) + '.'
+                return f'Error creating Customer in Odoo {str(e)}.'
 
-        return odoo_partner
+        so_metadict['odoo_partner'] = odoo_partner
+
+        return ''
 
     def check_address_exists(self, address_dict):
         country, streets, type = self.get_address_details(address_dict)

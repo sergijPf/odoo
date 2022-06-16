@@ -59,12 +59,9 @@ class SaleWorkflowProcess(models.Model):
                       ('id', 'in', order_ids)]
         else:
             domain = [('auto_workflow_process_id', 'in', workflow_process.ids),
-                      ('state', 'not in', ('done', 'cancel', 'sale')),
+                      ('state', 'not in', ('done', 'cancel')),
                       ('invoice_status', '!=', 'invoiced')]
 
         orders = self.env['sale.order'].search(domain)
 
-        try:
-            orders.process_orders_and_invoices()
-        except Exception as e:
-            return str(e)
+        orders.process_orders_and_invoices()

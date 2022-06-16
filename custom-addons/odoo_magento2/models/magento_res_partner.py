@@ -29,7 +29,10 @@ class MagentoResPartner(models.Model):
         ('exported', 'Exported')
     ], string="Import/Export status")
 
-    def get_magento_res_partner(self, instance, customer_dict, odoo_partner, website):
+    def get_magento_res_partner(self, instance, customer_dict, so_metadict):
+        website = so_metadict['website']
+        odoo_partner = so_metadict['odoo_partner']
+        so_metadict.update({'bill_addr': False, 'ship_addr': False})
         group_id = str(customer_dict.get("customer_group_id"))
         group_name = customer_dict.get("customer_group_name", '')
         billing_address = customer_dict.get("billing_address")
@@ -66,19 +69,17 @@ class MagentoResPartner(models.Model):
                 if not ship_addr:
                     ship_addr = customer_addresses.create_customers_address(addr_dict, customer_rec, odoo_partner)
         else:
-            group_id_in_ml = self.customer_group_id.get_customer_group(instance, group_id, group_name)
-
             try:
                 customer_rec = self.create({
                     'magento_customer_id': customer_id,
-                    "customer_group_id": group_id_in_ml.id,
+                    "customer_group_id": self.customer_group_id.get_customer_group(instance, group_id, group_name).id,
                     'partner_id': odoo_partner.id,
                     'magento_instance_id': instance.id,
                     'status': 'imported',
                     'magento_website_id':  website.id
                 })
             except Exception as err:
-                return str(err)
+                return f'Error while Magento Customer creation in Magento Layer: {str(err)}'
 
             customer_addresses = customer_rec.customer_address_ids
 
@@ -88,7 +89,10 @@ class MagentoResPartner(models.Model):
                 addr = address.get('shipping', {}).get('address', {})
                 ship_addr = customer_addresses.create_customers_address(addr, customer_rec, odoo_partner)
 
-        return bill_addr, ship_addr
+        so_metadict['bill_addr'] = bill_addr
+        so_metadict['ship_addr'] = ship_addr
+
+        return ''
     #
     # def export_customers_to_magento(self):
     #     active_ids = self._context.get("active_ids", [])
