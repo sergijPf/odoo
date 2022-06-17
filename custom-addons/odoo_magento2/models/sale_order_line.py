@@ -10,11 +10,10 @@ class SaleOrderLine(models.Model):
 
     def create_product_sales_order_line(self, instance, sales_order, order_rec):
         magento_order_lines = sales_order.get('items')
-        extens_attrs = sales_order.get('extension_attributes')
 
         for order_line in magento_order_lines:
             so_line_ref = order_line.get('item_id')
-            so_line_vals = self.prepare_product_sales_order_line_vals(order_line, instance, order_rec, extens_attrs)
+            so_line_vals = self.prepare_product_sales_order_line_vals(order_line, instance, order_rec)
 
             if isinstance(so_line_vals, str):
                 return so_line_vals
@@ -33,14 +32,14 @@ class SaleOrderLine(models.Model):
 
         return ''
 
-    def prepare_product_sales_order_line_vals(self, order_line, instance, order_rec, extension_attrs):
+    def prepare_product_sales_order_line_vals(self, order_line, instance, order_rec):
         sale_order_line_obj = self.env['sale.order.line']
         so_line_ref = order_line.get('item_id')
         product_sku = order_line.get('sku')
         original_price = order_line.get('original_price', 0.0)
-        discount = (original_price - order_line.get('price', 0.0)) if original_price else 0
+        discount = (original_price - order_line.get('price_incl_tax', 0.0)) if original_price else 0
 
-        tax_id = self.get_account_tax_id(extension_attrs, 'product', order_rec, order_line.get('sku'), so_line_ref)
+        tax_id = self.get_account_tax_id(order_line.get('tax_percent', False), order_rec, order_line.get('sku'))
         if isinstance(tax_id, str):
             return tax_id
 
@@ -69,8 +68,7 @@ class SaleOrderLine(models.Model):
 
         return order_line_vals
 
-    def get_account_tax_id(self, extension_attrs, type, order_rec, item, item_id):
-        tax_percent = self.check_tax_percent(extension_attrs, type, item_id)
+    def get_account_tax_id(self, tax_percent, order_rec, item):
         if tax_percent is False:
             return f"Unable to get tax percentage from order data for {item}"
 
@@ -87,23 +85,9 @@ class SaleOrderLine(models.Model):
         else:
             return f"Missed '{tax_percent}'% tax (brutto) within '{order_rec.fiscal_position_id.name}' Fiscal Position"
 
-    @staticmethod
-    def check_tax_percent(extension_attributes, type, item_id):
-        tax_percent = False
-
-        if extension_attributes and "item_applied_taxes" in extension_attributes:
-            if extension_attributes["item_applied_taxes"] == []:
-                tax_percent = 0
-            else:
-                for tax in extension_attributes["item_applied_taxes"]:
-                    if tax.get('type') == type and tax.get('applied_taxes') and item_id == tax.get('item_id'):
-                        tax_percent = tax.get('applied_taxes')[0].get('percent')
-
-        return tax_percent
-
     def create_shipping_sales_order_line(self, sales_order, order_rec):
         amount_net = float(sales_order.get('shipping_amount', 0.0))
-        discount_amount = float(sales_order.get('shipping_discount_amount', 0.0))
+        discount_amount = (amount_net - sales_order.get('shipping_incl_tax', 0.0)) if amount_net else 0
         shipping_product = self.env.ref('odoo_magento2.product_product_shipping')
 
         if not shipping_product:
