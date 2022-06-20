@@ -39,7 +39,7 @@ class MagentoConfigurableProduct(models.Model):
     active = fields.Boolean("Active", default=True)
     odoo_prod_template_id = fields.Many2one('product.template', string='Odoo Product Template')
     magento_product_name = fields.Char(string="Magento Configurable Product Name", related='odoo_prod_template_id.name')
-    category_ids = fields.Many2many("magento.product.category", string="Product Categories", store=True,
+    category_ids = fields.Many2many("magento.product.category", string="Product Categories", #store=True,
                                     help="Magento Product Categories", compute="_compute_config_product_categories")
     magento_attr_set = fields.Char(string='Magento Product Attribute Set', default="Default")
     do_not_create_flag = fields.Boolean(related="odoo_prod_template_id.x_magento_no_create",
@@ -536,7 +536,7 @@ class MagentoConfigurableProduct(models.Model):
                 else:
                     text = "Product with such sku already exists in Magento. And it's type is not configurable. "
                     ml_conf_products[prod]['log_message'] += text
-            elif ml_conf_products[prod]['magento_status'] == 'in_magento':
+            elif ml_conf_products[prod]['magento_status'] in ['in_magento', 'extra_info']:
                     ml_conf_products[prod]['magento_status'] = 'update_needed'
 
     def process_configurable_products_create_or_update(self, instance, conf_prods_dict, attr_sets, async_export):
