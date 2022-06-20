@@ -914,7 +914,7 @@ class MagentoProductProduct(models.Model):
 
         for prod in self:
             prod_dict = ml_simp_products[prod.magento_sku]
-            if prod_dict['log_message'] or prod.magento_conf_product_id.magento_attr_set:
+            if prod_dict['log_message'] or prod.magento_conf_product_id.do_not_create_flag:
                 continue
             data.append({
                 "childSku": prod.magento_sku,
