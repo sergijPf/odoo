@@ -339,8 +339,7 @@ class MagentoProductProduct(models.Model):
                 if simp_prods_dict[prod]['magento_status'] in ['in_magento', 'extra_info']:
                     simp_prods_dict[prod]['magento_status'] = 'update_needed'
                 continue
-            print(simp_prods_dict[prod]['magento_status'])
-            print(simp_prods_dict[prod]['to_export'])
+
             if simp_prods_dict[prod].get('magento_update_date', ''):
                 if simp_prods_dict[prod]['magento_type_id'] == 'simple':
                     # if not conf_prods_dict[conf_sku]['to_export']:
