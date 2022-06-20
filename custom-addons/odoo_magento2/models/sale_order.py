@@ -344,8 +344,8 @@ class SaleOrder(models.Model):
             order_base_price = line.get('original_price')
 
             if odoo_base_price != order_base_price:
-                message = "Product's base prices do not match: Odoo price - %s and " \
-                          "Magento price - %s" % (odoo_base_price, order_base_price)
+                message = f"Product's base prices do not match for {prod_sku}: Odoo price - {odoo_base_price} and " \
+                          f"Magento price - {order_base_price}"
                 break
 
         return message

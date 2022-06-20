@@ -810,14 +810,15 @@ class MagentoConfigurableProduct(models.Model):
                 }
             }
 
-            if method != 'POST':
+            if method == 'PUT':
                 magento_attributes = attr_sets[conf_product.magento_attr_set]['attributes']
-                config_attrs = conf_prod_dict['config_attr']
+                odoo_config_attrs = conf_prod_dict['config_attr']
                 magento_prod_attrs = conf_prod_dict.get('magento_conf_prod_options', {})
                 if not self.check_config_product_assign_attributes_match(
-                        magento_prod_attrs, config_attrs, magento_attributes):
+                        magento_prod_attrs, odoo_config_attrs, magento_attributes
+                ):
                     # here if False - means "config" attributes were changed and need to unlink all related simple products
-                    item['product']["extension_attributes"].update({"configurable_product_links": []})
+                    item["extension_attributes"].update({"configurable_product_links": []})
 
             data.append({"product": item})
 
