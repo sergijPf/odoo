@@ -60,7 +60,8 @@ class DeliveryCarrier(models.Model):
     @api.constrains('magento_carrier')
     def _check_magento_carrier_id_is_linked_to_one_delivery_method(self):
         for rec in self:
-            delivery_carrier = self.search([('magento_carrier', '=', rec.magento_carrier.id),
+            delivery_carrier = self.search([('magento_carrier', 'not in', [False, '']),
+                                            ('magento_carrier', '=', rec.magento_carrier.id),
                                             ('id', '!=', rec.id)])
 
             if delivery_carrier:
