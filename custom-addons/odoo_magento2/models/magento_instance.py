@@ -66,6 +66,7 @@ class MagentoInstance(models.Model):
     update_config_prods_count = fields.Integer(compute="_compute_products_count")
     disabled_simple_prods_count = fields.Integer(compute="_compute_products_count")
     update_simple_prods_count = fields.Integer(compute="_compute_products_count")
+    active_special_prices_count = fields.Integer(compute="_compute_active_special_prices_count")
     pending_sale_orders_count = fields.Integer(compute="_compute_pending_sale_info")
     pending_invoices_count = fields.Integer(compute="_compute_pending_sale_info")
     invoices_pending_payment_count = fields.Integer(compute="_compute_pending_sale_info")
@@ -91,6 +92,14 @@ class MagentoInstance(models.Model):
             rec.update_simple_prods_count = len(rec.simple_product_ids.filtered(
                 lambda x: x.magento_product_id and x.magento_status != 'in_magento'
             ))
+
+    def _compute_active_special_prices_count(self):
+        spec_prices_obj = self.env['magento.special.pricing']
+        for rec in self:
+            rec.active_special_prices_count = len(spec_prices_obj.search([
+                ('export_status', '=', 'exported'),
+                ('magento_instance_id', '=', rec.id)
+            ]))
 
     def _compute_sale_orders_invoices_and_shipments_with_errors_count(self):
         for rec in self:
@@ -444,6 +453,21 @@ class MagentoInstance(models.Model):
             'view_id': tree_view,
             'target': 'current',
             'domain': [('id', 'in', product_ids.ids)]
+        }
+
+    def get_special_prices_for_simple_products(self):
+        form_view_id = self.env.ref('odoo_magento2.view_magento_special_pricing_form').id
+        tree_view = self.env.ref('odoo_magento2.view_magento_special_pricing_tree').id
+
+        return {
+            'name': 'Advance Prices applied to products',
+            'type': ACTION_ACT_WINDOW,
+            'view_mode': 'tree, form',
+            'res_model': 'magento.special.pricing',
+            'views': [(tree_view, 'tree'), (form_view_id, 'form')],
+            'view_id': tree_view,
+            'target': 'current',
+            'domain': [('magento_instance_id', '=', self.id)]
         }
 
     def get_all_sale_orders(self):

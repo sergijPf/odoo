@@ -59,9 +59,10 @@ class DeliveryCarrier(models.Model):
 
     @api.constrains('magento_carrier')
     def _check_magento_carrier_id_is_linked_to_one_delivery_method(self):
-        delivery_carrier = self.search([('magento_carrier', '=', self.magento_carrier.id),
-                                        ('id', '!=', self.id)])
+        for rec in self:
+            delivery_carrier = self.search([('magento_carrier', '=', rec.magento_carrier.id),
+                                            ('id', '!=', rec.id)])
 
-        if delivery_carrier:
-            raise UserError(_("Current 'Magento Delivery Carrier' is already linked to"
-                              " another Delivery Method - %s" % delivery_carrier.name))
+            if delivery_carrier:
+                raise UserError(_("Current 'Magento Delivery Carrier' is already linked to"
+                                  " another Delivery Method - %s" % delivery_carrier.name))

@@ -74,6 +74,12 @@
                                                 Update needed
                                             </a>
                                         </div>
+                                        <div class="row" t-if="record.active_special_prices_count.raw_value > 0">
+                                            <a name="get_special_prices_for_simple_products" type="object" class="text-success">
+                                                <field name="active_special_prices_count"/>
+                                                Active Special Prices
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

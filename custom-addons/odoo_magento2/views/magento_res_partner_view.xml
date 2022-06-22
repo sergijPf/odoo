@@ -29,6 +29,7 @@
                                     <tree create="false">
                                         <field name="address_type" invisible="0" />
                                         <field name="name"/>
+                                        <field name="country"/>
                                         <field name="city"/>
                                         <field name="street"/>
                                         <field name="street2"/>
