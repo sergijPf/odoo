@@ -57,12 +57,12 @@ class DeliveryCarrier(models.Model):
     magento_carrier = fields.Many2one('magento.delivery.carrier', string="Magento Delivery Carrier", copy=False)
     magento_carrier_code = fields.Char(related='magento_carrier.carrier_code', string='Base Carrier Code')
 
-    @api.constrains('magento_carrier')
-    def _check_magento_carrier_id_is_linked_to_one_delivery_method(self):
-        for rec in self:
-            delivery_carrier = self.search([('magento_carrier', '=', rec.magento_carrier.id),
-                                            ('id', '!=', rec.id)])
-
-            if delivery_carrier:
-                raise UserError(_("Current 'Magento Delivery Carrier' is already linked to"
-                                  " another Delivery Method - %s" % delivery_carrier.name))
+    # @api.constrains('magento_carrier')
+    # def _check_magento_carrier_id_is_linked_to_one_delivery_method(self):
+    #     for rec in self:
+    #         delivery_carrier = self.search([('magento_carrier', '=', rec.magento_carrier.id),
+    #                                         ('id', '!=', rec.id)])
+    #
+    #         if delivery_carrier:
+    #             raise UserError(_("Current 'Magento Delivery Carrier' is already linked to"
+    #                               " another Delivery Method - %s" % delivery_carrier.name))
