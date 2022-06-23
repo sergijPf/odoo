@@ -16,7 +16,9 @@ class ResPartner(models.Model):
         if res:
             return res
 
-        return self.env['magento.res.partner'].get_magento_res_partner(instance, customer_dict, so_metadict)
+        res = self.env['magento.res.partner'].get_magento_res_partner(instance, customer_dict, so_metadict)
+        if res:
+            return res
 
     def get_odoo_res_partner(self, customer_dict, so_metadict):
         website = so_metadict['website']
