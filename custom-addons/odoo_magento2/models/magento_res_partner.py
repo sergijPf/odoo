@@ -211,13 +211,13 @@ class MagentoCustomerAddresses(models.Model):
             'is_magento_customer': True
         })
 
-        magento_address = self.create({
+        self.create({
             'address_type': address_dict.get('address_type'),
             'customer_id': magento_customer.id,
             'odoo_partner_id': odoo_address.id
         })
 
-        return magento_address
+        return odoo_address
 
 
 class MagentoCustomerGroups(models.Model):
