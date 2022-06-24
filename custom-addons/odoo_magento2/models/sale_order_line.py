@@ -39,14 +39,18 @@ class SaleOrderLine(models.Model):
         original_price = order_line.get('original_price', 0.0)
         discount = (original_price - order_line.get('price_incl_tax', 0.0)) if original_price else 0
 
-        tax_id = self.get_account_tax_id(order_line.get('tax_percent', False), order_rec, order_line.get('sku'))
-        if isinstance(tax_id, str):
-            return tax_id
+        # tax_id = self.get_account_tax_id(order_line.get('tax_percent', False), order_rec, order_line.get('sku'))
+        # if isinstance(tax_id, str):
+        #     return tax_id
 
         odoo_product = self.env['magento.product.product'].search([
             ('magento_sku', '=', product_sku),
             ('magento_instance_id', '=', instance.id)
         ], limit=1).odoo_product_id
+
+        res = self.check_vat_is_in_fiscal_positions_tax_list(order_rec, odoo_product)
+        if res:
+            return res
 
         order_line_vals = {
             'order_id': order_rec.id,
@@ -62,28 +66,40 @@ class SaleOrderLine(models.Model):
             'product_uom_qty': float(order_line.get('qty_ordered', 1.0)),
             'price_unit': original_price,
             'discount': round((discount / original_price) * 100, 2) if original_price and discount else 0,
-            'tax_id': [(6, 0, [tax_id.id])],
+            # 'tax_id': [(6, 0, [tax_id.id])],
             'magento_sale_order_line_ref': so_line_ref
         })
 
         return order_line_vals
 
-    def get_account_tax_id(self, tax_percent, order_rec, item):
-        if tax_percent is False:
-            return f"Unable to get tax percentage from order data for {item}"
+    def check_vat_is_in_fiscal_positions_tax_list(self, order_rec, odoo_product):
+        if not odoo_product.taxes_id:
+            return f"Product {odoo_product.default_code} missed 'Customer Taxes' field to be used while VAT % calculation."
 
-        tax_id = order_rec.fiscal_position_id.tax_ids.with_context(active_test=False).tax_src_id.filtered(
-            lambda x: x.type_tax_use == 'sale' and (True if tax_percent == 0 else x.price_include) and
-                      (x.amount >= tax_percent - 0.001 and x.amount <= tax_percent + 0.001)
-        )
+        for tax in odoo_product.taxes_id:
+            if not tax.price_include:
+                return f"Products '{odoo_product.default_code}' Customer Tax - '{tax.name}' is not brutto Tax."
 
-        if tax_id:
-            tax_id = tax_id[0]
-            if not tax_id.active:
-                tax_id.active = True
-            return tax_id
-        else:
-            return f"Missed '{tax_percent}'% tax (brutto) within '{order_rec.fiscal_position_id.name}' Fiscal Position"
+            if tax.id not in order_rec.fiscal_position_id.tax_ids.tax_src_id.mapped('id'):
+                return f"Fiscal position - '{order_rec.fiscal_position_id.name}' missed Sales Tax - '{tax.name}'" \
+                       f" applied for product '{odoo_product.default_code}'"
+
+    # def get_account_tax_id(self, tax_percent, order_rec, item):
+    #     if tax_percent is False:
+    #         return f"Unable to get tax percentage from order data for {item}"
+    #
+    #     tax_id = order_rec.fiscal_position_id.tax_ids.with_context(active_test=False).tax_src_id.filtered(
+    #         lambda x: x.type_tax_use == 'sale' and (True if tax_percent == 0 else x.price_include) and
+    #                   (x.amount >= tax_percent - 0.001 and x.amount <= tax_percent + 0.001)
+    #     )
+    #
+    #     if tax_id:
+    #         tax_id = tax_id[0]
+    #         if not tax_id.active:
+    #             tax_id.active = True
+    #         return tax_id
+    #     else:
+    #         return f"Missed '{tax_percent}'% tax (brutto) within '{order_rec.fiscal_position_id.name}' Fiscal Position"
 
     def create_shipping_sales_order_line(self, sales_order, order_rec):
         amount_net = float(sales_order.get('shipping_amount', 0.0))
