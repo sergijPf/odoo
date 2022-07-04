@@ -25,7 +25,7 @@ class ProductImage(models.Model):
                         product_tmpl_img_role.image_role = None
 
                 if self.product_tmpl_id.magento_conf_prod_ids:
-                    self.product_tmpl_id.magento_conf_prod_ids.write({'force_update': True})
+                    self.product_tmpl_id.magento_conf_prod_ids.write({'force_image_update': True})
 
             elif self.product_variant_id:
                 if vals['image_role']:
@@ -35,7 +35,7 @@ class ProductImage(models.Model):
                         product_vrnt_img_role.image_role = None
 
                 if self.product_variant_id.magento_product_ids:
-                    self.product_variant_id.magento_product_ids.write({'force_update': True})
+                    self.product_variant_id.magento_product_ids.write({'force_image_update': True})
 
         return super(ProductImage, self).write(vals)
 

@@ -54,6 +54,7 @@ class MagentoConfigurableProduct(models.Model):
                                                  compute="_compute_single_attributes_of_configurable_product")
     magento_export_date = fields.Datetime(string="Last Export Date", help="Config.Product last Export Date to Magento")
     force_update = fields.Boolean(string="Force export", help="Force run of Configurable Product Export", default=False)
+    force_image_update = fields.Boolean(string="Force image export", default=False)
     simple_product_ids = fields.One2many('magento.product.product', 'magento_conf_product_id', 'Magento Products',
                                          required=True, context={'active_test': False})
     product_simple_count = fields.Integer('Simple Products #', compute='_compute_magento_product_simple_count')
@@ -205,6 +206,7 @@ class MagentoConfigurableProduct(models.Model):
                 'magento_export_date': '',
                 'is_enabled': False,
                 'force_update': False,
+                'force_image_update': False,
                 'magento_website_ids': [(5, 0, 0)],
                 'bulk_log_ids': [(5, 0, 0)]
             })
@@ -389,6 +391,7 @@ class MagentoConfigurableProduct(models.Model):
                 'magento_status': c.magento_status,
                 'log_message': '',
                 'force_update': c.force_update,
+                'force_image_update': c.force_image_update,
                 'export_date_to_magento': '',
                 'to_export': False if c.do_not_create_flag else True
             } for c in configurable_products
@@ -402,6 +405,7 @@ class MagentoConfigurableProduct(models.Model):
                 'export_date_to_magento': '',
                 'magento_status': s.magento_status,
                 'force_update': s.force_update,
+                'force_image_update': s.force_image_update,
                 'to_export': True
             } for s in export_products
         }
@@ -497,7 +501,7 @@ class MagentoConfigurableProduct(models.Model):
             if not conf_prod.check_config_product_attributes(instance, ml_conf_products, avail_attributes, conf_prod_attr):
                 continue
 
-            if conf_prod.force_update:
+            if ml_conf_products[prod]['force_update'] or ml_conf_products[prod]['force_image_update']:
                 if ml_conf_products[prod]['magento_status'] in ['in_magento', 'extra_info']:
                     ml_conf_products[prod]['magento_status'] = 'update_needed'
                 continue
@@ -505,12 +509,15 @@ class MagentoConfigurableProduct(models.Model):
             if ml_conf_products[prod].get('magento_update_date', ''):
                 if ml_conf_products[prod]['magento_type_id'] == 'configurable':
                     # check if product images need to be updated
-                    magento_images = ml_conf_products[prod].get('media_gallery', [])
-                    prod_images = conf_prod.product_image_ids
-                    thumb_image = conf_prod.image_1920
+                    magento_imgs = ml_conf_products[prod].get('media_gallery', [])
+                    prod_imgs = conf_prod.product_image_ids
+                    thumb_img = conf_prod.image_1920
+                    small_base_imgs = prod_imgs.filtered(lambda x: x.image_role in ['small_image', 'image'])
 
-                    if len(magento_images) != (len(prod_images) + (1 if thumb_image else 0)):
+                    if len(magento_imgs) != (len(prod_imgs) + (1 if thumb_img else 0)) + \
+                            (1 if len(small_base_imgs) < 2 else 0):
                         ml_conf_products[prod]['magento_status'] = 'update_needed'
+                        ml_conf_products[prod]['force_image_update'] = True
                         continue
 
                     # check if configurable attribute(s) and attribute-set are the same in Magento and Odoo
@@ -765,17 +772,7 @@ class MagentoConfigurableProduct(models.Model):
 
             self.process_storeview_data_export(instance, ml_conf_products, data, attr_sets)
 
-            trigger = False
-            if method == "PUT":
-                magento_images = conf_prod_dict.get('media_gallery', [])
-
-                if len(magento_images) != (len(self.product_image_ids) + (1 if self.image_1920 else 0)):
-                    trigger = True
-                    if magento_images:
-                        self.remove_product_images_from_magento(instance, ml_conf_products, prod_sku)
-
-            if method == "POST" or trigger:
-                self.process_images_export_to_magento(instance, ml_conf_products)
+            self.process_images_export(instance, ml_conf_products, self)
 
             conf_prod_dict['export_date_to_magento'] = response.get("updated_at")
             conf_prod_dict['magento_status'] = 'extra_info'
@@ -844,10 +841,10 @@ class MagentoConfigurableProduct(models.Model):
                 ml_conf_products[prod_sku]['export_date_to_magento'] = datetime_stamp
                 ml_conf_products[prod_sku]['magento_status'] = 'in_process'
                 conf_product.write({'bulk_log_ids': [(6, 0, [log_id.id])]})
-                magento_images = ml_conf_products[prod_sku].get('media_gallery', [])
 
                 self.prepare_images_and_websites_info(
-                    magento_instance, conf_product, magento_images, product_websites, prod_media, remove_images, method
+                    magento_instance, conf_product, ml_conf_products[prod_sku], product_websites, prod_media,
+                    remove_images, method
                 )
 
             if method == "POST" and product_websites:
@@ -960,10 +957,10 @@ class MagentoConfigurableProduct(models.Model):
                 self.add_to_custom_attributes_list(custom_attributes, attr_code, value)
 
     @staticmethod
-    def prepare_images_and_websites_info(instance, prod, magento_images, product_websites, prod_media, remove_images,
+    def prepare_images_and_websites_info(instance, prod, product_dict, product_websites, prod_media, remove_images,
                                          method, is_simple_prod=False):
-        img_update = False
         sku = prod.magento_sku
+        magento_images = product_dict.get('media_gallery', [])
 
         if method == "POST":
             # update product_website dict with avail.websites
@@ -972,13 +969,11 @@ class MagentoConfigurableProduct(models.Model):
                     "productWebsiteLink": {"sku": sku, "website_id": site.magento_website_id},
                     "sku": sku
                 })
-        elif method == "PUT":
-            if (len(prod.product_image_ids) + (1 if prod.image_1920 else 0)) != len(magento_images):
-                for _id in magento_images:
-                    remove_images.append({"entryId": _id, "sku": sku})
-                img_update = True
 
-        if method == 'POST' or img_update:
+        if method == 'POST' or product_dict['force_image_update']:
+            for _id in magento_images:
+                remove_images.append({"entryId": _id, "sku": sku})
+
             product = prod.magento_conf_product_id if is_simple_prod else prod
             images = product.prepare_images_list(instance, prod if is_simple_prod else False)
             if images:
@@ -1041,52 +1036,74 @@ class MagentoConfigurableProduct(models.Model):
             ml_products[prod_sku]['log_message'] += text
             ml_products[prod_sku]['force_update'] = True
 
-    def process_images_export_to_magento(self, magento_instance, ml_conf_products):
-        prod_media = self.prepare_images_list(magento_instance)
+    def process_images_export(self, instance, ml_products, prod_rec, is_simple_prod=False):
+        sku = prod_rec.magento_sku
+        magento_imgs = ml_products[sku].get('media_gallery', [])
+
+        if magento_imgs:
+            self.remove_product_images_from_magento(instance, ml_products, sku)
+
+        prod_media = self.prepare_images_list(instance, prod_rec if is_simple_prod else False)
 
         if prod_media:
-            self.export_media_to_magento(magento_instance, {self.magento_sku: prod_media}, ml_conf_products)
+            self.export_media_to_magento(instance, {sku: prod_media}, ml_products)
 
     def prepare_images_list(self, instance, simple_prod=False):
         prod_media_list = []
         product_rec = simple_prod or self
+        res_field = instance.image_resolution or 'image_1024'
 
         for img in product_rec.product_image_ids:
             attachment = self.env['ir.attachment'].sudo().search([
-                ('res_field', '=', instance.image_resolution or 'image_1024'),
+                ('res_field', '=', res_field),
                 ('res_model', '=', 'product.image'),
                 ('res_id', '=', img.id)
             ])
             if attachment:
-                prod_media_list.append((attachment, img.name, [img.image_role]))
+                prod_media_list.append((attachment, img.name, [img.image_role], False))
 
         if product_rec.image_1920:     # product Thumbnail image
-            res_field = 'image_128'
-            roles = ['thumbnail']
-            attachment = False
+            roles = []
 
-            if not product_rec.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
-                res_field = instance.image_resolution or 'image_1024'
-                roles += ['small_image']
-
-            if simple_prod:
-                attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', 'image_variant_128'),
-                    ('res_model', '=', 'product.product'),
-                    ('res_id', '=', simple_prod.odoo_product_id.id)
-                ])
-
-            if not attachment:
-                attachment = self.env['ir.attachment'].sudo().search([
-                    ('res_field', '=', res_field),
-                    ('res_model', '=', 'product.template'),
-                    ('res_id', '=', product_rec.odoo_prod_template_id.id)
-                ])
+            # add thumbnail image
+            attachment = self.check_image_attachment_exists(simple_prod, product_rec, 'image_256')
 
             if attachment:
-                prod_media_list.append((attachment, '', roles))
+                prod_media_list.append((attachment, '', ['thumbnail'], True))
+
+            # add small/base image if there is no
+            if not product_rec.product_image_ids.filtered(lambda x: x.image_role == 'small_image'):
+                roles += ['small_image']
+
+            if not product_rec.product_image_ids.filtered(lambda x: x.image_role == 'image'):
+                roles += ['image']
+
+            if roles:
+                attachment = self.check_image_attachment_exists(simple_prod, product_rec, res_field)
+
+                if attachment:
+                    prod_media_list.append((attachment, '', roles, True if simple_prod else False))
 
         return prod_media_list
+
+    def check_image_attachment_exists(self, simple_prod, product_rec, res_field):
+        attachment = False
+
+        if simple_prod:
+            attachment = self.env['ir.attachment'].sudo().search([
+                ('res_field', '=', res_field.replace('image', 'image_variant')),
+                ('res_model', '=', 'product.product'),
+                ('res_id', '=', simple_prod.odoo_product_id.id)
+            ])
+
+        if not attachment:
+            attachment = self.env['ir.attachment'].sudo().search([
+                ('res_field', '=', res_field),
+                ('res_model', '=', 'product.template'),
+                ('res_id', '=', product_rec.odoo_prod_template_id.id)
+            ])
+
+        return attachment
 
     @staticmethod
     def export_media_to_magento(magento_instance, products_media, ml_products):
@@ -1094,13 +1111,13 @@ class MagentoConfigurableProduct(models.Model):
         prod_sku = list(products_media.keys())[0]
 
         for img in products_media[prod_sku]:
-            attachment, name, role = img
+            attachment, name, role, disabled = img
 
             images.update({
                 "entry": {
                     "media_type": "image",
                     "types": role,
-                    "disabled": "true" if role == ['thumbnail'] else "false",
+                    "disabled": "true" if disabled else "false",   # true - will be hidden on Product Page in M2
                     "label": name,
                     "content": {
                         "base64EncodedData": attachment.datas.decode('utf-8'),
@@ -1115,6 +1132,7 @@ class MagentoConfigurableProduct(models.Model):
                 req(magento_instance, api_url, 'POST', images)
             except Exception as e:
                 ml_products[prod_sku]['force_update'] = True
+                ml_products[prod_sku]['force_image_update'] = True
                 text = f"Error while Product ({role}) Image(s) export to Magento: {e} "
                 ml_products[prod_sku]['log_message'] += text
 
@@ -1126,6 +1144,7 @@ class MagentoConfigurableProduct(models.Model):
                 req(magento_instance, api_url, 'DELETE')
             except Exception as e:
                 ml_products[magento_sku]['force_update'] = True
+                ml_products[magento_sku]['force_image_update'] = True
                 text = "Error while Product Images remove from Magento. " + str(e)
                 ml_products[magento_sku]['log_message'] += text
 
@@ -1202,6 +1221,7 @@ class MagentoConfigurableProduct(models.Model):
             text = f"Error while async Product Images remove from Magento: {str(err)}"
             for sku in {img["sku"] for img in remove_images}:
                 ml_products[sku]['force_update'] = True
+                ml_products[sku]['force_image_update'] = True
                 ml_products[sku]['log_message'] += text
 
     @staticmethod
@@ -1219,6 +1239,7 @@ class MagentoConfigurableProduct(models.Model):
                 for sku in {i["sku"] for i in imgs}:
                     if not ml_products[sku]['log_message']:
                         ml_products[sku]['force_update'] = True
+                        ml_products[sku]['force_image_update'] = True
                         ml_products[sku]['log_message'] += text
             return [], 0
 
@@ -1227,7 +1248,7 @@ class MagentoConfigurableProduct(models.Model):
                 if ml_products[prod_sku]['log_message']:
                     continue
 
-                attachment, name, role = img
+                attachment, name, role, disabled = img
 
                 if files_size and (files_size + attachment.file_size) > MAX_SIZE_FOR_IMAGES:
                     images, files_size = process(images)
@@ -1236,7 +1257,7 @@ class MagentoConfigurableProduct(models.Model):
                     "entry": {
                         "media_type": "image",
                         "types": role,
-                        "disabled": "true" if role == ['thumbnail'] else "false",
+                        "disabled": "true" if disabled else "false",  # true - will be hidden on Product Page in M2
                         "label": name,
                         "content": {
                             "base64EncodedData": attachment.datas.decode('utf-8'),

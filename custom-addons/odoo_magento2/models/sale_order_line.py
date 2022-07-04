@@ -77,7 +77,7 @@ class SaleOrderLine(models.Model):
             return f"Product {odoo_product.default_code} missed 'Customer Taxes' field to be used while VAT % calculation."
 
         for tax in odoo_product.taxes_id:
-            if not tax.price_include:
+            if tax.amount and not tax.price_include:
                 return f"Products '{odoo_product.default_code}' Customer Tax - '{tax.name}' is not brutto Tax."
 
             if tax.id not in order_rec.fiscal_position_id.tax_ids.tax_src_id.mapped('id'):

@@ -51,6 +51,7 @@ class MagentoProductProduct(models.Model):
         ('log_error', 'Error to Export'),
     ], string='Export Status', help='The status of Product Variant export to Magento ', default='not_exported')
     force_update = fields.Boolean(string="Force export", help="Force run of Simple Product Export", default=False)
+    force_image_update = fields.Boolean(string="Force image export", default=False)
     qty_avail = fields.Float(string="Qty on hand", help="Available quantity on specified Locations",
                              compute="_compute_available_qty")
     bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs",
@@ -335,7 +336,7 @@ class MagentoProductProduct(models.Model):
             if export_prod.check_simple_product_attributes_for_errors(simp_prods_dict, conf_prods_dict, attr_sets):
                 continue
 
-            if simp_prods_dict[prod]['force_update']:
+            if simp_prods_dict[prod]['force_update'] or simp_prods_dict[prod]['force_image_update']:
                 if simp_prods_dict[prod]['magento_status'] in ['in_magento', 'extra_info']:
                     simp_prods_dict[prod]['magento_status'] = 'update_needed'
                 continue
@@ -346,9 +347,14 @@ class MagentoProductProduct(models.Model):
                     if export_prod.magento_conf_product_id.do_not_create_flag or \
                             simp_prods_dict[prod]['magento_prod_id'] in conf_prods_dict[conf_sku]['children']:
                         # check if images count is the same in Odoo and Magento
-                        if (len(export_prod.product_image_ids) + (1 if export_prod.image_1920 else 0)) != \
+                        prod_imgs = export_prod.product_image_ids
+                        thumb_img = export_prod.image_1920
+                        small_base_imgs = prod_imgs.filtered(lambda x: x.image_role in ['small_image', 'image'])
+
+                        if (len(prod_imgs) + (1 if thumb_img else 0)) + (1 if len(small_base_imgs) < 2 else 0) != \
                                 len(simp_prods_dict[prod].get('media_gallery', [])):
                             simp_prods_dict[prod]['magento_status'] = 'update_needed'
+                            simp_prods_dict[prod]['force_image_update'] = True
                             continue
 
                         if update_export_statuses:
@@ -635,6 +641,7 @@ class MagentoProductProduct(models.Model):
 
     def export_single_simple_product_to_magento(self, instance, ml_simp_products, attr_sets, method):
         magento_sku = self.magento_sku
+        simp_prod_dict = ml_simp_products[magento_sku]
         prod_attr_set = self.magento_conf_product_id.magento_attr_set
         available_attributes = attr_sets[prod_attr_set]['attributes']
         prod_attr_list = [(self.to_upper(a.attribute_id.name), self.to_upper(a.name)) for a in
@@ -670,16 +677,16 @@ class MagentoProductProduct(models.Model):
         except Exception as err:
             text = ("Error while new Simple Product creation in Magento: " if method == 'POST' else
                     "Error while Simple Product update in Magento: ") + str(err)
-            ml_simp_products[magento_sku]['log_message'] += text
+            simp_prod_dict['log_message'] += text
             return {}
 
         if response.get("sku"):
-            ml_simp_products[magento_sku]['export_date_to_magento'] = response.get("updated_at")
+            simp_prod_dict['export_date_to_magento'] = response.get("updated_at")
 
             if self.magento_conf_product_id.do_not_create_flag:
-                ml_simp_products[magento_sku]['magento_status'] = 'extra_info'
+                simp_prod_dict['magento_status'] = 'extra_info'
             else:
-                ml_simp_products[magento_sku]['magento_status'] = 'need_to_link'
+                simp_prod_dict['magento_status'] = 'need_to_link'
 
             if method == "POST":
                 conf_prod_obj = self.magento_conf_product_id
@@ -687,7 +694,7 @@ class MagentoProductProduct(models.Model):
 
             self.process_storeview_data_export(instance, ml_simp_products)
 
-            self.process_images_export(instance, ml_simp_products)
+            self.magento_conf_product_id.process_images_export(instance, ml_simp_products, self, True)
 
             return response
         return {}
@@ -724,17 +731,6 @@ class MagentoProductProduct(models.Model):
         if text:
             ml_products[prod_sku]['log_message'] += text
             ml_products[prod_sku]['force_update'] = True
-
-    def process_images_export(self, instance, ml_simp_products):
-        magento_sku = self.magento_sku
-
-        if ml_simp_products[magento_sku].get('media_gallery', []):
-            self.magento_conf_product_id.remove_product_images_from_magento(instance, ml_simp_products, magento_sku)
-
-        prod_media = self.magento_conf_product_id.prepare_images_list(instance, self)
-
-        if prod_media:
-            self.magento_conf_product_id.export_media_to_magento(instance, {magento_sku: prod_media}, ml_simp_products)
 
     def export_simple_products_in_bulk(self, instance, ml_simp_products, attr_sets, method='POST'):
         data = []
@@ -792,11 +788,10 @@ class MagentoProductProduct(models.Model):
             sku = prod.magento_sku
             ml_simp_products[sku]['export_date_to_magento'] = datetime_stamp
             ml_simp_products[sku]['magento_status'] = 'in_process'
-            magento_images = ml_simp_products[sku].get('media_gallery', [])
             prod.write({'bulk_log_ids': [(6, 0, [log_id.id])]})
 
             conf_prod_obj.prepare_images_and_websites_info(
-                instance, prod, magento_images, product_websites, prod_media, remove_images, method, True
+                instance, prod, ml_simp_products[sku], product_websites, prod_media, remove_images, method, True
             )
 
         if method == "POST" and product_websites:
@@ -1070,6 +1065,7 @@ class MagentoProductProduct(models.Model):
                     'magento_export_date': '',
                     'is_enabled': False,
                     'force_update': False,
+                    'force_image_update': False,
                     'bulk_log_ids': [(5, 0, 0)]
                 })
 
@@ -1089,7 +1085,13 @@ class MagentoProductProduct(models.Model):
                     product_dict['force_update'] = False
                     values.update({'force_update': False})
 
+                if product_dict['force_image_update']:
+                    product_dict['force_image_update'] = False
+                    values.update({'force_image_update': False})
+
             # valid for products which have failed exporting storeviews/images info (after product are created in M2)
+            if product_dict['force_update']:
+                values.update({'force_update': True})
             if product_dict['force_update']:
                 values.update({'force_update': True})
 
