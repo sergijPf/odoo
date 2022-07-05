@@ -33,14 +33,14 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
         except Exception as error:
             raise UserError(_("Error getting Product Categories from Magento" + str(error)))
 
-        roots_children = magento_root_category.get("children_data")
+        roots_children = magento_root_category.get("children_data", [])
 
         if self.is_update_existed:
             if not roots_children:
                 raise UserError("There is nothing to update on Magento side!")
 
             magento_categories_list = []
-            self._get_all_magento_category_ids(roots_children.get('children_data', []), magento_categories_list)
+            self._get_all_magento_category_ids(roots_children, magento_categories_list)
 
             for categ in ml_category_recs:
                 if categ.magento_category in magento_categories_list:

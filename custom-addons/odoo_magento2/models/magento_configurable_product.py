@@ -614,11 +614,17 @@ class MagentoConfigurableProduct(models.Model):
             mag_attr = magento_attributes[attribute]
             attr_vals = single_attr_recs.filtered(lambda x: self.to_upper(x.attribute_id.name) == attribute)
             attr_val_rec = attr_vals.value_ids
+            if attribute in config_attrs:
+                text = f"'{attribute}' attribute can't be used as single and configurable attribute at the same time."
+                ml_conf_products[sku]['log_message'] += text
+                return False
+
             if len(attr_val_rec) > 1 and mag_attr['frontend_input'] != 'multiselect':
                 text = f"'{attribute}' attribute can't be used as multiselect as it has single select" \
                        f" setup in Magento."
                 ml_conf_products[sku]['log_message'] += text
                 return False
+
             for rec in attr_val_rec:
                 if self.to_upper(rec.name) not in [self.to_upper(i.get('label')) for i in mag_attr['options']]:
                     val_id, err = self.create_new_attribute_option_in_magento(

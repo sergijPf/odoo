@@ -343,7 +343,6 @@ class MagentoProductProduct(models.Model):
 
             if simp_prods_dict[prod].get('magento_update_date', ''):
                 if simp_prods_dict[prod]['magento_type_id'] == 'simple':
-                    # if not conf_prods_dict[conf_sku]['to_export']:
                     if export_prod.magento_conf_product_id.do_not_create_flag or \
                             simp_prods_dict[prod]['magento_prod_id'] in conf_prods_dict[conf_sku]['children']:
                         # check if images count is the same in Odoo and Magento
@@ -371,8 +370,6 @@ class MagentoProductProduct(models.Model):
                             export_prod.error_log_ids.sudo().unlink()
                     else:
                         simp_prods_dict[prod]['magento_status'] = 'need_to_link'
-                    # elif simp_prods_dict[prod]['magento_status'] in ['in_magento', 'in_process']:
-                    #     simp_prods_dict[prod]['magento_status'] = 'update_needed'
                 else:
                     text = "The Product with such sku is already in Magento. (And it's type isn't Simple Product). "
                     simp_prods_dict[prod]['log_message'] += text
