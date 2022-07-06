@@ -19,7 +19,7 @@ class SaleOrderLine(models.Model):
                 return so_line_vals
 
             try:
-                line = order_rec.order_line.filtered(lambda x: x.magento_sale_order_line_ref == so_line_ref)
+                line = order_rec.order_line.filtered(lambda x: x.magento_sale_order_line_ref == str(so_line_ref))
                 if line:
                     line.with_context(tracking_disable=True).write(so_line_vals)
                 else:
@@ -38,10 +38,7 @@ class SaleOrderLine(models.Model):
         product_sku = order_line.get('sku')
         original_price = order_line.get('original_price', 0.0)
         discount = (original_price - order_line.get('price_incl_tax', 0.0)) if original_price else 0
-
-        # tax_id = self.get_account_tax_id(order_line.get('tax_percent', False), order_rec, order_line.get('sku'))
-        # if isinstance(tax_id, str):
-        #     return tax_id
+        discount += order_line.get('discount_amount', 0.0) / order_line.get('qty_ordered', 1.0)
 
         odoo_product = self.env['magento.product.product'].search([
             ('magento_sku', '=', product_sku),
@@ -66,8 +63,7 @@ class SaleOrderLine(models.Model):
             'product_uom_qty': float(order_line.get('qty_ordered', 1.0)),
             'price_unit': original_price,
             'discount': round((discount / original_price) * 100, 2) if original_price and discount else 0,
-            # 'tax_id': [(6, 0, [tax_id.id])],
-            'magento_sale_order_line_ref': so_line_ref
+            'magento_sale_order_line_ref': str(so_line_ref)
         })
 
         return order_line_vals
@@ -84,26 +80,9 @@ class SaleOrderLine(models.Model):
                 return f"Fiscal position - '{order_rec.fiscal_position_id.name}' missed Sales Tax - '{tax.name}'" \
                        f" applied for product '{odoo_product.default_code}'"
 
-    # def get_account_tax_id(self, tax_percent, order_rec, item):
-    #     if tax_percent is False:
-    #         return f"Unable to get tax percentage from order data for {item}"
-    #
-    #     tax_id = order_rec.fiscal_position_id.tax_ids.with_context(active_test=False).tax_src_id.filtered(
-    #         lambda x: x.type_tax_use == 'sale' and (True if tax_percent == 0 else x.price_include) and
-    #                   (x.amount >= tax_percent - 0.001 and x.amount <= tax_percent + 0.001)
-    #     )
-    #
-    #     if tax_id:
-    #         tax_id = tax_id[0]
-    #         if not tax_id.active:
-    #             tax_id.active = True
-    #         return tax_id
-    #     else:
-    #         return f"Missed '{tax_percent}'% tax (brutto) within '{order_rec.fiscal_position_id.name}' Fiscal Position"
-
     def create_shipping_sales_order_line(self, sales_order, order_rec):
-        amount_net = float(sales_order.get('shipping_amount', 0.0))
-        discount_amount = (amount_net - sales_order.get('shipping_incl_tax', 0.0)) if amount_net else 0
+        ship_amount = float(sales_order.get('shipping_amount', 0.0))
+        discount_amount = sales_order.get('shipping_discount_amount', 0.0)
         shipping_product = self.env.ref('odoo_magento2.product_product_shipping')
 
         if not shipping_product:
@@ -121,8 +100,8 @@ class SaleOrderLine(models.Model):
         vals.update({
             'name': 'Shipping cost',
             'product_uom_qty': 1,
-            'price_unit': amount_net,
-            'discount': round((discount_amount / amount_net) * 100, 2) if amount_net and discount_amount else 0,
+            'price_unit': ship_amount,
+            'discount': round((discount_amount / ship_amount) * 100, 2) if ship_amount and discount_amount else 0,
             'tax_id': False,
             'magento_sale_order_line_ref': 'shipping'
         })
