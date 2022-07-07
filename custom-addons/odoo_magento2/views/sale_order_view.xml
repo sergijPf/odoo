@@ -11,6 +11,14 @@
                          ('state','!=','cancel'), ('is_canceled_in_magento','=',True)]}"/>
             </xpath>
 
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_payment_transactions" type="object" class="oe_stat_button" icon="fa-credit-card"
+                        attrs="{'invisible': [('paym_trans_ids_nbr', '=', 0)]}">
+                    <field name="paym_trans_ids_nbr" widget="statinfo" string="Paym.Transaction(s)"
+                           modifiers="{'readonly': true}"/>
+                </button>
+            </xpath>
+
             <xpath expr="//button[@name='action_view_invoice']" position="before">
                 <button type="object" name="action_view_stock_move_" class="oe_stat_button"
                         icon="fa-truck"

@@ -23,6 +23,7 @@ class SaleOrder(models.Model):
     magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
     magento_order_log_book_ids = fields.One2many('magento.orders.log.book', 'sale_order_id', "Logged Error Messages")
     auto_workflow_process_id = fields.Many2one("sale.workflow.process", string="Workflow Process", copy=False)
+    paym_trans_ids_nbr = fields.Integer(compute='_compute_paym_trans_ids_nbr', string='# of Payment Transactions')
     moves_count = fields.Integer(compute="_compute_stock_move", string="Stock Move", store=False,
                                  help="Stock Move Count for Orders without Picking.")
     is_canceled_in_magento = fields.Boolean(string="Canceled in Magento", default=False,
@@ -43,6 +44,11 @@ class SaleOrder(models.Model):
         for rec in self:
             rec.moves_count = stock_move_obj.search_count([("picking_id", "=", False),
                                                            ("sale_line_id", "in", self.order_line.ids)])
+
+    @api.depends('transaction_ids')
+    def _compute_paym_trans_ids_nbr(self):
+        for order in self:
+            order.paym_trans_ids_nbr = len(order.transaction_ids)
 
     def action_view_stock_move_(self):
         stock_move_obj = self.env['stock.move']
@@ -450,3 +456,15 @@ class SaleOrder(models.Model):
                 'magento_instance_id': instance.id,
             })
             log_book_rec.create(data)
+
+    def action_view_payment_transactions(self):
+        action = self.env['ir.actions.act_window']._for_xml_id('payment.action_payment_transaction')
+
+        if len(self.transaction_ids) == 1:
+            action['view_mode'] = 'form'
+            action['res_id'] = self.transaction_ids.id
+            action['views'] = []
+        else:
+            action['domain'] = [('id', 'in', self.transaction_ids.ids)]
+
+        return action
