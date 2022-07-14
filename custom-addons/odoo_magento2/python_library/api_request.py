@@ -48,7 +48,6 @@ def req(backend, path, method='GET', data=None, params=None):
         raise UserError(_('A network error caused the failure of the job: %s', err))
     except Exception as err:
         raise UserError(err)
-        # raise UserError(_("Received message: " + str(err)))
     return content
 
 

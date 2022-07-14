@@ -80,6 +80,7 @@
                                     <field name="magento_conf_product_id" readonly="1"/>
                                     <br/>
                                     <field name="magento_sku" readonly="1"/>
+                                    <field name="cross_sell_product_ids" readonly="1" widget="many2many_tags"/>
                                     <field name="qty_avail" readonly="1"/>
                                 </group>
                                  <group name="magento_info" string="Magento Info">

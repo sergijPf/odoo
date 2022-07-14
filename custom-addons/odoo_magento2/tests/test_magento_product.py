@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from . import common
 from odoo.exceptions import UserError
 
+from . import common
 
 
 class TestMagentoProduct(common.TestMagentoInstanceCommon):
@@ -10,98 +10,72 @@ class TestMagentoProduct(common.TestMagentoInstanceCommon):
     def setUp(self):
         res = super(TestMagentoProduct, self).setUp()
 
-        self.uom_unit = self.env.ref('uom.product_uom_unit')
-        self.prod_attr_1 = self.env['product.attribute'].create({'name': 'Color'})
-        self.prod_attr1_v1 = self.env['product.attribute.value'].create(
-            {'name': 'red', 'attribute_id': self.prod_attr_1.id, 'sequence': 1})
-        self.prod_attr1_v2 = self.env['product.attribute.value'].create(
-            {'name': 'blue', 'attribute_id': self.prod_attr_1.id, 'sequence': 2})
+        prod1 = self.product_template1
+        sku = prod1.with_context(lang='en_US').name.replace(' - ', '_').replace('-', '_').replace('%', ''). \
+            replace('#', '').replace('/', '').replace('&', '').replace('  ', ' ').replace(' ', '_')
 
-        self.prod_attr_2 = self.env['product.attribute'].create({'name': 'Print', 'is_ignored_in_magento': True})
-        self.prod_attr2_v1 = self.env['product.attribute.value'].create(
-            {'name': 'A4', 'attribute_id': self.prod_attr_2.id, 'sequence': 1})
-
-        self.product_template = self.env['product.template'].create({
-            'name': 'Test_prod',
-            'type': 'product',
-            'uom_id': self.uom_unit.id,
-            'uom_po_id': self.uom_unit.id,
-            'attribute_line_ids': [(0, 0, {
-                'attribute_id': self.prod_attr_1.id,
-                'value_ids': [(6, 0, [self.prod_attr1_v1.id, self.prod_attr1_v2.id])]
-            })],
-            'is_magento_config': True
-        })
-
-        self.product_template.attribute_line_ids.create({
-            'product_tmpl_id': self.product_template.id,
-            'attribute_id': self.prod_attr_2.id,
-            'value_ids': [(6, 0, [self.prod_attr2_v1.id])]
-        })
-
-        # product.template.attribute.value records
-        self.product_attr1_v1 = self.product_template.attribute_line_ids[0].product_template_value_ids[0]
-        self.product_attr1_v2 = self.product_template.attribute_line_ids[0].product_template_value_ids[1]
-        self.product_attr2 = self.product_template.attribute_line_ids[1].product_template_value_ids[0]
-
-        self.product_1 = self.product_template._get_variant_for_combination(self.product_attr1_v1 + self.product_attr2)
-        self.product_1.default_code = "variant_1"
-        self.product_2 = self.product_template._get_variant_for_combination(self.product_attr1_v2 + self.product_attr2)
-        self.product_2.default_code = "variant_2"
-
-        imp_exp_wiz = self.env['magento.import.export'].create({'magento_instance_ids': [(6, 0, [self.instance.id])]})
-        self.result = imp_exp_wiz.with_context({'active_ids': self.product_template.id}).\
-            export_products_to_magento_layer_operation()
+        self.conf_prod1 = self.env['magento.configurable.product'].search([
+            ('magento_sku', '=', sku),
+            ('magento_instance_id', '=', self.instance.id),
+            ('odoo_prod_template_id', '=', prod1.id)
+        ])
 
         return res
 
-    def test_adding_products_to_layer(self):
+    def test_check_products_have_proper_setup_for_magento_export(self):
+        prod1 = self.product_template1
+        prod2 = self.product_template2
 
+        self.assertTrue(prod1.is_magento_config)
+        self.assertFalse(prod1.x_magento_no_create)
+        self.assertTrue(prod1.attribute_line_ids[0].magento_config)
+        self.assertTrue(prod1.attribute_line_ids[-1].magento_config)
+        self.assertTrue(prod1.attribute_line_ids[0].main_conf_attr)
+
+        self.assertTrue(prod2.is_magento_config)
+        self.assertTrue(prod2.attribute_line_ids[0].magento_config)
+
+    def test_check_products_were_added_to_layer(self):
         # check if products are successfully added to Magento Layer in Odoo
-        self.assertIn('effect', self.result)
+        self.assertIn('effect', self.add_result)
 
-        # check if product attribute line with multiple values is configurable
-        self.assertTrue(self.product_template.attribute_line_ids.filtered(
-            lambda x: x.attribute_id.id == self.prod_attr_1.id).magento_config)
+        self.assertTrue(True if self.conf_prod1 else False)
 
-        # check if product attribute with is_ignore_for_magento flag can't be configurable
-        with self.assertRaises(UserError):
-            self.product_template.attribute_line_ids.filtered(
-            lambda x: x.attribute_id == self.prod_attr_2).magento_config = True
+        self.assertEqual(self.product_template1.product_variant_ids, self.conf_prod1.simple_product_ids.odoo_product_id,
+                         "Product Variants and Simple Products in Magento Layer do not match")
 
-        # check if config.product is in layer
-        conf_prod = self.env['magento.configurable.product'].search([
-            ('magento_instance_id', '=', self.instance.id),
-            ('odoo_prod_template_id', '=', self.product_template.id)
-        ])
-        self.assertTrue(conf_prod)
+    def test_product_attributes_in_magento_layer(self):
+        self.assertEqual(set(self.conf_prod1.x_magento_assign_attr_ids.mapped('name')), {'color', 'size'},
+                         "Product's configurable attributes do not match with Product Template setup")
+
+        self.assertEqual(self.conf_prod1.x_magento_main_config_attr, 'color',
+                         "Product's 'hover attribute' wasn't apply properly to Configurable Product in Magento Layer")
+
+        self.assertEqual(set(self.conf_prod1.x_magento_single_attr_ids.attribute_id.mapped('name')), {'material', 'collection'},
+                         "Product single attributes do not match with Product Template setup")
+
+    def test_product_force_update_in_layer_after_change_in_odoo(self):
+        prod1 = self.product_template1
 
         # check if 'is_magento_config' can't be unchecked for product which is already added to layer
         with self.assertRaises(UserError):
-            self.product_template.onchange_magento_config_check()
+            prod1.onchange_magento_config_check()
 
         # check if update of product specific fields changes 'force_update' field for conf.product in layer
-        conf_prod.force_update = False
-        self.product_template.website_description = '<p> test paragraph </p>'
-        self.assertTrue(conf_prod.force_update)
-
-        # check product variant is in magento layer and sku == internal reference
-        simp_prod = self.env['magento.product.product'].search([
-            ('magento_instance_id', '=', self.instance.id),
-            ('magento_sku', '=', self.product_1.default_code)
-        ])
-        self.assertEqual(simp_prod.magento_sku if simp_prod else False, self.product_1.default_code,
-                         "Can't find Product Variant in Magento Layer. Magento SKU should be equal to Internal Reference")
+        self.assertFalse(self.conf_prod1.force_update)
+        prod1.website_description = '<p> test paragraph </p>'
+        self.assertTrue(self.conf_prod1.force_update)
 
         # check if update of product specific field changes 'force_update' field for simple product in layer
-        simp_prod.force_update = False
-        self.product_1.weight = '0.1'
-        self.assertTrue(simp_prod.force_update)
-
+        simpl_prod = self.conf_prod1.simple_product_ids[0]
+        if simpl_prod:
+            self.assertFalse(simpl_prod.force_update)
+            simpl_prod.odoo_product_id.weight = '0.1'
+            self.assertTrue(simpl_prod.force_update)
 
     def test_delete_odoo_products_exported_to_layer(self):
         with self.assertRaises(UserError):
-            self.product_template.unlink()
+            self.product_template1.unlink()
 
         with self.assertRaises(UserError):
             self.product_1.unlink()
