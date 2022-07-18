@@ -215,36 +215,36 @@ class MagentoProductProduct(models.Model):
             return True
 
     def export_product_prices_to_magento(self, instances):
-        result = False
+        errors = False
 
         for instance in instances:
-            res = []
+            err_lst = []
             special_prices_obj = self.env['magento.special.pricing']
 
             base_prices, tier_prices, special_prices = self.prepare_product_prices_data_to_export(instance)
 
             if base_prices:
                 api_url = "/all/V1/products/base-prices"
-                res += special_prices_obj.call_export_product_price_api(instance, base_prices, api_url)
+                err_lst += special_prices_obj.call_export_product_price_api(instance, base_prices, api_url)
 
             if tier_prices:
                 api_url = "/all/V1/products/tier-prices"
-                res += special_prices_obj.call_export_product_price_api(instance, tier_prices, api_url)
+                err_lst += special_prices_obj.call_export_product_price_api(instance, tier_prices, api_url)
 
             for store_code in special_prices:
                 api_url = "/%s/V1/products/special-price" % store_code
-                res += special_prices_obj.call_export_product_price_api(instance, special_prices[store_code], api_url)
+                err_lst += special_prices_obj.call_export_product_price_api(instance, special_prices[store_code], api_url)
 
             if tier_prices or special_prices:
                 special_prices_obj.search([('magento_instance_id', '=', instance.id)]).export_status = 'exported'
 
-            if res:
-                special_prices_obj.log_price_errors(instance, res, 'Mass Export')
-                result = True
+            if err_lst:
+                special_prices_obj.log_price_errors(instance, err_lst, 'Mass Export')
+                errors = True
             else:
                 special_prices_obj.remove_log_errors(instance, 'Mass Export')
 
-        if result:
+        if errors:
             return {
                 'name': 'Product Prices Export Error Logs',
                 'view_mode': 'tree,form',
@@ -306,19 +306,20 @@ class MagentoProductProduct(models.Model):
         return base_prices, tier_prices, special_prices
 
     @staticmethod
-    def update_simple_product_dict_with_magento_data(magento_product, ml_simp_products_dict):
+    def update_simple_product_dict_with_magento_data(magento_product, simp_products_dict):
         website_ids = magento_product.get("extension_attributes").get("website_ids")
         product_prices = magento_product.get("extension_attributes").get("website_wise_product_price_data", [])
         prices_list = [json.loads(price) for price in product_prices]
 
-        ml_simp_products_dict[str(magento_product.get("sku"))].update({
+        simp_products_dict[str(magento_product.get("sku"))].update({
             'magento_type_id': magento_product.get('type_id'),
             'magento_prod_id': magento_product.get("id"),
             'is_magento_enabled': True if magento_product.get('status') == 1 else False,
             'magento_update_date': magento_product.get("updated_at"),
             'magento_website_ids': website_ids,
             'media_gallery': [i['id'] for i in magento_product.get("media_gallery_entries", []) if i],
-            'product_prices': {p['website_id']: p.get('product_price', 0) for p in prices_list if p.get('website_id')}
+            'product_prices': {p['website_id']: p.get('product_price', 0) for p in prices_list if p.get('website_id')},
+            'product_links_cnt': len(magento_product.get("product_links", []))
         })
 
     def check_simple_products_for_errors_and_update_export_statuses(self, conf_prods_dict, simp_prods_dict, attr_sets,
@@ -351,9 +352,10 @@ class MagentoProductProduct(models.Model):
                         prod_imgs = export_prod.product_image_ids
                         thumb_img = export_prod.image_1920
                         small_base_imgs = prod_imgs.filtered(lambda x: x.image_role in ['small_image', 'image'])
+                        sb_imgs_cnt = 1 if prod_imgs and len(small_base_imgs) < 2 else 0
+                        magento_imgs = simp_prods_dict[prod].get('media_gallery', [])
 
-                        if (len(prod_imgs) + (1 if thumb_img else 0)) + (1 if len(small_base_imgs) < 2 else 0) != \
-                                len(simp_prods_dict[prod].get('media_gallery', [])):
+                        if (len(prod_imgs) + (1 if thumb_img else 0) + sb_imgs_cnt) != len(magento_imgs):
                             simp_prods_dict[prod]['magento_status'] = 'update_needed'
                             simp_prods_dict[prod]['force_image_update'] = True
                             continue
@@ -362,6 +364,10 @@ class MagentoProductProduct(models.Model):
                             # check prices
                             if not self.check_simple_product_prices(export_prod, simp_prods_dict[prod]):
                                 continue
+
+                        if simp_prods_dict[prod]['product_links_cnt'] != len(export_prod.cross_sell_product_ids):
+                            simp_prods_dict[prod]['magento_status'] = 'extra_info'
+                            continue
 
                         if simp_prods_dict[prod]['magento_status'] != 'extra_info':
                             simp_prods_dict[prod]['magento_status'] = 'in_magento'
@@ -723,7 +729,7 @@ class MagentoProductProduct(models.Model):
 
         for prod in self:
             if simp_prods_dict[prod.magento_sku]['magento_status'] != 'need_to_link':
-                data.append(self.prepare_simple_product_data(attr_sets, method, True))
+                data.append(prod.prepare_simple_product_data(attr_sets, method, True))
 
         if data:
             response = self.call_simple_products_export_in_bulk(instance, simp_prods_dict, data, method)

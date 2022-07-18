@@ -102,7 +102,6 @@
                                     <field name="x_magento_single_attr_ids" readonly="1" widget="many2many_tags"/>
                                     <field name="x_magento_main_config_attr" readonly="1"/>
                                     <field name="related_product_ids" readonly="1" widget="many2many_tags"/>
-                                    <field name="cross_sell_product_ids" readonly="1" widget="many2many_tags"/>
                                     <field name="category_ids"
                                            attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
                                            readonly="1" widget="many2many_tags"/>

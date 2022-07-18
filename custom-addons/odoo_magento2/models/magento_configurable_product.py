@@ -63,7 +63,7 @@ class MagentoConfigurableProduct(models.Model):
     bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs")
     related_product_ids = fields.Many2many('magento.configurable.product', 'related_products_rel', 'src_id', 'dest_id',
                                            string="Related Products", compute="_compute_related_products")
-    cross_sell_product_ids = fields.Many2many('magento.configurable.product', 'cross_sell_products_rel', 'src_id',
+    cross_sell_product_ids = fields.Many2many('magento.product.product', 'cross_sell_products_rel', 'src_id',
                                               'dest_id', string="Cross-Sell Products", compute="_compute_cross_sell_products")
     product_label_ids = fields.Many2many("magento.product.label", string="Product Labels",
                                          help="Product labels to be marked on Product on Magento's frontpage")
@@ -122,12 +122,12 @@ class MagentoConfigurableProduct(models.Model):
 
             rec.related_product_ids = [(6, 0, alternatives.ids)]
 
-    @api.depends('odoo_prod_template_id.accessory_product_ids', 'do_not_create_flag')
+    @api.depends('odoo_prod_template_id.accessory_product_ids')
     def _compute_cross_sell_products(self):
         for rec in self:
             rec.cross_sell_product_ids = [
-                (6, 0, rec.odoo_prod_template_id.accessory_product_ids.magento_conf_prod_ids.filtered(
-                    lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.do_not_create_flag).ids)]
+                (6, 0, rec.odoo_prod_template_id.accessory_product_ids.magento_product_ids.filtered(
+                    lambda x: x.magento_instance_id.id == rec.magento_instance_id.id).ids)]
 
     @api.depends('magento_product_id', 'is_enabled', 'magento_website_ids')
     def _check_config_product_has_issues(self):
@@ -509,9 +509,9 @@ class MagentoConfigurableProduct(models.Model):
                     prod_imgs = conf_prod.product_image_ids
                     thumb_img = conf_prod.image_1920
                     small_base_imgs = prod_imgs.filtered(lambda x: x.image_role in ['small_image', 'image'])
+                    sb_imgs_cnt = 1 if prod_imgs and len(small_base_imgs) < 2 else 0
 
-                    if len(magento_imgs) != (len(prod_imgs) + (1 if thumb_img else 0)) + \
-                            (1 if len(small_base_imgs) < 2 else 0):
+                    if len(magento_imgs) != (len(prod_imgs) + (1 if thumb_img else 0) + sb_imgs_cnt):
                         conf_prods_dict[prod]['magento_status'] = 'update_needed'
                         conf_prods_dict[prod]['force_image_update'] = True
                         continue
@@ -527,8 +527,7 @@ class MagentoConfigurableProduct(models.Model):
                         conf_prods_dict[prod]['log_message'] += text
                         continue
 
-                    if conf_prods_dict[prod]['product_links_cnt'] != \
-                            (len(conf_prod.related_product_ids) + len(conf_prod.cross_sell_product_ids)):
+                    if conf_prods_dict[prod]['product_links_cnt'] != len(conf_prod.related_product_ids):
                         conf_prods_dict[prod]['magento_status'] = 'extra_info'
                     else:
                         conf_prods_dict[prod]['magento_status'] = 'in_magento'
@@ -1240,29 +1239,14 @@ class MagentoConfigurableProduct(models.Model):
 
     def export_products_extra_info_to_magento_in_bulk(self, instances):
         for instance in instances:
-            valid_products = self.search([]).filtered(
-                lambda x: x.magento_instance_id.id == instance.id and x.magento_product_id
-            )
-
             data = []
+            valid_products = self.search([]).filtered(
+                lambda x: x.magento_instance_id.id == instance.id and x.magento_product_id)
+
             for product in valid_products:
-                items = []
-                sku = product.magento_sku
-                for rel_prod in product.related_product_ids.filtered(lambda p: p.magento_product_id):
-                    items.append({
-                        'sku': sku,
-                        'link_type': 'related',
-                        'linked_product_sku': rel_prod.magento_sku
-                    })
-
-                for cs_prod in product.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
-                    items.append({
-                        'sku': sku,
-                        'link_type': 'crosssell',
-                        'linked_product_sku': cs_prod.magento_sku
-                    })
-
-                data.append({'items': items, 'sku': sku})
+                items = product.prepare_products_extra_info()
+                if items:
+                    data.append({'items': items, 'sku': product.magento_sku})
 
             if data:
                 try:
@@ -1275,34 +1259,40 @@ class MagentoConfigurableProduct(models.Model):
         self.ensure_one()
 
         if self.magento_product_id:
-            items = []
-            sku = self.magento_sku
-            for rel_prod in self.related_product_ids.filtered(lambda p: p.magento_product_id):
-                items.append({
-                    'sku': sku,
-                    'link_type': 'related',
-                    'linked_product_sku': rel_prod.magento_sku
-                })
-
-            for cs_prod in self.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
-                items.append({
-                    'sku': sku,
-                    'link_type': 'crosssell',
-                    'linked_product_sku': cs_prod.magento_sku
-                })
+            items = self.prepare_products_extra_info()
 
             if items:
                 try:
-                    api_url = '/all/V1/products/%s/links' % sku
+                    api_url = '/all/V1/products/%s/links' % self.magento_sku
                     req(self.magento_instance_id, api_url, 'POST', {'items': items})
                 except Exception as e:
                     raise UserError ("Error while exporting configurable product extra info to Magento: %s" % e)
 
-        response = self.simple_product_ids.export_product_prices_to_magento(self.magento_instance_id)
-        if not response:
+        err_res = self.simple_product_ids.export_product_prices_to_magento(self.magento_instance_id)
+        if not err_res:
             self.processing_products_export_to_magento(True)
         else:
-            return response
+            return err_res
+
+    def prepare_products_extra_info(self):
+        items = []
+
+        for rel_prod in self.related_product_ids.filtered(lambda p: p.magento_product_id):
+            items.append({
+                'sku': self.magento_sku,
+                'link_type': 'related',
+                'linked_product_sku': rel_prod.magento_sku
+            })
+
+        for cs_prod in self.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
+            for simpl_prod in self.simple_product_ids:
+                items.append({
+                    'sku': simpl_prod.magento_sku,
+                    'link_type': 'crosssell',
+                    'linked_product_sku': cs_prod.magento_sku
+                })
+
+        return items
 
     def convert_json_to_dict(self, json_data):
         if not json_data:
