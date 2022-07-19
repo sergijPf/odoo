@@ -1247,14 +1247,15 @@ class MagentoConfigurableProduct(models.Model):
             for product in valid_products:
                 items = product.prepare_products_extra_info()
                 if items:
-                    data.append({'items': items, 'sku': product.magento_sku})
+                    for c in range((len(items) // 20) + 1):
+                        data.append({'items': items[c * 20:20 * (c + 1)], 'sku': product.magento_sku})
 
             if data:
                 try:
                     api_url = '/all/async/bulk/V1/products/bySku/links'
                     req(instance, api_url, 'POST', data)
                 except Exception as e:
-                    raise UserError ("Error while exporting configurable product extra info to Magento: %s" % e)
+                    raise UserError ("Error while exporting product's extra info to Magento: %s" % e)
 
     def export_products_extra_info_to_magento(self):
         self.ensure_one()
@@ -1263,11 +1264,12 @@ class MagentoConfigurableProduct(models.Model):
             items = self.prepare_products_extra_info()
 
             if items:
-                try:
-                    api_url = '/all/V1/products/%s/links' % self.magento_sku
-                    req(self.magento_instance_id, api_url, 'POST', {'items': items})
-                except Exception as e:
-                    raise UserError ("Error while exporting configurable product extra info to Magento: %s" % e)
+                for c in range((len(items) // 20) + 1):
+                    try:
+                        api_url = '/all/V1/products/%s/links' % self.magento_sku
+                        req(self.magento_instance_id, api_url, 'POST', {'items': items[c * 20:20 * (c + 1)]})
+                    except Exception as e:
+                        raise UserError ("Error while exporting product's extra info to Magento: %s" % e)
 
         err_res = self.simple_product_ids.export_product_prices_to_magento(self.magento_instance_id)
         if not err_res:
