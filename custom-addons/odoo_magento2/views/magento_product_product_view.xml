@@ -28,6 +28,10 @@
         <field name="arch" type="xml">
             <form string="Product" name="product_form" create="false" delete="true" edit="true">
                 <header>
+                    <button name="export_products_extra_info_to_magento"
+                            string="Force Export of Extra Info"
+                            type="object" class="btn btn-secondary ml-2"
+                            attrs="{'invisible': [('magento_status', '!=', 'extra_info')]}"/>
                     <field name="magento_status" widget="statusbar"
                            statusbar_visible="not_exported,in_process,need_to_link,update_needed,extra_info,in_magento"
                            attrs="{'invisible': [('magento_status', '=', 'log_error')]}"/>

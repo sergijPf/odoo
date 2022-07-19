@@ -16,26 +16,24 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='website_ribbon_id']" position='after'>
                 <field name="is_magento_config" groups="odoo_magento2.group_magento_user"/>
-                <field name="x_magento_no_create" id="x_magento_no_create"
+                <field name="is_marketing_prod" id="is_marketing_prod"
                        groups="odoo_magento2.group_magento_user"
                        attrs="{'invisible': [('is_magento_config', '!=', True)]}"/>
-<!--                <field name="website_description"-->
-<!--                       attrs="{'invisible': [('is_magento_config', '!=', True)]}"/>-->
             </xpath>
 
             <xpath expr="//field[@name='attribute_line_ids']/tree/field[@name='value_ids']" position='after'>
                 <field name="is_magento_config_prod" invisible="1"/>
-                <field name="x_magento_no_create" invisible="1"/>
+                <field name="is_marketing_prod" invisible="1"/>
                 <field name="is_ignored" invisible="1"/>
                 <field name="create_variant" invisible="1"/>
                 <field name="magento_config" widget="boolean_toggle"
                        attrs="{'invisible': ['|', '|', '|', ('is_magento_config_prod', '!=', True),
-                            ('x_magento_no_create', '=', True), ('is_ignored', '=', True),
+                            ('is_marketing_prod', '=', True), ('is_ignored', '=', True),
                             ('create_variant', '=', 'no_variant')]}"
                        groups="odoo_magento2.group_magento_user"/>
                 <field name="main_conf_attr" groups="odoo_magento2.group_magento_user"
                        attrs="{'invisible': ['|', '|', '|', ('is_magento_config_prod', '!=', True),
-                            ('x_magento_no_create', '=', True), ('magento_config', '!=', True),
+                            ('is_marketing_prod', '=', True), ('magento_config', '!=', True),
                             ('is_ignored', '=', True)]}"/>
             </xpath>
 

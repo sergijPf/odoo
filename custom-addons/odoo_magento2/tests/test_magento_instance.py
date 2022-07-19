@@ -3,7 +3,7 @@
 import requests
 
 from . import common
-from unittest.mock import patch
+# from unittest.mock import patch
 
 
 class TestMagentoInstance(common.TestMagentoInstanceCommon):
@@ -46,9 +46,3 @@ class TestMagentoInstance(common.TestMagentoInstanceCommon):
 
         res = requests.get(f"{api_url}rest/V1/shippingmethod", headers=headers)
         self.assertTrue(True if res.ok else False, "Shipping methods endpoint fails to get info")
-
-        # with patch('odoo.addons.odoo_magento2.models.magento_instance.MagentoInstance.req') as reque:
-        #     print(reque.return_value)
-
-        # with patch.object(MagentoInstance, 'sync_website') as instance:
-        #     print(instance)

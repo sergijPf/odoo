@@ -9,8 +9,8 @@ class ProductTemplate(models.Model):
 
     is_magento_config = fields.Boolean(string='Is Magento Config.Product',
                                        help='Selected if current product is Configurable Product in Magento')
-    x_magento_no_create = fields.Boolean(string="Don't create in Magento", default=False,
-                                         help="If checked the Configurable Product won't be created on Magento side")
+    is_marketing_prod = fields.Boolean(string="Is marketing Product?", default=False,
+                                      help="If checked the Configurable Product won't be created on Magento side, only Simple one")
     magento_conf_prod_ids = fields.One2many('magento.configurable.product', 'odoo_prod_template_id',
                                             string="Magento Configurable Products", context={'active_test': False})
 
@@ -32,7 +32,7 @@ class ProductTemplate(models.Model):
             if 'detailed_type' in vals:
                 raise UserError("Product type can't be changed for the products already exported to Magento layer")
 
-            if ('website_description' in vals or 'name' in vals or 'x_magento_no_create' in vals or
+            if ('website_description' in vals or 'name' in vals or 'is_marketing_prod' in vals or
                     'public_categ_ids' in vals or 'categ_id' in vals):
                 self.magento_conf_prod_ids.force_update = True
             elif 'attribute_line_ids' in vals:
@@ -94,7 +94,7 @@ class ProductTemplateAttributeLine(models.Model):
     is_ignored = fields.Boolean(related="attribute_id.is_ignored_in_magento")
     create_variant = fields.Selection(related="attribute_id.create_variant")
     is_magento_config_prod = fields.Boolean(related="product_tmpl_id.is_magento_config")
-    x_magento_no_create = fields.Boolean(related="product_tmpl_id.x_magento_no_create")
+    is_marketing_prod = fields.Boolean(related="product_tmpl_id.is_marketing_prod")
 
     @api.onchange('magento_config')
     def onchange_magento_config_attribute(self):

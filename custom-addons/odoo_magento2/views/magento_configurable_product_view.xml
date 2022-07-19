@@ -31,7 +31,6 @@
                             string="Export to Magento async (RabbitMQ)"
                             type="object" class="btn btn-primary ml-2"/>
                     <button name="export_products_extra_info_to_magento"
-                            context="{'async_export': True}"
                             string="Force Export of Extra Info"
                             type="object" class="btn btn-secondary ml-2"
                             attrs="{'invisible': [('magento_status', '!=', 'extra_info')]}"/>
@@ -103,21 +102,21 @@
                                     <field name="x_magento_main_config_attr" readonly="1"/>
                                     <field name="related_product_ids" readonly="1" widget="many2many_tags"/>
                                     <field name="category_ids"
-                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                           attrs="{'invisible': [('is_marketing_prod', '=', True)]}"
                                            readonly="1" widget="many2many_tags"/>
                                 </group>
                                 <group name="magento_info" string="Magento Info">
                                     <field name="magento_instance_id" readonly="1"/>
                                     <field name="is_enabled" readonly="1"/>
-                                    <field name="do_not_create_flag" invisible="1"/>
+                                    <field name="is_marketing_prod" invisible="1"/>
                                     <field name="magento_product_id"
-                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                           attrs="{'invisible': [('is_marketing_prod', '=', True)]}"
                                            readonly="1"/>
                                     <field name="magento_website_ids"
-                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"
+                                           attrs="{'invisible': [('is_marketing_prod', '=', True)]}"
                                            widget="many2many_tags" readonly="1"/>
                                     <field name="magento_export_date" readonly="1"
-                                           attrs="{'invisible': [('do_not_create_flag', '=', True)]}"/>
+                                           attrs="{'invisible': [('is_marketing_prod', '=', True)]}"/>
                                     <field name="force_update" readonly="1"/>
                                     <field name="magento_attr_set" required="1"/>
                                     <field name="product_label_ids" widget="many2many_tags"

@@ -64,6 +64,7 @@ class MagentoProductProduct(models.Model):
                                  column1='price_id', column2='product_id', string='Special Prices')
     base_prices = fields.Char(string="Base Prices:", help="Product base prices for each website",
                               compute="_compute_base_prices")
+    is_marketing_prod = fields.Boolean(related="magento_conf_product_id.is_marketing_prod")
     cross_sell_product_ids = fields.Many2many(string="Cross-Sell Products",
                                               related="magento_conf_product_id.cross_sell_product_ids")
     error_log_ids = fields.One2many('magento.product.log.book', 'magento_product_id', string="Error Logs")
@@ -346,8 +347,8 @@ class MagentoProductProduct(models.Model):
 
             if simp_prods_dict[prod].get('magento_update_date', ''):
                 if simp_prods_dict[prod]['magento_type_id'] == 'simple':
-                    if export_prod.magento_conf_product_id.do_not_create_flag or \
-                            simp_prods_dict[prod]['magento_prod_id'] in conf_prods_dict[conf_sku]['children']:
+                    magento_prod_id = simp_prods_dict[prod]['magento_prod_id']
+                    if export_prod.is_marketing_prod or magento_prod_id in conf_prods_dict[conf_sku]['children']:
                         # check if images count is the same in Odoo and Magento
                         prod_imgs = export_prod.product_image_ids
                         thumb_img = export_prod.image_1920
@@ -392,7 +393,7 @@ class MagentoProductProduct(models.Model):
         avail_attributes = attribute_sets[prod_attr_set]['attributes']
         prod_attrs = {a.attribute_id.name: a.name for a in self.product_attribute_ids.product_attribute_value_id}
 
-        if not prod_attrs and not self.magento_conf_product_id.do_not_create_flag:
+        if not prod_attrs and not self.is_marketing_prod:
             text = "Product - %s has no attributes. " % prod_sku
             simp_products_dict[prod_sku]['log_message'] += text
             return True
@@ -413,7 +414,7 @@ class MagentoProductProduct(models.Model):
         if simp_products_dict[prod_sku]['log_message']:
             return True
 
-        if not self.magento_conf_product_id.do_not_create_flag:
+        if not self.is_marketing_prod:
             # check if product has configurable attributes defined in configurable product
             simp_prod_attr = self.product_attribute_ids.product_attribute_value_id
             missed_attrs = conf_products_dict[conf_sku]['config_attr'].difference({
@@ -485,9 +486,8 @@ class MagentoProductProduct(models.Model):
             instance, simp_prods_dict, attr_sets, conf_prods_dict, async_export, 'POST'
         )
 
-    def process_simple_products_create_or_update_in_magento(
-            self, instance, simp_prod_dict, attr_sets, conf_prod_dict, async_export, method
-    ):
+    def process_simple_products_create_or_update_in_magento(self, instance, simp_prod_dict, attr_sets, conf_prod_dict,
+                                                            async_export, method):
         if not self:
             return
 
@@ -505,7 +505,7 @@ class MagentoProductProduct(models.Model):
                     else:
                         continue
 
-                if not simple_product.magento_conf_product_id.do_not_create_flag:
+                if not simple_product.is_marketing_prod:
                     simple_product.assign_conf_attributes_to_config_product_in_magento(
                         instance, attr_sets, conf_prod_dict, simp_prod_dict
                     )
@@ -658,7 +658,7 @@ class MagentoProductProduct(models.Model):
 
         if response.get("sku"):
             simp_dict['export_date_to_magento'] = response.get("updated_at")
-            simp_dict['magento_status'] = 'extra_info' if conf_prod.do_not_create_flag else 'need_to_link'
+            simp_dict['magento_status'] = 'extra_info' if conf_prod.is_marketing_prod else 'need_to_link'
 
             if method == "POST":
                 conf_prod.link_product_with_websites_in_magento(magento_sku, instance, simp_prods_dict, response)
@@ -681,7 +681,7 @@ class MagentoProductProduct(models.Model):
                 "name": self.x_magento_name,
                 "attribute_set_id": attr_sets[prod_attr_set]['id'],
                 "status": 2,  # 1-enabled / 2-disabled
-                "visibility": 3,  # Search
+                "visibility": 1 if self.is_marketing_prod else 3,  # 1-Not visible indiv., 3-Search
                 "price": 0,
                 "type_id": "simple",
                 "weight": self.odoo_product_id.weight,
@@ -813,7 +813,7 @@ class MagentoProductProduct(models.Model):
 
         for prod in self:
             prod_dict = simp_prod_dict[prod.magento_sku]
-            if prod_dict['log_message'] or prod.magento_conf_product_id.do_not_create_flag:
+            if prod_dict['log_message'] or prod.is_marketing_prod:
                 continue
 
             mag_attr_set = prod.magento_conf_product_id.magento_attr_set
@@ -857,7 +857,7 @@ class MagentoProductProduct(models.Model):
         data = []
 
         for prod in self:
-            if simp_prods_dict[prod.magento_sku]['log_message'] or prod.magento_conf_product_id.do_not_create_flag:
+            if simp_prods_dict[prod.magento_sku]['log_message'] or prod.is_marketing_prod:
                 continue
 
             data.append({
@@ -1122,6 +1122,15 @@ class MagentoProductProduct(models.Model):
         })
 
         self.write({'bulk_log_ids': [(4, log_id.id)]})
+
+    def export_products_extra_info_to_magento(self):
+        self.ensure_one()
+
+        err_res = self.export_product_prices_to_magento(self.magento_instance_id)
+        if not err_res:
+            self.magento_conf_product_id.processing_products_export_to_magento(True)
+        else:
+            return err_res
 
     @staticmethod
     def clean_old_log_records(instance, log_book_obj):

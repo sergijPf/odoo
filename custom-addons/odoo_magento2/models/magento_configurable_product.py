@@ -29,7 +29,7 @@ class MagentoConfigurableProduct(models.Model):
         ('update_needed', 'Need to Update'),
         ('extra_info', 'Extra info needed'),
         ('in_magento', 'In Magento'),
-        ('no_need', 'Not needed'),
+        ('no_need', 'No need'),
         ('log_error', 'Error to Export'),
     ], string='Export Status', help='The status of Configurable Product Export to Magento ', default='not_exported')
     image_1920 = fields.Image(related="odoo_prod_template_id.image_1920")
@@ -42,8 +42,8 @@ class MagentoConfigurableProduct(models.Model):
     category_ids = fields.Many2many("magento.product.category", string="Product Categories",
                                     help="Magento Product Categories", compute="_compute_config_product_categories")
     magento_attr_set = fields.Char(string='Magento Product Attribute Set', default="Default")
-    do_not_create_flag = fields.Boolean(related="odoo_prod_template_id.x_magento_no_create",
-                                        string="Don't create Product in Magento")
+    is_marketing_prod = fields.Boolean(related="odoo_prod_template_id.is_marketing_prod",
+                                       string="Is marketing Product?")
     x_magento_assign_attr_ids = fields.Many2many('product.attribute', string="Configurable Attribute(s)",
                                                  compute="_compute_configurable_product_attributes", store=True)
     x_magento_main_config_attr = fields.Char(string="Hover Attribute", compute="_compute_configurable_product_attributes",
@@ -114,20 +114,21 @@ class MagentoConfigurableProduct(models.Model):
         for rec in self:
             rec.sipmle_count_equal = True if rec.product_simple_count == rec.product_variant_count else False
 
-    @api.depends('odoo_prod_template_id.alternative_product_ids', 'do_not_create_flag')
+    @api.depends('odoo_prod_template_id.alternative_product_ids', 'is_marketing_prod')
     def _compute_related_products(self):
         for rec in self:
-            alternatives = rec.odoo_prod_template_id.alternative_product_ids.magento_conf_prod_ids.filtered(
-                lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.do_not_create_flag)
+            alternatives = [] if rec.is_marketing_prod else rec.odoo_prod_template_id.alternative_product_ids.magento_conf_prod_ids.filtered(
+                lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.is_marketing_prod).ids
 
-            rec.related_product_ids = [(6, 0, alternatives.ids)]
+            rec.related_product_ids = [(6, 0, alternatives)]
 
-    @api.depends('odoo_prod_template_id.accessory_product_ids')
+    @api.depends('odoo_prod_template_id.accessory_product_ids', 'is_marketing_prod')
     def _compute_cross_sell_products(self):
         for rec in self:
-            rec.cross_sell_product_ids = [
-                (6, 0, rec.odoo_prod_template_id.accessory_product_ids.magento_product_ids.filtered(
-                    lambda x: x.magento_instance_id.id == rec.magento_instance_id.id).ids)]
+            cross_sell = [] if rec.is_marketing_prod else rec.odoo_prod_template_id.accessory_product_ids.magento_product_ids.filtered(
+                    lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.is_marketing_prod).ids
+
+            rec.cross_sell_product_ids = [(6, 0, cross_sell)]
 
     @api.depends('magento_product_id', 'is_enabled', 'magento_website_ids')
     def _check_config_product_has_issues(self):
@@ -388,7 +389,7 @@ class MagentoConfigurableProduct(models.Model):
                 'force_update': c.force_update,
                 'force_image_update': c.force_image_update,
                 'export_date_to_magento': '',
-                'to_export': False if c.do_not_create_flag else True
+                'to_export': False if c.is_marketing_prod else True
             } for c in configurable_products
         }
 
@@ -483,7 +484,7 @@ class MagentoConfigurableProduct(models.Model):
                 conf_prods_dict[prod]['log_message'] += text
                 continue
 
-            if conf_prod.do_not_create_flag:
+            if conf_prod.is_marketing_prod:
                 conf_prods_dict[prod]['magento_status'] = 'no_need'
                 continue
 

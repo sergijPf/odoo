@@ -403,7 +403,7 @@ class MagentoInstance(models.Model):
         return self._get_configurable_products(self.config_product_ids)
 
     def get_disabled_conf_products(self):
-        disabled_conf_prods = self.config_product_ids.filtered(lambda x: not x.is_enabled)
+        disabled_conf_prods = self.config_product_ids.filtered(lambda x: not x.is_enabled and x.magento_status != 'no_need')
         return self._get_configurable_products(disabled_conf_prods)
 
     def get_conf_products_to_be_updated(self):

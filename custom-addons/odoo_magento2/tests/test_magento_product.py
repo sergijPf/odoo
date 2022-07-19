@@ -27,7 +27,7 @@ class TestMagentoProduct(common.TestMagentoInstanceCommon):
         prod2 = self.product_template2
 
         self.assertTrue(prod1.is_magento_config)
-        self.assertFalse(prod1.x_magento_no_create)
+        self.assertFalse(prod1.is_marketing_prod)
         self.assertTrue(prod1.attribute_line_ids[0].magento_config)
         self.assertTrue(prod1.attribute_line_ids[-1].magento_config)
         self.assertTrue(prod1.attribute_line_ids[0].main_conf_attr)
