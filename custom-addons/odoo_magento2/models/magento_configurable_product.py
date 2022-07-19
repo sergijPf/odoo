@@ -510,7 +510,7 @@ class MagentoConfigurableProduct(models.Model):
                     prod_imgs = conf_prod.product_image_ids
                     thumb_img = conf_prod.image_1920
                     small_base_imgs = prod_imgs.filtered(lambda x: x.image_role in ['small_image', 'image'])
-                    sb_imgs_cnt = 1 if prod_imgs and len(small_base_imgs) < 2 else 0
+                    sb_imgs_cnt = 1 if thumb_img and len(small_base_imgs) < 2 else 0
 
                     if len(magento_imgs) != (len(prod_imgs) + (1 if thumb_img else 0) + sb_imgs_cnt):
                         conf_prods_dict[prod]['magento_status'] = 'update_needed'

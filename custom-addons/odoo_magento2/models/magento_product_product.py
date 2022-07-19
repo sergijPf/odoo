@@ -353,7 +353,7 @@ class MagentoProductProduct(models.Model):
                         prod_imgs = export_prod.product_image_ids
                         thumb_img = export_prod.image_1920
                         small_base_imgs = prod_imgs.filtered(lambda x: x.image_role in ['small_image', 'image'])
-                        sb_imgs_cnt = 1 if prod_imgs and len(small_base_imgs) < 2 else 0
+                        sb_imgs_cnt = 1 if thumb_img and len(small_base_imgs) < 2 else 0
                         magento_imgs = simp_prods_dict[prod].get('media_gallery', [])
 
                         if (len(prod_imgs) + (1 if thumb_img else 0) + sb_imgs_cnt) != len(magento_imgs):
@@ -708,7 +708,7 @@ class MagentoProductProduct(models.Model):
             for website in instance.magento_website_ids:
                 storeview_code = website.store_view_ids[0].magento_storeview_code
                 lang_code = website.store_view_ids[0].lang_id.code
-                data = {'product': {'name': '', "price": 0, "visibility": 3}}
+                data = {'product': {'name': '', "price": 0, "visibility": 1 if self.is_marketing_prod else 3}}
                 data["product"]["name"] = self.with_context(lang=lang_code).odoo_product_id.name + ' ' + \
                                           ' '.join(self.product_attribute_ids.product_attribute_value_id.mapped('name'))
 
@@ -792,7 +792,14 @@ class MagentoProductProduct(models.Model):
                 product = self.filtered(lambda x: x.magento_sku == sku)
                 prod_name = product.with_context(lang=lang_code).odoo_product_id.name + ' ' + \
                             ' '.join(product.product_attribute_ids.product_attribute_value_id.mapped('name'))
-                new_prod = {'product': {'name': prod_name, 'sku': sku, "visibility": 3, 'price': 0}}
+                new_prod = {
+                    'product': {
+                        'name': prod_name,
+                        'sku': sku,
+                        "visibility": 1 if product.is_marketing_prod else 3,
+                        'price': 0
+                    }
+                }
                 data_lst.append(new_prod)
 
             try:
