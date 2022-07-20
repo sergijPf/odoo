@@ -684,6 +684,7 @@ class MagentoProductProduct(models.Model):
                 "visibility": 1 if self.is_marketing_prod else 3,  # 1-Not visible indiv., 3-Search
                 "price": 0,
                 "type_id": "simple",
+                "product_links": [],
                 "weight": self.odoo_product_id.weight,
                 "custom_attributes": custom_attributes,
                 "extension_attributes": {

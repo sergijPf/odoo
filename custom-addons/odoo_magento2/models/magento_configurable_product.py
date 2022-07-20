@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import json, re
+import logging
 
 from datetime import datetime
+
 from odoo import fields, models, api
 from odoo.exceptions import UserError
+
 from ..python_library.php import Php
 from ..python_library.api_request import req, create_search_criteria
 
+_logger = logging.getLogger(__name__)
 PRODUCTS_BATCH = 250
 MAX_SIZE_FOR_IMAGES = 2500000  # should be aligned with MYSQL - max_allowed_packet (currently 4M), !!! NOTE 4M is
                                # converted size and constant value is before convertion
@@ -360,10 +364,10 @@ class MagentoConfigurableProduct(models.Model):
         conf_products_dict, simp_products_dict = self.create_metadata_dict(simple_products)
 
         [self.update_conf_product_dict_with_magento_data(prod, conf_products_dict)
-         for prod in self.get_products_from_magento(instance, conf_products_dict)]
+         for prod in self.get_products_from_magento(instance, list(conf_products_dict.keys()), products_dict=conf_products_dict)]
 
         [simple_products.update_simple_product_dict_with_magento_data(prod, simp_products_dict)
-         for prod in self.get_products_from_magento(instance, simp_products_dict)]
+         for prod in self.get_products_from_magento(instance, list(simp_products_dict.keys()), products_dict=simp_products_dict)]
 
         self.check_config_products_for_errors_and_update_export_statuses(conf_products_dict, attr_sets)
 
@@ -409,27 +413,31 @@ class MagentoConfigurableProduct(models.Model):
         return conf_products_dict, simp_products_dict
 
     @staticmethod
-    def get_products_from_magento(magento_instance, products_dict):
+    def get_products_from_magento(magento_instance, products_list, products_dict={}, fields_str=''):
         res = []
-        step = 20
+        step = 50
         cur_page = 0
-        magento_sku_list = list(products_dict)
-        times = (len(magento_sku_list) // step) + (1 if len(magento_sku_list) % step else 0)
+        times = (len(products_list) // step) + (1 if len(products_list) % step else 0)
 
         for cnt in range(times):
-            sku_list = ','.join(magento_sku_list[cur_page:step * (1 + cnt)])
-            search_criteria = 'searchCriteria[filterGroups][0][filters][0][field]=sku&searchCriteria[filterGroups][0]' \
-                              '[filters][0][condition_type]=in&searchCriteria[filterGroups][0][filters][0][value]=%s' % \
-                              sku_list
-            api_url = '/V1/products?%s' % search_criteria
+            sku_list = ','.join(products_list[cur_page:step * (1 + cnt)])
+            search_criteria = f'searchCriteria[filterGroups][0][filters][0][field]=sku&searchCriteria[filterGroups][0]' \
+                              f'[filters][0][condition_type]=in&searchCriteria[filterGroups][0][filters][0][value]={sku_list}' \
+                              f'&searchCriteria[currentPage]=1&searchCriteria[pageSize]={step}' + \
+                              (f'&fields=items[{fields_str}]' if fields_str else '')
+            api_url = f'/V1/products?{search_criteria}'
+
             try:
                 response = req(magento_instance, api_url)
             except Exception as e:
-                for prod in magento_sku_list[cur_page:step * (1 + cnt)]:
-                    text = "Error while requesting product from Magento. " + str(e)
-                    products_dict[prod]['log_message'] += text
-                cur_page += step
-                continue
+                if products_dict:
+                    for prod in products_list[cur_page:step * (1 + cnt)]:
+                        text = "Error while requesting product from Magento. " + str(e)
+                        products_dict[prod]['log_message'] += text
+                    cur_page += step
+                    continue
+                else:
+                    raise UserError(f"Error to get products from Magento: {str(e)}")
 
             res += (response.get('items', []))
             cur_page += step
@@ -1241,11 +1249,13 @@ class MagentoConfigurableProduct(models.Model):
     def export_products_extra_info_to_magento_in_bulk(self, instances):
         for instance in instances:
             data = []
-            valid_products = self.search([]).filtered(
-                lambda x: x.magento_instance_id.id == instance.id and x.magento_product_id)
+            valid_products = self.search([]).filtered(lambda x: x.magento_instance_id.id == instance.id and x.magento_product_id)
+            links = self.get_magento_product_links(instance, valid_products.mapped('magento_sku'),
+                                                   valid_products.simple_product_ids.mapped('magento_sku'))
 
             for product in valid_products:
-                items = product.prepare_products_extra_info()
+                items = product.prepare_product_links(instance, links)
+
                 if items:
                     for c in range((len(items) // 20) + 1):
                         data.append({'items': items[c * 20:20 * (c + 1)], 'sku': product.magento_sku})
@@ -1255,47 +1265,105 @@ class MagentoConfigurableProduct(models.Model):
                     api_url = '/all/async/bulk/V1/products/bySku/links'
                     req(instance, api_url, 'POST', data)
                 except Exception as e:
-                    raise UserError ("Error while exporting product's extra info to Magento: %s" % e)
+                    raise UserError (f"Error while exporting product's extra info to Magento: {str(e)}")
 
     def export_products_extra_info_to_magento(self):
         self.ensure_one()
 
+        instance = self.magento_instance_id
+        sku = self.magento_sku
+        links = self.get_magento_product_links(instance, [sku], self.simple_product_ids.mapped('magento_sku'))
+
         if self.magento_product_id:
-            items = self.prepare_products_extra_info()
+            items = self.prepare_product_links(instance, links)
 
             if items:
                 for c in range((len(items) // 20) + 1):
                     try:
-                        api_url = '/all/V1/products/%s/links' % self.magento_sku
-                        req(self.magento_instance_id, api_url, 'POST', {'items': items[c * 20:20 * (c + 1)]})
+                        api_url = f'/all/V1/products/{sku}/links'
+                        req(instance, api_url, 'POST', {'items': items[c * 20:20 * (c + 1)]})
                     except Exception as e:
-                        raise UserError ("Error while exporting product's extra info to Magento: %s" % e)
+                        raise UserError (f"Error while exporting product's extra info to Magento: {e}")
 
-        err_res = self.simple_product_ids.export_product_prices_to_magento(self.magento_instance_id)
+        err_res = self.simple_product_ids.export_product_prices_to_magento(instance)
+
         if not err_res:
             self.processing_products_export_to_magento(True)
         else:
             return err_res
 
-    def prepare_products_extra_info(self):
-        items = []
+    def get_magento_product_links(self, instance, conf_prods, simple_prods):
+        resp = {}
 
-        for rel_prod in self.related_product_ids.filtered(lambda p: p.magento_product_id):
-            items.append({
-                'sku': self.magento_sku,
-                'link_type': 'related',
-                'linked_product_sku': rel_prod.magento_sku
+        res = self.get_products_from_magento(instance, conf_prods, fields_str='sku,product_links')
+
+        for item in res:
+            links = item.get('product_links')
+            resp.update({
+                item.get("sku"): {
+                    'related': [l.get('linked_product_sku') for l in links if
+                                l.get('link_type') == 'related'] if links else []
+                }
             })
 
-        for cs_prod in self.cross_sell_product_ids.filtered(lambda p: p.magento_product_id):
-            for simpl_prod in self.simple_product_ids:
-                items.append({
-                    'sku': simpl_prod.magento_sku,
-                    'link_type': 'crosssell',
-                    'linked_product_sku': cs_prod.magento_sku
-                })
+        res = self.get_products_from_magento(instance, simple_prods, fields_str='sku,product_links')
+        for item in res:
+            links = item.get('product_links')
+            resp.update({
+                item.get("sku"): {
+                    'crosssell': [l.get('linked_product_sku') for l in links if
+                                  l.get('link_type') == 'crosssell'] if links else []
+                }
+            })
+
+        return resp
+
+    def prepare_product_links(self, instance, magento_links):
+        items = []
+        sku = self.magento_sku
+        magento_rel_products = magento_links[sku]['related']
+        rel_products = self.related_product_ids.filtered(lambda p: p.magento_product_id).mapped('magento_sku')
+        item = {'sku': sku, 'link_type': 'related', 'linked_product_sku': ''}
+
+
+        for p in rel_products:
+            if p not in magento_rel_products:
+                new_item = item.copy()
+                new_item.update({'linked_product_sku': p})
+                items.append(new_item)
+
+        if magento_rel_products:
+            to_remove = set(magento_rel_products).difference(set(rel_products))
+            if to_remove:
+                self.call_delete_product_links(instance, sku, to_remove, 'related')
+
+        crs_products = self.cross_sell_product_ids.filtered(lambda p: p.magento_product_id).mapped('magento_sku')
+
+        for simpl_prod_sku in self.simple_product_ids.mapped('magento_sku'):
+            magento_crs_prods = magento_links[simpl_prod_sku]['crosssell']
+            item = {'sku': simpl_prod_sku, 'link_type': 'crosssell', 'linked_product_sku': ''}
+
+            for p in crs_products:
+                if p not in magento_crs_prods:
+                    new_item = item.copy()
+                    new_item.update({'linked_product_sku': p})
+                    items.append(new_item)
+
+            if magento_crs_prods:
+                to_remove = set(magento_crs_prods).difference(set(crs_products))
+                if to_remove:
+                    self.call_delete_product_links(instance, simpl_prod_sku, to_remove, 'crosssell')
 
         return items
+
+    @staticmethod
+    def call_delete_product_links(instance, sku, prods_to_remove, type):
+        for prod in prods_to_remove:
+            try:
+                api_url = f'/all/V1/products/{sku}/links/{type}/{prod}'
+                req(instance, api_url, 'DELETE')
+            except Exception as e:
+                _logger.warning(f'Failed to unlink {prod} from {sku}. The reason: {str(e)}')
 
     def convert_json_to_dict(self, json_data):
         if not json_data:
