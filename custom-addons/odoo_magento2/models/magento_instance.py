@@ -84,7 +84,8 @@ class MagentoInstance(models.Model):
 
     def _compute_products_count(self):
         for rec in self:
-            rec.disabled_config_prods_count = len(rec.config_product_ids.filtered(lambda x: not x.is_enabled))
+            rec.disabled_config_prods_count = len(rec.config_product_ids.filtered(
+                lambda x: not x.is_enabled and x.magento_status != 'no_need'))
             rec.disabled_simple_prods_count = len(rec.simple_product_ids.filtered(lambda x: not x.is_enabled))
             rec.update_config_prods_count = len(rec.config_product_ids.filtered(
                 lambda x: x.magento_product_id and  x.magento_status != 'in_magento'
