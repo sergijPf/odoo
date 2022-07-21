@@ -66,9 +66,10 @@ class MagentoConfigurableProduct(models.Model):
     sipmle_count_equal = fields.Boolean("Is product count equal?", compute='_compute_simple_and_variant_count_equal')
     bulk_log_ids = fields.Many2many('magento.async.bulk.logs', string="Async Bulk Logs")
     related_product_ids = fields.Many2many('magento.configurable.product', 'related_products_rel', 'src_id', 'dest_id',
-                                           string="Related Products", compute="_compute_related_products")
-    cross_sell_product_ids = fields.Many2many('magento.product.product', 'cross_sell_products_rel', 'src_id',
-                                              'dest_id', string="Cross-Sell Products", compute="_compute_cross_sell_products")
+                                           string="Related Products", compute="_compute_related_and_cross_sell_products")
+    cross_sell_product_ids = fields.Many2many('magento.configurable.product', 'cross_sell_products_rel', 'src_id',
+                                              'dest_id', string="Cross-Sell Products",
+                                              compute="_compute_related_and_cross_sell_products")
     product_label_ids = fields.Many2many("magento.product.label", string="Product Labels",
                                          help="Product labels to be marked on Product on Magento's frontpage")
     issue = fields.Char('Issue with product', compute="_check_config_product_has_issues")
@@ -118,19 +119,19 @@ class MagentoConfigurableProduct(models.Model):
         for rec in self:
             rec.sipmle_count_equal = True if rec.product_simple_count == rec.product_variant_count else False
 
-    @api.depends('odoo_prod_template_id.alternative_product_ids', 'is_marketing_prod')
-    def _compute_related_products(self):
+    @api.depends('odoo_prod_template_id.alternative_product_ids', 'odoo_prod_template_id.optional_product_ids', 'is_marketing_prod')
+    def _compute_related_and_cross_sell_products(self):
         for rec in self:
-            alternatives = [] if rec.is_marketing_prod else rec.odoo_prod_template_id.alternative_product_ids.magento_conf_prod_ids.filtered(
-                lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.is_marketing_prod).ids
+            prod_tmpl = rec.odoo_prod_template_id
+            inst = rec.magento_instance_id
+
+            alternatives = [] if rec.is_marketing_prod else prod_tmpl.alternative_product_ids.magento_conf_prod_ids.filtered(
+                lambda x: x.magento_instance_id.id == inst.id and not x.is_marketing_prod).ids
 
             rec.related_product_ids = [(6, 0, alternatives)]
 
-    @api.depends('odoo_prod_template_id.accessory_product_ids', 'is_marketing_prod')
-    def _compute_cross_sell_products(self):
-        for rec in self:
-            cross_sell = [] if rec.is_marketing_prod else rec.odoo_prod_template_id.accessory_product_ids.magento_product_ids.filtered(
-                    lambda x: x.magento_instance_id.id == rec.magento_instance_id.id and not x.is_marketing_prod).ids
+            cross_sell = [] if rec.is_marketing_prod else prod_tmpl.optional_product_ids.magento_conf_prod_ids.filtered(
+                lambda x: x.magento_instance_id.id == inst.id and not x.is_marketing_prod).ids
 
             rec.cross_sell_product_ids = [(6, 0, cross_sell)]
 
@@ -1326,10 +1327,10 @@ class MagentoConfigurableProduct(models.Model):
         item = {'sku': sku, 'link_type': 'related', 'linked_product_sku': ''}
 
 
-        for p in rel_products:
-            if p not in magento_rel_products:
+        for prod in rel_products:
+            if prod not in magento_rel_products:
                 new_item = item.copy()
-                new_item.update({'linked_product_sku': p})
+                new_item.update({'linked_product_sku': prod})
                 items.append(new_item)
 
         if magento_rel_products:
@@ -1343,10 +1344,10 @@ class MagentoConfigurableProduct(models.Model):
             magento_crs_prods = magento_links[simpl_prod_sku]['crosssell']
             item = {'sku': simpl_prod_sku, 'link_type': 'crosssell', 'linked_product_sku': ''}
 
-            for p in crs_products:
-                if p not in magento_crs_prods:
+            for prod in crs_products:
+                if prod not in magento_crs_prods:
                     new_item = item.copy()
-                    new_item.update({'linked_product_sku': p})
+                    new_item.update({'linked_product_sku': prod})
                     items.append(new_item)
 
             if magento_crs_prods:
