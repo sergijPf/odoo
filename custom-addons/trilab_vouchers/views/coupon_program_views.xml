@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="coupon_program_view_form_inherit" model="ir.ui.view">
+        <field name="name">coupon.program.form.inherit</field>
+        <field name="model">coupon.program</field>
+        <field name="inherit_id" ref="coupon.coupon_program_view_form_common"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='reward']" position="inside">
+                <field name="x_auto_product_ids" widget="many2many_tags"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

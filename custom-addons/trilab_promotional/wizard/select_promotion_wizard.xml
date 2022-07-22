@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="select_promotion_wizard_view" model="ir.ui.view">
+        <field name="name">select.promotion.wizard.view</field>
+        <field name="model">trilab_promotional.select_promotion_wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="available_program_ids" invisible="1"/>
+                <sheet>
+                    <group col="2">
+                        <group>
+                            <field name="order_id"/>
+                            <field name="program_id" domain="[('id', 'in', available_program_ids)]"
+                                   options="{'no_create_edit':1}"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Apply Program" name="button_apply_program" class="oe_highlight" type="object"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

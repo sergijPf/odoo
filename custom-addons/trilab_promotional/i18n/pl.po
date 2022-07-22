@@ -1,0 +1,131 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* trilab_promotional
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-11-20 00:01+0000\n"
+"PO-Revision-Date: 2021-11-20 00:01+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: trilab_promotional
+#: model_terms:ir.ui.view,arch_db:trilab_promotional.select_promotion_wizard_view
+msgid "Apply Program"
+msgstr "Zastosuj Program"
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__available_program_ids
+msgid "Available Program"
+msgstr "Dostępne Programy"
+
+#. module: trilab_promotional
+#: model_terms:ir.ui.view,arch_db:trilab_promotional.select_promotion_wizard_view
+msgid "Cancel"
+msgstr "Anuluj"
+
+#. module: trilab_promotional
+#: model:ir.model,name:trilab_promotional.model_coupon_reward
+msgid "Coupon Reward"
+msgstr "Nagroda kuponu"
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: trilab_promotional
+#: model:ir.model.fields,help:trilab_promotional.field_coupon_program__reward_type
+#: model:ir.model.fields,help:trilab_promotional.field_coupon_reward__reward_type
+msgid ""
+"Discount - Reward will be provided as discount.\n"
+"Free Product - Free product will be provide as reward \n"
+"Free Shipping - Free shipping will be provided as reward (Need delivery module)"
+msgstr ""
+"Rabat - Nagroda będzie udzielana jako zniżka.\n"
+"Bezpłatny produkt - darmowy produkt zostanie dostarczony jako nagroda \n"
+"Darmowa wysyłka - darmowa dostawa będzie dostarczona jako nagroda (potrzebujesz modułu dostawy)"
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_coupon_reward__display_name
+#: model:ir.model.fields,field_description:trilab_promotional.field_sale_order__display_name
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__display_name
+msgid "Display Name"
+msgstr "Nazwa wyświetlana"
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_coupon_reward__id
+#: model:ir.model.fields,field_description:trilab_promotional.field_sale_order__id
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__id
+msgid "ID"
+msgstr ""
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_coupon_reward____last_update
+#: model:ir.model.fields,field_description:trilab_promotional.field_sale_order____last_update
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard____last_update
+msgid "Last Modified on"
+msgstr "Data ostatniej modyfikacji"
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__order_id
+msgid "Order"
+msgstr "Zamówienie"
+
+#. module: trilab_promotional
+#: model:ir.model.fields.selection,name:trilab_promotional.selection__coupon_reward__reward_type__x_product_discount
+msgid "Product Discount"
+msgstr "Zniżka na Produkt"
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_trilab_promotional_select_promotion_wizard__program_id
+msgid "Program"
+msgstr "Program Promocyjny"
+
+#. module: trilab_promotional
+#: model_terms:ir.ui.view,arch_db:trilab_promotional.sale_order_view_form_inherit
+msgid "Promotions"
+msgstr "Promocje"
+
+#. module: trilab_promotional
+#: model:ir.model.fields,field_description:trilab_promotional.field_coupon_program__reward_type
+#: model:ir.model.fields,field_description:trilab_promotional.field_coupon_reward__reward_type
+msgid "Reward Type"
+msgstr "Rodzaj nagrody"
+
+#. module: trilab_promotional
+#: model:ir.model,name:trilab_promotional.model_sale_order
+msgid "Sales Order"
+msgstr "Zamówienie sprzedaży"
+
+#. module: trilab_promotional
+#: code:addons/trilab_promotional/models/sale_order.py:0
+#, python-format
+msgid "Select Promotion"
+msgstr "Wybierz Promocje"
+
+#. module: trilab_promotional
+#: model:ir.model,name:trilab_promotional.model_trilab_promotional_select_promotion_wizard
+msgid "Trilab Promotional Select Promotion Wizard"
+msgstr ""

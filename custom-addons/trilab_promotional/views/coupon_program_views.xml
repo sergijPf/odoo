@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="sale_coupon_program_view_promo_program_form" model="ir.ui.view">
+        <field name="name">coupon.program.form</field>
+        <field name="model">coupon.program</field>
+        <field name="inherit_id" ref="coupon.coupon_program_view_promo_program_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='reward_product_id']" position="attributes">
+                <attribute name="attrs">{'invisible': [('reward_type', 'in', ('paid_product', 'discount', 'free_shipping', 'x_product_discount'))], 'required': [('reward_type', '=', 'product')]}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
