@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields
+from odoo import models, fields, api
 from odoo.exceptions import UserError
 
 
@@ -32,3 +32,12 @@ class CouponProgram(models.Model):
                                         f"exists in Magento Layer. Please archive/remove it first.")
 
         return super(CouponProgram, self).write(vals)
+
+    @api.model
+    def create(self, vals):
+        res = super(CouponProgram, self).create(vals)
+
+        if vals['is_in_magento'] and not res.magento_promotion_ids and res.reward_type in ['discount', 'x_product_discount']:
+                res.magento_promotion_ids.create({'coupon_program_id': res.id})
+
+        return res

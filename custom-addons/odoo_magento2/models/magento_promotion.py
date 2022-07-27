@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
+
 from odoo import fields, models, api
 from odoo.exceptions import UserError
 
@@ -190,10 +192,12 @@ class MagentoPromotion(models.Model):
         }
 
         if self.rule_date_from:
-            rule.update({'from_date': self.rule_date_from})
+            from_date = datetime.strftime(self.rule_date_to, '%Y-%m-%d %H:%M:%S')
+            rule.update({'from_date': from_date})
 
         if self.rule_date_to:
-            rule.update({'to_date': self.rule_date_to})
+            to_date = datetime.strftime(self.rule_date_to, '%Y-%m-%d %H:%M:%S')
+            rule.update({'to_date': to_date})
 
         if self.discount_perc:
             if len(self.website_ids) > 1 and len(self.gift_product_ids) > 1:
