@@ -7,7 +7,7 @@ from odoo.exceptions import UserError
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    is_magento_config = fields.Boolean(string='Is Magento Config.Product',
+    is_magento_config = fields.Boolean(string='Is Magento Config.Product?',
                                        help='Selected if current product is Configurable Product in Magento')
     is_marketing_prod = fields.Boolean(string="Is marketing Product?", default=False,
                                       help="If checked the Configurable Product won't be created on Magento side, only Simple one")

@@ -68,7 +68,8 @@ class SaleOrderLine(models.Model):
 
         return order_line_vals
 
-    def check_vat_is_in_fiscal_positions_tax_list(self, order_rec, odoo_product):
+    @staticmethod
+    def check_vat_is_in_fiscal_positions_tax_list(order_rec, odoo_product):
         if not odoo_product.taxes_id:
             return f"Product {odoo_product.default_code} missed 'Customer Taxes' field to be used while VAT % calculation."
 

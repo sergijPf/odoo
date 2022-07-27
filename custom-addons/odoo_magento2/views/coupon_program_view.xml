@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="sale_coupon_program_view_promo_program_form_magento" model="ir.ui.view">
+        <field name="name">coupon.program.form</field>
+        <field name="model">coupon.program</field>
+        <field name="inherit_id" ref="coupon.coupon_program_view_promo_program_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group name="is_in_magento" string="Magento">
+                    <field name="is_in_magento" groups="odoo_magento2.group_magento_user"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

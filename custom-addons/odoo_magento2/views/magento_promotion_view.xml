@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_magento_promotion_tree" model="ir.ui.view">
+        <field name="name">magento.promotion.tree</field>
+        <field name="model">magento.promotion</field>
+        <field name="arch" type="xml">
+            <tree string="Magento Promotions" create="0">
+                <field name="magento_instance_id"/>
+                <field name="website_ids" widget="many2many_tags"/>
+                <field name="name"/>
+                <field name="customer_group_ids" widget="many2many_tags"/>
+                <field name="export_status" widget="badge"
+                    decoration-success="export_status == 'exported'"
+                    decoration-danger="export_status == 'error'"
+                    decoration-muted="export_status == 'not_exported'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_magento_promotion_form" model="ir.ui.view">
+        <field name="name">magento.promotion.form</field>
+        <field name="model">magento.promotion</field>
+        <field name="arch" type="xml">
+            <form string="Magento Promotion" create="0">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button string="Applied to Products" type="object" icon="fa-bars"
+                                name="get_valid_simple_products" class="oe_stat_button"/>
+                        <field name="active" invisible="1"/>
+                        <button class="oe_stat_button"
+                                name="toggle_active" icon="fa-lock"
+                                type="object" attrs="{'invisible': [('active','=',False)]}">
+                            <span class="o_stat_text" style="color:#2dab2d">Active</span>
+                        </button>
+                        <button class="oe_stat_button"
+                                name="toggle_active" icon="fa-unlock"
+                                type="object" attrs="{'invisible': [('active','=',True)]}">
+                            <span class="o_stat_text" style="color:#da3434">Archived</span>
+                        </button>
+                        <button class="oe_stat_button" name="process_promotion_export_to_magento"
+                                icon="fa-external-link-square" type="object">
+                            <span class="o_stat_text" style="color:#2dab2d" >
+                                <b>Export To Magento</b>
+                            </span>
+                        </button>
+                        <button class="oe_stat_button" name="process_promotion_delete_in_magento"
+                                icon="fa-remove" type="object">
+                            <span class="o_stat_text" style="color:#da3434">
+                                <b>Delete in Magento</b>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <h3>
+                            <field name="export_status" widget="badge" readonly="1"
+                                   decoration-success="export_status == 'exported'"
+                                   decoration-danger="export_status == 'error'"
+                                   decoration-muted="export_status == 'not_exported'"/>
+                        </h3>
+                        <h4 class="my-2 text-danger" attrs="{'invisible': [('magento_instance_id', '!=', False)]}">
+                            Missing magento instance info
+                        </h4>
+                        <h4 class="my-2 text-danger" attrs="{'invisible': [('website_ids', '!=', False)]}">
+                            Missing magento website(s) info
+                        </h4>
+                        <field name="issue" invisible="1"/>
+                        <h4 class="my-2 text-danger" attrs="{'invisible': [('issue', '=', False)]}">
+                            The "Gift" Product(s) or Base Products(Applied to) are missing.
+                            Please make sure promotion has proper setup and the Products are in Magento Layer.
+                        </h4>
+                    </div>
+                    <group>
+                        <group string="Inputs and Ref.">
+                            <field name="magento_instance_id" required="1"/>
+                            <field name="website_ids" domain="[('magento_instance_id', '=', magento_instance_id)]"
+                                   options="{'no_create':True}" widget="many2many_tags" required="1"/>
+                            <field name="customer_group_ids" domain="[('magento_instance_id', '=', magento_instance_id)]"
+                                   options="{'no_create':True}" widget="many2many_tags"/>
+                            <field name="rule_id" readonly="1"/>
+                            <field name="coupon_program_id" readonly="1"/>
+                        </group>
+                        <group string="Promo Conditions">
+                            <field name="rule_date_from" readonly="1"/>
+                            <field name="rule_date_to" readonly="1"/>
+                            <field name="min_amount" readonly="1"/>
+                            <field name="promo_code" readonly="1" attrs="{'invisible': [('promo_code', 'in', [False, ''])]}"/>
+                        </group>
+                        <group string="Product Details">
+                            <field name="gift_product_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="rule_applied_to_product_ids" invisible="1"/>
+                            <field name="applied_to_products" readonly="1"/>
+                        </group>
+                        <group string="Reward Details">
+                            <field name="reward_type" readonly="1"/>
+                            <field name="discount_type" readonly="1"/>
+                            <field name="discount_perc" readonly="1" attrs="{'invisible': [('discount_type', '!=', 'percentage')]}"/>
+                            <field name="discount_apply_on" readonly="1" attrs="{'invisible': [('discount_type', '!=', 'percentage')]}"/>
+                            <field name="discounted_price" readonly="1" attrs="{'invisible': [('discounted_price', 'in', [False, 0])]}"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="magento_promotion_search_view" model="ir.ui.view">
+        <field name="name">magento.promotion.search.view</field>
+        <field name="model">magento.promotion</field>
+        <field name="arch" type="xml">
+            <search string="Magento Promotion">
+                <field name="magento_instance_id" readonly="1"/>
+                <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="Instance" string="Magento Instance" context="{'group_by' : 'magento_instance_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="magento_promotion_action" model="ir.actions.act_window">
+            <field name="name">Magento Promotions</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">magento.promotion</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_magento_promotion_tree"/>
+    </record>
+
+    <menuitem id="menu_item_magento_promotions" name="Promotions"
+        parent="odoo_magento2.menu_product_details" sequence="6"
+        action="magento_promotion_action"/>
+</odoo>

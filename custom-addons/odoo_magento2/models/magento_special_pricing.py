@@ -162,7 +162,8 @@ class MagentoSpecialPricing(models.Model):
 
         return data_prices, api_url
 
-    def call_export_product_price_api(self, instance, data_list, api_url):
+    @staticmethod
+    def call_export_product_price_api(instance, data_list, api_url):
         failed = []
         count = (len(data_list) // 20) + 1
 

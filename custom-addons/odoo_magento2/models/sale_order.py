@@ -356,7 +356,8 @@ class SaleOrder(models.Model):
 
         return message
 
-    def check_pricelist_and_currency_of_sales_order(self, sales_order, website):
+    @staticmethod
+    def check_pricelist_and_currency_of_sales_order(sales_order, website):
         if website.pricelist_id:
             order_currency = sales_order.get('order_currency_code')
             pricelist_currency = website.pricelist_id.currency_id.name

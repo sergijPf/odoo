@@ -913,7 +913,8 @@ class MagentoConfigurableProduct(models.Model):
             self.process_conf_prod_storeview_data_export_in_bulk(instance, data, attr_sets, conf_prods_dict)
             self.process_images_export_in_bulk(instance, extra_info_dict, conf_prods_dict)
 
-    def call_export_config_products_in_bulk(self, instance, data, conf_prods_list, conf_prods_dict, method):
+    @staticmethod
+    def call_export_config_products_in_bulk(instance, data, conf_prods_list, conf_prods_dict, method):
         response = {}
 
         try:

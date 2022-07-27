@@ -601,7 +601,8 @@ class MagentoProductProduct(models.Model):
                             "label": attr_name
                         })
 
-    def call_unassign_conf_attribute_option(self, instance, conf_sku, prod_attr, simp_product_dict):
+    @staticmethod
+    def call_unassign_conf_attribute_option(instance, conf_sku, prod_attr, simp_product_dict):
         try:
             api_url = f'/V1/configurable-products/{conf_sku}/options/{prod_attr}'
             res = req(instance, api_url, 'DELETE')
@@ -612,7 +613,8 @@ class MagentoProductProduct(models.Model):
 
         return res
 
-    def call_assign_new_conf_attribute_option(self, instance, conf_sku, data, simp_prod_dict):
+    @staticmethod
+    def call_assign_new_conf_attribute_option(instance, conf_sku, data, simp_prod_dict):
         try:
             api_url = f'/V1/configurable-products/{conf_sku}/options'
             req(instance, api_url, 'POST', data)
@@ -634,7 +636,8 @@ class MagentoProductProduct(models.Model):
 
         self.call_linking_of_simple_and_configurable_products(magento_instance, config_sku, simple_sku, simp_dict)
 
-    def call_linking_of_simple_and_configurable_products(self, instance, config_sku, simple_sku, simp_dict):
+    @staticmethod
+    def call_linking_of_simple_and_configurable_products(instance, config_sku, simple_sku, simp_dict):
         data = {"childSku": simple_sku}
 
         try:
@@ -1104,7 +1107,8 @@ class MagentoProductProduct(models.Model):
 
         return failed
 
-    def prepare_enable_or_disable_products(self, instance, product_recs, product_dict):
+    @staticmethod
+    def prepare_enable_or_disable_products(instance, product_recs, product_dict):
         to_disable = []
         to_enable = []
 
