@@ -69,8 +69,8 @@ class MagentoPromotion(models.Model):
             if rec.discount_type == 'percentage' and rec.discount_apply_on == 'specific_products' and rec.discount_perc:
                 if rec.magento_instance_id and len(rec.website_ids) == 1 and len(rec.gift_product_ids) == 1:
                     simpl_prod = rec.gift_product_ids
-                    rec.discounted_price = simpl_prod.get_product_price_for_website(
-                        rec.website_ids, simpl_prod.odoo_product_id) * (1 - rec.discount_perc / 100)
+                    rec.discounted_price = round(simpl_prod.get_product_price_for_website(
+                        rec.website_ids, simpl_prod.odoo_product_id) * (1 - rec.discount_perc / 100), 2)
                     continue
 
             rec.discounted_price = 0
@@ -191,12 +191,11 @@ class MagentoPromotion(models.Model):
             }
         }
 
-        if self.rule_date_from:
-            from_date = datetime.strftime(self.rule_date_to, '%Y-%m-%d %H:%M:%S')
-            rule.update({'from_date': from_date})
+        from_date = datetime.strftime(self.rule_date_from if self.rule_date_from else datetime.now(), '%Y-%m-%d')
+        rule.update({'from_date': from_date})
 
         if self.rule_date_to:
-            to_date = datetime.strftime(self.rule_date_to, '%Y-%m-%d %H:%M:%S')
+            to_date = datetime.strftime(self.rule_date_to, '%Y-%m-%d')
             rule.update({'to_date': to_date})
 
         if self.discount_perc:
