@@ -307,22 +307,14 @@ class SaleOrder(models.Model):
 
         mag_deliv_carrier = magento_instance.shipping_method_ids.filtered(lambda x: x.carrier_code == shipping_method)
         if not mag_deliv_carrier:
-            return f"Order {order_ref} has failed to proceed due to shipping method - {shipping_method} wasn't found " \
+            return f"Order has failed to proceed due to shipping method - {shipping_method} wasn't found " \
                    f"within Magento Delivery Methods. Please synchronize Instance Metadata."
 
         odoo_delivery_carrier = mag_deliv_carrier.delivery_carrier_ids
         delivery_carrier = odoo_delivery_carrier[0] if odoo_delivery_carrier else False
         if not delivery_carrier:
-            try:
-                product = self.env.ref('odoo_magento2.product_product_shipping')
-                self.env["delivery.carrier"].create({
-                    'name': mag_deliv_carrier.carrier_label or mag_deliv_carrier.magento_carrier_title,
-                    'product_id': product.id,
-                    'magento_carrier': mag_deliv_carrier.id
-                })
-            except Exception as err:
-                return f"Error while new Delivery Method creation in Odoo: {err}. Please create it manually and link " \
-                       f"'Magento Delivery Carrier' field with {shipping_method} shipping method code. "
+            return f"Missed Delivery Method in Odoo. Please create it first and link 'Magento Delivery Carrier' field " \
+                   f"with '{shipping_method}' method code. "
 
         if shipping_method == "inpostlocker_standard":
             locker_code = sales_order.get('extension_attributes', {}).get('inpost_locker_id', '')

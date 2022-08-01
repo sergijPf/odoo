@@ -81,10 +81,14 @@ class SaleOrderLine(models.Model):
     def create_shipping_sales_order_line(self, sales_order, order_rec):
         ship_amount = float(sales_order.get('shipping_amount', 0.0))
         discount_amount = sales_order.get('shipping_discount_amount', 0.0)
-        shipping_product = self.env.ref('odoo_magento2.product_product_shipping')
+        carrier = order_rec.carrier_id
+        shipping_product = carrier.product_id
 
         if not shipping_product:
-            return "Failed to find Magento Shipping product within Odoo products."
+            if carrier:
+                return f"Failed to find Product for '{order_rec.carrier_id}' delivery method."
+            else:
+                return f"Order missed delivery method to create shipping order line."
 
         vals = {
             'order_id': order_rec.id,
