@@ -17,7 +17,6 @@ class SaleOrder(models.Model):
     magento_payment_method_id = fields.Many2one('magento.payment.method', string="Payment Method")
     magento_shipping_method_id = fields.Many2one('magento.delivery.carrier', string="Shipping Method")
     payment_transaction_code = fields.Char(string="Payment Trans. Code", help="Magento Payment System Transaction ID")
-    inpost_locker_code = fields.Char(string="Locker ID", default='')
     order_currency_code = fields.Char(string="Order Currency")
     order_total_amount = fields.Float(string="Order Amount")
     magento_carrier_name = fields.Char(compute="_compute_magento_carrier_name", string="Magento Carrier Name")
@@ -325,6 +324,24 @@ class SaleOrder(models.Model):
                 return f"Error while new Delivery Method creation in Odoo: {err}. Please create it manually and link " \
                        f"'Magento Delivery Carrier' field with {shipping_method} shipping method code. "
 
+        if shipping_method == "inpostlocker_standard":
+            locker_code = sales_order.get('extension_attributes', {}).get('inpost_locker_id', '')
+            inpost_point_id = self.env['inpost.point'].search([('name', '=', locker_code)])
+
+            if not inpost_point_id:
+                inpost_api = self.env['delivery.carrier'].inpost_get_api_client()
+                InpostPoint = self.env['inpost.point']
+
+                try:
+                    response = inpost_api.get_point(locker_code)
+                except Exception as e:
+                    return f"Error to get '{locker_code}' locker info from Inpost - {str(e)}."
+
+                if response and response.get('items'):
+                    InpostPoint.create(InpostPoint.convert_api_data(response['items']))
+                else:
+                    return f"Inpost response with locker: '{locker_code}' details doesn't contain appropriate info."
+
         return ''
 
     def check_products_exist_and_prices(self, magento_instance, order_lines, website):
@@ -419,7 +436,6 @@ class SaleOrder(models.Model):
             'magento_website_id': website.id,
             'store_id': store_view.id if store_view else False,
             'payment_transaction_code': sales_order.get('payment', {}).get('last_trans_id', False),
-            'inpost_locker_code': sales_order.get('extension_attributes', {}).get('inpost_locker_id', ''),
             'auto_workflow_process_id': workflow_process_id.id,
             'order_currency_code': sales_order.get("order_currency_code"),
             'order_total_amount': sales_order.get("grand_total", 0),
@@ -429,6 +445,13 @@ class SaleOrder(models.Model):
             'magento_order_status': sales_order.get('status'),
             'magento_order_reference': so_increment_id
         })
+
+        if shipping_method == "inpostlocker_standard":
+            locker_code = sales_order.get('extension_attributes', {}).get('inpost_locker_id', '')
+            inpost_point_id = self.env['inpost.point'].search([('name', '=', locker_code)])
+
+            if inpost_point_id:
+                order_vals.udpate({'inpost_sending_point_id': inpost_point_id.id})
 
         return order_vals
 

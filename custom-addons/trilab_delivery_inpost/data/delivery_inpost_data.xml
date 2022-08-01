@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+    <!-- InPost carriers -->
+    <record id="inpost_locker" model="inpost.carrier">
+        <field name="name">Paczkomat</field>
+        <field name="code">inpost_locker</field>
+    </record>
+    <record id="inpost_courier" model="inpost.carrier">
+        <field name="name">Kurier</field>
+        <field name="code">inpost_courier</field>
+    </record>
+    <record id="inpost_letter" model="inpost.carrier">
+        <field name="name">List</field>
+        <field name="code">inpost_letter</field>
+    </record>
+
+    <!-- InPost services -->
+    <record id="inpost_locker_standard" model="inpost.service">
+        <field name="name">Przesyłka paczkomatowa - standardowa</field>
+        <field name="code">inpost_locker_standard</field>
+        <field name="point_option">required_locker</field>
+        <field name="carrier_id" ref="inpost_locker"/>
+    </record>
+    <record id="inpost_locker_allegro" model="inpost.service">
+        <field name="name">Przesyłka paczkomatowa - Allegro Paczkomaty InPost</field>
+        <field name="code">inpost_locker_allegro</field>
+        <field name="point_option">required_locker</field>
+        <field name="carrier_id" ref="inpost_locker"/>
+    </record>
+    <record id="inpost_locker_pass_thru" model="inpost.service">
+        <field name="name">Przesyłka paczkomatowa - Podaj Dalej</field>
+        <field name="code">inpost_locker_pass_thru</field>
+        <field name="point_option">required_locker</field>
+        <field name="carrier_id" ref="inpost_locker"/>
+    </record>
+    <record id="inpost_courier_allegro" model="inpost.service">
+        <field name="name">Przesyłka kurierska - Allegro Kurier24 InPost</field>
+        <field name="code">inpost_courier_allegro</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_standard" model="inpost.service">
+        <field name="name">Przesyłka kurierska standardowa</field>
+        <field name="code">inpost_courier_standard</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_palette" model="inpost.service">
+        <field name="name">Przesyłka kurierska Paleta Standard</field>
+        <field name="code">inpost_courier_palette</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_express_1000" model="inpost.service">
+        <field name="name">Przesyłka kurierska z doręczeniem do 10:00</field>
+        <field name="code">inpost_courier_express_1000</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_express_1200" model="inpost.service">
+        <field name="name">Przesyłka kurierska z doręczeniem do 12:00</field>
+        <field name="code">inpost_courier_express_1200</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_express_1700" model="inpost.service">
+        <field name="name">Przesyłka kurierska z doręczeniem do 17:00</field>
+        <field name="code">inpost_courier_express_1700</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_local_standard" model="inpost.service">
+        <field name="name">Przesyłka kurierska Lokalna Standardowa</field>
+        <field name="code">inpost_courier_local_standard</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_local_express" model="inpost.service">
+        <field name="name">Przesyłka kurierska Lokalna Expresowa</field>
+        <field name="code">inpost_courier_local_express</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_local_super_express" model="inpost.service">
+        <field name="name">Przesyłka kurierska Lokalna Super Expresowa</field>
+        <field name="code">inpost_courier_local_super_express</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_letter_allegro" model="inpost.service">
+        <field name="name">Przesyłka kurierska - Allegro MiniKurier24 InPost</field>
+        <field name="code">inpost_letter_allegro</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+    <record id="inpost_courier_c2c" model="inpost.service">
+        <field name="name">Przesyłka kurierska InPost Kurier Standard C2C</field>
+        <field name="code">inpost_courier_c2c</field>
+        <field name="point_option">no</field>
+        <field name="carrier_id" ref="inpost_courier"/>
+    </record>
+
+    <!-- inpost additional services -->
+    <record id="inpost_add_insurance" model="inpost.service.additional">
+        <field name="name">Ubezpieczenie przesyłki</field>
+        <field name="code">insurance</field>
+        <field name="allowed_services"
+               eval="[(6, 0, [ref('inpost_courier_standard'), ref('inpost_courier_express_1000'), ref('inpost_courier_express_1200'), ref('inpost_courier_express_1700'), ref('inpost_courier_palette'), ref('inpost_courier_local_standard'), ref('inpost_courier_local_express'), ref('inpost_courier_local_super_express'), ref('inpost_courier_c2c')])]"/>
+    </record>
+    <record id="inpost_add_cod" model="inpost.service.additional">
+        <field name="name">Pobranie za przesyłkę</field>
+        <field name="code">cod</field>
+        <field name="allowed_services"
+               eval="[(6, 0, [ref('inpost_locker_standard'), ref('inpost_locker_allegro'), ref('inpost_locker_pass_thru'), ref('inpost_courier_standard'), ref('inpost_courier_express_1000'), ref('inpost_courier_express_1200'), ref('inpost_courier_express_1700'), ref('inpost_courier_palette'), ref('inpost_courier_local_standard'), ref('inpost_courier_local_express'), ref('inpost_courier_local_super_express'), ref('inpost_courier_c2c')])]"/>
+    </record>
+    <record id="inpost_add_sms" model="inpost.service.additional">
+        <field name="name">Powiadomienie o przesyłce via SMS</field>
+        <field name="code">sms</field>
+        <field name="allowed_services"
+               eval="[(6, 0, [ref('inpost_locker_standard'), ref('inpost_locker_allegro'), ref('inpost_locker_pass_thru'), ref('inpost_courier_standard'), ref('inpost_courier_express_1000'), ref('inpost_courier_express_1200'), ref('inpost_courier_express_1700'), ref('inpost_courier_palette')])]"/>
+    </record>
+    <record id="inpost_add_email" model="inpost.service.additional">
+        <field name="name">Powiadomienie o przesyłce via e-mail</field>
+        <field name="code">email</field>
+        <field name="allowed_services"
+               eval="[(6, 0, [ref('inpost_locker_standard'), ref('inpost_locker_allegro'), ref('inpost_locker_pass_thru'), ref('inpost_courier_standard'), ref('inpost_courier_express_1000'), ref('inpost_courier_express_1200'), ref('inpost_courier_express_1700'), ref('inpost_courier_palette')])]"/>
+    </record>
+    <record id="inpost_add_saturday" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w sobotę</field>
+        <field name="code">saturday</field>
+        <field name="allowed_services"
+               eval="[(6, 0, [ref('inpost_locker_standard'), ref('inpost_locker_allegro'), ref('inpost_locker_pass_thru'), ref('inpost_courier_standard'), ref('inpost_courier_express_1000'), ref('inpost_courier_express_1200'), ref('inpost_courier_express_1700')])]"/>
+    </record>
+    <record id="inpost_add_dor1720" model="inpost.service.additional">
+        <field name="name">Doręczenie pomiędzy 17:00 a 20:00</field>
+        <field name="code">dor1720</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_standard')])]"/>
+    </record>
+    <record id="inpost_add_rod" model="inpost.service.additional">
+        <field name="name">Zwrot dokumentów</field>
+        <field name="code">rod</field>
+        <field name="allowed_services"
+               eval="[(6, 0, [ref('inpost_courier_standard'), ref('inpost_courier_express_1000'), ref('inpost_courier_express_1200'), ref('inpost_courier_express_1700'), ref('inpost_courier_palette'), ref('inpost_courier_local_standard'), ref('inpost_courier_local_express'), ref('inpost_courier_local_super_express')])]"/>
+    </record>
+    <record id="inpost_add_forhour_9" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 9</field>
+        <field name="code">forhour_9</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1000')])]"/>
+    </record>
+    <record id="inpost_add_forhour_10" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 10</field>
+        <field name="code">forhour_10</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1000')])]"/>
+    </record>
+    <record id="inpost_add_forhour_11" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 11</field>
+        <field name="code">forhour_11</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1200')])]"/>
+    </record>
+    <record id="inpost_add_forhour_12" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 12</field>
+        <field name="code">forhour_12</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1200')])]"/>
+    </record>
+    <record id="inpost_add_forhour_13" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 13</field>
+        <field name="code">forhour_13</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1700')])]"/>
+    </record>
+    <record id="inpost_add_forhour_14" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 14</field>
+        <field name="code">forhour_14</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1700')])]"/>
+    </record>
+    <record id="inpost_add_forhour_15" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 15</field>
+        <field name="code">forhour_15</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1700')])]"/>
+    </record>
+    <record id="inpost_add_forhour_16" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 16</field>
+        <field name="code">forhour_16</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1700')])]"/>
+    </record>
+    <record id="inpost_add_forhour_17" model="inpost.service.additional">
+        <field name="name">Doręczenie przesyłki w dni robocze do godziny 17</field>
+        <field name="code">forhour_17</field>
+        <field name="allowed_services" eval="[(6, 0, [ref('inpost_courier_express_1700')])]"/>
+    </record>
+
+    <!-- InPost Package Type -->
+    <!-- locker -->
+    <record id="inpost_package_type_locker_size_a" model="stock.package.type">
+        <field name="name">Gabaryt A paczkomat</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">8</field>
+        <field name="width">38</field>
+        <field name="packaging_length">64</field>
+        <field name="max_weight">25.0</field>
+        <field name="shipper_package_code">small</field>
+        <field name="inpost_carrier_id" ref="inpost_locker"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_locker_size_b" model="stock.package.type">
+        <field name="name">Gabaryt B paczkomat</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">19</field>
+        <field name="width">38</field>
+        <field name="packaging_length">64</field>
+        <field name="max_weight">25.0</field>
+        <field name="shipper_package_code">medium</field>
+        <field name="inpost_carrier_id" ref="inpost_locker"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_locker_size_c" model="stock.package.type">
+        <field name="name">Gabaryt C paczkomat</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">41</field>
+        <field name="width">38</field>
+        <field name="packaging_length">64</field>
+        <field name="max_weight">25.0</field>
+        <field name="shipper_package_code">large</field>
+        <field name="inpost_carrier_id" ref="inpost_locker"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <!-- letter -->
+    <record id="inpost_letter_size_a" model="stock.package.type">
+        <field name="name">Gabaryt A list</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">8</field>
+        <field name="width">38</field>
+        <field name="packaging_length">64</field>
+        <field name="max_weight">2.0</field>
+        <field name="shipper_package_code">letter_a</field>
+        <field name="inpost_carrier_id" ref="inpost_letter"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_letter_size_b" model="stock.package.type">
+        <field name="name">Gabaryt B list</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">19</field>
+        <field name="width">38</field>
+        <field name="packaging_length">64</field>
+        <field name="max_weight">10.0</field>
+        <field name="shipper_package_code">letter_b</field>
+        <field name="inpost_carrier_id" ref="inpost_letter"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_letter_size_c" model="stock.package.type">
+        <field name="name">Gabaryt C list</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">40</field>
+        <field name="width">40</field>
+        <field name="packaging_length">80</field>
+        <field name="max_weight">10.0</field>
+        <field name="shipper_package_code">letter_c</field>
+        <field name="inpost_carrier_id" ref="inpost_letter"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <!-- Courier -->
+    <record id="inpost_package_type_courier_size_a" model="stock.package.type">
+        <field name="name">Gabaryt A kurier</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">8</field>
+        <field name="width">38</field>
+        <field name="packaging_length">64</field>
+        <field name="max_weight">25.0</field>
+        <field name="shipper_package_code">small</field>
+        <field name="inpost_carrier_id" ref="inpost_courier"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_courier_size_b" model="stock.package.type">
+        <field name="name">Gabaryt B kurier</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">19</field>
+        <field name="width">38</field>
+        <field name="packaging_length">64</field>
+        <field name="max_weight">25.0</field>
+        <field name="shipper_package_code">medium</field>
+        <field name="inpost_carrier_id" ref="inpost_courier"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_courier_size_c" model="stock.package.type">
+        <field name="name">Gabaryt C kurier</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">41</field>
+        <field name="width">38</field>
+        <field name="packaging_length">64</field>
+        <field name="max_weight">25.0</field>
+        <field name="shipper_package_code">large</field>
+        <field name="inpost_carrier_id" ref="inpost_courier"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_courier_size_d" model="stock.package.type">
+        <field name="name">Gabaryt D kurier</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">50</field>
+        <field name="width">50</field>
+        <field name="packaging_length">80</field>
+        <field name="max_weight">25.0</field>
+        <field name="shipper_package_code">xlarge</field>
+        <field name="inpost_carrier_id" ref="inpost_courier"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_parcel_domestic" model="stock.package.type">
+        <field name="name">krajowa</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">35</field>
+        <field name="width">24</field>
+        <field name="packaging_length">24</field>
+        <field name="max_weight">50.0</field>
+        <field name="shipper_package_code">parcel</field>
+        <field name="inpost_carrier_id" ref="inpost_courier"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <record id="inpost_package_type_parcel_international" model="stock.package.type">
+        <field name="name">Paczka z Polski</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">60</field>
+        <field name="width">40</field>
+        <field name="packaging_length">40</field>
+        <field name="max_weight">25.0</field>
+        <field name="shipper_package_code">parcel</field>
+        <field name="inpost_carrier_id" ref="inpost_courier"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+    <!-- palette -->
+    <record id="inpost_package_type_palette" model="stock.package.type">
+        <field name="name">paleta</field>
+        <field name="x_length_uom" ref="uom.product_uom_cm"/>
+        <field name="height">120</field>
+        <field name="width">80</field>
+        <field name="packaging_length">180</field>
+        <field name="max_weight">800.0</field>
+        <field name="shipper_package_code">palette</field>
+        <field name="inpost_carrier_id" ref="inpost_courier"/>
+        <field name="package_carrier_type">inpost</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_delivery_carrier_form_with_provider_inpost" model="ir.ui.view">
+        <field name="name">delivery.carrier.form.provider.inpost</field>
+        <field name="model">delivery.carrier</field>
+        <field name="inherit_id" ref="delivery.view_delivery_carrier_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//notebook/page[1]" position="attributes">
+                <attribute name="attrs">{'invisible': [('delivery_type', 'not in', ['fixed', 'base_on_rule', 'inpost'])]}
+                </attribute>
+            </xpath>
+
+            <xpath expr="//notebook/page[1]/group[1]" position="attributes">
+                <attribute name="attrs">{'invisible': [('delivery_type', 'not in', ['fixed', 'inpost'])]}</attribute>
+            </xpath>
+
+            <xpath expr="//page[@name='destination']" position="before">
+                <page string="Inpost Configuration" attrs="{'invisible': [('delivery_type', '!=', 'inpost')]}">
+                    <field name="x_delivery_available_packaging_ids" invisible="1"/>
+                    <group>
+                        <field name="inpost_token" style="white-space: normal;word-break: break-word;"
+                               attrs="{'required': [('delivery_type', '=', 'inpost')]}"/>
+
+                        <label for="inpost_organization_name" string="Organization"/>
+                        <div class="o_row">
+                            <div attrs="{'invisible': [('inpost_organization', '=', False)]}">
+                                <field name="inpost_organization_name" readonly="1" nolabel="1" class="oe_inline"/>
+                                &amp;nbsp;
+                                (<field name="inpost_organization" readonly="1" nolabel="1" class="oe_inline"/>)
+                            </div>
+                            <div>
+                                <button name="action_get_organizations" type="object" class="btn btn-link">
+                                    <i class="fa fa-fw o_buton_icon fa-arrow-right" title="select org"/>
+                                    <span>Select InPost organization</span>
+                                </button>
+                            </div>
+                        </div>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="inpost_delivery_carrier_id" string="InPost Carrier"
+                                   options="{'no_create': True, 'no_create_edit':True, 'no_quick_create':True, 'no_open':True}"
+                                   attrs="{'required': [('delivery_type', '=', 'inpost'), ('inpost_organization', '!=', False)], 'invisible': ['|', ('delivery_type', '!=', 'inpost'), ('inpost_organization', '=', False)]}"/>
+
+                            <field name="inpost_default_service_type_id" string="InPost Service"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_open': False}"
+                                   attrs="{'required': [('delivery_type', '=', 'inpost'), ('inpost_delivery_carrier_id', '!=', False)], 'invisible': ['|', ('delivery_type', '!=', 'inpost'), ('inpost_delivery_carrier_id', '=', False)]}"/>
+
+                            <field name="x_delivery_available_packaging_ids" invisible="1"/>
+                            <field name="x_delivery_default_package_type_id" string="Default Package Type"
+                                   style="white-space: normal;word-break: break-word;"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_open': False}"
+                                   context="{'default_inpost_carrier': inpost_delivery_carrier_id, 'default_package_carrier_type': delivery_type}"
+                                   attrs="{'invisible': [('inpost_delivery_carrier_id', '=', False)], 'required': [('inpost_delivery_carrier_id', '!=', False), ('inpost_organization', '!=', False)]}"/>
+
+                            <field name="x_delivery_can_pickup" invisible="1"/>
+                            <field name="inpost_sending_method"/>
+                            <field name="inpost_default_sending_point_id"/>
+
+                            <!-- those 2 fields are automatically set by inpost_additional_services,
+                                 so they need to be here and *not* readonly -->
+                            <field name="x_delivery_cod" invisible="1"/>
+                            <field name="x_delivery_insurance" invisible="1"/>
+                            <field name="x_delivery_minimum_insurance_value"/>
+                            <field name="inpost_additional_services" widget="many2many_tags"
+                                   domain="[('allowed_services', 'in', inpost_default_service_type_id)]"/>
+                        </group>
+                        <group>
+                            <field name="inpost_label_file_type"
+                                   attrs="{'required': [('delivery_type', '=', 'inpost')], 'invisible': ['|', ('delivery_type', '!=', 'inpost'), ('inpost_organization', '=', False)]}"/>
+
+                            <field name="inpost_label_format"
+                                   attrs="{'required': [('delivery_type', '=', 'inpost')], 'invisible': ['|', ('delivery_type', '!=', 'inpost'), ('inpost_organization', '=', False)]}"/>
+
+                            <field name="inpost_send_sender"
+                                   attrs="{'required': [('delivery_type', '=', 'inpost')], 'invisible': ['|', ('delivery_type', '!=', 'inpost'), ('inpost_organization', '=', False)]}"/>
+
+                            <div colspan='2' groups="stock.group_stock_manager,sales_team.group_sale_manager">
+                                <button name="action_get_points" type="object" class="btn btn-link btn-danger"
+                                        confirm="Do you really want ro reload points?" title="reload points">
+                                    <i class="fa fa-fw o_buton_icon fa-warning"/>
+                                    <i class="fa fa-fw o_buton_icon fa-arrow-right"/>
+                                    <span>Import InPost points (dangerous)</span>
+                                </button>
+                            </div>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

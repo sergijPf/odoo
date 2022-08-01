@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="trilab_delivery_pickup_tree" model="ir.ui.view">
+        <field name="name">trilab_delivery_pickup_tree</field>
+        <field name="model">trilab.delivery.pickup</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="id"/>
+                <field name="carrier_id"/>
+                <field name="pickup_date"/>
+                <field name="pickup_hour_from"/>
+                <field name="pickup_hour_to"/>
+                <field name="warehouse_id"/>
+                <field name="picking_ids"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="trilab_delivery_pickup_form" model="ir.ui.view">
+        <field name="name">trilab_delivery_pickup_form</field>
+        <field name="model">trilab.delivery.pickup</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="id" invisible="1"/>
+                <field name="company_id" invisible="1"/>
+                <field name="protocol_id" invisible="1"/>
+                <field name="delivery_type" invisible="1"/>
+                <field name="show_create_protocol_btn" invisible="1"/>
+                <field name="show_schedule_pickup_btn" invisible="1"/>
+                <field name="show_cancel_pickup_btn" invisible="1"/>
+
+                <header>
+                    <button name="create_protocol" string="Create Protocol" type="object"
+                            class="oe_highlight" attrs="{'invisible': [('show_create_protocol_btn', '=', False)]}"/>
+                    <button name="schedule_pickup" string="Schedule Pickup" type="object" class="oe_highlight"
+                            attrs="{'invisible': [('show_schedule_pickup_btn', '=', False)]}"/>
+                    <button name="download_protocol" string="Download Protocol" type="object"
+                            class="oe_highlight" attrs="{'invisible': [('protocol_id', '=', False)]}"/>
+                    <button name="cancel_pickup" string="Cancel Pickup" type="object"
+                            attrs="{'invisible': [('show_cancel_pickup_btn', '=', False)]}"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group name="basic">
+                            <field name="carrier_id" domain="[('x_delivery_can_pickup', '=', True)]" options="{'no_create': 1}"/>
+                        </group>
+                        <group name="details">
+                            <field name="pickup_date" attrs="{'readonly': [('state', '=', 'scheduled')]}"/>
+
+                            <label for="pickup_hour_from" string="Pickup hours"/>
+                            <div>
+                                <span>from</span>&amp;nbsp;
+                                <field name="pickup_hour_from" class="oe_inline" attrs="{'readonly': [('state', '=', 'scheduled')]}" style="width:2em;"/>
+                                &amp;nbsp;<span>to</span>&amp;nbsp;
+                                <field name="pickup_hour_to" class="oe_inline" attrs="{'readonly': [('state', '=', 'scheduled')]}" style="width:2em;"/>
+                            </div>
+
+                            <field name="warehouse_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                            <field name="comments" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        </group>
+                        <group name="extra">
+
+                        </group>
+                    </group>
+                    <label for="picking_ids"/>
+                    <field name="picking_ids" options="{'no_create': 1}" widget="many2many"
+                           attrs="{'readonly': [('state', '!=', 'draft')]}"
+                           domain="[('carrier_id', '=', carrier_id), ('warehouse_id', '=', warehouse_id), ('x_delivery_pickup_id', 'in', [False, id])]"
+                                />
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <template id="delivery_pickup_protocol_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Delivery Pickup Protocol #<span t-out="o.id"/> </h2>
+                        <p>for: <span t-out="o.carrier_id.name"/></p>
+                        <table>
+                            <tr>
+                                <td>&amp;nbsp;</td>
+                                <td>&amp;nbsp;</td>
+                                <td>&amp;nbsp;</td>
+                                <td>
+                                    from:<br/>
+                                    <span t-out="o.warehouse_id.partner_id._display_address()" />
+                                </td>
+                            </tr>
+                        </table>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Package</th>
+                                    <th>Reference</th>
+                                    <th>Receiver</th>
+                                    <th>Value</th>
+                                    <th t-if="o.carrier_id.x_delivery_cod">COD</th>
+                                    <th>Weight</th>
+                                    <td>Content</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.picking_ids" t-as="p">
+                                    <td t-out="p_index"/>
+                                    <td t-out="p.carrier_tracking_ref"/>
+                                    <td t-out="p.origin"/>
+                                    <td t-out="p.partner_id._display_address()"/>
+                                    <td t-out="p.sale_id.amount_total"/>
+                                    <td t-if="o.carrier_id.x_delivery_cod">[X]</td>
+                                    <td t-out="p.weight_bulk" t-options='{"widget": "float", "precision": 2}'/>
+                                    <td t-out="p.x_get_content_description()[:30]"/>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p>Packages total: <span t-out="len(o.picking_ids)"/></p>
+                        <p t-if="o.comments">Comments:</p>
+                        <p t-if="o.comments" t-out="o.comments" />
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="delivery_pickup_protocol" model="ir.actions.report">
+        <field name="name">Delivery Protocol</field>
+        <field name="model">trilab.delivery.pickup</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">trilab_delivery_base.delivery_pickup_protocol_template</field>
+        <field name="report_file">trilab_delivery_base.delivery_pickup_protocol_template</field>
+        <field name="binding_model_id" eval="False"/>
+    </record>
+
+    <record id="action_trilab_delivery_pickup" model="ir.actions.act_window">
+        <field name="name">Delivery Pickup</field>
+        <field name="res_model">trilab.delivery.pickup</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem action="action_trilab_delivery_pickup" id="menu_trilab_delivery_pickup"
+              parent="stock.menu_stock_warehouse_mgmt" sequence="150"/>
+
+</odoo>

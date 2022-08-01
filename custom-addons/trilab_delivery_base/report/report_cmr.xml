@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="report_cmr_document">
+        <t t-foreach="['1', '2', '3', '4']" t-as="doc_copy" t-translation="off">
+            <t t-call="web.basic_layout">
+                <div class="page m-0 p-0 cmr-report" style="page-break-inside: avoid;">
+                    <t t-if="doc_copy == '1'">
+                        <img src="/trilab_delivery_base/static/src/img/cmr-red.svg"/>
+                    </t>
+                    <t t-if="doc_copy == '2'">
+                        <img src="/trilab_delivery_base/static/src/img/cmr-blue.svg"/>
+                    </t>
+                    <t t-if="doc_copy == '3'">
+                        <img src="/trilab_delivery_base/static/src/img/cmr-green.svg"/>
+                    </t>
+                    <t t-if="doc_copy == '4'">
+                        <img src="/trilab_delivery_base/static/src/img/cmr-black.svg"/>
+                    </t>
+
+
+                    <span t-field="o.picking_type_id.warehouse_id.partner_id"
+                          style="position: absolute; top: 70px; left: 70px;"
+                          t-options='{"widget": "contact", "fields": ["name", "address", "phone", "email"], "no_marker": true}'/>
+
+                    <span t-field="o.x_delivery_cmr_code" style="position: absolute; top: 55px; right: 160px; font-weight: bold; font-size: 1.1rem;"/>
+
+                    <span t-field="o.partner_id" style="position: absolute; top: 170px; left: 70px;"
+                          t-options='{"widget": "contact", "fields": ["name", "address", "phone", "email"], "no_marker": true}'/>
+
+
+                    <span style="position: absolute; top: 275px; left: 70px;">
+                        <span t-field="o.partner_id.city"/>
+                        <br/>
+                        <span t-field="o.partner_id.country_id"/>
+                    </span>
+
+                    <span style="position: absolute; top: 480px; right: 190px;">
+                        <span t-field="o.shipping_weight"/> <span t-field="o.weight_uom_name"/>
+                    </span>
+                </div>
+            </t>
+        </t>
+    </template>
+    <template id="report_cmr">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="lang" t-value="o.partner_id.lang"/>
+                <t t-call="trilab_delivery_base.report_cmr_document" t-lang="lang"/>
+            </t>
+        </t>
+    </template>
+
+    <record id="paperformat_cmr" model="report.paperformat">
+        <field name="name">CMR A4</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">7</field>
+        <field name="margin_bottom">7</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="report_cmr_create" model="ir.actions.report">
+        <field name="paperformat_id" ref="trilab_delivery_base.paperformat_cmr"/>
+        <field name="name">CMR Report</field>
+        <field name="model">stock.picking</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_file">trilab_delivery_base.report_cmr</field>
+        <field name="report_name">trilab_delivery_base.report_cmr</field>
+        <field name="print_report_name">'cmr-%s' % object.name</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record model="ir.ui.view" id="stock_package_type_form_trilab_delivery">
+        <field name="name">stock.package.type.form.delivery.trilab</field>
+        <field name="model">stock.package.type</field>
+        <field name="inherit_id" ref="stock.stock_package_type_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='delivery']" position="inside">
+                <group>
+                    <field name="x_length_uom" string="Override length UOM"
+                           domain="[['category_id', '=', %(uom.uom_categ_length)d]]"/>
+                    <field name="x_weight_uom" string="Override weight UOM"
+                           domain="[['category_id', '=', %(uom.product_uom_categ_kgm)d]]"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

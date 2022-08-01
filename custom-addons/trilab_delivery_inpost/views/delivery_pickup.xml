@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="trilab_delivery_pickup_form_inpost" model="ir.ui.view">
+        <field name="name">trilab_delivery_pickup_inpost_form</field>
+        <field name="model">trilab.delivery.pickup</field>
+        <field name="inherit_id" ref="trilab_delivery_base.trilab_delivery_pickup_form"/>
+        <field name="arch" type="xml">
+
+            <group name="extra" position="inside">
+                <field name="inpost_order_number" readonly="1" attrs="{'invisible': [('inpost_order_number', '=', False)]}" />
+            </group>
+
+        </field>
+    </record>
+
+</odoo>

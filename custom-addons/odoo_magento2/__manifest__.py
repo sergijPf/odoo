@@ -5,7 +5,7 @@
     'category': 'Sales',
     'summary': 'Odoo - Magento2 Connector',
 
-    'depends': ['delivery', 'sale_stock', 'account', 'sale_management', 'smartino_common'],
+    'depends': ['delivery', 'sale_stock', 'account', 'sale_management', 'smartino_common', 'trilab_delivery_inpost'],
 
     # Views
     'data': [

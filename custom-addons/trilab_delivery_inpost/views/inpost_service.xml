@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record model="ir.ui.view" id="inpost_service_form">
+        <field name="name">inpost.service.form</field>
+        <field name="model">inpost.service</field>
+        <field name="inherit_id" eval="False"/>
+        <field name="arch" type="xml">
+            <form string="Inpost Service">
+                <sheet>
+                    <label for="name"/>
+                    <h1>
+                        <field name="name"/>
+                    </h1>
+                    <group name="configuration">
+                      <group>
+                        <field name="code"/>
+                        <field name="carrier_id"/>
+                        <field name="point_option"/>
+                        <field name="show_point" readonly="1"/>
+                        <field name="require_point" readonly="1"/>
+                      </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

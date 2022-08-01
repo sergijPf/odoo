@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_order_form_inherit_delivery_inpost" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.delivery.inpost</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='commitment_date']/.." position="after">
+                <field name="carrier_delivery_type" invisible="1"/>
+                <field name="carrier_id" invisible="1"/>
+                <field name="inpost_delivery_carrier_code" invisible="1"/>
+                <field name="inpost_locker_id"
+                       attrs="{'invisible': ['|','|',('carrier_id','=',False),
+                                                     ('carrier_delivery_type', '!=', 'inpost'),
+                                                     ('inpost_delivery_carrier_code', '!=', 'inpost_locker')],
+                               'required': [('inpost_delivery_carrier_code', '=', 'inpost_locker')]}"/>
+                <field name="inpost_locker_code" invisible="1"/>
+                <field name="inpost_sending_point_id"
+                       attrs="{'invisible': ['|',('carrier_id','=',False), ('carrier_delivery_type', '!=', 'inpost')]}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

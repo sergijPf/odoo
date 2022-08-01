@@ -1,0 +1,587 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* trilab_delivery_inpost
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-07-27 19:46+0000\n"
+"PO-Revision-Date: 2021-07-27 19:46+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+msgid ""
+"&amp;nbsp;\n"
+"                                ("
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+msgid ""
+"<i class=\"fa fa-fw o_buton_icon fa-arrow-right\"/>\n"
+"                                    <span>Select InPost organization</span>"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+msgid ""
+"<i class=\"fa fa-fw o_buton_icon fa-warning\"/>\n"
+"                                    <i class=\"fa fa-fw o_buton_icon fa-arrow-right\"/>\n"
+"                                    <span>Import InPost points (dangerous)</span>"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields.selection,name:trilab_delivery_inpost.selection__delivery_carrier__inpost_label_format__a6
+msgid "A6"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_token
+msgid "API Token"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__allowed_services
+msgid "Allowed Services"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_inpost_organization
+msgid "Cancel"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid "Cant cancel picking without Inpost shipment data!"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__carrier_id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_product_packaging__package_carrier_type
+msgid "Carrier"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier__code
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__code
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__code
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_sale_order__inpost_delivery_carrier_code
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_stock_picking__inpost_delivery_carrier_code
+msgid "Carrier Code"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier__name
+msgid "Carrier Name"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__city
+msgid "City"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.res_config_settings_view_form
+msgid "Compute shipping costs and ship with InPost"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_res_config_settings
+msgid "Config Settings"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__country_id
+msgid "Country"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier__create_uid
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization__create_uid
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__create_uid
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__create_uid
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier__create_date
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization__create_date
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__create_date
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__create_date
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+msgid "Default Package Type"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization__delivery_carrier_id
+msgid "Delivery Carrier"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_trilab_delivery_pickup
+msgid "Delivery Pickup"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_product_packaging__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_sale_order__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_trilab_delivery_pickup__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+msgid "Do you really want ro reload points?"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.actions.server,name:trilab_delivery_inpost.action_stock_picking_download_inpost_labels
+msgid "Download InPost Shipping Labels"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields.selection,name:trilab_delivery_inpost.selection__delivery_carrier__inpost_label_file_type__epl
+msgid "EPL"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__functions
+msgid "Functions"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_product_packaging__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_res_config_settings__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_sale_order__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_stock_picking__id
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_trilab_delivery_pickup__id
+msgid "ID"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid "Import finished, added {} point(s)"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid "Imported Inpost pickup points and lockers"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields.selection,name:trilab_delivery_inpost.selection__product_packaging__package_carrier_type__inpost
+msgid "InPost"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_inpost_service_additional
+msgid "InPost Additional Service"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_inpost_carrier
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_product_packaging__inpost_carrier_id
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+msgid "InPost Carrier"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_res_config_settings__module_trilab_delivery_inpost
+msgid "InPost Connector"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.res_config_settings_view_form
+msgid "InPost Delivery Methods"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_sale_order__inpost_locker_id
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_picking_inpost_form
+msgid "InPost Locker"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_sale_order__inpost_locker_code
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_stock_picking__inpost_locker_code
+msgid "InPost Locker Code"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_inpost_organization
+msgid "InPost Organizations"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_inpost_point
+msgid "InPost Points"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_inpost_service
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+msgid "InPost Service"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields.selection,name:trilab_delivery_inpost.selection__delivery_carrier__delivery_type__inpost
+msgid "Inpost"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_additional_services
+msgid "Inpost Additional Services"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_delivery_carrier_id
+msgid "Inpost Carrier"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+msgid "Inpost Configuration"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_trilab_delivery_pickup__inpost_order_number
+msgid "Inpost Order Number"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_default_service_type_id
+msgid "Inpost Service"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_stock_picking__inpost_shipment_id
+msgid "Inpost Shipment"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_label_file_type
+msgid "Label File Type"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_label_format
+msgid "Label Format"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_product_packaging____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_res_config_settings____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_sale_order____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_stock_picking____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_trilab_delivery_pickup____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier__write_uid
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization__write_uid
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__write_uid
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__write_uid
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_carrier__write_date
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization__write_date
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__write_date
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__write_date
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__latitude
+msgid "Latitude"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__location_date
+msgid "Location Date"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__location_description
+msgid "Location Description"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__location_description_1
+msgid "Location Description 1"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__location_description_2
+msgid "Location Description 2"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__location_type
+msgid "Location Type"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__longitude
+msgid "Longitude"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields.selection,name:trilab_delivery_inpost.selection__delivery_carrier__inpost_label_format__normal
+msgid "Normal"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__opening_hours
+msgid "Opening Hours"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_organization
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_organization__organization
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_carrier_form_with_provider_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_inpost_organization
+msgid "Organization"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_organization_name
+msgid "Organization Name"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields.selection,name:trilab_delivery_inpost.selection__delivery_carrier__inpost_label_file_type__pdf
+msgid "PDF"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid ""
+"Package shipping weight and default package weight are both equal to zero. "
+"Make sure that one of the values will resolve to valid weight."
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__payment_available
+msgid "Payment Available"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__payment_point_descr
+msgid "Payment Point Descr"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__payment_type
+msgid "Payment Type"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__phone_number
+msgid "Phone Number"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__name
+msgid "Point Name"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_product_packaging
+msgid "Product Packaging"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__delivery_type
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_sale_order__carrier_delivery_type
+msgid "Provider"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid "Recipient phone number is missing or invalid!"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__recommended_low_interest_box_machines_list
+msgid "Recommended Low Interest Box Machines List"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_sale_order
+msgid "Sales Order"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_inpost.view_delivery_inpost_organization
+msgid "Select"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.actions.act_window,name:trilab_delivery_inpost.act_delivery_inpost_organization
+msgid "Select an organization"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid ""
+"Selected shipping via Inpost Locker, but destination locker is missing."
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_delivery_carrier__inpost_send_sender
+msgid "Send Odoo Sender"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.actions.server,name:trilab_delivery_inpost.action_stock_picking_send_to_inpost
+msgid "Send to Shipper"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service__name
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_service_additional__name
+msgid "Service Level Name"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid "Shipment N° %s has been cancelled"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_delivery_carrier
+msgid "Shipping Methods"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_pickup.py:0
+#, python-format
+msgid "Some pickings are not registered with Inpost"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__state_id
+msgid "State"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__status
+msgid "Status"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__street
+msgid "Street"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__street2
+msgid "Street2"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid ""
+"The {} carrier is missing (Missing field(s) :\n"
+" API Token)"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid ""
+"The {} carrier is missing (Missing field(s) :\n"
+" Default Product Packaging)"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid ""
+"The {} carrier is missing (Missing field(s) :\n"
+" InPost Carrier)"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: code:addons/trilab_delivery_inpost/models/delivery_carrier.py:0
+#, python-format
+msgid ""
+"The {} carrier is missing (Missing field(s) :\n"
+" Organization)"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model,name:trilab_delivery_inpost.model_stock_picking
+msgid "Transfer"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__type
+msgid "Type"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__url
+msgid "Url"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__virtual
+msgid "Virtual"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields.selection,name:trilab_delivery_inpost.selection__delivery_carrier__inpost_label_file_type__zpl
+msgid "ZPL"
+msgstr ""
+
+#. module: trilab_delivery_inpost
+#: model:ir.model.fields,field_description:trilab_delivery_inpost.field_inpost_point__zip
+msgid "Zip"
+msgstr ""

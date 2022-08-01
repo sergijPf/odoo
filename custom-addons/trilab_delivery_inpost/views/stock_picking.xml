@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_picking_inpost_form" model="ir.ui.view">
+        <field name="name">stock.picking.form.inpost</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='delivery_type']" position="after">
+                <field name="delivery_type" invisible="1" />
+                <field name="inpost_delivery_show_point" invisible="1" />
+                <field name="inpost_shipment_id" readonly="1" attrs="{'invisible': ['|', '|', ('carrier_id','=',False), ('delivery_type', '!=', 'inpost'), ('inpost_shipment_id', '=', False)]}"/>
+                <field name="inpost_shipment_status" readonly="1" attrs="{'invisible': ['|', '|', ('carrier_id','=',False), ('delivery_type', '!=', 'inpost'), ('inpost_shipment_status', '=', False)]}"/>
+                <field name="inpost_shipment_id" readonly="1" attrs="{'invisible': [('inpost_shipment_id', '=', False)]}"/>
+                <field name="inpost_locker_code" string="InPost Locker"
+                       attrs="{'invisible': ['|', '|', ('carrier_id','=',False), ('delivery_type', '!=', 'inpost'), ('inpost_delivery_show_point', '=', False)]}" />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

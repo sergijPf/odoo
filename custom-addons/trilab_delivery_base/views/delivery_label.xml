@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+
+    <record id="label_save_done" model="ir.ui.view">
+        <field name="name">trilab_delivery.base.label.form.save.done</field>
+        <field name="model">trilab.delivery.label</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="file_name" invisible="1"/>
+                <div>
+                    <label for="data" string="The file has been successfully prepared, click to download:"/>
+                    <field name="data" filename="file_name" readonly="1" nolabel="1"/>
+                </div>
+                <footer>
+                    <button special="cancel" string="Close" type="object" class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</data>

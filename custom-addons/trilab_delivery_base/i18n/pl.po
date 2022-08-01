@@ -1,0 +1,705 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* trilab_delivery_base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-02-13 09:32+0000\n"
+"PO-Revision-Date: 2022-02-13 09:32+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "&amp;nbsp;"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.trilab_delivery_pickup_form
+msgid "&amp;nbsp;<span>to</span>&amp;nbsp;"
+msgstr "&amp;nbsp;<span>do</span>&amp;nbsp;"
+
+#. module: trilab_delivery_base
+#: model:ir.actions.report,print_report_name:trilab_delivery_base.report_cmr_create
+msgid "'cmr-%s' % object.name"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.view_picking_form_inherit
+msgid "00000"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model_terms:payment.acquirer,pending_msg:trilab_delivery_base.payment_acquirer_cod
+msgid ""
+"<i>Pending</i>, Thanks for choosing COD (Cash on Delivery) option. Courier "
+"will collect the payment on delivery."
+msgstr ""
+"<i>Oczekuje</i>, Dziękujemy za wybranie płatności za pobraniem. Kurier "
+"odbierze opłatę przy dostawie."
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.view_picking_form_inherit
+msgid "<span class=\"o_stat_text\">Delivery Pickup</span>"
+msgstr "<span class=\"o_stat_text\">Zlecenie Odbioru</span>"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.trilab_delivery_pickup_form
+msgid "<span>from</span>&amp;nbsp;"
+msgstr "<span>od</span>&amp;nbsp;"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_needaction
+msgid "Action Needed"
+msgstr "Wymagana akcja"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_ids
+msgid "Activities"
+msgstr "Czynności"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_exception_decoration
+msgid "Activity Exception Decoration"
+msgstr "Dekoracja wyjątku aktywności"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_state
+msgid "Activity State"
+msgstr "Stan czynności"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_type_icon
+msgid "Activity Type Icon"
+msgstr "Ikona typu aktywności"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/res_partner.py:0
+#, python-format
+msgid "Address {} is missing city info"
+msgstr "Adresowi {} brakuje informacji o mieście"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/res_partner.py:0
+#, python-format
+msgid "Address {} is missing street info"
+msgstr "Adresowi {} brakuje informacji o ulicy"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/res_partner.py:0
+#, python-format
+msgid "Address {} is missing zip info"
+msgstr "Adresowi {} brakuje kodu pocztowego"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/res_partner.py:0
+#, python-format
+msgid "Address {} is missing {} info"
+msgstr "Adresowi {} brakuje {} informacji"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier__x_delivery_can_pickup
+msgid "Allow Delivery Pickup"
+msgstr "Zezwól na zlecenie odbioru"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_attachment_count
+msgid "Attachment Count"
+msgstr "Ilość Załączników"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__x_delivery_cmr_code
+msgid "CMR Code"
+msgstr "Kod CMR"
+
+#. module: trilab_delivery_base
+#: model:ir.actions.report,name:trilab_delivery_base.report_cmr_create
+msgid "CMR Report"
+msgstr "Raport CMR"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "COD"
+msgstr "Za pobraniem"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/delivery_pickup.py:0
+#, python-format
+msgid "Can't cancel pickup in this state"
+msgstr "Zlecenie odbioru w tym statusie, nie może być anulowane"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.trilab_delivery_pickup_form
+msgid "Cancel Pickup"
+msgstr "Anuluj zlecenie"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_quant_package__x_delivery_carrier_type
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__carrier_id
+msgid "Carrier"
+msgstr "Przewoźnik"
+
+#. module: trilab_delivery_base
+#: model:payment.acquirer,name:trilab_delivery_base.payment_acquirer_cod
+msgid "Cash On Delivery"
+msgstr "Płatność za pobraniem"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.label_save_done
+msgid "Close"
+msgstr "Zamknij"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Comments:"
+msgstr "Komentarze:"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__company_id
+msgid "Company"
+msgstr "Firma"
+
+#. module: trilab_delivery_base
+#: model:ir.model,name:trilab_delivery_base.model_res_partner
+msgid "Contact"
+msgstr "Kontakt"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Content"
+msgstr "Zawartość"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__comments
+msgid "Courier Instructions"
+msgstr "Instrukcje dla kuriera"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.trilab_delivery_pickup_form
+msgid "Create Protocol"
+msgstr "Utwórz protokół"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields.selection,name:trilab_delivery_base.selection__trilab_delivery_pickup__state__created
+msgid "Created"
+msgstr "Utworzono"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label__create_uid
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__create_uid
+msgid "Created by"
+msgstr "Utworzona przez"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label__create_date
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__create_date
+msgid "Created on"
+msgstr "Utworzono"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier__x_delivery_default_packaging_id
+msgid "Default Package"
+msgstr "Domyślne opakowanie"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__x_delivery_can_show_cancel_btn
+msgid "Delivery Can Show Cancel Button"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier__x_delivery_mpk
+msgid "Delivery MPK"
+msgstr "MPK"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/stock_picking.py:0
+#: model:ir.actions.act_window,name:trilab_delivery_base.action_trilab_delivery_pickup
+#: model:ir.model,name:trilab_delivery_base.model_trilab_delivery_pickup
+#: model:ir.ui.menu,name:trilab_delivery_base.menu_trilab_delivery_pickup
+#, python-format
+msgid "Delivery Pickup"
+msgstr "Zlecenie odbioru"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Delivery Pickup Protocol #"
+msgstr "Numer zlecenia odbioru"
+
+#. module: trilab_delivery_base
+#: model:ir.actions.report,name:trilab_delivery_base.delivery_pickup_protocol
+msgid "Delivery Protocol"
+msgstr "Protokół zlecenia odbioru"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_sale_order__x_delivery_type
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__delivery_type
+msgid "Delivery Type"
+msgstr "Typ dostawy"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_res_partner__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_sale_order__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_quant_package__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label__display_name
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__display_name
+msgid "Display Name"
+msgstr "Nazwa wyświetlana"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/stock_picking.py:0
+#, python-format
+msgid "Download File"
+msgstr "Pobierz plik"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.trilab_delivery_pickup_form
+msgid "Download Protocol"
+msgstr "Pobierz protokół"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.view_picking_form_inherit
+msgid "Download Shipping Label"
+msgstr "Pobierz naklejkę adresową"
+
+#. module: trilab_delivery_base
+#: model:ir.actions.server,name:trilab_delivery_base.action_stock_picking_download_delivery_labels
+msgid "Download Shipping Labels"
+msgstr "Pobierz naklejki adresowe"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields.selection,name:trilab_delivery_base.selection__trilab_delivery_pickup__state__draft
+msgid "Draft"
+msgstr "Projekt"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label__data
+msgid "File data"
+msgstr "Plik z danymi"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label__file_name
+msgid "File name"
+msgstr "Nazwa pliku"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_follower_ids
+msgid "Followers"
+msgstr "Obserwatorzy"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_channel_ids
+msgid "Followers (Channels)"
+msgstr "Obserwatorzy (kanały)"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "Obserwatorzy (partnerzy)"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__activity_type_icon
+msgid "Font awesome icon e.g. fa-tasks"
+msgstr "Ikona Font Awesome np. fa-tasks"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_res_partner__full_street
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_res_users__full_street
+msgid "Full Street"
+msgstr "Ulica (pełna)"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier__id
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_res_partner__id
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_sale_order__id
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__id
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_quant_package__id
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label__id
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__id
+msgid "ID"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_exception_icon
+msgid "Icon"
+msgstr "Ikona"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__activity_exception_icon
+msgid "Icon to indicate an exception activity."
+msgstr "Ikona wskazująca na wyjątkową aktywność"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__message_needaction
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__message_unread
+msgid "If checked, new messages require your attention."
+msgstr "Jeśli zaznaczone, to nowa wiadomość wymaga twojej uwagi."
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__message_has_error
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr ""
+"Jeśli zaznaczone, to część wiadomości napotkało na błąd przy próbie "
+"doręczenia."
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_is_follower
+msgid "Is Follower"
+msgstr "Jest obserwatorem"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__x_delivery_label_id
+msgid "Label"
+msgstr "Etykieta"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_res_partner____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_sale_order____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_quant_package____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label____last_update
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup____last_update
+msgid "Last Modified on"
+msgstr "Data ostatniej modyfikacji"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label__write_uid
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__write_uid
+msgid "Last Updated by"
+msgstr "Ostatnio aktualizowane przez"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_label__write_date
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__write_date
+msgid "Last Updated on"
+msgstr "Data ostatniej aktualizacji"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_main_attachment_id
+msgid "Main Attachment"
+msgstr "Główny Załącznik"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_has_error
+msgid "Message Delivery error"
+msgstr "Błąd doręczenia wiadomości"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_ids
+msgid "Messages"
+msgstr "Wiadomości"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__my_activity_date_deadline
+msgid "My Activity Deadline"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_date_deadline
+msgid "Next Activity Deadline"
+msgstr "Termin następnej czynności"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_summary
+msgid "Next Activity Summary"
+msgstr "Następne podsumowanie aktywności"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_type_id
+msgid "Next Activity Type"
+msgstr "Typ następnej czynności"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_needaction_counter
+msgid "Number of Actions"
+msgstr "Ilość akcji"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_has_error_counter
+msgid "Number of errors"
+msgstr "Ilość błędów"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__message_needaction_counter
+msgid "Number of messages which requires an action"
+msgstr "Ilość wiadomości wymagających akcji"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "Ilość wiadomości z błędami przy doręczeniu"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__message_unread_counter
+msgid "Number of unread messages"
+msgstr "Ilość nieprzeczytanych wiadomości"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Package"
+msgstr "Opakowanie"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__x_delivery_packaging_id
+msgid "Package Type"
+msgstr "Typ opakowania"
+
+#. module: trilab_delivery_base
+#: model:ir.model,name:trilab_delivery_base.model_stock_quant_package
+msgid "Packages"
+msgstr "Paczki"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Packages total:"
+msgstr "Ilość paczek:"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__picking_ids
+msgid "Picking"
+msgstr "Pobranie"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__pickup_date
+msgid "Pickup Date"
+msgstr "Data odbioru"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__pickup_hour_from
+msgid "Pickup Hour From"
+msgstr "Godzina odbioru (od)"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__pickup_hour_to
+msgid "Pickup Hour To"
+msgstr "Godzina odbioru (do)"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/delivery_pickup.py:0
+#, python-format
+msgid "Pickup date is in the past."
+msgstr "Data odbioru jest w przeszłości."
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.trilab_delivery_pickup_form
+msgid "Pickup hours"
+msgstr "Godziny odbioru"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__protocol_id
+msgid "Protocol"
+msgstr "Protokół odbioru"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Receiver"
+msgstr "Adresat"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Reference"
+msgstr "Odnośnik"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__activity_user_id
+msgid "Responsible User"
+msgstr "Użytkownik odpowiedzialny"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr "Błąd dostarczenia wiadomości SMS"
+
+#. module: trilab_delivery_base
+#: model:ir.model,name:trilab_delivery_base.model_sale_order
+msgid "Sales Order"
+msgstr "Zamówienie sprzedaży"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.trilab_delivery_pickup_form
+msgid "Schedule Pickup"
+msgstr "Zaplanuj zlecenie odbioru"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields.selection,name:trilab_delivery_base.selection__trilab_delivery_pickup__state__scheduled
+msgid "Scheduled"
+msgstr "Zaplanowane"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/delivery_pickup.py:0
+#, python-format
+msgid "Select some Stock Pickings first"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/res_partner.py:0
+#, python-format
+msgid "Selected address does not exists"
+msgstr "Wybrany adres nie istnieje"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/res_partner.py:0
+#, python-format
+msgid "Selected address is missing its name"
+msgstr "Wybrany adres nie jest kompletny"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier__x_delivery_insurance
+msgid "Shipment Insurance"
+msgstr "Ubezpieczenie przesyłki"
+
+#. module: trilab_delivery_base
+#: model:ir.model,name:trilab_delivery_base.model_delivery_carrier
+msgid "Shipping Methods"
+msgstr "Metody wysyłki"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__show_cancel_pickup_btn
+msgid "Show Cancel Pickup Btn"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__show_create_protocol_btn
+msgid "Show Create Protocol Btn"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__show_schedule_pickup_btn
+msgid "Show Schedule Pickup Btn"
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__x_delivery_pickup_state
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__state
+msgid "State"
+msgstr "Stan"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__activity_state
+msgid ""
+"Status based on activities\n"
+"Overdue: Due date is already passed\n"
+"Today: Activity date is today\n"
+"Planned: Future activities."
+msgstr ""
+"Status bazuje na aktywnościach\n"
+"Zaległe: Termin minął\n"
+"Dziś: Aktywność przewidziana na dziś\n"
+"Zaplanowane: Przyszłe aktywności."
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.label_save_done
+msgid "The file has been successfully prepared, click to download:"
+msgstr "Plik został przygotowaany, kliknij by go pobrać"
+
+#. module: trilab_delivery_base
+#: model:ir.model,name:trilab_delivery_base.model_stock_picking
+msgid "Transfer"
+msgstr "Pobranie"
+
+#. module: trilab_delivery_base
+#: model_terms:payment.acquirer,auth_msg:trilab_delivery_base.payment_acquirer_cod
+msgid "Twoja płatność została autoryzowana."
+msgstr ""
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__activity_exception_decoration
+msgid "Type of the exception activity on record."
+msgstr "Wyjątkowa czynność w historii."
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_unread
+msgid "Unread Messages"
+msgstr "Nieprzeczytane wiadomości"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__message_unread_counter
+msgid "Unread Messages Counter"
+msgstr "Licznik nieprzeczytanych wiadomości"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/delivery_pickup.py:0
+#, python-format
+msgid "Valid hour from 0 to 23"
+msgstr "Poprawny godzina z zakresu 0 do 23"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Value"
+msgstr "Wartość"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__warehouse_id
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__warehouse_id
+msgid "Warehouse"
+msgstr "Magazyn"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_trilab_delivery_pickup__website_message_ids
+msgid "Website Messages"
+msgstr "Wiadomości"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,help:trilab_delivery_base.field_trilab_delivery_pickup__website_message_ids
+msgid "Website communication history"
+msgstr "Historia komunikacji"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "Weight"
+msgstr "Waga"
+
+#. module: trilab_delivery_base
+#: code:addons/trilab_delivery_base/models/delivery_pickup.py:0
+#, python-format
+msgid "Wrong hour range"
+msgstr "Zły zakres godzin"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier__x_delivery_cod
+msgid "X Collect on Delivery"
+msgstr "Za pobraniem"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_delivery_carrier__x_delivery_available_packaging_ids
+msgid "X Delivery Available Packaging"
+msgstr "Dostepne opakowania"
+
+#. module: trilab_delivery_base
+#: model:ir.model.fields,field_description:trilab_delivery_base.field_stock_picking__x_delivery_pickup_id
+msgid "X Delivery Pickup"
+msgstr "Zlecenie odbioru"
+
+#. module: trilab_delivery_base
+#: model_terms:payment.acquirer,cancel_msg:trilab_delivery_base.payment_acquirer_cod
+msgid "Your payment has been cancelled."
+msgstr "Płatność została anulowana."
+
+#. module: trilab_delivery_base
+#: model_terms:payment.acquirer,done_msg:trilab_delivery_base.payment_acquirer_cod
+msgid "Your payment has been successfully processed. Thank you!"
+msgstr "Płatność została przetworzona. Dziękujemy!"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "for:"
+msgstr "dla:"
+
+#. module: trilab_delivery_base
+#: model_terms:ir.ui.view,arch_db:trilab_delivery_base.delivery_pickup_protocol_template
+msgid "from:<br/>"
+msgstr "od:<br/>"
+
+#. module: trilab_delivery_base
+#: model:ir.model,name:trilab_delivery_base.model_trilab_delivery_label
+msgid "transient model to handle labels downloads"
+msgstr ""

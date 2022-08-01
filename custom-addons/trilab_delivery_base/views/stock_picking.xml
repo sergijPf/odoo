@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record model="ir.actions.server" id="action_stock_picking_download_delivery_labels">
+        <field name="name">Download Shipping Labels</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = records.x_get_delivery_labels()
+        </field>
+    </record>
+
+    <record id="view_picking_form_inherit" model="ir.ui.view">
+        <field name="name">view_picking_form_inherit_trilab</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+
+            <group name="carrier_data" position="inside">
+                <field name="x_delivery_label_id" readonly="1" attrs="{'invisible': [('x_delivery_label_id', '=', False)]}"/>
+                <field name="x_delivery_pickup_id" readonly="1" attrs="{'invisible': [('x_delivery_pickup_id', '=', False)]}"/>
+                <field name="x_delivery_pickup_state" readonly="1" attrs="{'invisible': [('x_delivery_pickup_state', '=', False)]}"/>
+                <field name="x_delivery_package_type_id" domain="[('package_carrier_type', '=', delivery_type)]" />
+                <field name="x_delivery_cmr_code" placeholder="00000"
+                       attrs="{'invisible': [('picking_type_code', '!=', 'outgoing')] }"/>
+            </group>
+
+            <header position="inside">
+                <field name="x_delivery_can_show_cancel_btn" invisible="1"/>
+                <field name="x_delivery_label_id" invisible="1"/>
+                <field name="x_delivery_pickup_id" invisible="1"/>
+                <button name="x_delivery_download_label" string="Download Shipping Label"
+                        type="object" class="oe_highlight" attrs="{'invisible': [('x_delivery_label_id', '=', False)]}"/>
+            </header>
+
+            <div class="oe_button_box" position="inside">
+                <button name="x_delivery_pickup_btn" class="oe_stat_button" icon="fa-sign-out" type="object"
+                        attrs="{'invisible': [('x_delivery_pickup_id', '=', False)]}">
+                    <div class="o_form_field o_stat_info">
+                        <span class="o_stat_text">Delivery Pickup</span>
+                    </div>
+                </button>
+            </div>
+
+            <button name="cancel_shipment" position="before">
+                <field name="x_delivery_can_show_cancel_btn" invisible="1"/>
+            </button>
+
+            <button name="cancel_shipment" position="attributes">
+                <attribute name="attrs">
+                    {'invisible': [('x_delivery_can_show_cancel_btn', '=', False)]}
+                </attribute>
+            </button>
+        </field>
+    </record>
+
+    <record id="view_picking_withcarrier_out_form_trilab" model="ir.ui.view">
+        <field name="name">delivery.stock.picking_withcarrier.form.view</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="delivery.view_picking_withcarrier_out_form"/>
+        <field name="arch" type="xml">
+            <button name="send_to_shipper" position="attributes">
+                <attribute name="attrs">
+                    {'invisible':['|','|','|','|',('carrier_tracking_ref','!=',False),('delivery_type','in', ['fixed', 'base_on_rule']),('delivery_type','=',False),('state','in',('cancelled',)),('picking_type_code', '=', 'incoming')]}
+                </attribute>
+            </button>
+        </field>
+    </record>
+
+</odoo>

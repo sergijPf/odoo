@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="payment_delivery_methods_inherit_website_sale_delivery" inherit_id="website_sale_delivery.payment_delivery_methods">
+
+        <input name="delivery_type" position="attributes">
+            <attribute name="t-att-data-inpost-show-point">'true' if delivery.inpost_default_service_type_id.show_point else ''</attribute>
+            <attribute name="t-att-data-inpost-require-point">'true' if delivery.inpost_default_service_type_id.require_point else ''</attribute>
+            <attribute name="t-att-data-inpost-point-option">delivery.inpost_default_service_type_id.point_option</attribute>
+            <attribute name="t-att-data-inpost-selected-point">order.inpost_locker_id.name</attribute>
+        </input>
+
+        <xpath expr="." position="inside">
+            <t t-if="delivery.delivery_type == 'inpost'">
+                <t t-if="delivery.inpost_default_service_type_id and delivery.inpost_default_service_type_id.show_point">
+                    <br/>
+<!--                    <span>selected locker:</span>-->
+                    <a href="#" class="inpost_edit_locker" style="display:none;">
+                        <span t-if="order.inpost_locker_id">
+                            <t t-out="order.inpost_locker_id.name"/>
+                                <span class="text-muted" t-if="order.inpost_locker_id.street or order.inpost_locker_id.street2">
+                                    (<t t-out="order.inpost_locker_id.street"/>
+                                    <t t-out="order.inpost_locker_id.street2"/>,
+                                    <t t-out="order.inpost_locker_id.city"/>)
+                                </span>
+                        </span>
+                        <span t-else="">Select locker</span>
+                    </a>
+                </t>
+            </t>
+        </xpath>
+
+    </template>
+
+</odoo>

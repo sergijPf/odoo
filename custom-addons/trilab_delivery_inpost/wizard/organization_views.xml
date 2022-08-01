@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_delivery_inpost_organization" model="ir.ui.view">
+        <field name="name">InPost Select Organization</field>
+        <field name="model">inpost.organization</field>
+        <field name="arch" type="xml">
+            <form string="Organization">
+                <group>
+                    <field name="organization"/>
+                    <field name="delivery_carrier_id" invisible="1"/>
+                </group>
+                <footer>
+                    <button name="action_validate" type="object" string="Select" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="act_delivery_inpost_organization" model="ir.actions.act_window">
+        <field name="name">Select an organization</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">inpost.organization</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>
