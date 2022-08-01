@@ -443,7 +443,7 @@ class SaleOrder(models.Model):
             inpost_point_id = self.env['inpost.point'].search([('name', '=', locker_code)])
 
             if inpost_point_id:
-                order_vals.udpate({'inpost_locker_id': inpost_point_id.id})
+                order_vals.update({'inpost_locker_id': inpost_point_id.id})
 
         return order_vals
 
