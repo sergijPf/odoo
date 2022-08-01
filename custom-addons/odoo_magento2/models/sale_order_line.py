@@ -100,11 +100,9 @@ class SaleOrderLine(models.Model):
         vals = self._convert_to_write(new_order_line._cache)
 
         vals.update({
-            'name': 'Shipping cost',
             'product_uom_qty': 1,
             'price_unit': ship_amount,
             'discount': round((discount_amount / ship_amount) * 100, 2) if ship_amount and discount_amount else 0,
-            'tax_id': False,
             'magento_sale_order_line_ref': 'shipping'
         })
 
