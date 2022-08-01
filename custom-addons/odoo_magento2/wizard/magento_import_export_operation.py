@@ -114,22 +114,21 @@ class MagentoImportExport(models.TransientModel):
         return True
 
     def create_or_update_configurable_product_in_magento_layer(self, product_dict):
-        conf_product_obj = self.env['magento.configurable.product']
+        Conf_product = self.env['magento.configurable.product']
         product = product_dict.get('odoo_product_id')
-        domain = [('magento_instance_id', '=', product_dict.get('instance_id')),
+        instance_id = product_dict.get('instance_id')
+        domain = [('magento_instance_id', '=', instance_id),
                   ('odoo_prod_template_id', '=', product.id)]
-        conf_product = conf_product_obj.with_context(active_test=False).search(domain)
+        conf_product = Conf_product.with_context(active_test=False).search(domain)
         if not conf_product:
-            sku = product.with_context(lang='en_US').name.replace(' - ', '_').replace('-', '_').replace('%', '').\
-                replace('#', '').replace('/', '').replace('&', '').replace('  ', ' ').replace(' ', '_')
-            if len(sku) > 63:
-                sku = sku[:63]
+            sku = self._get_conf_product_sku(Conf_product, instance_id, product.magento_sku)
+
             values = {
-                'magento_instance_id': product_dict.get('instance_id'),
+                'magento_instance_id': instance_id,
                 'odoo_prod_template_id': product.id,
                 'magento_sku': sku
             }
-            conf_product = conf_product_obj.create(values)
+            conf_product = Conf_product.create(values)
         else:
             if not conf_product.active:
                 conf_product.write({'active': True})
@@ -137,6 +136,23 @@ class MagentoImportExport(models.TransientModel):
             conf_product.simple_product_ids.force_update = True
 
         product_dict.update({"conf_product_id": conf_product})
+
+    @staticmethod
+    def _get_conf_product_sku(Conf_product, instance_id, sku):
+        cnt = 0
+
+        while True:
+            prod_with_same_sku = Conf_product.with_context(active_test=False).search([
+                ('magento_instance_id', '=', instance_id),
+                ('magento_sku', '=', (sku + str(cnt)) if cnt else sku)])
+
+            if prod_with_same_sku:
+                cnt += 1
+            else:
+                sku = (sku + str(cnt)) if cnt else sku
+                break
+
+        return sku
 
     @staticmethod
     def create_or_update_simple_product_in_magento_layer(product_dict, magento_sku_missing, magento_product_obj,

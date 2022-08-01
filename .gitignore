@@ -55,3 +55,4 @@ conf/
 venv*
 *.pdf
 third_party_addons
+custom-addons/trilab_merge_product

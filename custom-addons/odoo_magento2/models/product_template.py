@@ -13,6 +13,21 @@ class ProductTemplate(models.Model):
                                       help="If checked the Configurable Product won't be created on Magento side, only Simple one")
     magento_conf_prod_ids = fields.One2many('magento.configurable.product', 'odoo_prod_template_id',
                                             string="Magento Configurable Products", context={'active_test': False})
+    magento_sku = fields.Char('Magento Sku', compute="_compute_magento_sku", store=True)
+
+    @api.depends('name', 'is_magento_config')
+    def _compute_magento_sku(self):
+        for prod in self:
+            if prod.is_magento_config:
+                sku = prod.with_context(lang='en_US').name.replace(' - ', '_').replace('-', '_').replace('%', '').\
+                    replace('#', '').replace('/', '').replace('&', '').replace('  ', ' ').replace(' ', '_')
+
+                if len(sku) > 63:
+                    sku = sku[:63]
+
+                prod.magento_sku = sku
+            else:
+                prod.magento_sku = ""
 
     @api.onchange('is_magento_config')
     def onchange_magento_config_check(self):

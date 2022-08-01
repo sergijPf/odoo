@@ -1298,7 +1298,6 @@ class MagentoConfigurableProduct(models.Model):
         resp = {}
 
         res = self.get_products_from_magento(instance, conf_prods, fields_str='sku,product_links')
-
         for item in res:
             links = item.get('product_links')
             resp.update({
