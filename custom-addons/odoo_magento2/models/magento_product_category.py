@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
 
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 from ..python_library.api_request import req
 
+_logger = logging.getLogger(__name__)
 
 class MagentoProductCategory(models.Model):
     _name = "magento.product.category"
@@ -34,9 +36,12 @@ class MagentoProductCategory(models.Model):
     def delete_category_in_magento(instance, categ_id):
         try:
             url = '/V1/categories/%s' % categ_id
-            return req(instance, url, 'DELETE')
+            res = req(instance, url, 'DELETE')
         except Exception as e:
-            return e
+            _logger.warning(f'Failed to delete category id{categ_id} in Magento. The reason: {str(e)}')
+            res = False
+
+        return res
 
     def create_product_category_in_magento_and_layer(self, product_categ, instance, magento_categ_id, parent_categ):
         data = {

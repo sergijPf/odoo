@@ -63,9 +63,7 @@ class ProductPublicCategory(models.Model):
                             f"archive it in Magento Layer first and try once again.")
         if to_remove:
             for ml_categ in to_remove:
-                res = ml_categ.delete_category_in_magento(ml_categ.instance_id, ml_categ.magento_category)
-
-                if res is True:
+                if ml_categ.delete_category_in_magento(ml_categ.instance_id, ml_categ.magento_category):
                     ml_categ.unlink()
 
         return super(ProductPublicCategory, self).unlink()

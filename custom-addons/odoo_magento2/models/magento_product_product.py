@@ -643,9 +643,9 @@ class MagentoProductProduct(models.Model):
         try:
             api_url = f'/V1/configurable-products/{config_sku}/child'
             res = req(instance, api_url, 'POST', data)
-            if res is True:
+            if isinstance(res, bool) and res:
                 simp_dict['magento_status'] = 'extra_info'
-            elif res.get('message'):
+            elif isinstance(res, dict)and res.get('message'):
                 raise
         except Exception as err:
             text = (f"Error while linking {simple_sku} with {config_sku} Configurable Product in Magento: {str(err)}.")

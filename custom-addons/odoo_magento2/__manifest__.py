@@ -1,11 +1,12 @@
 {
     # App information
     'name': "Smartino Magento2 connector",
-    'version': '15.0.22',
+    'version': '15.0.23',
     'category': 'Sales',
     'summary': 'Odoo - Magento2 Connector',
 
-    'depends': ['delivery', 'sale_stock', 'account', 'sale_management', 'smartino_common', 'trilab_delivery_inpost'],
+    'depends': ['delivery', 'sale_stock', 'account', 'sale_management', 'smartino_common',
+                'trilab_delivery_inpost', 'trilab_promotional'],
 
     # Views
     'data': [

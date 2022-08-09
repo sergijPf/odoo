@@ -52,15 +52,15 @@ class ResPartner(models.Model):
         return ''
 
     def check_address_exists(self, address_dict):
-        country, streets, type = self.get_address_details(address_dict)
+        country, streets, type_ = self.get_address_details(address_dict)
         city = address_dict.get('city')
         street = streets.get('street', '')
         street2 = streets.get('street2', '')
-        zip = address_dict.get('postcode')
+        zip_code = address_dict.get('postcode')
 
         address = self.filtered(
-            lambda x: x.type == type and
-                      {x.country_id.id, x.city, x.zip, x.street or '', x.street2 or ''} == {country.id, city, zip, street, street2}
+            lambda x: x.type == type_ and
+                      {x.country_id.id, x.city, x.zip, x.street or '', x.street2 or ''} == {country.id, city, zip_code, street, street2}
         )
 
         if address and not address[0]['is_magento_customer']:
@@ -76,13 +76,13 @@ class ResPartner(models.Model):
         streets = self.get_street_and_street2(address_dict.get('street'))
 
         if addr_type == 'billing':
-            _type = 'invoice'
+            type_ = 'invoice'
         elif addr_type == 'shipping':
-            _type = 'delivery'
+            type_ = 'delivery'
         else:
-            _type = 'other'
+            type_ = 'other'
 
-        return country, streets, _type
+        return country, streets, type_
 
     @staticmethod
     def get_street_and_street2(streets):

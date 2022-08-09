@@ -233,10 +233,10 @@ class MagentoPromotion(models.Model):
     def _get_promo_conditions(self):
         applied_to_prods = self.rule_applied_to_product_ids
 
-        is_all_prods = True if len(applied_to_prods.filtered(lambda x: x.magento_product_id)) == len(applied_to_prods.search([
+        is_all_prods = True if len(applied_to_prods.filtered(lambda x: x.magento_product_id)) == applied_to_prods.search([
             ('magento_instance_id', '=', self.magento_instance_id.id),
             ('magento_product_id', 'not in', [False, ''])
-        ])) else False
+        ], count=True) else False
 
         data = {
             "condition_type": "Magento\\SalesRule\\Model\\Rule\\Condition\\Combine",

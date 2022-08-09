@@ -15,69 +15,49 @@ def req(backend, path, method='GET', data=None, params=None):
     Make API request based on API method
     """
     location_url = backend._append_rest_suffix_to_url(backend.magento_url)
-    verify_ssl = backend.magento_verify_ssl
-    api_url = '%s%s' % (location_url, path)
-    headers = {
-        'Accept': '*/*',
-        'Content-Type': 'application/json',
-        'User-Agent': 'My User Agent 1.0',
-        'Authorization': 'Bearer %s' % backend.access_token
-    }
 
     try:
-        _logger.info('Data pass to Magento : %s', data)
-        if verify_ssl:
-            resp = call_ssl_verify_request(method, api_url, headers, params, data)
-        else:
-            resp = call_without_ssl_verify_request(method, api_url, headers, params, data)
+        _logger.info(f'Data pass to Magento : {data}')
+
+        api_url = f'{location_url}{path}'
+        kwargs = {
+            'method': method,
+            'url': api_url,
+            'headers': {
+                'User-Agent': 'My User Agent 1.0',
+                'Authorization': f'Bearer {backend.access_token}'
+            },
+            'params': params,
+            'json': data
+        }
+
+        if backend.magento_verify_ssl:
+            kwargs.update({'verify': True})
+
+        resp = requests.request(**kwargs)
+
         content = resp.json()
-        _logger.info('API URL : %s', api_url)
-        _logger.info('Response Status code : %s', resp.status_code)
+        _logger.info(f'API URL : {api_url}')
+        _logger.info(f'Response Status code : {resp.status_code}')
+
         if resp.status_code == 401:
             raise UserError(_('Given Credentials is incorrect, please provide correct Credentials.'))
         if resp.status_code == 500:
             return content
         if not resp.ok:
-            if resp.headers.get('content-type').split(';')[0] == 'text/html':
-                raise UserError(_('Content-type is not JSON \n %s : %s \n %s \n %s', (
-                    resp.status_code, resp.reason, path, resp.content)))
+            if resp.headers.get('content-type') != 'application/json':
+                raise UserError(_(f'Content-type is not JSON \n {resp.status_code} : {resp.reason} \n {path} \n {resp.content}'))
+
             response = resp.json()
-            response.update({'status_code':resp.status_code})
+            response.update({'status_code': resp.status_code})
+
             raise UserError(str(response))
+
     except (socket.gaierror, socket.error, socket.timeout) as err:
-        raise UserError(_('A network error caused the failure of the job: %s', err))
+        raise UserError(_(f'A network error caused the failure of the job: {str(err)}'))
     except Exception as err:
         raise UserError(err)
     return content
-
-
-def call_ssl_verify_request(method, api_url, headers, params, data):
-    if method == 'GET':
-        resp = requests.get(api_url, headers=headers, verify=True, params=params)
-    elif method == 'POST':
-        resp = requests.post(api_url, headers=headers, data=json.dumps(data), verify=True, params=params)
-    elif method == 'DELETE':
-        resp = requests.delete(api_url, headers=headers, data=json.dumps(data) if data else {}, verify=True, params=params)
-    elif method == 'PUT':
-        resp = requests.put(api_url, headers=headers, data=json.dumps(data), verify=True, params=params)
-    else:
-        resp = requests.get(api_url, headers=headers, verify=True, params=params)
-    return resp
-
-
-def call_without_ssl_verify_request(method, api_url, headers, params, data):
-    if method == 'GET':
-        resp = requests.get(api_url, headers=headers, params=params)
-    elif method == 'POST':
-        resp = requests.post(api_url, headers=headers, data=json.dumps(data), params=params)
-    elif method == 'DELETE':
-        resp = requests.delete(api_url, headers=headers, data=json.dumps(data) if data else {}, params=params)
-    elif method == 'PUT':
-        resp = requests.put(api_url, headers=headers, data=json.dumps(data), params=params)
-    else:
-        resp = requests.get(api_url, headers=headers, params=params)
-    return resp
-
 
 def create_filter(field, value, condition_type='eq'):
     """

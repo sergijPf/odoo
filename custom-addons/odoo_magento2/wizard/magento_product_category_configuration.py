@@ -18,10 +18,10 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
                                           default=_default_get_magento_instance)
 
     def create_update_product_public_category_structure(self):
-        prod_publ_categ_obj = self.env['product.public.category']
+        Prod_public_category = self.env['product.public.category']
         domain = [('parent_id', '=', False), ('no_create_in_magento', '=', False)]
-        ml_category_obj = self.env['magento.product.category']
-        ml_category_recs = ml_category_obj.with_context(active_test=False).search([
+        Magento_product_category = self.env['magento.product.category']
+        ml_category_recs = Magento_product_category.with_context(active_test=False).search([
             ('instance_id', '=', self.magento_instance_id.id)
         ])
 
@@ -44,7 +44,7 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
 
             for categ in ml_category_recs:
                 if categ.magento_category in magento_categories_list:
-                    ml_category_obj.process_storeview_translations_export(
+                    Magento_product_category.process_storeview_translations_export(
                         self.magento_instance_id, categ.product_public_categ_id, categ.magento_category
                     )
                 else:
@@ -54,16 +54,16 @@ class MagentoProductCategoryConfiguration(models.TransientModel):
             if roots_children:
                 for child in roots_children:
                     child_id = str(child.get("id"))
-                    if child_id and ml_category_obj.delete_category_in_magento(self.magento_instance_id, child_id) is True:
-                        ml_category = ml_category_obj.search([
+                    if child_id and Magento_product_category.delete_category_in_magento(self.magento_instance_id, child_id):
+                        ml_category = Magento_product_category.search([
                             ('magento_category', '=', child_id),
                             ('instance_id', '=', self.magento_instance_id.id)
                         ])
                         ml_category and ml_category.unlink()
 
             # create new categories
-            for public_category in prod_publ_categ_obj.search(domain):
-                ml_category_obj.create_product_category_in_magento_and_layer(
+            for public_category in Prod_public_category.search(domain):
+                Magento_product_category.create_product_category_in_magento_and_layer(
                     public_category, self.magento_instance_id, magento_root_category.get("id"), None
                 )
 

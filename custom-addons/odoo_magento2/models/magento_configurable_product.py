@@ -203,7 +203,7 @@ class MagentoConfigurableProduct(models.Model):
         except Exception as err:
             raise UserError("Error while delete product in Magento. " + str(err))
 
-        if response is True:
+        if response:
             prod_rec = simple_product if simple_product else self
             prod_rec.write({
                 'magento_status': 'not_exported',
@@ -970,8 +970,7 @@ class MagentoConfigurableProduct(models.Model):
             data["productWebsiteLink"].update({"website_id": site.magento_website_id})
             try:
                 api_url = '/V1/products/%s/websites' % prod_sku
-                res = req(instance, api_url, method, data)
-                if res is True:
+                if req(instance, api_url, method, data) :
                     website_ids.append(site.magento_website_id)
             except Exception as e:
                 text = "Error while adding website to product in Magento. " + str(e)

@@ -19,12 +19,6 @@ class MagentoInstance(models.Model):
     _name = MAGENTO_INSTANCE
     _description = 'Magento Instance'
 
-    @api.model
-    def _default_order_status(self):
-        order_status = self.env.ref('odoo_magento2.processing')
-
-        return [(6, 0, [order_status.id])] if order_status else False
-
     name = fields.Char("Instance Name", required=True)
     magento_url = fields.Char(string='Magento URLs', required=False, help="URL of Magento")
     location_ids = fields.Many2many('stock.location', string="Locations", required=True,

@@ -87,7 +87,7 @@ class SaleOrder(models.Model):
                         paym_trans = self.env['payment.transaction'].search([('reference', '=', order.name)])
 
                         if paym_trans:
-                            cnt = len(self.env['payment.transaction'].search([('reference', 'ilike', order.name + '%')]))
+                            cnt = self.env['payment.transaction'].search([('reference', 'ilike', order.name)], count=True)
                             ref = order.name + f'-{cnt}'
                         else:
                             ref = order.name
@@ -150,8 +150,7 @@ class SaleOrder(models.Model):
         if magento_order_id:
             try:
                 api_url = '/V1/orders/%s/cancel' % magento_order_id
-                res = req(self.magento_instance_id, api_url, 'POST')
-                if res is True:
+                if req(self.magento_instance_id, api_url, 'POST'):
                     self.is_canceled_in_magento = True
             except Exception:
                 raise UserError("Error while requesting order cancellation in Magento!")

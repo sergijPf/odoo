@@ -47,11 +47,14 @@ class SaleWorkflowProcess(models.Model):
     #             record.invoice_date_is_order_date = False
 
     @api.model
-    def auto_workflow_process(self, order_ids=[]):
+    def auto_workflow_process(self, order_ids=None):
         """
         This method will find draft sale orders which are not having invoices yet, confirmed it according to
         configured 'order auto workflow' settings
         """
+        if order_ids is None:
+            order_ids = []
+
         workflow_process = self if self else self.search([])
 
         if order_ids:
