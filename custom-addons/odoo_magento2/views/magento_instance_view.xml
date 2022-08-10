@@ -69,7 +69,7 @@
                             <field name="image_resolution"/>
                             <field name="odoo_token" readonly="1" groups="odoo_magento2.group_magento_manager"/>
                             <button string="Get New Token" type="object"
-                                    name="action_generate_token"
+                                    name="action_generate_token" groups="odoo_magento2.group_magento_manager"
                                     confirm="Do you really want to generate new Access Token for Magento? Please note: queue consumer restart will be needed afterwards."/>
                         </group>
                     </group>
